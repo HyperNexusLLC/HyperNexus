@@ -147,6 +147,25 @@ export async function isPortFree(port: number): Promise<boolean> {
 	});
 }
 
+async function isGoAvailable(): Promise<boolean> {
+	try {
+		const { existsSync } = await import('fs');
+		const { resolve } = await import('path');
+		const goBin = resolve(process.cwd(), 'tormentnexus.exe');
+		if (existsSync(goBin)) return true;
+		const altLocations = [
+			resolve(process.cwd(), 'go', 'tormentnexus.exe'),
+			resolve(process.cwd(), 'bin', 'tormentnexus.exe'),
+		];
+		for (const alt of altLocations) {
+			if (existsSync(alt)) return true;
+		}
+		return false;
+	} catch {
+		return false;
+	}
+}
+
 function readStartLock(lockPath: string): TormentNexusStartLockRecord | null {
 	try {
 		const parsed = JSON.parse(
@@ -297,10 +316,7 @@ export function createLockLifecycleHandlers(
 	deps: CreateLockLifecycleHandlersDeps = {},
 ): TormentNexusStartLifecycleHandlers {
 	const exit = deps.exit ?? ((code: number) => process.exit(code));
-	const logError =
-		deps.logError ??
-		((message?: unknown, ...optionalParams: unknown[]) =>
-			console.error(message, ...optionalParams));
+	void deps.logError;
 
 	const cleanup = () => {
 		lockHandle.releaseSync();
@@ -348,6 +364,7 @@ export function registerStartCommand(program: Command): void {
 		.option("-c, --config <path>", "Path to config file")
 		.option("-d, --data-dir <path>", "Data directory for TormentNexus state", "~/.tormentnexus")
 		.option("--daemon", "Run as background daemon")
+		.option("--runtime <mode>", "Runtime mode: auto (prefer Go), go (Go-only), node (TS-primary)", "auto")
 		.addHelpText(
 			"after",
 			`
@@ -358,6 +375,8 @@ Examples:
   $ tormentnexus start --auto-drive        Start the Director after boot completes
   $ tormentnexus start --daemon            Run as background service
   $ tormentnexus start --host 127.0.0.1    Bind to localhost only
+  $ tormentnexus start --runtime go        Go-primary startup (Go control plane + optional TS)
+  $ tormentnexus start --runtime node      TS-primary startup (legacy behavior)
     `,
 		)
 		.action(async (opts) => {
@@ -460,25 +479,53 @@ Examples:
 				}
 				console.log(chalk.dim("\n  Press Ctrl+C to stop\n"));
 
-				// Launch Go sidecar if available
-				try {
-					const { existsSync } = await import('fs');
-					const { resolve } = await import('path');
-					const goBin = resolve(process.cwd(), 'go', 'tormentnexus.exe');
-					if (existsSync(goBin)) {
+				// Runtime selection: Go-primary vs TS-primary
+				const runtimeMode = (opts.runtime || 'auto').toLowerCase();
+				const wantGo = runtimeMode === 'go' || (runtimeMode === 'auto' && await isGoAvailable());
+
+				if (wantGo) {
+					// Launch Go primary control plane
+					try {
 						const { spawn } = await import('child_process');
-						const goProc = spawn(goBin, ['serve', '--port', '4300'], {
+						const { resolve } = await import('path');
+						const goBin = resolve(process.cwd(), 'tormentnexus.exe');
+						const goPort = 7778;
+						const goProc = spawn(goBin, ['serve', '--port', String(goPort), '--host', host], {
 							stdio: 'ignore',
 							detached: true,
 							env: { ...process.env, TORMENTNEXUS_WORKSPACE: process.cwd() },
 						});
 						goProc.unref();
-						console.log(chalk.green('  ✓ Go sidecar launched on port 4300'));
+						console.log(chalk.green(`  ✓ Go control plane launched on port ${goPort}`));
+
+						// Start TS as compatibility supplement (optional, always starts for now)
+						if (runtimeMode !== 'go') {
+							console.log(chalk.dim('  TS compatibility layer: started alongside Go'));
+						}
+					} catch (e: any) {
+						console.log(chalk.yellow('  Go control plane: not available, falling back to TS-primary'));
 					}
-				} catch (e: any) {
-					// Go sidecar is optional
-					console.log(chalk.dim('  Go sidecar: not available (optional)'));
+				} else {
+					// TS-primary mode (legacy): Go sidecar is optional
+					console.log(chalk.dim(`  Runtime: TS-primary${runtimeMode === 'auto' ? ' (Go binary not found)' : ''}`));
+					try {
+						const { existsSync } = await import('fs');
+						const { resolve } = await import('path');
+						const goBin = resolve(process.cwd(), 'tormentnexus.exe');
+						if (existsSync(goBin)) {
+							const { spawn } = await import('child_process');
+							const goProc = spawn(goBin, ['serve', '--port', '4300'], {
+								stdio: 'ignore',
+								detached: true,
+								env: { ...process.env, TORMENTNEXUS_WORKSPACE: process.cwd() },
+							});
+							goProc.unref();
+							console.log(chalk.green('  ✓ Go sidecar launched on port 4300'));
+						}
+					} catch (e: any) {
+						console.log(chalk.dim('  Go sidecar: not available (optional)'));
 					}
+				}
 
 				process.once("exit", lifecycle.cleanup);
 				process.once("SIGINT", lifecycle.handleSigint);
