@@ -27,6 +27,7 @@ WORKERS = {
         "log": "data/swarm_watchdog.log",
         "type": "python",
         "critical": True,
+        "pid_file": "data/swarm.pid",
     },
     "bobbybookmarks_sync": {
         "script": "scripts/bobbybookmarks_sync.py",
@@ -34,6 +35,7 @@ WORKERS = {
         "log": "data/bobby_sync_watchdog.log",
         "type": "python",
         "critical": True,
+        "pid_file": "data/bobby_sync.pid",
     },
     "trends_analyzer": {
         "script": "scripts/trends_analyzer.py",
@@ -41,6 +43,7 @@ WORKERS = {
         "log": "data/trends_watchdog.log",
         "type": "python",
         "critical": False,
+        "pid_file": "data/trends.pid",
     },
     # Core TormentNexus services (checked by port)
     "freellm_proxy": {
@@ -117,7 +120,26 @@ def find_process(name, config):
         except Exception:
             return []
     else:
-        # Python script check — use wmic which works without admin rights
+        # FIRST: Check PID file — it's the authoritative source
+        pid_file = config.get("pid_file")
+        if pid_file:
+            pid_path = WORKSPACE / pid_file
+            if pid_path.exists():
+                try:
+                    stored_pid = int(pid_path.read_text().strip())
+                    # Verify the process is actually running and matches our script
+                    check = subprocess.run(
+                        ["tasklist", "/FI", f"PID eq {stored_pid}", "/FO", "CSV", "/NH"],
+                        capture_output=True, text=True, timeout=5,
+                    )
+                    if str(stored_pid) in check.stdout:
+                        return [stored_pid]
+                except (ValueError, OSError):
+                    pass
+                # Stale PID file — remove it
+                pid_path.unlink(missing_ok=True)
+
+        # SECOND: Scan running processes, kill ALL duplicates, return the first
         script_name = config["script"]
         try:
             result = subprocess.run(
@@ -143,23 +165,18 @@ def find_process(name, config):
                         if part.strip().isdigit():
                             pids.append(int(part.strip()))
                             break
+            # Kill all but the first PID to prevent duplicates
+            if len(pids) > 1:
+                for extra in pids[1:]:
+                    try:
+                        subprocess.run(["taskkill", "/F", "/PID", str(extra)], capture_output=True, timeout=5)
+                        log(f"{name}: killed zombie PID {extra}")
+                    except Exception:
+                        pass
+                return [pids[0]]
             return pids
         except Exception:
-            # Fallback: try tasklist
-            try:
-                result = subprocess.run(
-                    ["tasklist", "/FI", "IMAGENAME eq python.exe", "/FO", "CSV", "/NH"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    creationflags=subprocess.CREATE_NO_WINDOW,
-                )
-                lines = [l for l in result.stdout.split("\n") if l.strip()]
-                return [
-                    int(l.split(",")[1].strip().strip('"')) for l in lines if l.strip()
-                ]
-            except Exception:
-                return []
+            return []
 
 
 def start_worker(name, config):

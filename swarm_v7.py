@@ -495,7 +495,10 @@ class ProxyManager:
         try:
             d = str(Path(PROXY_BIN).parent)
             subprocess.Popen(
-                [PROXY_BIN], cwd=d, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                [PROXY_BIN],
+                cwd=d,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
         except Exception as e:
@@ -1688,6 +1691,10 @@ class Swarm:
                         log.stat(f"Retrying {n} failed tasks")
                         continue
                 log.stat("No pending tasks!")
+                if self.forever:
+                    log.info("Waiting 60s for next cycle...")
+                    time.sleep(60)
+                    continue
                 break
             if self.forever:
                 n = reset_failed(limit=20)

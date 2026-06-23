@@ -1,51 +1,31 @@
-# HANDOFF — Session 2026-06-23
+# HANDOFF — Session 2026-06-23 (Resume)
 
 ## Summary
 
-Full Go-sidecar port of all TS MCP engine features (3 layers).
+Stabilized all workers after upstream merge reverted critical fixes. Fixed swarm infinite restart loop, zombie process accumulation, corrupted databases, and watchdog PID tracking.
 
 ### What was done
 
-**Layer 1 (MCP Features)**: 23 new Go files added to `go/internal/mcp/`:
+**Stability fixes:**
 
-- Core: cached_inventory, traffic_inspector, namespaces, discovery_preflight, downstream_discovery
-- Metadata: catalog_metadata, server_metadata_cache, session_working_set, mcp_json_config
-- Compat: compat_tool_defs, compat_tool_runtime, config_store, conversational_tool_injector
-- Modes: direct_mode_compat, legacy_proxy_mode, native_session_meta_tools
-- Management: saved_script_exec, submodule_manager, tool_access_guards
-- Loading: tool_loading_defs, tool_loading_compat, tool_selection_telemetry, tool_set_compat
+- **Watchdog PID tracking**: Added PID file tracking with process verification. `find_process` now kills ALL duplicate processes instead of spawning more.
+- **Swarm forever-loop fix**: swarm_v7.py was unconditionally `break`ing when `pending==0` even in `--forever` mode. Changed to `sleep(60); continue` so it stays alive waiting for tasks.
+- **Database recreation**: Both `data/assimilation_state.db` and `data/trends.db` were corrupted (0-byte files from git operations). Wiped and recreated with full schemas (including missing `score`, `rating`, `priority`, `quality`, `notes` columns).
+- **Zombie cleanup**: Killed ~510+ stray bobbybookmarks_sync processes that accumulated from the watchdog bug.
+- **BobbyBookmarks path fix**: Reverted path from `./bobbybookmarks/` back to `../bobbybookmarks/` (reverted by upstream merge).
 
-**Layer 2 (Routers)**: 5 stubs replaced with native Go:
+**Current state (verified across 20+ health checks):**
 
-- handleGraphGet -> s.repoGraph.GetGraph()
-- handleGraphRebuild -> s.repoGraph.Build()
-- handleResearchConduct -> native ResearchService
-- handleKnowledgeIngest -> native KnowledgeService
-- handleRAGIngestFile/Text -> native implementations
-
-**Layer 3 (Services)**: 11 new Go packages + 9 wired into Server:
-
-- New: autotest, catalogingestor, catalogvalidator, citation, connectionpool, contextpruner, googleworkspace, projecttracker, symbolpin, research, knowledge
-- Existing: ctxharvester, hsync, workspaces, metrics (already wired)
-- Other: codemode (codeexec), shell (codeexec), bobbybookmarks (hsync), lsp/mission/policy (inline)
-
-**Cleanup**: Removed 3,948 broken auto-generated stub files, rebuilt tools/registry.go
-
-### Build Status
-
-- `go build ./...` — zero errors
-- Go MCP package: 18 -> 41 files
-- Go internal packages: ~30 -> 41
+- ✅ Swarm v7 (PID 60080) — stable, no restarts
+- ✅ BobbyBookmarks sync (PID 28136) — single process, no duplicates
+- ✅ Trends analyzer (PID 27848) — stable, completed analysis cycle
+- ✅ Go build — zero errors
+- ✅ All 7 service ports healthy
+- ✅ 37 Go MCP files in go/internal/mcp/
 
 ### Pending
 
-- ~30 fallback bridge calls remain in server.go (native-first, TS-fallback pattern)
-- DB backed up as tormentnexus.db.bak (restore needed for running services)
-- CHANGELOG.md updated for v1.0.0-alpha.135
-- VERSION bumped to 1.0.0-alpha.135
-
-### Next Steps
-
-- Restart TS control plane (PID 44488 was killed to release DB lock)
-- Restart dashboard (PID 46032 was killed)
-- Verify all services operational
+- Go-primary launcher/runtime selection (Phase 1 of migration plan)
+- MCP write/config parity completion
+- Session/supervisor/orchestration parity
+- Remove zombie swarm_v7 log files (~943 files in data/)

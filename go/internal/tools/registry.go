@@ -9,7 +9,7 @@ import (
 
 type ToolResponse struct {
 	Content []TextContent `json:"content"`
-	IsError bool         `json:"isError,omitempty"`
+	IsError bool          `json:"isError,omitempty"`
 }
 
 type TextContent struct {

@@ -1,7 +1,19 @@
 # Changelog
 
+## [1.0.0-alpha.136] - 2026-06-23
+
+### Fixed
+
+- **Swarm forever-loop bug**: Swarm was exiting after one cycle even in `--forever` mode when DB was empty. Now sleeps 60s and continues.
+- **Watchdog zombie process accumulation**: Added PID file tracking + duplicate killing. `find_process` now kills extra instances instead of ignoring them.
+- **Corrupted databases**: Recreated `assimilation_state.db` and `trends.db` with full schemas after git operations corrupted them.
+- **BobbyBookmarks sync path**: Reverted path from `./bobbybookmarks/` back to `../bobbybookmarks/` after upstream merge reverted the fix.
+- **Killed 510+ zombie bobbybookmarks_sync processes** that accumulated from the watchdog spawning duplicates.
+
 ## [1.0.0-alpha.135] - 2026-06-23
+
 ### Added
+
 - **Go MCP Engine (Phase P Port)**: Ported 22 TS MCP features to native Go
   - Cached inventory, traffic inspector, namespacing, discovery preflight
   - Downstream discovery, catalog metadata, server metadata cache
@@ -18,10 +30,12 @@
 - **All 20 Layer 3 Services Wired** into Server struct
 
 ### Changed
+
 - **tools/registry.go**: Rebuilt with proper ToolResponse, TextContent, helpers
 - Removed 3,948 broken auto-generated stub files from go/internal/tools/
 
 ### Build
+
 - Full go build ./... passes with zero errors
 - Go MCP package: 18 files -> 41 files
 - Go internal packages: ~30 -> 41 packages
