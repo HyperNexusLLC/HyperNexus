@@ -102,51 +102,51 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 type Server struct {
-	memoryManager     *memorystore.Manager
-	codeExecutor      *codeexec.Sandbox
-	cfg               config.Config
-	detector          controlplane.ToolProvider
-	mesh              *mesh.Service
-	startedAt         time.Time
-	mux               *http.ServeMux
-	lifecycleModes    map[string]any
-	fallbackBuffer    *providerFallbackBuffer
-	autoDev           *localAutoDevManager
-	squad             *localSquadManager
-	swarm             *localSwarmManager
-	debateHistory     *orchestration.DebateHistoryStore
-	darwinState       *localDarwinStateManager
-	runtimeServers    *runtimeServerRegistry
-	supervisorManager *supervisor.Manager
-	sessionState      *localSessionStateManager
-	workflowEngine    *workflow.Engine
-	toolsRegistry     *tools.Registry
-	mcpAggregator          *mcp.Aggregator
-	toolSelectionStore     *mcp.ToolSelectionStore
-	mcpPredictor           *mcp.ToolPredictor
-	mcpDecision            *mcp.DecisionSystem
-	nativeRouter      *mcp.NativeMCPRouter
-	a2aLogger         *orchestration.A2ALogger
-	a2aBroker         *orchestration.A2ABroker
-	taskQueue         *orchestration.TaskQueue
-	swarmController   *orchestration.SwarmController
-	coderAgent        *orchestration.CoderAgent
-	goDirector        *orchestration.Director
-	highValueIngestor *hsync.HighValueIngestor
-	memoryReactor     *memorystore.MemoryReactor
-	mcpConfig         *mcp.ConfigManager
-	skillStore        *harnesses.SkillStore
-	skillRegistry     *skillregistry.SkillRegistry
-	skillDecision     *skillregistry.SkillDecisionSystem
-	pairOrchestrator  *orchestration.PairOrchestrator
-	directorNotes     *orchestration.DirectorNotesManager
-	expertManager     *hsync.ExpertManager
-	memoryArchiver    *memorystore.MemoryArchiver
-	importCache       *importScanCache
-	fleetManager      *orchestration.FleetManagerPlus
-	consensusEngine   *orchestration.ConsensusEngine
-	quotaManager      *providers.QuotaManager
-	modelSelector     *providers.ModelSelector
+	memoryManager      *memorystore.Manager
+	codeExecutor       *codeexec.Sandbox
+	cfg                config.Config
+	detector           controlplane.ToolProvider
+	mesh               *mesh.Service
+	startedAt          time.Time
+	mux                *http.ServeMux
+	lifecycleModes     map[string]any
+	fallbackBuffer     *providerFallbackBuffer
+	autoDev            *localAutoDevManager
+	squad              *localSquadManager
+	swarm              *localSwarmManager
+	debateHistory      *orchestration.DebateHistoryStore
+	darwinState        *localDarwinStateManager
+	runtimeServers     *runtimeServerRegistry
+	supervisorManager  *supervisor.Manager
+	sessionState       *localSessionStateManager
+	workflowEngine     *workflow.Engine
+	toolsRegistry      *tools.Registry
+	mcpAggregator      *mcp.Aggregator
+	toolSelectionStore *mcp.ToolSelectionStore
+	mcpPredictor       *mcp.ToolPredictor
+	mcpDecision        *mcp.DecisionSystem
+	nativeRouter       *mcp.NativeMCPRouter
+	a2aLogger          *orchestration.A2ALogger
+	a2aBroker          *orchestration.A2ABroker
+	taskQueue          *orchestration.TaskQueue
+	swarmController    *orchestration.SwarmController
+	coderAgent         *orchestration.CoderAgent
+	goDirector         *orchestration.Director
+	highValueIngestor  *hsync.HighValueIngestor
+	memoryReactor      *memorystore.MemoryReactor
+	mcpConfig          *mcp.ConfigManager
+	skillStore         *harnesses.SkillStore
+	skillRegistry      *skillregistry.SkillRegistry
+	skillDecision      *skillregistry.SkillDecisionSystem
+	pairOrchestrator   *orchestration.PairOrchestrator
+	directorNotes      *orchestration.DirectorNotesManager
+	expertManager      *hsync.ExpertManager
+	memoryArchiver     *memorystore.MemoryArchiver
+	importCache        *importScanCache
+	fleetManager       *orchestration.FleetManagerPlus
+	consensusEngine    *orchestration.ConsensusEngine
+	quotaManager       *providers.QuotaManager
+	modelSelector      *providers.ModelSelector
 
 	// --- New Go-native services (alpha.32+) ---
 	eventBus         *eventbus.EventBus
@@ -481,20 +481,20 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 			"lazySessionMode":        false,
 			"singleActiveServerMode": false,
 		},
-		fallbackBuffer:    newProviderFallbackBuffer(50),
-		autoDev:           newLocalAutoDevManager(cfg.WorkspaceRoot),
-		squad:             newLocalSquadManager(cfg.WorkspaceRoot),
-		swarm:             newLocalSwarmManager(cfg.WorkspaceRoot),
-		debateHistory:     orchestration.NewDebateHistoryStore(filepath.Join(cfg.WorkspaceRoot, "debate_history.db")),
-		darwinState:       newLocalDarwinStateManager(filepath.Join(cfg.WorkspaceRoot, "darwin_state.json")),
-		runtimeServers:    newRuntimeServerRegistry(),
-		supervisorManager: supervisor.NewManager(supervisor.ManagerOptions{WorktreeRoot: cfg.WorkspaceRoot, PersistencePath: filepath.Join(cfg.ConfigDir, "session-supervisor.json")}),
-		sessionState:      newLocalSessionStateManager(filepath.Join(cfg.WorkspaceRoot, ".tormentnexus-session.json")),
-		workflowEngine:    workflow.NewEngine(),
-		toolsRegistry:     tools.NewRegistry(),
-		mcpAggregator:     mcp.NewAggregator(),
+		fallbackBuffer:     newProviderFallbackBuffer(50),
+		autoDev:            newLocalAutoDevManager(cfg.WorkspaceRoot),
+		squad:              newLocalSquadManager(cfg.WorkspaceRoot),
+		swarm:              newLocalSwarmManager(cfg.WorkspaceRoot),
+		debateHistory:      orchestration.NewDebateHistoryStore(filepath.Join(cfg.WorkspaceRoot, "debate_history.db")),
+		darwinState:        newLocalDarwinStateManager(filepath.Join(cfg.WorkspaceRoot, "darwin_state.json")),
+		runtimeServers:     newRuntimeServerRegistry(),
+		supervisorManager:  supervisor.NewManager(supervisor.ManagerOptions{WorktreeRoot: cfg.WorkspaceRoot, PersistencePath: filepath.Join(cfg.ConfigDir, "session-supervisor.json")}),
+		sessionState:       newLocalSessionStateManager(filepath.Join(cfg.WorkspaceRoot, ".tormentnexus-session.json")),
+		workflowEngine:     workflow.NewEngine(),
+		toolsRegistry:      tools.NewRegistry(),
+		mcpAggregator:      mcp.NewAggregator(),
 		toolSelectionStore: mcp.NewToolSelectionStore(cfg.ConfigDir, 1000),
-		a2aLogger:         orchestration.NewA2ALogger(cfg.WorkspaceRoot),
+		a2aLogger:          orchestration.NewA2ALogger(cfg.WorkspaceRoot),
 	}
 	server.a2aBroker = orchestration.NewA2ABroker(server.a2aLogger)
 	server.skillStore = harnesses.NewSkillStore(cfg.MainConfigDir)
@@ -3319,20 +3319,184 @@ func (s *Server) handleMCPServerTest(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	case targetKind == "router":
+		result, probeErr := s.probeNativeRouter(r.Context(), operation, toolName, args)
+		if probeErr != nil {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"success": true,
+				"data":    buildFailure(probeErr.Error(), map[string]any{"error": probeErr.Error()}),
+				"bridge":  map[string]any{"fallback": "go-local-mcp", "procedure": "mcp.runServerTest", "reason": "upstream unavailable; native router probe attempted but failed"},
+			})
+			return
+		}
+		responsePayload := buildSuccess(result, targetKind, operation, serverName, toolName, requestPayload, startedAt)
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
-			"data":    buildFailure("tormentnexus MCP router is not initialized.", map[string]any{"error": "tormentnexus MCP router is not initialized."}),
-			"bridge":  map[string]any{"fallback": "go-local-mcp", "procedure": "mcp.runServerTest", "reason": "upstream unavailable; simulating router probe failure locally"},
+			"data":    responsePayload,
+			"bridge":  map[string]any{"fallback": "go-local-mcp", "procedure": "mcp.runServerTest", "reason": "upstream unavailable; used native router probe"},
 		})
 		return
 	default:
-		message := "Downstream server '" + serverName + "' is not currently connected."
+		result, probeErr := s.probeDownstreamServer(r.Context(), serverName, operation, toolName, args)
+		if probeErr != nil {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"success": true,
+				"data":    buildFailure(probeErr.Error(), map[string]any{"error": probeErr.Error()}),
+				"bridge":  map[string]any{"fallback": "go-local-mcp", "procedure": "mcp.runServerTest", "reason": "upstream unavailable; downstream probe attempted but failed: " + probeErr.Error()},
+			})
+			return
+		}
+		responsePayload := buildSuccess(result, targetKind, operation, serverName, toolName, requestPayload, startedAt)
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
-			"data":    buildFailure(message, map[string]any{"error": message}),
-			"bridge":  map[string]any{"fallback": "go-local-mcp", "procedure": "mcp.runServerTest", "reason": "upstream unavailable; simulating downstream probe failure locally"},
+			"data":    responsePayload,
+			"bridge":  map[string]any{"fallback": "go-local-mcp", "procedure": "mcp.runServerTest", "reason": "upstream unavailable; used direct downstream probe"},
 		})
 		return
+	}
+}
+
+// buildSuccess constructs a probe success response matching the buildFailure shape.
+func buildSuccess(result any, targetKind, operation, serverName, toolName string, requestPayload map[string]any, startedAt time.Time) map[string]any {
+	endedAt := time.Now()
+	return map[string]any{
+		"success": true,
+		"target": map[string]any{
+			"kind": targetKind,
+			"displayName": func() string {
+				if targetKind == "router" {
+					return "tormentnexus router"
+				}
+				if strings.TrimSpace(serverName) != "" {
+					return serverName
+				}
+				return "Unknown downstream server"
+			}(),
+			"serverName": nullableString(serverName),
+			"via":        requestPayload["via"],
+		},
+		"operation": operation,
+		"startedAt": startedAt.UnixMilli(),
+		"endedAt":   endedAt.UnixMilli(),
+		"latencyMs": endedAt.Sub(startedAt).Milliseconds(),
+		"request":   requestPayload,
+		"response": map[string]any{
+			"summary": "Probe successful",
+			"payload": result,
+		},
+		"trafficEvents": []map[string]any{},
+	}
+}
+
+// probeNativeRouter runs a probe against the local native MCP router.
+func (s *Server) probeNativeRouter(ctx context.Context, operation, toolName string, args map[string]any) (any, error) {
+	if s.nativeRouter == nil {
+		return nil, fmt.Errorf("native MCP router is not initialized")
+	}
+
+	switch operation {
+	case "tools/list":
+		ws := s.nativeRouter.GetWorkingSet()
+		if ws == nil {
+			return []map[string]any{}, nil
+		}
+		result := make([]map[string]any, 0, len(ws))
+		for _, entry := range ws {
+			result = append(result, map[string]any{
+				"name":        entry.OriginalName,
+				"server":      entry.Server,
+				"description": entry.Description,
+				"loadedAt":    entry.LoadedAt,
+			})
+		}
+		return map[string]any{"tools": result}, nil
+	case "tools/call":
+		if strings.TrimSpace(toolName) == "" {
+			return nil, fmt.Errorf("tool name is required for tools/call")
+		}
+		resp, err := s.nativeRouter.CallTool(ctx, toolName, args)
+		if err != nil {
+			return nil, fmt.Errorf("router call failed: %w", err)
+		}
+		return resp, nil
+	default:
+		return nil, fmt.Errorf("unsupported operation: %s (supported: tools/list, tools/call)", operation)
+	}
+}
+
+// probeDownstreamServer runs a probe against a named downstream MCP server.
+func (s *Server) probeDownstreamServer(ctx context.Context, serverName, operation, toolName string, args map[string]any) (any, error) {
+	servers := s.mcpConfig.GetServers()
+	cfg, ok := servers[serverName]
+	if !ok {
+		return nil, fmt.Errorf("downstream server '%s' is not configured", serverName)
+	}
+
+	if cfg.Command == "" {
+		return nil, fmt.Errorf("downstream server '%s' has no command configured", serverName)
+	}
+
+	client := mcp.NewStdioClient(serverName, cfg.Command, cfg.Args, cfg.Env)
+	if err := client.Start(); err != nil {
+		return nil, fmt.Errorf("failed to start downstream server '%s': %w", serverName, err)
+	}
+	defer client.Stop()
+
+	method := operation
+	if method == "" {
+		method = "tools/list"
+	}
+
+		extractError := func(errObj any) string {
+			if m, ok := errObj.(map[string]any); ok {
+				if msg, ok := m["message"].(string); ok {
+					return msg
+				}
+			}
+			return fmt.Sprintf("%v", errObj)
+		}
+
+		switch method {
+	case "tools/list":
+		resp, err := client.Call(ctx, "tools/list", nil)
+		if err != nil {
+			return nil, fmt.Errorf("tools/list probe failed: %w", err)
+		}
+		if resp.Result != nil {
+			return resp.Result, nil
+		}
+		if resp.Error != nil {
+			return nil, fmt.Errorf("tools/list returned error: %s", extractError(resp.Error))
+		}
+		return []map[string]any{}, nil
+	case "tools/call":
+		if strings.TrimSpace(toolName) == "" {
+			return nil, fmt.Errorf("tool name is required for tools/call")
+		}
+		resp, err := client.Call(ctx, "tools/call", map[string]any{"name": toolName, "arguments": args})
+		if err != nil {
+			return nil, fmt.Errorf("tools/call probe failed: %w", err)
+		}
+		if resp.Result != nil {
+			return resp.Result, nil
+		}
+		if resp.Error != nil {
+			return nil, fmt.Errorf("tools/call returned error: %s", extractError(resp.Error))
+		}
+		return nil, fmt.Errorf("tools/call returned empty response")
+	case "ping":
+		resp, err := client.Call(ctx, "ping", nil)
+		if err != nil {
+			return nil, fmt.Errorf("ping probe failed: %w", err)
+		}
+		if resp.Result != nil {
+			return map[string]any{"pong": true}, nil
+		}
+		if resp.Error != nil {
+			return nil, fmt.Errorf("ping returned error: %s", extractError(resp.Error))
+		}
+		return nil, fmt.Errorf("ping returned empty response")
+	default:
+		return nil, fmt.Errorf("unsupported operation: %s (supported: tools/list, tools/call, ping)", method)
 	}
 }
 
