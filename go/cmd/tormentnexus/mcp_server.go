@@ -391,12 +391,15 @@ func (s *MCPServer) registerTools() {
 		},
 	}
 
-	// ── Root Go Accessory Tools (Always-On) ──
+	// ─── Root Go Accessory Tools (Always-On) ───
 	if s.rootRegistry != nil {
 		for _, t := range s.rootRegistry.Tools {
 			var schema InputSchema
 			if len(t.Parameters) > 0 {
 				_ = json.Unmarshal(t.Parameters, &schema)
+			}
+			if schema.Type == "" {
+				schema.Type = "object"
 			}
 			s.tools = append(s.tools, ToolDefinition{
 				Name:        t.Name,
