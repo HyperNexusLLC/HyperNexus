@@ -201,10 +201,21 @@ export class SessionSupervisor {
             ...process.env,
             ...session.env,
         };
-        const child = this.spawnProcess(session.command, session.args, {
-            cwd: session.workingDirectory,
-            env,
-        });
+        let child;
+        try {
+            child = this.spawnProcess(session.command, session.args, {
+                cwd: session.workingDirectory,
+                env,
+            });
+        } catch (spawnErr: any) {
+            session.status = 'error';
+            session.lastError = spawnErr?.message || String(spawnErr);
+            this.appendLog(id, 'system', `Spawn failed: ${session.lastError}`);
+            runtime.health.status = 'degraded';
+            runtime.health.errorMessage = session.lastError;
+            this.persist();
+            return this.cloneSession(session);
+        }
 
         runtime.process = child;
         session.status = 'running';

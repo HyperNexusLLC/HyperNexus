@@ -81,5 +81,9 @@
 - **Tab Layout Structure**: Using Framer Motion's `AnimatePresence` and `motion.div` transitions on tab panels creates a high-end, responsive feel.
 - **Vitest Workspace Matching**: Vitest scans all git worktrees recursively by default, matching nested test files. To run a fast, scoped test check, limit the matches by targeting specific directories or using exact path matching.
 
+### Session Supervisor Robustness
+- **Process Spawning Try-Catch**: When the SessionSupervisor or PtySupervisor attempts to restore active sessions from `session-supervisor.json` on startup, it executes `spawnProcess` (e.g. `node-pty`). If a shell path or binary is missing on the host, it throws a synchronous error (like `Error: File not found: ...`). Wrapping the spawn block in a try-catch ensures that individual session start failures are handled gracefully (marking the session as 'error' state) rather than raising an uncaught exception that completely crashes the main MCP server.
+
+
 
 
