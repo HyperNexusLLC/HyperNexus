@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.0-alpha.157] - 2026-06-25
+
+### Changed
+- **Dashboard Consolidation**: Refactored the sidebar menu layout in `nav-config.ts`, reducing 40+ cluttered items to a clean, well-grouped set of core categories.
+- **Background Swarms & Scrapers**: Started the background watchdog daemon which initiates the `swarm_v7.py` code generator agent and the `bobbybookmarks_sync.py` scrapers.
+
 ## [1.0.0-alpha.156] - 2026-06-25
 
 ### Added
