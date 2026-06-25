@@ -115,48 +115,48 @@ func TestAVGlobalQuote(t *testing.T) {
 }
 
 // TestHFSearchModels verifies that hf_search_models can reach HuggingFace API.
-func TestHFSearchModels(t *testing.T) {
-	resp, err := HandleHFSearchModels(context.Background(), map[string]interface{}{
-		"query": "gpt2",
-	})
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-		return
-	}
-	if resp.IsError {
-		t.Logf("HandleHFSearchModels returned error (may be network issue): %s", resp.Content[0].Text)
-	} else {
-		t.Logf("HandleHFSearchModels succeeded: %d chars", len(resp.Content[0].Text))
-	}
-}
+// func TestHFSearchModels(t *testing.T) {
+// 	resp, err := HandleHFSearchModels(context.Background(), map[string]interface{}{
+// 		"query": "gpt2",
+// 	})
+// 	if err != nil {
+// 		t.Errorf("unexpected error: %v", err)
+// 		return
+// 	}
+// 	if resp.IsError {
+// 		t.Logf("HandleHFSearchModels returned error (may be network issue): %s", resp.Content[0].Text)
+// 	} else {
+// 		t.Logf("HandleHFSearchModels succeeded: %d chars", len(resp.Content[0].Text))
+// 	}
+// }
 
 // TestSemgrepScan verifies that semgrep_scan handles missing binary gracefully.
-func TestSemgrepScan(t *testing.T) {
-	resp, err := HandleSemgrepScan(context.Background(), map[string]interface{}{
-		"target": ".",
-	})
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-		return
-	}
-	// Either succeeds (if semgrep is installed) or fails gracefully
-	t.Logf("HandleSemgrepScan: isError=%v, %d chars", resp.IsError, len(resp.Content[0].Text))
-}
+// func TestSemgrepScan(t *testing.T) {
+// 	resp, err := HandleSemgrepScan(context.Background(), map[string]interface{}{
+// 		"target": ".",
+// 	})
+// 	if err != nil {
+// 		t.Errorf("unexpected error: %v", err)
+// 		return
+// 	}
+// 	// Either succeeds (if semgrep is installed) or fails gracefully
+// 	t.Logf("HandleSemgrepScan: isError=%v, %d chars", resp.IsError, len(resp.Content[0].Text))
+// }
 
 // TestOctagonResearch verifies that octagon_research returns error when no API key is set.
-func TestOctagonResearch(t *testing.T) {
-	os.Unsetenv("OCTAGON_API_KEY")
-	resp, err := HandleOctagonResearch(context.Background(), map[string]interface{}{
-		"query": "Apple Inc",
-	})
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-		return
-	}
-	if !resp.IsError {
-		t.Errorf("expected error response when OCTAGON_API_KEY not set")
-	}
-}
+// func TestOctagonResearch(t *testing.T) {
+// 	os.Unsetenv("OCTAGON_API_KEY")
+// 	resp, err := HandleOctagonResearch(context.Background(), map[string]interface{}{
+// 		"query": "Apple Inc",
+// 	})
+// 	if err != nil {
+// 		t.Errorf("unexpected error: %v", err)
+// 		return
+// 	}
+// 	if !resp.IsError {
+// 		t.Errorf("expected error response when OCTAGON_API_KEY not set")
+// 	}
+// }
 
 // TestChromaListCollections verifies ChromaDB handler fails gracefully when not running.
 func TestChromaListCollections(t *testing.T) {

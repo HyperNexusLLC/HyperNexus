@@ -22,6 +22,14 @@ type l1Entry struct {
 	lastAccess time.Time
 }
 
+type QueryPayload struct {
+	QueryText string    `json:"query_text"`
+	QueryVec  []float32 `json:"query_vec"`
+	Kind      string    `json:"kind"`
+	Category  string    `json:"category"`
+	Tags      []string  `json:"tags"`
+}
+
 type VectorStore struct {
 	db      *sql.DB
 	mu      sync.Mutex
@@ -76,17 +84,27 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 	if entry.LastAccessedAt.IsZero() {
 		entry.LastAccessedAt = time.Now()
 	}
+	if entry.Kind == "" {
+		entry.Kind = "fact"
+	}
+	if entry.Category == "" {
+		entry.Category = "general"
+	}
 
 	_, err := s.db.ExecContext(ctx, `
-		INSERT INTO l2_vault (id, session_id, memory_type, content, importance, heat_score, last_accessed_at, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO l2_vault (id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			content = excluded.content,
+			memory_kind = excluded.memory_kind,
+			category = excluded.category,
+			tags = excluded.tags,
+			source_url = excluded.source_url,
 			importance = excluded.importance,
 			heat_score = excluded.heat_score,
 			last_accessed_at = excluded.last_accessed_at,
 			created_at = excluded.created_at
-	`, entry.ID, entry.SessionID, string(entry.Type), entry.Content, entry.Importance, entry.HeatScore, entry.LastAccessedAt, entry.CreatedAt)
+	`, entry.ID, entry.SessionID, string(entry.Type), entry.Kind, entry.Category, entry.Tags, entry.SourceURL, entry.Content, entry.Importance, entry.HeatScore, entry.LastAccessedAt, entry.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("memorystore commit insert: %w", err)
 	}
@@ -133,23 +151,56 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Try to parse query as JSON float array for vector search
-	var queryVec []float32
-	isVectorSearch := false
-	if strings.HasPrefix(strings.TrimSpace(query), "[") {
-		if err := json.Unmarshal([]byte(query), &queryVec); err == nil && len(queryVec) > 0 {
-			isVectorSearch = true
+	// Try parsing structured query payload or direct JSON float array
+	var queryPayload QueryPayload
+	isStructured := false
+	trimmedQuery := strings.TrimSpace(query)
+
+	if strings.HasPrefix(trimmedQuery, "{") {
+		if err := json.Unmarshal([]byte(query), &queryPayload); err == nil {
+			isStructured = true
 		}
 	}
 
+	var queryVec []float32
+	var queryText string
+	var filterKind string
+	var filterCategory string
+
+	if isStructured {
+		queryVec = queryPayload.QueryVec
+		queryText = queryPayload.QueryText
+		filterKind = queryPayload.Kind
+		filterCategory = queryPayload.Category
+	} else if strings.HasPrefix(trimmedQuery, "[") {
+		if err := json.Unmarshal([]byte(query), &queryVec); err == nil && len(queryVec) > 0 {
+			// successfully parsed vector directly
+		}
+	} else {
+		queryText = query
+	}
+
+	isVectorSearch := len(queryVec) > 0
+
 	if isVectorSearch {
-		// Vector search: load all active embeddings and compute cosine similarity in Go
-		rows, err := s.db.QueryContext(ctx, `
-			SELECT v.id, v.embedding, l.session_id, l.memory_type, l.content, l.importance, l.heat_score, l.last_accessed_at, l.created_at
+		// Vector search with optional metadata filters
+		var args []interface{}
+		sqlQuery := `
+			SELECT v.id, v.embedding, l.session_id, l.memory_type, l.memory_kind, l.category, l.tags, l.source_url, l.content, l.importance, l.heat_score, l.last_accessed_at, l.created_at
 			FROM vec_l2_vault v
 			JOIN l2_vault l ON l.id = v.id
 			WHERE l.memory_type != 'archive'
-		`)
+		`
+		if filterKind != "" {
+			sqlQuery += " AND l.memory_kind = ?"
+			args = append(args, filterKind)
+		}
+		if filterCategory != "" {
+			sqlQuery += " AND l.category = ?"
+			args = append(args, filterCategory)
+		}
+
+		rows, err := s.db.QueryContext(ctx, sqlQuery, args...)
 		if err != nil {
 			return nil, fmt.Errorf("memorystore vector search: %w", err)
 		}
@@ -165,7 +216,7 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 			var r controlplane.L2VaultRecord
 			var blob []byte
 			var mType string
-			if err := rows.Scan(&r.ID, &blob, &r.SessionID, &mType, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
+			if err := rows.Scan(&r.ID, &blob, &r.SessionID, &mType, &r.Kind, &r.Category, &r.Tags, &r.SourceURL, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
 				return nil, err
 			}
 			r.Type = controlplane.MemoryType(mType)
@@ -196,11 +247,18 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 		return results, nil
 	}
 
-	// Check L1 cache first for manual / working memory queries
-	if query != "" {
+	// Check L1 cache first for manual / working memory queries (supporting text filter)
+	if queryText != "" {
 		var l1Results []controlplane.L2VaultRecord
 		for _, e := range s.l1Cache {
-			if strings.Contains(strings.ToLower(e.value.Content), strings.ToLower(query)) && e.value.Type != controlplane.MemoryArchive {
+			match := strings.Contains(strings.ToLower(e.value.Content), strings.ToLower(queryText))
+			if filterKind != "" && e.value.Kind != filterKind {
+				match = false
+			}
+			if filterCategory != "" && e.value.Category != filterCategory {
+				match = false
+			}
+			if match && e.value.Type != controlplane.MemoryArchive {
 				e.heat += 1.0
 				e.lastAccess = time.Now()
 				l1Results = append(l1Results, e.value)
@@ -217,15 +275,29 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 		}
 	}
 
-	// Fall back to keyword search
-	queryStr := "%" + query + "%"
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT id, session_id, memory_type, content, importance, heat_score, last_accessed_at, created_at
+	// Fall back to keyword search with optional filters
+	var args []interface{}
+	sqlQuery := `
+		SELECT id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at
 		FROM l2_vault
-		WHERE content LIKE ? AND memory_type != 'archive'
-		ORDER BY importance DESC, heat_score DESC, created_at DESC
-		LIMIT ?
-	`, queryStr, limit)
+		WHERE memory_type != 'archive'
+	`
+	if queryText != "" {
+		sqlQuery += " AND content LIKE ?"
+		args = append(args, "%"+queryText+"%")
+	}
+	if filterKind != "" {
+		sqlQuery += " AND memory_kind = ?"
+		args = append(args, filterKind)
+	}
+	if filterCategory != "" {
+		sqlQuery += " AND category = ?"
+		args = append(args, filterCategory)
+	}
+	sqlQuery += " ORDER BY importance DESC, heat_score DESC, created_at DESC LIMIT ?"
+	args = append(args, limit)
+
+	rows, err := s.db.QueryContext(ctx, sqlQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("memorystore search: %w", err)
 	}
@@ -235,7 +307,7 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 	for rows.Next() {
 		var r controlplane.L2VaultRecord
 		var mType string
-		if err := rows.Scan(&r.ID, &r.SessionID, &mType, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
+		if err := rows.Scan(&r.ID, &r.SessionID, &mType, &r.Kind, &r.Category, &r.Tags, &r.SourceURL, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
 			return nil, err
 		}
 		r.Type = controlplane.MemoryType(mType)
@@ -248,6 +320,31 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 	}
 
 	return results, nil
+}
+
+func (s *VectorStore) ReinforceMemory(ctx context.Context, id string, success bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var heatScore, importance float64
+	err := s.db.QueryRowContext(ctx, "SELECT heat_score, importance FROM l2_vault WHERE id = ?", id).Scan(&heatScore, &importance)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+
+	if success {
+		heatScore = math.Min(100.0, heatScore+15.0)
+		importance = math.Min(1.0, importance+0.1)
+	} else {
+		heatScore = math.Max(0.0, heatScore-20.0)
+		importance = math.Max(0.0, importance-0.2)
+	}
+
+	_, err = s.db.ExecContext(ctx, "UPDATE l2_vault SET heat_score = ?, importance = ?, last_accessed_at = CURRENT_TIMESTAMP WHERE id = ?", heatScore, importance, id)
+	return err
 }
 
 func (s *VectorStore) GetVaultRecordCount(ctx context.Context) (int, error) {
@@ -310,11 +407,11 @@ func (s *VectorStore) GetAllVaultRecords(ctx context.Context, limit int) ([]cont
 	defer s.mu.Unlock()
 
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT id, session_id, memory_type, content, importance, heat_score, last_accessed_at, created_at
+		SELECT id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at
 		FROM l2_vault
 		ORDER BY created_at DESC
 		LIMIT ?
-	`, limit)
+	`)
 	if err != nil {
 		return nil, fmt.Errorf("GetAllVaultRecords: %w", err)
 	}
@@ -324,7 +421,7 @@ func (s *VectorStore) GetAllVaultRecords(ctx context.Context, limit int) ([]cont
 	for rows.Next() {
 		var r controlplane.L2VaultRecord
 		var mType string
-		if err := rows.Scan(&r.ID, &r.SessionID, &mType, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
+		if err := rows.Scan(&r.ID, &r.SessionID, &mType, &r.Kind, &r.Category, &r.Tags, &r.SourceURL, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
 			return nil, err
 		}
 		r.Type = controlplane.MemoryType(mType)

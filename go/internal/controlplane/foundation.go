@@ -58,6 +58,10 @@ type L2VaultRecord struct {
 	ID             string     `json:"id"`
 	SessionID      string     `json:"session_id"`
 	Type           MemoryType `json:"memory_type"`
+	Kind           string     `json:"memory_kind"`
+	Category       string     `json:"category"`
+	Tags           string     `json:"tags,omitempty"`
+	SourceURL      string     `json:"source_url,omitempty"`
 	Content        string     `json:"content"`
 	Importance     float64    `json:"importance"`
 	HeatScore      float64    `json:"heat_score"` // 0-100
@@ -97,6 +101,10 @@ CREATE TABLE IF NOT EXISTS l2_vault (
     id TEXT PRIMARY KEY,
     session_id TEXT NOT NULL,
     memory_type TEXT NOT NULL CHECK(memory_type IN ('working', 'long_term', 'archive')),
+    memory_kind TEXT NOT NULL DEFAULT 'fact',
+    category TEXT NOT NULL DEFAULT 'general',
+    tags TEXT,
+    source_url TEXT,
     content TEXT NOT NULL,
     importance REAL DEFAULT 0.5,
     heat_score REAL DEFAULT 50.0,
