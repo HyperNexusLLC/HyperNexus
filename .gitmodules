@@ -1,0 +1,6 @@
+[submodule "vendor/deepseek-harness"]
+	path = vendor/deepseek-harness
+	url = https://github.com/deepseek-ai/deepseek-harness.git
+[submodule "vendor/grok-build"]
+	path = vendor/grok-build
+	url = https://github.com/xai-org/grok-build.git

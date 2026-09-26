@@ -1,0 +1,50 @@
+{
+  "name": "tools",
+  "version": "1.0.0",
+  "description": "38+ AI tool integrations - file system, terminal, search, git, and more",
+  "author": "HyperNexus LLC",
+  "license": "MIT",
+  "main": "tools.js",
+  "capabilities": [
+    "filesystem",
+    "terminal",
+    "search",
+    "git",
+    "web",
+    "database",
+    "api"
+  ],
+  "commands": [
+    {
+      "name": "tool_list",
+      "description": "List all available tools",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Filter by category (filesystem, terminal, search, git, web)"
+          }
+        }
+      }
+    },
+    {
+      "name": "tool_execute",
+      "description": "Execute a tool with parameters",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tool": {
+            "type": "string",
+            "description": "Tool name"
+          },
+          "params": {
+            "type": "object",
+            "description": "Tool parameters"
+          }
+        },
+        "required": ["tool"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+package httpapi
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
+)
+
+// handleServiceConnectivity reports the health of connections between
+// the Go kernel and its downstream services.
+func (s *Server) handleServiceConnectivity(w http.ResponseWriter, r *http.Request) {
+	sd := config.DefaultServiceDiscovery()
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	services := map[string]any{}
+
+	// 1. Check external tRPC upstream (opt-in via HYPERNEXUS_TRPC_UPSTREAM)
+	if len(sd.TRPCUpstreamURLs) > 0 {
+		services["trpcUpstream"] = checkTRPCUpstream(ctx, sd.TRPCUpstreamURLs)
+	} else {
+		services["trpcUpstream"] = map[string]any{
+			"status":    "not-configured",
+			"reachable": true,
+			"note":      "Go kernel is the sole control plane; set HYPERNEXUS_TRPC_UPSTREAM to enable an external tRPC upstream",
+		}
+	}
+
+	// 2. Check dashboard (Next.js)
+	dashboardStatus := checkHTTPService(ctx, sd.DashboardBaseURL(), "dashboard")
+	services["dashboard"] = dashboardStatus
+
+	// 3. Go kernel self-status
+	services["goKernel"] = map[string]any{
+		"status":    "running",
+		"port":      sd.KernelPort,
+		"baseURL":   sd.KernelBaseURL(),
+		"reachable": true,
+	}
+
+	// Overall summary
+	allHealthy := true
+	for _, svc := range services {
+		if m, ok := svc.(map[string]any); ok {
+			if reachable, ok := m["reachable"].(bool); ok && !reachable {
+				allHealthy = false
+				break
+			}
+		}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success":    true,
+		"allHealthy": allHealthy,
+		"services":   services,
+		"discovery": map[string]any{
+			"kernelPort":    sd.KernelPort,
+			"trpcUpstreams": sd.TRPCUpstreamURLs,
+			"dashboardPort": sd.DashboardPort,
+			"dashboardHost": sd.DashboardHost,
+		},
+	})
+}
+
+func checkTRPCUpstream(ctx context.Context, urls []string) map[string]any {
+	for _, base := range urls {
+		targetURL := strings.TrimRight(base, "/") + "/health"
+
+		result := probeURL(ctx, targetURL, 3*time.Second)
+		if result["status"] == "reachable" {
+			result["activeBaseURL"] = base
+			return result
+		}
+	}
+
+	return map[string]any{
+		"status":    "unreachable",
+		"reachable": false,
+		"tried":     urls,
+		"error":     "all tRPC upstream candidates failed",
+	}
+}
+
+func checkHTTPService(ctx context.Context, baseURL string, name string) map[string]any {
+	healthURL := strings.TrimRight(baseURL, "/") + "/health"
+	result := probeURL(ctx, healthURL, 3*time.Second)
+	result["baseURL"] = baseURL
+	result["name"] = name
+	return result
+}
+
+func probeURL(ctx context.Context, targetURL string, timeout time.Duration) map[string]any {
+	probeCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(probeCtx, http.MethodGet, targetURL, nil)
+	if err != nil {
+		return map[string]any{
+			"status":    "error",
+			"reachable": false,
+			"url":       targetURL,
+			"error":     err.Error(),
+		}
+	}
+
+	client := &http.Client{Timeout: timeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return map[string]any{
+			"status":    "unreachable",
+			"reachable": false,
+			"url":       targetURL,
+			"error":     err.Error(),
+		}
+	}
+	defer resp.Body.Close()
+
+	return map[string]any{
+		"status":     "reachable",
+		"reachable":  true,
+		"url":        targetURL,
+		"statusCode": resp.StatusCode,
+	}
+}
+
+// handleMCPClientSync handles POST requests to sync MCP server configuration
+// to supported IDE clients (Claude Desktop, Cursor, VS Code).
+func (s *Server) handleMCPClientSync(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+
+	var req struct {
+		Client string `json:"client"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON"})
+		return
+	}
+
+	sd := config.DefaultServiceDiscovery()
+	kernelBase := sd.KernelBaseURL()
+
+	servers := map[string]any{
+		"hypernexus": map[string]any{
+			"url":   fmt.Sprintf("%s/mcp", kernelBase),
+			"notes": "HyperNexus Go Control Plane — aggregated MCP router",
+		},
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data": map[string]any{
+			"client":     req.Client,
+			"servers":    servers,
+			"kernelBase": kernelBase,
+		},
+	})
+}

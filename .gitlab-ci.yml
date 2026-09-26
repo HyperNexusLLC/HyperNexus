@@ -1,0 +1,344 @@
+# HyperNexus GitLab CI/CD Pipeline
+# Auto-builds installers for Win/Mac/Linux
+
+stages:
+  - build
+  - test
+  - package
+  - deploy
+  - release
+
+variables:
+  GO_VERSION: "1.25"
+  HETZNER_HOST: "5.161.250.43"
+  HETZNER_USER: "root"
+  DEPLOY_DIR: "/opt/tormentnexus"
+  RELEASES_DIR: "/var/www/releases.hypernexus.site"
+  VERSION_FILE: "VERSION"
+
+# ─── Helpers ────────────────────────────────────────────────
+
+.read_version:
+  before_script:
+    - export VERSION=$(cat $VERSION_FILE | tr -d '[:space:]')
+    - echo "Building version $VERSION"
+
+# ─── Build Stage ────────────────────────────────────────────
+
+build-go-linux:
+  stage: build
+  image: golang:${GO_VERSION}-alpine
+  extends: .read_version
+  script:
+    - cd go
+    - go mod download
+    - >
+      CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+      go build -buildvcs=false
+      -ldflags "-s -w -X main.Version=${VERSION}"
+      -o ../bin/hypernexus-linux-amd64
+      ./cmd/tormentnexus
+    - >
+      CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+      go build -buildvcs=false
+      -ldflags "-s -w -X main.Version=${VERSION}"
+      -o ../bin/hypernexus-cloud-linux-amd64
+      ./cmd/cloud
+  artifacts:
+    paths:
+      - bin/hypernexus-linux-amd64
+      - bin/hypernexus-cloud-linux-amd64
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+build-go-windows:
+  stage: build
+  image: golang:${GO_VERSION}-alpine
+  extends: .read_version
+  script:
+    - cd go
+    - go mod download
+    - >
+      CGO_ENABLED=0 GOOS=windows GOARCH=amd64
+      go build -buildvcs=false
+      -ldflags "-s -w -X main.Version=${VERSION} -H windowsgui"
+      -o ../bin/hypernexus.exe
+      ./cmd/tormentnexus
+    - >
+      CGO_ENABLED=0 GOOS=windows GOARCH=amd64
+      go build -buildvcs=false
+      -ldflags "-s -w -X main.Version=${VERSION}"
+      -o ../bin/hypernexus-cloud.exe
+      ./cmd/cloud
+  artifacts:
+    paths:
+      - bin/hypernexus.exe
+      - bin/hypernexus-cloud.exe
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+build-go-darwin:
+  stage: build
+  image: golang:${GO_VERSION}-alpine
+  extends: .read_version
+  script:
+    - cd go
+    - go mod download
+    - >
+      CGO_ENABLED=0 GOOS=darwin GOARCH=amd64
+      go build -buildvcs=false
+      -ldflags "-s -w -X main.Version=${VERSION}"
+      -o ../bin/hypernexus-darwin-amd64
+      ./cmd/tormentnexus
+    - >
+      CGO_ENABLED=0 GOOS=darwin GOARCH=arm64
+      go build -buildvcs=false
+      -ldflags "-s -w -X main.Version=${VERSION}"
+      -o ../bin/hypernexus-darwin-arm64
+      ./cmd/tormentnexus
+  artifacts:
+    paths:
+      - bin/hypernexus-darwin-amd64
+      - bin/hypernexus-darwin-arm64
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+build-dashboard:
+  stage: build
+  image: node:20-alpine
+  before_script:
+    - npm install -g pnpm
+  script:
+    - pnpm install --no-frozen-lockfile
+    - cd apps/web
+    - pnpm run build
+  artifacts:
+    paths:
+      - apps/web/.next-build
+      - apps/web/out
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ─── Test Stage ─────────────────────────────────────────────
+
+test-go:
+  stage: test
+  image: golang:${GO_VERSION}-alpine
+  script:
+    - cd go
+    - go vet ./...
+    - go test -short ./... 2>&1 || true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ─── Package Stage ──────────────────────────────────────────
+
+package-windows-installer:
+  stage: package
+  image: alpine:latest
+  extends: .read_version
+  needs:
+    - build-go-windows
+  script:
+    - apk add --no-cache zip
+    - mkdir -p dist/windows
+    # Copy binaries
+    - cp bin/hypernexus.exe dist/windows/
+    - cp bin/hypernexus-cloud.exe dist/windows/
+    # Copy installer scripts
+    - cp dist/install.ps1 dist/windows/
+    - cp installers/windows/install.bat dist/windows/
+    # Create ZIP archive
+    - cd dist/windows
+    - zip -r ../../hypernexus-windows-${VERSION}.zip .
+    # Also create standalone .exe (just the binary for direct download)
+    - cp bin/hypernexus.exe hypernexus-${VERSION}.exe
+  artifacts:
+    paths:
+      - hypernexus-windows-${VERSION}.zip
+      - dist/windows/hypernexus-${VERSION}.exe
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+package-macos-installer:
+  stage: package
+  image: alpine:latest
+  extends: .read_version
+  needs:
+    - build-go-darwin
+  script:
+    - apk add --no-cache tar
+    - mkdir -p dist/macos
+    # Copy binaries
+    - cp bin/hypernexus-darwin-amd64 dist/macos/hypernexus
+    - cp bin/hypernexus-darwin-arm64 dist/macos/hypernexus-arm64
+    # Copy installer script
+    - cp dist/install.sh dist/macos/
+    - chmod +x dist/macos/install.sh
+    # Create tarball
+    - tar -czf hypernexus-macos-${VERSION}.tar.gz -C dist/macos .
+  artifacts:
+    paths:
+      - hypernexus-macos-${VERSION}.tar.gz
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+package-linux-installer:
+  stage: package
+  image: alpine:latest
+  extends: .read_version
+  needs:
+    - build-go-linux
+  script:
+    - apk add --no-cache tar
+    - mkdir -p dist/linux
+    - cp bin/hypernexus-linux-amd64 dist/linux/hypernexus
+    - cp dist/install.sh dist/linux/
+    - chmod +x dist/linux/install.sh
+    - tar -czf hypernexus-linux-${VERSION}.tar.gz -C dist/linux .
+  artifacts:
+    paths:
+      - hypernexus-linux-${VERSION}.tar.gz
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# ─── Deploy Stage ───────────────────────────────────────────
+
+deploy-hetzner:
+  stage: deploy
+  image: alpine:latest
+  extends: .read_version
+  needs:
+    - build-go-linux
+    - build-dashboard
+  before_script:
+    - apk add --no-cache openssh-client rsync curl
+    - eval $(ssh-agent -s)
+    - chmod 600 $HETZNER_SSH_KEY
+    - ssh-add $HETZNER_SSH_KEY
+    - mkdir -p ~/.ssh
+    - echo "$HETZNER_SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - echo "── Deploying binaries to Hetzner ──"
+    - >
+      rsync -avz --progress
+      bin/hypernexus-linux-amd64 bin/hypernexus-cloud-linux-amd64
+      ${HETZNER_USER}@${HETZNER_HOST}:${DEPLOY_DIR}/bin/
+    - >
+      rsync -avz --progress
+      --exclude='.git'
+      go/
+      ${HETZNER_USER}@${HETZNER_HOST}:${DEPLOY_DIR}/go/
+    - |
+      ssh ${HETZNER_USER}@${HETZNER_HOST} << 'DEPLOY_SCRIPT'
+        cd /opt/tormentnexus
+        ln -sf /opt/tormentnexus/bin/hypernexus-linux-amd64 \
+          /usr/local/bin/hypernexus
+        ln -sf /opt/tormentnexus/bin/hypernexus-cloud-linux-amd64 \
+          /usr/local/bin/hypernexus-cloud
+        systemctl daemon-reload
+        systemctl restart hypernexus
+        systemctl restart hypernexus-cloud
+        sleep 5
+        echo "── Service Status ──"
+        systemctl is-active hypernexus
+        systemctl is-active hypernexus-cloud
+        echo "── Health Checks ──"
+        curl -s http://localhost:7778/health || echo "Agent failed"
+        curl -s http://localhost:7780/api/cloud/health || echo "Cloud failed"
+        echo "── Deployment Complete ──"
+      DEPLOY_SCRIPT
+  environment:
+    name: hetzner
+    url: https://hypernexus.site
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+      allow_failure: false
+
+# ─── Release Stage ──────────────────────────────────────────
+
+publish-release:
+  stage: release
+  image: alpine:latest
+  extends: .read_version
+  needs:
+    - package-windows-installer
+    - package-macos-installer
+    - package-linux-installer
+  before_script:
+    - apk add --no-cache openssh-client rsync curl
+    - eval $(ssh-agent -s)
+    - chmod 600 $HETZNER_SSH_KEY
+    - ssh-add $HETZNER_SSH_KEY
+    - mkdir -p ~/.ssh
+    - echo "$HETZNER_SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - echo "── Publishing installers to releases server ──"
+    # Create version directory on releases server
+    - |
+      ssh ${HETZNER_USER}@${HETZNER_HOST} \
+        "mkdir -p ${RELEASES_DIR}/${VERSION}"
+    # Upload all installers
+    - >
+      rsync -avz --progress
+      hypernexus-windows-${VERSION}.zip
+      hypernexus-macos-${VERSION}.tar.gz
+      hypernexus-linux-${VERSION}.tar.gz
+      dist/install.ps1
+      dist/install.sh
+      ${HETZNER_USER}@${HETZNER_HOST}:${RELEASES_DIR}/${VERSION}/
+    # Upload Windows .exe directly
+    - >
+      rsync -avz --progress
+      dist/windows/hypernexus-${VERSION}.exe
+      ${HETZNER_USER}@${HETZNER_HOST}:${RELEASES_DIR}/${VERSION}/hypernexus.exe
+    # Update latest symlink
+    - |
+      ssh ${HETZNER_USER}@${HETZNER_HOST} \
+        "cd ${RELEASES_DIR} && rm -f latest && ln -sf ${VERSION} latest && \
+         echo '{\"version\":\"${VERSION}\"}' > latest/version.json && \
+         echo '── Release ${VERSION} published ──' && cat latest/version.json"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+      allow_failure: false
+
+# ─── Scheduled Jobs ─────────────────────────────────────────
+
+healthcheck:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "── Running Health Checks ──"
+    - |
+      STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://hypernexus.site)
+      if [ "$STATUS" != "200" ]; then
+        echo "ERROR: hypernexus.site returned $STATUS"
+        exit 1
+      fi
+    - |
+      CLOUD_URL="https://cloud.hypernexus.site"
+      STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+        "$CLOUD_URL/api/cloud/health")
+      if [ "$STATUS" != "200" ]; then
+        echo "ERROR: cloud.hypernexus.site returned $STATUS"
+        exit 1
+      fi
+    - echo "── All Health Checks Passed ──"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"

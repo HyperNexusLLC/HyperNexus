@@ -1,0 +1,117 @@
+{
+  "name": "hypernexus",
+  "displayName": "HyperNexus",
+  "description": "AI Control Plane with Persistent Memory & 26,000+ MCP Tools",
+  "version": "1.0.0",
+  "publisher": "hypernexus",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "mcp",
+    "memory",
+    "llm",
+    "tools",
+    "agent"
+  ],
+  "icon": "images/icon.png",
+  "activationEvents": [
+    "onView:hypernexus.memory",
+    "onView:hypernexus.tools",
+    "onCommand:hypernexus.connect",
+    "onCommand:hypernexus.searchTools"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "hypernexus",
+          "title": "HyperNexus",
+          "icon": "images/sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "hypernexus": [
+        {
+          "id": "hypernexus.memory",
+          "name": "Memory"
+        },
+        {
+          "id": "hypernexus.tools",
+          "name": "MCP Tools"
+        },
+        {
+          "id": "hypernexus.status",
+          "name": "Status"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "hypernexus.connect",
+        "title": "HyperNexus: Connect to Server"
+      },
+      {
+        "command": "hypernexus.disconnect",
+        "title": "HyperNexus: Disconnect"
+      },
+      {
+        "command": "hypernexus.searchTools",
+        "title": "HyperNexus: Search MCP Tools"
+      },
+      {
+        "command": "hypernexus.addMemory",
+        "title": "HyperNexus: Add Memory"
+      },
+      {
+        "command": "hypernexus.searchMemory",
+        "title": "HyperNexus: Search Memory"
+      },
+      {
+        "command": "hypernexus.openDashboard",
+        "title": "HyperNexus: Open Dashboard"
+      },
+      {
+        "command": "hypernexus.refresh",
+        "title": "HyperNexus: Refresh"
+      }
+    ],
+    "configuration": {
+      "title": "HyperNexus",
+      "properties": {
+        "hypernexus.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:7778",
+          "description": "HyperNexus server URL"
+        },
+        "hypernexus.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-connect on startup"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}

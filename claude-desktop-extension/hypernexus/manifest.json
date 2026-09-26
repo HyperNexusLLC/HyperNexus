@@ -1,0 +1,48 @@
+{
+  "name": "hypernexus",
+  "version": "1.0.1",
+  "description": "HyperNexus - Universal AI Control Plane with persistent memory, tool orchestration, and cloud sync",
+  "author": "HyperNexus LLC",
+  "license": "MIT",
+  "main": "index.js",
+  "permissions": [
+    "mcp",
+    "filesystem",
+    "network",
+    "process"
+  ],
+  "mcpServer": {
+    "command": "hypernexus",
+    "args": ["mcp"],
+    "env": {
+      "HN_EDITION": "corporate",
+      "HN_CLOUD_ENDPOINT": "https://cloud.hypernexus.site",
+      "HN_UPDATE_URL": "https://releases.hypernexus.site/latest/version.json"
+    }
+  },
+  "skills": [
+    {
+      "name": "memory",
+      "description": "Persistent memory across sessions",
+      "version": "1.0.0"
+    },
+    {
+      "name": "tools",
+      "description": "38+ AI tool integrations",
+      "version": "1.0.0"
+    },
+    {
+      "name": "cloud",
+      "description": "Cloud sync and collaboration",
+      "version": "1.0.0"
+    }
+  ],
+  "keywords": [
+    "ai",
+    "memory",
+    "mcp",
+    "tools",
+    "cloud",
+    "orchestration"
+  ]
+}

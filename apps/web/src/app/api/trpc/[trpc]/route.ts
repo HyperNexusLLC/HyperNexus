@@ -1,0 +1,683 @@
+import { getCacheTTL, getCached, setCached } from "../cache";
+
+export const runtime = "nodejs";
+
+const DEFAULT_UPSTREAM_TRPC_URL = "http://127.0.0.1:7778/trpc";
+const DEFAULT_GO_API_BASE = "http://127.0.0.1:7778";
+
+function resolveUpstreamBase(): string {
+	return (
+		process.env.TORMENTNEXUS_TRPC_UPSTREAM?.trim() || DEFAULT_UPSTREAM_TRPC_URL
+	);
+}
+
+function resolveGoApiBase(): string {
+	return process.env.TORMENTNEXUS_GO_API_BASE?.trim() || DEFAULT_GO_API_BASE;
+}
+
+function getProcedurePath(req: Request): string {
+	const incomingUrl = new URL(req.url);
+	const pathMatch = incomingUrl.pathname.match(/\/api\/trpc\/?(.*)$/);
+	return pathMatch?.[1] ?? "";
+}
+
+function buildUpstreamUrl(req: Request): URL {
+	const incomingUrl = new URL(req.url);
+	const upstreamBase = resolveUpstreamBase().replace(/\/$/, "");
+	const procedurePath = getProcedurePath(req);
+	const upstreamUrl = new URL(
+		`${upstreamBase}${procedurePath ? `/${procedurePath}` : ""}`,
+	);
+	upstreamUrl.search = incomingUrl.search;
+	return upstreamUrl;
+}
+
+function cloneHeaders(req: Request): Headers {
+	const headers = new Headers(req.headers);
+	headers.delete("host");
+	headers.delete("content-length");
+	return headers;
+}
+
+function getCompatRoute(procedurePath: string, input: unknown): string | null {
+	// ── Go-native fast paths (cached, <5ms) ──
+	if (procedurePath === "startupStatus") {
+		return "/api/startup/status";
+	}
+	if (procedurePath === "mcp.getStatus") {
+		return "/api/mcp/status";
+	}
+	if (procedurePath === "mcp.listServers") {
+		return "/api/mcp/servers";
+	}
+	if (procedurePath === "mcp.getToolSelectionTelemetry") {
+		return "/api/mcp/tool-selection-telemetry";
+	}
+	if (procedurePath === "mcp.clearToolSelectionTelemetry") {
+		return "/api/mcp/tool-selection-telemetry/clear";
+	}
+	if (procedurePath === "mcp.runServerTest") {
+		return "/api/mcp/server-test";
+	}
+	if (procedurePath === "session.list") {
+		return "/api/native/session/list";
+	}
+	if (procedurePath === "session.importedMaintenanceStats") {
+		return "/api/sessions/imported/maintenance-stats";
+	}
+	// ── Billing (Go-native with local fallback) ──
+	if (procedurePath === "billing.getStatus") {
+		return "/api/billing/status";
+	}
+	if (procedurePath === "billing.getProviderQuotas") {
+		return "/api/billing/provider-quotas";
+	}
+	if (procedurePath === "billing.getCostHistory") {
+		const days =
+			typeof input === "object" && input !== null && "days" in input
+				? Number((input as { days?: unknown }).days)
+				: NaN;
+		const normalizedDays =
+			Number.isFinite(days) && days > 0 ? Math.min(Math.round(days), 90) : 30;
+		return `/api/billing/cost-history?days=${normalizedDays}`;
+	}
+	if (procedurePath === "billing.getModelPricing") {
+		return "/api/billing/model-pricing";
+	}
+	if (procedurePath === "billing.getFallbackChain") {
+		const taskType =
+			typeof input === "object" && input !== null && "taskType" in input
+				? (input as { taskType?: unknown }).taskType
+				: undefined;
+		const search =
+			typeof taskType === "string" && taskType.length > 0
+				? `?taskType=${encodeURIComponent(taskType)}`
+				: "";
+		return `/api/billing/fallback-chain${search}`;
+	}
+	if (procedurePath === "billing.getTaskRoutingRules") {
+		return "/api/billing/task-routing-rules";
+	}
+	if (procedurePath === "billing.getDepletedModels") {
+		return "/api/billing/depleted-models";
+	}
+	if (procedurePath === "billing.getFallbackHistory") {
+		const limit =
+			typeof input === "object" && input !== null && "limit" in input
+				? Number((input as { limit?: unknown }).limit)
+				: NaN;
+		const normalizedLimit =
+			Number.isFinite(limit) && limit > 0
+				? Math.min(Math.round(limit), 50)
+				: 20;
+		return `/api/billing/fallback-history?limit=${normalizedLimit}`;
+	}
+	if (procedurePath === "billing.getCorporateSettings") {
+		return "/api/config/corporate-settings";
+	}
+	if (procedurePath === "billing.setCorporateSettings") {
+		return "/api/config/corporate-settings/set";
+	}
+	if (procedurePath === "billing.stripeSubscribe") {
+		return "/api/billing/stripe/subscribe";
+	}
+	// ── Director (Go-native with local fallback) ──
+	if (procedurePath === "director.status") {
+		return "/api/director/status";
+	}
+	if (procedurePath === "directorConfig.get") {
+		return "/api/director-config";
+	}
+	// ── LLM (Go-native with WaterfallClient) ──
+	if (procedurePath === "llm.generate") {
+		return "/api/llm/generate";
+	}
+	// ── Memory (Go-native with local fallback) ──
+	if (procedurePath === "memory.getRecentObservations") {
+		const limit =
+			typeof input === "object" && input !== null && "limit" in input
+				? Number((input as { limit?: unknown }).limit)
+				: NaN;
+		const namespace =
+			typeof input === "object" && input !== null && "namespace" in input
+				? (input as { namespace?: unknown }).namespace
+				: undefined;
+		const type =
+			typeof input === "object" && input !== null && "type" in input
+				? (input as { type?: unknown }).type
+				: undefined;
+		const params = new URLSearchParams();
+		params.set(
+			"limit",
+			String(Number.isFinite(limit) && limit > 0 ? Math.round(limit) : 6),
+		);
+		if (typeof namespace === "string" && namespace.length > 0)
+			params.set("namespace", namespace);
+		if (typeof type === "string" && type.length > 0) params.set("type", type);
+		return `/api/memory/observations/recent?${params.toString()}`;
+	}
+	if (procedurePath === "memory.getRecentUserPrompts") {
+		const limit =
+			typeof input === "object" && input !== null && "limit" in input
+				? Number((input as { limit?: unknown }).limit)
+				: NaN;
+		const role =
+			typeof input === "object" && input !== null && "role" in input
+				? (input as { role?: unknown }).role
+				: undefined;
+		const params = new URLSearchParams();
+		params.set(
+			"limit",
+			String(Number.isFinite(limit) && limit > 0 ? Math.round(limit) : 5),
+		);
+		if (typeof role === "string" && role.length > 0) params.set("role", role);
+		return `/api/memory/user-prompts/recent?${params.toString()}`;
+	}
+	if (procedurePath === "memory.getRecentSessionSummaries") {
+		const limit =
+			typeof input === "object" && input !== null && "limit" in input
+				? Number((input as { limit?: unknown }).limit)
+				: NaN;
+		const params = new URLSearchParams();
+		params.set(
+			"limit",
+			String(Number.isFinite(limit) && limit > 0 ? Math.round(limit) : 4),
+		);
+		return `/api/memory/session-summaries/recent?${params.toString()}`;
+	}
+
+	// ── Health ──
+	if (procedurePath === "health") {
+		return "/api/health";
+	}
+
+	// ── Git (Go-native with local fallback) ──
+	if (procedurePath === "git.getLog") {
+		const limit = (input as any)?.limit ?? 10;
+		return `/api/git/log?limit=${limit}`;
+	}
+	if (procedurePath === "git.getStatus") {
+		return "/api/git/status";
+	}
+	if (procedurePath === "git.getModules") {
+		return "/api/git/modules";
+	}
+	if (procedurePath === "git.revert") {
+		return "/api/git/revert";
+	}
+
+	// ── Graph (Go-native with local fallback) ──
+	if (procedurePath === "graph.getSymbolsGraph" || procedurePath === "graph.getSymbols") {
+		return "/api/graph/symbols";
+	}
+	if (procedurePath === "graph.get") {
+		return "/api/graph";
+	}
+
+	// ── Knowledge (Go-native with local fallback) ──
+	if (procedurePath === "knowledge.ingest") {
+		return "/api/knowledge/ingest";
+	}
+	if (procedurePath === "knowledge.getResources") {
+		return "/api/knowledge/resources";
+	}
+	if (procedurePath === "knowledge.graph") {
+		return "/api/knowledge/graph";
+	}
+	if (procedurePath === "knowledge.stats") {
+		return "/api/knowledge/stats";
+	}
+
+	// ── LSP (Go-native with local fallback) ──
+	if (procedurePath === "lsp.getSymbols") {
+		const filePath = (input as any)?.filePath || "";
+		return `/api/lsp/symbols?filePath=${encodeURIComponent(filePath)}`;
+	}
+	if (procedurePath === "lsp.findSymbol") {
+		const filePath = (input as any)?.filePath || "";
+		const symbolName = (input as any)?.symbolName || "";
+		return `/api/lsp/find-symbol?filePath=${encodeURIComponent(filePath)}&symbolName=${encodeURIComponent(symbolName)}`;
+	}
+	if (procedurePath === "lsp.findReferences") {
+		const filePath = (input as any)?.filePath || "";
+		const line = (input as any)?.line || 0;
+		const character = (input as any)?.character || 0;
+		return `/api/lsp/find-references?filePath=${encodeURIComponent(filePath)}&line=${line}&character=${character}`;
+	}
+	if (procedurePath === "lsp.searchSymbols") {
+		const query = (input as any)?.query || "";
+		return `/api/lsp/search?query=${encodeURIComponent(query)}`;
+	}
+	if (procedurePath === "lsp.indexProject") {
+		return "/api/lsp/index";
+	}
+
+	// ── Memory Queries (Go-native with local fallback) ──
+	if (procedurePath === "memory.query" || procedurePath === "memory.searchAgentMemory") {
+		const query = (input as any)?.query || "";
+		const limit = (input as any)?.limit || 10;
+		return `/api/memory/search?query=${encodeURIComponent(query)}&limit=${limit}`;
+	}
+	if (procedurePath === "memory.searchObservations") {
+		const query = (input as any)?.query || "";
+		const limit = (input as any)?.limit || 10;
+		return `/api/memory/observations/search?query=${encodeURIComponent(query)}&limit=${limit}`;
+	}
+	if (procedurePath === "memory.searchUserPrompts") {
+		const query = (input as any)?.query || "";
+		const limit = (input as any)?.limit || 10;
+		return `/api/memory/user-prompts/search?query=${encodeURIComponent(query)}&limit=${limit}`;
+	}
+	if (procedurePath === "memory.searchMemoryPivot") {
+		const query = (input as any)?.query || "";
+		const limit = (input as any)?.limit || 10;
+		return `/api/memory/pivot/search?query=${encodeURIComponent(query)}&limit=${limit}`;
+	}
+	if (procedurePath === "memory.searchSessionSummaries") {
+		const query = (input as any)?.query || "";
+		const limit = (input as any)?.limit || 10;
+		return `/api/memory/session-summaries/search?query=${encodeURIComponent(query)}&limit=${limit}`;
+	}
+
+	return null;
+}
+
+const MUTATION_PROCEDURES = new Set([
+	"billing.setCorporateSettings",
+	"billing.stripeSubscribe",
+	"git.revert",
+	"lsp.indexProject",
+	"knowledge.ingest",
+]);
+
+async function getCompatPayload(
+	procedurePath: string,
+	input: unknown,
+	method: string = "GET",
+): Promise<unknown | null> {
+	const compatRoute = getCompatRoute(procedurePath, input);
+	if (!compatRoute) {
+		return null;
+	}
+
+	const goApiBase = resolveGoApiBase().replace(/\/$/, "");
+
+	try {
+		const isMutation = MUTATION_PROCEDURES.has(procedurePath) || method === "POST";
+		const fetchOptions: RequestInit = {
+			method: isMutation ? "POST" : "GET",
+			headers: isMutation ? { "Content-Type": "application/json" } : undefined,
+			body: isMutation ? JSON.stringify(input ?? {}) : undefined,
+		};
+		const compatResponse = await fetch(`${goApiBase}${compatRoute}`, fetchOptions);
+		if (!compatResponse.ok) {
+			return null;
+		}
+
+		const compatJson = await compatResponse.json();
+		return Array.isArray(compatJson?.data) ||
+			typeof compatJson?.data === "object"
+			? compatJson.data
+			: compatJson;
+	} catch {
+		return null;
+	}
+}
+
+function parseBatchInput(req: Request): Record<string, unknown> {
+	const inputParam = new URL(req.url).searchParams.get("input");
+	if (!inputParam) {
+		return {};
+	}
+
+	try {
+		const parsed = JSON.parse(inputParam);
+		return parsed && typeof parsed === "object"
+			? (parsed as Record<string, unknown>)
+			: {};
+	} catch {
+		return {};
+	}
+}
+
+async function fetchSingleProcedureEntry(
+	procedurePath: string,
+	input: unknown,
+): Promise<any | null> {
+	const upstreamBase = resolveUpstreamBase().replace(/\/$/, "");
+	const upstreamUrl = new URL(`${upstreamBase}/${procedurePath}`);
+	upstreamUrl.searchParams.set("batch", "1");
+	upstreamUrl.searchParams.set("input", JSON.stringify(input ?? {}));
+
+	try {
+		const response = await fetch(upstreamUrl, { method: "GET" });
+		if (response.ok) {
+			const json = await response.json();
+			if (Array.isArray(json) && json.length > 0) {
+				return json[0];
+			}
+			return json;
+		}
+	} catch {
+		// Fall through to compat path below.
+	}
+
+	const compatPayload = await getCompatPayload(procedurePath, input);
+	if (compatPayload !== null) {
+		return { result: { data: compatPayload } };
+	}
+
+	return null;
+}
+
+async function tryCompatFallback(
+	req: Request,
+	procedurePath: string,
+): Promise<Response | null> {
+	const hasBody = req.method !== "GET" && req.method !== "HEAD";
+	let bodyInput: any = {};
+	let postInputs: any = {};
+	if (hasBody) {
+		try {
+			const text = await req.clone().text();
+			const parsed = JSON.parse(text);
+			if (parsed && typeof parsed === "object") {
+				postInputs = parsed;
+				if ("0" in parsed) {
+					bodyInput = parsed["0"];
+				} else if (Array.isArray(parsed)) {
+					bodyInput = parsed[0];
+				} else {
+					bodyInput = parsed;
+				}
+			}
+		} catch {}
+	}
+
+	if (!procedurePath.includes(",")) {
+		const input = hasBody ? bodyInput : {};
+		const compatPayload = await getCompatPayload(procedurePath, input, req.method);
+		if (compatPayload === null) {
+			return null;
+		}
+
+		return new Response(JSON.stringify([{ result: { data: compatPayload } }]), {
+			status: 200,
+			headers: { "content-type": "application/json" },
+		});
+	}
+
+	const procedures = procedurePath
+		.split(",")
+		.map((entry) => entry.trim())
+		.filter(Boolean);
+	if (procedures.length === 0) {
+		return null;
+	}
+
+	const batchInput = hasBody ? postInputs : parseBatchInput(req);
+	const entries = [];
+	for (const [index, procedure] of procedures.entries()) {
+		const input = hasBody
+			? (Array.isArray(batchInput) ? batchInput[index] : batchInput[String(index)])
+			: (batchInput[String(index)] ?? {});
+		const entry = await fetchSingleProcedureEntry(
+			procedure,
+			input,
+		);
+		if (!entry) {
+			return null;
+		}
+		entries.push(entry);
+	}
+
+	const hasErrors = entries.some((entry) => entry?.error);
+	return new Response(JSON.stringify(entries), {
+		status: hasErrors ? 207 : 200,
+		headers: { "content-type": "application/json" },
+	});
+}
+
+/**
+ * Procedures that have fast Go-native implementations.
+ * These are served directly from the TN Kernel (<5ms) instead of
+ * proxying through the TS Core tRPC server (~100-300ms).
+ */
+const GO_NATIVE_PROCEDURES = new Set([
+	"health",
+	"startupStatus",
+	"mcp.getStatus",
+	"mcp.listServers",
+	"mcp.getToolSelectionTelemetry",
+	"mcp.clearToolSelectionTelemetry",
+	"mcp.runServerTest",
+	"session.list",
+	"session.importedMaintenanceStats",
+	"billing.getProviderQuotas",
+	"billing.getModelPricing",
+	"billing.getStatus",
+	"billing.getDepletedModels",
+	"billing.getFallbackHistory",
+	"billing.getFallbackChain",
+	"billing.getTaskRoutingRules",
+	"billing.getCostHistory",
+	"director.status",
+	"directorConfig.get",
+	"llm.generate",
+	"git.getLog",
+	"git.getStatus",
+	"git.getModules",
+	"git.revert",
+	"graph.getSymbolsGraph",
+	"graph.getSymbols",
+	"graph.get",
+	"knowledge.ingest",
+	"knowledge.getResources",
+	"knowledge.graph",
+	"knowledge.stats",
+	"lsp.getSymbols",
+	"lsp.findSymbol",
+	"lsp.findReferences",
+	"lsp.searchSymbols",
+	"lsp.indexProject",
+	"memory.query",
+	"memory.searchAgentMemory",
+	"memory.searchObservations",
+	"memory.searchUserPrompts",
+	"memory.searchMemoryPivot",
+	"memory.searchSessionSummaries",
+	"billing.getCorporateSettings",
+	"billing.setCorporateSettings",
+	"billing.stripeSubscribe",
+	"memory.getRecentObservations",
+	"memory.getRecentUserPrompts",
+	"memory.getRecentSessionSummaries",
+]);
+
+async function handler(req: Request): Promise<Response> {
+	const procedurePath = getProcedurePath(req);
+	const hasBody = req.method !== "GET" && req.method !== "HEAD";
+	let bodyText = "";
+	let postInputs: any = {};
+	if (hasBody) {
+		try {
+			bodyText = await req.clone().text();
+			const parsed = JSON.parse(bodyText);
+			if (parsed && typeof parsed === "object") {
+				postInputs = parsed;
+			}
+		} catch {}
+	}
+
+	const isBatch = procedurePath.includes(",");
+	if (isBatch) {
+		const procedures = procedurePath
+			.split(",")
+			.map((entry) => entry.trim())
+			.filter(Boolean);
+		const allNative = procedures.length > 0 && procedures.every((proc) => GO_NATIVE_PROCEDURES.has(proc));
+		if (allNative) {
+			const batchInput = hasBody ? postInputs : parseBatchInput(req);
+			const entries = [];
+			let allSuccessful = true;
+			for (const [index, procedure] of procedures.entries()) {
+				const input = hasBody
+					? (Array.isArray(batchInput) ? batchInput[index] : batchInput[String(index)])
+					: (batchInput[String(index)] ?? {});
+				const compatPayload = await getCompatPayload(
+					procedure,
+					input,
+					req.method,
+				);
+				if (compatPayload !== null) {
+					entries.push({ result: { data: compatPayload } });
+				} else {
+					allSuccessful = false;
+					break;
+				}
+			}
+			if (allSuccessful) {
+				return new Response(JSON.stringify(entries), {
+					status: 200,
+					headers: { "content-type": "application/json" },
+				});
+			}
+		}
+	}
+
+	const firstProc = isBatch ? "" : (procedurePath.trim() ?? "");
+	if (firstProc && GO_NATIVE_PROCEDURES.has(firstProc)) {
+		let input: any = {};
+		if (hasBody) {
+			if ("0" in postInputs) {
+				input = postInputs["0"];
+			} else if (Array.isArray(postInputs)) {
+				input = postInputs[0];
+			} else {
+				input = postInputs;
+			}
+		} else {
+			const batchInput = parseBatchInput(req);
+			input = batchInput["0"] ?? {};
+		}
+		const compatPayload = await getCompatPayload(
+			firstProc,
+			input,
+			req.method,
+		);
+		if (compatPayload !== null) {
+			return new Response(
+				JSON.stringify([{ result: { data: compatPayload } }]),
+				{ status: 200, headers: { "content-type": "application/json" } },
+			);
+		}
+		// TN Kernel unavailable; fall through to tRPC upstream
+	}
+
+	const upstreamUrl = buildUpstreamUrl(req);
+	const headers = cloneHeaders(req);
+	const body = hasBody ? bodyText : undefined;
+
+	// Check tRPC response cache for frequently-polled procedures
+	const cacheTTL = getCacheTTL(procedurePath);
+	const cacheInput = new URL(req.url).searchParams.get("input") ?? "{}";
+	if (cacheTTL !== null && req.method === "GET") {
+		const cached = getCached(procedurePath, cacheInput);
+		if (cached) {
+			return new Response(JSON.stringify(cached.data), {
+				status: cached.status,
+				headers: cached.headers,
+			});
+		}
+	}
+
+	let upstreamResponse: Response;
+	try {
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 3000);
+		upstreamResponse = await fetch(upstreamUrl, {
+			method: req.method,
+			headers,
+			body,
+			signal: controller.signal,
+		});
+		clearTimeout(timeout);
+	} catch (error) {
+		const compatFallback = await tryCompatFallback(req, procedurePath);
+		if (compatFallback) {
+			console.warn(
+				`[TRPC-Proxy] Using compat fallback for ${procedurePath} after upstream fetch failure`,
+			);
+			return compatFallback;
+		}
+		const message = error instanceof Error ? error.message : String(error);
+		if (error.name === 'AbortError') {
+		    console.error(`[TRPC-Proxy] Upstream fetch timed out: ${message}`);
+		    return new Response(
+			    JSON.stringify({
+				    error: "TRPC_UPSTREAM_TIMEOUT",
+				    message: "The TN Kernel upstream timed out.",
+				    upstream: upstreamUrl.toString(),
+			    }),
+			    { status: 504, headers: { "content-type": "application/json" } },
+		    );
+        }
+
+		console.error(`[TRPC-Proxy] Upstream fetch failed: ${message}`);
+		return new Response(
+			JSON.stringify({
+				error: "TRPC_UPSTREAM_UNAVAILABLE",
+				message,
+				upstream: upstreamUrl.toString(),
+			}),
+			{ status: 502, headers: { "content-type": "application/json" } },
+		);
+	}
+
+	if (!upstreamResponse.ok) {
+		const compatFallback = await tryCompatFallback(req, procedurePath);
+		if (compatFallback) {
+			console.warn(
+				`[TRPC-Proxy] Using compat fallback for ${procedurePath} after upstream status ${upstreamResponse.status}`,
+			);
+			return compatFallback;
+		}
+	}
+
+	const responseHeaders = new Headers(upstreamResponse.headers);
+	const isSse = responseHeaders.get("content-type") === "text/event-stream";
+	if (isSse) {
+		responseHeaders.set("Connection", "keep-alive");
+		responseHeaders.set("Cache-Control", "no-cache");
+	}
+	// Cache the successful response for frequently-polled procedures
+	if (cacheTTL !== null && upstreamResponse.ok && req.method === "GET") {
+		try {
+			const bodyClone = upstreamResponse.clone();
+			const bodyText = await bodyClone.text();
+			const responseData = JSON.parse(bodyText);
+			const headerObj: Record<string, string> = {};
+			responseHeaders.forEach((v, k) => {
+				headerObj[k] = v;
+			});
+			setCached(
+				procedurePath,
+				cacheInput,
+				responseData,
+				upstreamResponse.status,
+				headerObj,
+				cacheTTL,
+			);
+		} catch {
+			// Cache write failure is non-critical
+		}
+	}
+
+	return new Response(upstreamResponse.body, {
+		status: upstreamResponse.status,
+		statusText: upstreamResponse.statusText,
+		headers: responseHeaders,
+	});
+}
+
+export { handler as GET, handler as POST };

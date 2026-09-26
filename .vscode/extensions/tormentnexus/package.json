@@ -1,0 +1,38 @@
+{
+  "name": "hypernexus",
+  "displayName": "HyperNexus",
+  "description": "AI control plane with L2 memory, tool discovery, session import, and skill registry",
+  "version": "1.0.0",
+  "publisher": "robertpelloni",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.94.0"
+  },
+  "categories": ["AI", "Other"],
+  "keywords": ["hypernexus", "mcp", "memory", "tools"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "hypernexus.tnStore",
+        "title": "HyperNexus: Store in memory"
+      },
+      {
+        "command": "hypernexus.tnSearch",
+        "title": "HyperNexus: Search memory"
+      },
+      {
+        "command": "hypernexus.tnStatus",
+        "title": "HyperNexus: Check status"
+      }
+    ],
+    "mcpServers": {
+      "hypernexus": {
+        "command": "C:\\Users\\hyper\\workspace\\hypernexus\\hypernexus.exe",
+        "args": ["mcp"]
+      }
+    }
+  },
+  "icon": "icon.png"
+}

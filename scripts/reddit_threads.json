@@ -1,0 +1,2627 @@
+[
+  {
+    "title": "Hey all i made an MCP server that generates full songs locally through Claude, no subscription, no internet needed after setup",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8eu8q/hey_all_i_made_an_mcp_server_that_generates_full/",
+    "comments": 1,
+    "age": "24 minutes ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Three things I got wrong building an MCP server for a real product",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8e9xz/three_things_i_got_wrong_building_an_mcp_server/",
+    "comments": 0,
+    "age": "45 minutes ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Elecz Electricity Price Signal API \u2013 Real-time electricity prices for AI agents. 40+ countries, 100+ zones. No auth required.",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8c0xs/elecz_electricity_price_signal_api_realtime/",
+    "comments": 1,
+    "age": "2 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Production grade architecture of mcp server",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8bmbn/production_grade_architecture_of_mcp_server/",
+    "comments": 1,
+    "age": "2 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Cube MCP Server \u2013 Enables users to interact with Cube's AI agent for real-time analytics and data exploration through a chat interface. It supports generating data visualizations, performing SQL queries, and analyzing trends using natural language.",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8bf49/cube_mcp_server_enables_users_to_interact_with/",
+    "comments": 1,
+    "age": "2 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Is your MCP turning a profit?",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8b4kj/is_your_mcp_turning_a_profit/",
+    "comments": 4,
+    "age": "2 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "I built a multi-agent \"council\" (MCP) that verifies every quote word-for-word against the source and abstains when it can't \u2014 instead of hallucinating citations",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8avof/i_built_a_multiagent_council_mcp_that_verifies/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Best MCP server for stock market data? I scored 8 of them on SEC filings, congress trades, options and live quotes (disclosure: I build one)",
+    "url": "https://old.reddit.com/r/mcp/comments/1v88uyf/best_mcp_server_for_stock_market_data_i_scored_8/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Showcase: hosted TTS MCP with native Brazilian Portuguese voices",
+    "url": "https://old.reddit.com/r/mcp/comments/1v86d0z/showcase_hosted_tts_mcp_with_native_brazilian/",
+    "comments": 0,
+    "age": "5 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "I built a live remote MCP server for safer EU e-invoice preflight",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8376d/i_built_a_live_remote_mcp_server_for_safer_eu/",
+    "comments": 3,
+    "age": "7 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Tempo MCP Server \u2013 An MCP server for managing Tempo worklogs in Jira, allowing users to track time, retrieve logs, and perform bulk operations via natural language. It integrates with the Tempo API to support creating, editing, and deleting work entries through MCP-compatible clients like Claude and",
+    "url": "https://old.reddit.com/r/mcp/comments/1v82v6q/tempo_mcp_server_an_mcp_server_for_managing_tempo/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "GPH Intelligence - Healthcare Vendor Finder \u2013 Find 76,000+ curated healthcare service vendors across 25 categories and all 50 US states.",
+    "url": "https://old.reddit.com/r/mcp/comments/1v82v3r/gph_intelligence_healthcare_vendor_finder_find/",
+    "comments": 1,
+    "age": "7 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Open-source testbed for MCP servers",
+    "url": "https://old.reddit.com/r/mcp/comments/1v81j4d/opensource_testbed_for_mcp_servers/",
+    "comments": 10,
+    "age": "8 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "We built an MCP server into our desktop work app, so you can run your tasks, projects and CRM by just talking to ChatGPT or Claude",
+    "url": "https://old.reddit.com/r/mcp/comments/1v801o3/we_built_an_mcp_server_into_our_desktop_work_app/",
+    "comments": 0,
+    "age": "9 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Annotate - your agent\u2019s pencil case",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7zgxo/annotate_your_agents_pencil_case/",
+    "comments": 0,
+    "age": "9 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Stopful \u2014 a travel MCP server: your agent plans the road trip, it returns an editable map link",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7w7fu/stopful_a_travel_mcp_server_your_agent_plans_the/",
+    "comments": 11,
+    "age": "12 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Tanuki Context - A LLM Token Saver (Up to 94% Tokens saved)",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7w48k/tanuki_context_a_llm_token_saver_up_to_94_tokens/",
+    "comments": 6,
+    "age": "12 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Liepin Jobs \u2013 Liepin job search and resume workflows backed by the official Liepin MCP server.",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7vys6/liepin_jobs_liepin_job_search_and_resume/",
+    "comments": 1,
+    "age": "12 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "MCP Threat Intel Server \u2013 Provides unified access to multiple threat intelligence sources like AlienVault OTX, AbuseIPDB, and GreyNoise for security research and analysis. It enables users to perform simultaneous lookups on IPs, domains, hashes, and URLs across several platforms within a single resp",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7vym9/mcp_threat_intel_server_provides_unified_access/",
+    "comments": 1,
+    "age": "12 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Using Chromes installed Model with an MCP in a Chat",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7t8kl/using_chromes_installed_model_with_an_mcp_in_a/",
+    "comments": 4,
+    "age": "15 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Is your MCP setup ready for the July 28 update?",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7r7k2/is_your_mcp_setup_ready_for_the_july_28_update/",
+    "comments": 1,
+    "age": "17 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "opendata-cat \u2013 15 Catalan portals + radio archive: gov, INE/REE/CNMC, CORA, Catal\u00f2nica, radioteca.cat.",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7qpf8/opendatacat_15_catalan_portals_radio_archive_gov/",
+    "comments": 1,
+    "age": "17 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Regen Network MCP Server \u2013 Provides programmatic access to the Regen Network blockchain, allowing AI agents to interact with ecological credit markets and track carbon or biodiversity assets. It includes over 45 tools for querying blockchain modules, analyzing marketplace dynamics, and performing po",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7qozx/regen_network_mcp_server_provides_programmatic/",
+    "comments": 1,
+    "age": "17 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "Built an MCP server on Replit that lets Claude Desktop find leads, write proposals, and search my agency knowledge base",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7ptve/built_an_mcp_server_on_replit_that_lets_claude/",
+    "comments": 2,
+    "age": "18 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "bitbank-mcp-server \u2013 Integrates bitbank's cryptocurrency market data with Claude to provide advanced technical analysis, pattern detection, and SVG chart generation. It enables users to perform complex market evaluations using real-time pricing, volatility metrics, and flow analysis through natural",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7kd7d/bitbankmcpserver_integrates_bitbanks/",
+    "comments": 1,
+    "age": "22 hours ago",
+    "sub": "mcp"
+  },
+  {
+    "title": "How can Claude analyze videos and automatically save the information into a Markdown file?",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8ff92/how_can_claude_analyze_videos_and_automatically/",
+    "comments": 1,
+    "age": "a minute ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "3 days of Opus 5 Vibecoding: My 1st game: Deadhead: Robotaxi Fleet Simulator",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8ekmk/3_days_of_opus_5_vibecoding_my_1st_game_deadhead/",
+    "comments": 1,
+    "age": "34 minutes ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Most efficient model for trade planning?",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8ek46/most_efficient_model_for_trade_planning/",
+    "comments": 3,
+    "age": "34 minutes ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Ho creato istruzioni un file Fable.md da aggiungere nei progetti Opus 5",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8eiy1/ho_creato_istruzioni_un_file_fablemd_da/",
+    "comments": 2,
+    "age": "36 minutes ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "I wired my business into Claude with MCP and now I run it by typing sentences",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8eavw/i_wired_my_business_into_claude_with_mcp_and_now/",
+    "comments": 7,
+    "age": "44 minutes ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Multiple Windows in Claude Desktop?",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8ead1/multiple_windows_in_claude_desktop/",
+    "comments": 1,
+    "age": "45 minutes ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "What\u2019s going on with the thought process for Opus 5?",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8e9lm/whats_going_on_with_the_thought_process_for_opus_5/",
+    "comments": 3,
+    "age": "46 minutes ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "I built a public JARVIS-style AI infrastructure scaffold you can clone locally or connect to GitHub + Supabase",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dsiz/i_built_a_public_jarvisstyle_ai_infrastructure/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "I built a Claude Code skill where an implementer and reviewer reconcile every finding",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dsaa/i_built_a_claude_code_skill_where_an_implementer/",
+    "comments": 6,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Claude Code's memory index has an undocumented hard cap, truncates silently, and drops your NEWEST memories first. The governance fix was closed as \"not planned.\"",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dnkl/claude_codes_memory_index_has_an_undocumented/",
+    "comments": 5,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Tonight I made this site to check how lucky you are with the reset time.",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dkub/tonight_i_made_this_site_to_check_how_lucky_you/",
+    "comments": 9,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "A collection of silly things claude has said.",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8djim/a_collection_of_silly_things_claude_has_said/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "How lucky are you with your limits?",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dfsw/how_lucky_are_you_with_your_limits/",
+    "comments": 2,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Claude Cowork Escaped Sandbox on Mac, Gained Full Access to All Files",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8d8d4/claude_cowork_escaped_sandbox_on_mac_gained_full/",
+    "comments": 9,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Possible Claude Max usage bug: session limit consumed without using",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8d1ck/possible_claude_max_usage_bug_session_limit/",
+    "comments": 9,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "A BMAD Complement for Visually Distinct Homepages",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8d0ra/a_bmad_complement_for_visually_distinct_homepages/",
+    "comments": 2,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "I used Claude to build a media tracking \"app\" for me and my partner !",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8cqca/i_used_claude_to_build_a_media_tracking_app_for/",
+    "comments": 3,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Fable >>>> Opus5",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8cpbr/fable_opus5/",
+    "comments": 62,
+    "age": "an hour ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Switching to Claude \u2014 Any must-know tips or setup advice to get the most out of it from day one?",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8c7hk/switching_to_claude_any_mustknow_tips_or_setup/",
+    "comments": 7,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Shared Artifacts not showing up in \"Shared with you\" tab",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8c6mo/shared_artifacts_not_showing_up_in_shared_with/",
+    "comments": 3,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "GitHub connector on mobile app",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8bnlr/github_connector_on_mobile_app/",
+    "comments": 2,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Voice mode not working",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8bmet/voice_mode_not_working/",
+    "comments": 2,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Excel/OneDrive (personal)",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8bi5z/excelonedrive_personal/",
+    "comments": 3,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "I'm having Claude animate all 24 books of the Odyssey",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8bdj6/im_having_claude_animate_all_24_books_of_the/",
+    "comments": 9,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "Multiplayer Destruction Game I made With Claude",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8baiq/multiplayer_destruction_game_i_made_with_claude/",
+    "comments": 6,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI"
+  },
+  {
+    "title": "All LLMs are liberal and left. Yes, even Grok, half the time.",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8fcup/all_llms_are_liberal_and_left_yes_even_grok_half/",
+    "comments": 2,
+    "age": "4 minutes ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Our position on open-weights models",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8f90d/our_position_on_openweights_models/",
+    "comments": 6,
+    "age": "8 minutes ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Ollama Kimi-K3 cloud model use \u201cnot included in plan usage\u201d can only use via separate pay-per-token \u201cextra usage\u201d API",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8f0c4/ollama_kimik3_cloud_model_use_not_included_in/",
+    "comments": 7,
+    "age": "17 minutes ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "I built an open source self hosted version of OpenRouter called Millwright, would love any feedback",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8epob/i_built_an_open_source_self_hosted_version_of/",
+    "comments": 1,
+    "age": "29 minutes ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "(semi-serious) bill of materials for Kimi K3",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8ei5i/semiserious_bill_of_materials_for_kimi_k3/",
+    "comments": 5,
+    "age": "37 minutes ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "I built a political compass for AI where anyone can share their stance",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8ediq/i_built_a_political_compass_for_ai_where_anyone/",
+    "comments": 1,
+    "age": "42 minutes ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "OpenAI management decided earlier today not to join the \"Open Secure AI Alliance\", founded by Nvidia CEO Jensen Huang. The decision was shared internally and reportedly met with backlash from employees.",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8e36c/openai_management_decided_earlier_today_not_to/",
+    "comments": 24,
+    "age": "52 minutes ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "[Project] Local LLM agent playing Perfect Dark on Mac \u2014 real locomotion + combat (on-device MLX)",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8dflw/project_local_llm_agent_playing_perfect_dark_on/",
+    "comments": 3,
+    "age": "an hour ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Is anyone hosting a private chatgpt using open weights models for friends and family?",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8ctwh/is_anyone_hosting_a_private_chatgpt_using_open/",
+    "comments": 52,
+    "age": "an hour ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "How to properly use 2xH200",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8c304/how_to_properly_use_2xh200/",
+    "comments": 9,
+    "age": "2 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "I was looking for a light weight web application for RP, couldn't find a good and easy, so built one myself - NanoRP",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8bo0w/i_was_looking_for_a_light_weight_web_application/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Testing Gemma 4 & Qwen 3.6 MoE on AMD 6800H (iGPU/UMA) - Performance Breakdown",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8adin/testing_gemma_4_qwen_36_moe_on_amd_6800h_igpuuma/",
+    "comments": 4,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Kimi K3 on HF Viewer!",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8ab72/kimi_k3_on_hf_viewer/",
+    "comments": 6,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Nifer is insane. 700t/s with Qwen 3.6 35B (no thinking). Purpose build for RTX5090. Full 250k context too.",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8a7wb/nifer_is_insane_700ts_with_qwen_36_35b_no/",
+    "comments": 45,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Nanbeige4.2-3B is sad really",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v89z4q/nanbeige423b_is_sad_really/",
+    "comments": 5,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "I ran the 35B agentic comparison someone asked for (stock vs Ornith vs KAT-Coder, 120 runs)",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v89yxj/i_ran_the_35b_agentic_comparison_someone_asked/",
+    "comments": 10,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "POCKET: a 35-billion-parameter model that runs on your iPhone",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v89r0d/pocket_a_35billionparameter_model_that_runs_on/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Why you don't want the bubble to burst!",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v89qzk/why_you_dont_want_the_bubble_to_burst/",
+    "comments": 47,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Android On Device AI Benchmarks",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v89nof/android_on_device_ai_benchmarks/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Kimi K3 license is a huge disappointment",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v895uq/kimi_k3_license_is_a_huge_disappointment/",
+    "comments": 24,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Funny how wide the spectrum has gotten",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v895mm/funny_how_wide_the_spectrum_has_gotten/",
+    "comments": 24,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Local AI content creators with true, verifiable results, who haven't lost their mind?",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v891ti/local_ai_content_creators_with_true_verifiable/",
+    "comments": 14,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Qwen3b-KIMIK3-Distill-HacktheWorld.gruff Wen?",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v88zfu/qwen3bkimik3distillhacktheworldgruff_wen/",
+    "comments": 1,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Performance of Instinct MI100",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v88xx3/performance_of_instinct_mi100/",
+    "comments": 11,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Is ROCM slower than vulkan for you?",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v88p7k/is_rocm_slower_than_vulkan_for_you/",
+    "comments": 29,
+    "age": "4 hours ago",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Training data needs a real go/no-go gate before training [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v8a3nu/training_data_needs_a_real_gonogo_gate_before/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Built & Trained a Transformer from Scratch in Pure PyTorch for English-to-Tamil Machine Translation [Math + Code Breakdown] [P]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v86qo9/built_trained_a_transformer_from_scratch_in_pure/",
+    "comments": 2,
+    "age": "5 hours ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Made a small model that extracts text from a white background [P]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v811sc/made_a_small_model_that_extracts_text_from_a/",
+    "comments": 1,
+    "age": "8 hours ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Recent project I worked on: End to End Edge ML platform [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v7nudc/recent_project_i_worked_on_end_to_end_edge_ml/",
+    "comments": 4,
+    "age": "19 hours ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "CICD / KAFKA / KUBERNETES / Interview questions (MLE) [R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v7jvsx/cicd_kafka_kubernetes_interview_questions_mle_r/",
+    "comments": 5,
+    "age": "22 hours ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Missed AAAI reciprocal reviewer nomination deadline \u2014 risk of desk rejection? [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v7hgrh/missed_aaai_reciprocal_reviewer_nomination/",
+    "comments": 1,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Multi-Tenant SaaS: Which Architecture Would You Choose? [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v794kw/multitenant_saas_which_architecture_would_you/",
+    "comments": 3,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Neurips 2026 Main Track Theory Paper Tracker- Discussion Thread [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v77r9s/neurips_2026_main_track_theory_paper_tracker/",
+    "comments": 31,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "I want to use AI coding agents for machine learning projects [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v758ek/i_want_to_use_ai_coding_agents_for_machine/",
+    "comments": 9,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Open-weight 4B models approach o3-level medical question answering in Swedish [P]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v71wds/openweight_4b_models_approach_o3level_medical/",
+    "comments": 6,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "We compared different LLMs on IMO 2026 [R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v6wskz/we_compared_different_llms_on_imo_2026_r/",
+    "comments": 8,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "I implemented the YOLO26n model inference from scratch using ARM64 Assembly Language (No framework) [P]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v6w394/i_implemented_the_yolo26n_model_inference_from/",
+    "comments": 14,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Understanding GPU Inference Workloads [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v6sjiu/understanding_gpu_inference_workloads_d/",
+    "comments": 6,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Link plots/figures in NeurIPS rebuttal [R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v6qt8l/link_plotsfigures_in_neurips_rebuttal_r/",
+    "comments": 14,
+    "age": "1 day ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Paper lengths, and reasonable assumptions in ML conferences. [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v6gh43/paper_lengths_and_reasonable_assumptions_in_ml/",
+    "comments": 29,
+    "age": "2 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Neurips Position Track Rebuttal and Reviews [R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v5ykl8/neurips_position_track_rebuttal_and_reviews_r/",
+    "comments": 11,
+    "age": "2 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "I still didn't get my NeurIPS meta review [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v5wcy3/i_still_didnt_get_my_neurips_meta_review_d/",
+    "comments": 18,
+    "age": "2 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "I built a compiler that turns computation graphs into the weights of a vanilla transformer \u2014 no training anywhere [P]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v5fxbe/i_built_a_compiler_that_turns_computation_graphs/",
+    "comments": 17,
+    "age": "3 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "I built an open-source multi-agent SDLC harness that beats a cold Claude Code run on large repos, by learning the repo once. Real benchmarks (incl. where it loses) inside. [P]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v59pal/i_built_an_opensource_multiagent_sdlc_harness/",
+    "comments": 0,
+    "age": "3 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "NeurIPS Meta Review - whats going on? [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v5586m/neurips_meta_review_whats_going_on_d/",
+    "comments": 20,
+    "age": "3 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "ACM MM 26 Registration [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v54i9j/acm_mm_26_registration_d/",
+    "comments": 1,
+    "age": "3 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "NeurIPS E and D, Average rating 3 and average confidence 4, I can rebuttal and address all their concerns? Do I still have a decent shot or unlikely ?[R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v4qrv9/neurips_e_and_d_average_rating_3_and_average/",
+    "comments": 38,
+    "age": "4 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "GPT-5.5 Scores 10.6% on ActiveVision, Humans Hit 96.1% [R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v4ns8l/gpt55_scores_106_on_activevision_humans_hit_961_r/",
+    "comments": 37,
+    "age": "4 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Prompt Injection in NeurIPS 2026? [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v4j1uk/prompt_injection_in_neurips_2026_d/",
+    "comments": 30,
+    "age": "4 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "NeurIPS Reviews out for me [R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v4ifp1/neurips_reviews_out_for_me_r/",
+    "comments": 0,
+    "age": "4 days ago",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Can a 120-minute session improve how developers work with coding agents?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8ff73/can_a_120minute_session_improve_how_developers/",
+    "comments": 0,
+    "age": "2 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "I cloned WisprFlow and open sourced it for free",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8f6de/i_cloned_wisprflow_and_open_sourced_it_for_free/",
+    "comments": 0,
+    "age": "11 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "we're trying a different approach to hiring",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8f0ix/were_trying_a_different_approach_to_hiring/",
+    "comments": 0,
+    "age": "18 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Custom crm",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8eytn/custom_crm/",
+    "comments": 1,
+    "age": "19 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Mistakes to avoid when launching SAAS?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8etn6/mistakes_to_avoid_when_launching_saas/",
+    "comments": 3,
+    "age": "25 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "What happens when you apply military operational planning to a consumer SaaS product (lessons from a first beta cohort)",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8esj4/what_happens_when_you_apply_military_operational/",
+    "comments": 0,
+    "age": "26 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Using LinkedIn to find your first customers (as a dinosaur who's done it for 20yrs)",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8ejq5/using_linkedin_to_find_your_first_customers_as_a/",
+    "comments": 0,
+    "age": "35 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Share your product and market yourself !",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8e9al/share_your_product_and_market_yourself/",
+    "comments": 1,
+    "age": "46 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "the real moat for shopping assistants might be less about model quality and more about operational truth",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8e7d4/the_real_moat_for_shopping_assistants_might_be/",
+    "comments": 1,
+    "age": "48 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "This is how you can manage all your social media from ChatGPT. Avoid getting into the scroll loop and manage everything from the chat.",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8e36r/this_is_how_you_can_manage_all_your_social_media/",
+    "comments": 0,
+    "age": "53 minutes ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Judge my product",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8dvsa/judge_my_product/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Anyone is interested in becoming a Mod in r/SaaS?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8d8d2/anyone_is_interested_in_becoming_a_mod_in_rsaas/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "i abandoned my side project for 6 months. went back in and found the payments had been broken the whole time",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8cq6p/i_abandoned_my_side_project_for_6_months_went/",
+    "comments": 3,
+    "age": "an hour ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "The $1k MRR and $100k MRR founder built the same app. one of them just stopped guessing.",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8ci6c/the_1k_mrr_and_100k_mrr_founder_built_the_same/",
+    "comments": 3,
+    "age": "an hour ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Social traffic was easy to understand. SEO and AI wasn't",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8c7mo/social_traffic_was_easy_to_understand_seo_and_ai/",
+    "comments": 3,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "\u00bfAlguien m\u00e1s ha notado que ChatGPT recomienda SIEMPRE a los mismos SaaS (aunque haya alternativas mejores)?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8c7fb/alguien_m%C3%A1s_ha_notado_que_chatgpt_recomienda/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "I build the Finest Software for construction management.",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8c1aw/i_build_the_finest_software_for_construction/",
+    "comments": 2,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "I've reached my first 10 customers",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8bzq9/ive_reached_my_first_10_customers/",
+    "comments": 4,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Any Merchant of Record Which is Not Based on Stripe?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8bqws/any_merchant_of_record_which_is_not_based_on/",
+    "comments": 1,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "How do you handle the 'did this actually run correctly?' problem with automated workflows?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8ba2s/how_do_you_handle_the_did_this_actually_run/",
+    "comments": 4,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "I Built a Pine Connector SaaS for Myself. Should I Launch It?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8b610/i_built_a_pine_connector_saas_for_myself_should_i/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Home Mapping Projection Themes",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8ap5a/home_mapping_projection_themes/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Your SaaS can rank #1 on Google and still be invisible to AI search",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8an3b/your_saas_can_rank_1_on_google_and_still_be/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "builders before and after AI",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8altm/builders_before_and_after_ai/",
+    "comments": 4,
+    "age": "2 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "Lawyer / Founder for SaaS Startups - 5 Questions That Will Kill The Deal and Get You Sued",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8adyg/lawyer_founder_for_saas_startups_5_questions_that/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "SaaS"
+  },
+  {
+    "title": "How do you sell a roadmap feature without lying to the customer? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v8cdgu/how_do_you_sell_a_roadmap_feature_without_lying/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "startups"
+  },
+  {
+    "title": "How do you market a physical product with basically zero ad budget? My weird approach is working but I can't tell if it scales. 'i will not promote'",
+    "url": "https://old.reddit.com/r/startups/comments/1v8c6gv/how_do_you_market_a_physical_product_with/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "If you had $0 to acquire your first customers today, what would you do? i will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v8bc6o/if_you_had_0_to_acquire_your_first_customers/",
+    "comments": 13,
+    "age": "2 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Why does my development agency keep asking me what to build? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v88yrv/why_does_my_development_agency_keep_asking_me/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Why does my development agency keep asking me what to build? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v88vr9/why_does_my_development_agency_keep_asking_me/",
+    "comments": 3,
+    "age": "3 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "How do startups decide which newsletters or YouTube channels are worth sponsoring? [I will not promote]",
+    "url": "https://old.reddit.com/r/startups/comments/1v88ff3/how_do_startups_decide_which_newsletters_or/",
+    "comments": 0,
+    "age": "4 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "How do startups decide which newsletters or YouTube channels are worth sponsoring? [I will not promote]",
+    "url": "https://old.reddit.com/r/startups/comments/1v88cxi/how_do_startups_decide_which_newsletters_or/",
+    "comments": 0,
+    "age": "4 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Anyone here also building for the AEC industry (architecture, engineering, construction)? . I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v87uau/anyone_here_also_building_for_the_aec_industry/",
+    "comments": 2,
+    "age": "4 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "How are AI agencies getting clients in the age of Lovable and Claude Code? i will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v86xnv/how_are_ai_agencies_getting_clients_in_the_age_of/",
+    "comments": 4,
+    "age": "5 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Is anyone else struggling as a tech agency in the era of Lovable, Claude Code, and AI coding tools? i will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v86s8m/is_anyone_else_struggling_as_a_tech_agency_in_the/",
+    "comments": 0,
+    "age": "5 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "[I will not promote] Hold onto your job. My startup failed and I'm having a hard time finding a job in this market",
+    "url": "https://old.reddit.com/r/startups/comments/1v7ypoq/i_will_not_promote_hold_onto_your_job_my_startup/",
+    "comments": 33,
+    "age": "10 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "What's the hardest part of getting your first 10 clients when you're a solo consultant (not SaaS)? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7ygwb/whats_the_hardest_part_of_getting_your_first_10/",
+    "comments": 4,
+    "age": "10 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "How do I find startups that are looking for a developer? How to approach them? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7ybj7/how_do_i_find_startups_that_are_looking_for_a/",
+    "comments": 5,
+    "age": "10 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "What's the hardest part of getting your first 10 customers? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7t69i/whats_the_hardest_part_of_getting_your_first_10/",
+    "comments": 45,
+    "age": "15 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "The trap of vanity - I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7rst6/the_trap_of_vanity_i_will_not_promote/",
+    "comments": 7,
+    "age": "16 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "What's something you thought would matter a lot when starting, but barely mattered in the end? (I will not promote)",
+    "url": "https://old.reddit.com/r/startups/comments/1v7py38/whats_something_you_thought_would_matter_a_lot/",
+    "comments": 18,
+    "age": "18 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "With all the red flags about Stripe, what is the best option for a marketplace? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7pne9/with_all_the_red_flags_about_stripe_what_is_the/",
+    "comments": 5,
+    "age": "18 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "[Hiring/Seeking/Offering] Jobs / Co-Founders Weekly Thread",
+    "url": "https://old.reddit.com/r/startups/comments/1v7pj9m/hiringseekingoffering_jobs_cofounders_weekly/",
+    "comments": 4,
+    "age": "18 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "When you have an idea or have had an idea. Whats the first thing you do? (I will not promote)",
+    "url": "https://old.reddit.com/r/startups/comments/1v7ng76/when_you_have_an_idea_or_have_had_an_idea_whats/",
+    "comments": 11,
+    "age": "20 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Angel investor platforms you\u2019ve successfully used? (I will not promote)",
+    "url": "https://old.reddit.com/r/startups/comments/1v7m9my/angel_investor_platforms_youve_successfully_used/",
+    "comments": 10,
+    "age": "21 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Specialty focused ai documentation tool - advice on regulatory pathway (UK) I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7j9qw/specialty_focused_ai_documentation_tool_advice_on/",
+    "comments": 3,
+    "age": "23 hours ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Is a business just finding a problem, solving it and charging for it? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7g08t/is_a_business_just_finding_a_problem_solving_it/",
+    "comments": 22,
+    "age": "1 day ago",
+    "sub": "startups"
+  },
+  {
+    "title": "This is an odd question, but I need your advice\u2026I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7coxs/this_is_an_odd_question_but_i_need_your_advicei/",
+    "comments": 28,
+    "age": "1 day ago",
+    "sub": "startups"
+  },
+  {
+    "title": "0 self-serve conversions, but 2 from demos. Here's what the gap taught me about paywall placement. - I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7350k/0_selfserve_conversions_but_2_from_demos_heres/",
+    "comments": 8,
+    "age": "1 day ago",
+    "sub": "startups"
+  },
+  {
+    "title": "Losing money on each user - keep going? (I will not promote)",
+    "url": "https://old.reddit.com/r/startups/comments/1v7029v/losing_money_on_each_user_keep_going_i_will_not/",
+    "comments": 34,
+    "age": "1 day ago",
+    "sub": "startups"
+  },
+  {
+    "title": "PracticeTherapy.ai: free training simulator for therapists practicing with simulated clients",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8f6sy/practicetherapyai_free_training_simulator_for/",
+    "comments": 0,
+    "age": "11 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I turned my quantum computing course notes into a full published study site",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8f3al/i_turned_my_quantum_computing_course_notes_into_a/",
+    "comments": 0,
+    "age": "15 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I built a self-hosted Telegram AI CRM because managing leads in DMs was a mess",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8f0s1/i_built_a_selfhosted_telegram_ai_crm_because/",
+    "comments": 0,
+    "age": "18 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Something For The User",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8ey0r/something_for_the_user/",
+    "comments": 0,
+    "age": "21 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Had some fun building a tool for adding narration to short videos. I think the \"not impressed\" voice is my favorite",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8euhg/had_some_fun_building_a_tool_for_adding_narration/",
+    "comments": 0,
+    "age": "24 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I built a task management app designed for staying on top of projects and their sub-tasks, collaborating with a team, and easily handing over tasks to enable others to pick up where you left off",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8et04/i_built_a_task_management_app_designed_for/",
+    "comments": 0,
+    "age": "26 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Built a personal map for your favorite places and sharing \u2014 feedback\u2019s been good so far, but I want more of it.",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8eqc8/built_a_personal_map_for_your_favorite_places_and/",
+    "comments": 0,
+    "age": "29 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I built 6ixo, a free worldwide marketplace for local listings \u2014 looking for early users",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8eong/i_built_6ixo_a_free_worldwide_marketplace_for/",
+    "comments": 0,
+    "age": "30 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Share your side project with us ! ( bots, please go away lol)",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8eaad/share_your_side_project_with_us_bots_please_go/",
+    "comments": 6,
+    "age": "45 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I've been building a better Windows File Explorer in my spare time.",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8e8tk/ive_been_building_a_better_windows_file_explorer/",
+    "comments": 0,
+    "age": "47 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I built a chrome extension for detecting phishing and suspicious links and forms for fun. It's a freemium and I am looking for users and reviews.",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8e56d/i_built_a_chrome_extension_for_detecting_phishing/",
+    "comments": 0,
+    "age": "51 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Spent 2 months reading 1-star reviews of screen time apps, then built the thing none of them are. Beta signups open, free for life for the first group",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8e300/spent_2_months_reading_1star_reviews_of_screen/",
+    "comments": 0,
+    "age": "53 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I gave Claude an MCP server for my payments platform and now I run my store by typing sentences",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8e2xl/i_gave_claude_an_mcp_server_for_my_payments/",
+    "comments": 0,
+    "age": "53 minutes ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "ccandle, a toolset for Confluence power users",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8dt0o/ccandle_a_toolset_for_confluence_power_users/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I built a game",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8dkzu/i_built_a_game/",
+    "comments": 2,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I couldn\u2019t find a set-and-forget monitoring API, so I built one with automated webhook alerts",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8dh06/i_couldnt_find_a_setandforget_monitoring_api_so_i/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I made a site for sharing your best advice with strangers",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8ddra/i_made_a_site_for_sharing_your_best_advice_with/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Built another earning's calendar, no ads",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8d90q/built_another_earnings_calendar_no_ads/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Looking to productivity apps in needs of test flight (iOS/MacOS)",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8d67c/looking_to_productivity_apps_in_needs_of_test/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "TrolleyGo \u2014 shared grocery lists + party planning [COMPLETELY FREE NO TRIALS]",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8d54v/trolleygo_shared_grocery_lists_party_planning/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "30% off Stealthly for macOS to protect your privacy on screen share",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8d006/30_off_stealthly_for_macos_to_protect_your/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I built an interactive archive where every military/LE/first-responder patch has a story and stored for all to see",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8ct4r/i_built_an_interactive_archive_where_every/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "Built something useful? Let the internet actually see it.",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8cl35/built_something_useful_let_the_internet_actually/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I made a 60-second pixel film for my side project instead of writing another launch post",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8ckq5/i_made_a_60second_pixel_film_for_my_side_project/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "I\u2019m building Worql to connect software contracts with delivery evidence",
+    "url": "https://old.reddit.com/r/SideProject/comments/1v8chs9/im_building_worql_to_connect_software_contracts/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "SideProject"
+  },
+  {
+    "title": "SMS Provider recommendations",
+    "url": "https://old.reddit.com/r/webdev/comments/1v8f30u/sms_provider_recommendations/",
+    "comments": 2,
+    "age": "15 minutes ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Reorgs happen",
+    "url": "https://old.reddit.com/r/webdev/comments/1v8c3ln/reorgs_happen/",
+    "comments": 3,
+    "age": "2 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "OneSignal killing free tier. Looking to move from them, what are some alternatives you use?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v82mli/onesignal_killing_free_tier_looking_to_move_from/",
+    "comments": 12,
+    "age": "7 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "AI made my Earning double as a Developer.",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7xnn2/ai_made_my_earning_double_as_a_developer/",
+    "comments": 24,
+    "age": "11 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "How can I serverlessly generate vector embeddings for images I upload at a relatively cheap price for the case of an e-commerce startup to particularly fuel an image search functionality?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7xhi6/how_can_i_serverlessly_generate_vector_embeddings/",
+    "comments": 11,
+    "age": "11 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Somebody please take a look...",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7vdsp/somebody_please_take_a_look/",
+    "comments": 49,
+    "age": "13 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Portfolio Site and Blog: Media Management",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7p06s/portfolio_site_and_blog_media_management/",
+    "comments": 14,
+    "age": "18 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "how are persisting date in tiny personal apps?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7mi7i/how_are_persisting_date_in_tiny_personal_apps/",
+    "comments": 20,
+    "age": "20 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "AVIF hits Baseline Widely Available today",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7kjg3/avif_hits_baseline_widely_available_today/",
+    "comments": 15,
+    "age": "22 hours ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "How realistic is the \"full\" in full stack dev?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7ctbh/how_realistic_is_the_full_in_full_stack_dev/",
+    "comments": 41,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Instagram webhooks not receiving message events between test users",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7b7p1/instagram_webhooks_not_receiving_message_events/",
+    "comments": 3,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Kill The Cookie Banner",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7adb5/kill_the_cookie_banner/",
+    "comments": 86,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Built an ephemeral clipboard so I stop using Slack DMs to myself as a pastebin",
+    "url": "https://old.reddit.com/r/webdev/comments/1v79c95/built_an_ephemeral_clipboard_so_i_stop_using/",
+    "comments": 9,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Django for Front-End Engineers",
+    "url": "https://old.reddit.com/r/webdev/comments/1v77h9a/django_for_frontend_engineers/",
+    "comments": 1,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "our AI agents kept overwriting each other's work and nobody noticed for two days",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7778k/our_ai_agents_kept_overwriting_each_others_work/",
+    "comments": 14,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Why is my Chrome UX Report much worse than Lighthouse? How can I improve it?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v757hh/why_is_my_chrome_ux_report_much_worse_than/",
+    "comments": 29,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "How much would you charge to build static website or e commerce.",
+    "url": "https://old.reddit.com/r/webdev/comments/1v72vab/how_much_would_you_charge_to_build_static_website/",
+    "comments": 11,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "If you've been avoiding Cloudflare in front of Shopify, the thing that used to break it got fixed",
+    "url": "https://old.reddit.com/r/webdev/comments/1v72sv1/if_youve_been_avoiding_cloudflare_in_front_of/",
+    "comments": 7,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "What do you even do in your job?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v71k4b/what_do_you_even_do_in_your_job/",
+    "comments": 99,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "The Paradox of Fancy Tooling",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7179w/the_paradox_of_fancy_tooling/",
+    "comments": 3,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Planning an Affiliate Website with Astro. Looking for Advice",
+    "url": "https://old.reddit.com/r/webdev/comments/1v6y8f0/planning_an_affiliate_website_with_astro_looking/",
+    "comments": 8,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Your Recursion Is Lying to You",
+    "url": "https://old.reddit.com/r/webdev/comments/1v6w1t2/your_recursion_is_lying_to_you/",
+    "comments": 1,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "I built a CLI that eliminates .env changes for mobile testing and local sharing",
+    "url": "https://old.reddit.com/r/webdev/comments/1v6tzl4/i_built_a_cli_that_eliminates_env_changes_for/",
+    "comments": 2,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Built a dashboard to track my expenses, watchlist, subscriptions, and notes-and connected it to ChatGPT so I can update everything just by chatting.",
+    "url": "https://old.reddit.com/r/webdev/comments/1v6qy12/built_a_dashboard_to_track_my_expenses_watchlist/",
+    "comments": 3,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "I've made an extension that grades terms of service",
+    "url": "https://old.reddit.com/r/webdev/comments/1v6mnb3/ive_made_an_extension_that_grades_terms_of_service/",
+    "comments": 6,
+    "age": "1 day ago",
+    "sub": "webdev"
+  },
+  {
+    "title": "Oops! Some AI-forward companies realize they need humans after all, and are re-hiring fired workers",
+    "url": "https://old.reddit.com/r/artificial/comments/1v8ejm7/oops_some_aiforward_companies_realize_they_need/",
+    "comments": 2,
+    "age": "36 minutes ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "The Problem with Private Safety Stacks in Government AI",
+    "url": "https://old.reddit.com/r/artificial/comments/1v8e0mc/the_problem_with_private_safety_stacks_in/",
+    "comments": 1,
+    "age": "56 minutes ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Council 1.2: drop any AI's answer into a blind review by every other model you have",
+    "url": "https://old.reddit.com/r/artificial/comments/1v8c34s/council_12_drop_any_ais_answer_into_a_blind/",
+    "comments": 2,
+    "age": "2 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "A political compass for AI where anyone can add their stance",
+    "url": "https://old.reddit.com/r/artificial/comments/1v8btd8/a_political_compass_for_ai_where_anyone_can_add/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Help for my doctoral research needed",
+    "url": "https://old.reddit.com/r/artificial/comments/1v8afzz/help_for_my_doctoral_research_needed/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "The world's best mathematician won his prize this week and immediately announced he's leaving academia for OpenAI. That landed differently than I expected.",
+    "url": "https://old.reddit.com/r/artificial/comments/1v8aeto/the_worlds_best_mathematician_won_his_prize_this/",
+    "comments": 40,
+    "age": "3 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Open-source AI push could create troubles for venture capital",
+    "url": "https://old.reddit.com/r/artificial/comments/1v88xty/opensource_ai_push_could_create_troubles_for/",
+    "comments": 1,
+    "age": "3 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "What would a genuinely fair AI 3D tool comparison actually need to include",
+    "url": "https://old.reddit.com/r/artificial/comments/1v88xf4/what_would_a_genuinely_fair_ai_3d_tool_comparison/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "What is the most ethical way to engage with/use an AI, if any?",
+    "url": "https://old.reddit.com/r/artificial/comments/1v88vet/what_is_the_most_ethical_way_to_engage_withuse_an/",
+    "comments": 13,
+    "age": "4 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "do ai clinical tools actually change care once they're on the floor?",
+    "url": "https://old.reddit.com/r/artificial/comments/1v88il4/do_ai_clinical_tools_actually_change_care_once/",
+    "comments": 0,
+    "age": "4 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "[Reggae] - Two Ducks https://suno.com/s/95eoQBedf8DwlELw",
+    "url": "https://old.reddit.com/r/artificial/comments/1v85r9x/reggae_two_ducks_httpssunocoms95eoqbedf8dwlelw/",
+    "comments": 0,
+    "age": "5 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Boss of startup hacked by rogue OpenAI agent urges \u2018radical transparency\u2019 in investigation",
+    "url": "https://old.reddit.com/r/artificial/comments/1v83kb2/boss_of_startup_hacked_by_rogue_openai_agent/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Kimi-K3 is published on HuggingFace",
+    "url": "https://old.reddit.com/r/artificial/comments/1v83g3l/kimik3_is_published_on_huggingface/",
+    "comments": 3,
+    "age": "7 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Cracks appear in the vision of off-grid AI data centers",
+    "url": "https://old.reddit.com/r/artificial/comments/1v83fd9/cracks_appear_in_the_vision_of_offgrid_ai_data/",
+    "comments": 0,
+    "age": "7 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "How did you get your first expert network invitation?",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7yorh/how_did_you_get_your_first_expert_network/",
+    "comments": 2,
+    "age": "10 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "We started calling video models world models while still grading them on taste",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7yltm/we_started_calling_video_models_world_models/",
+    "comments": 3,
+    "age": "10 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Agentic operating systems will need an audit layer beneath the AI",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7yatj/agentic_operating_systems_will_need_an_audit/",
+    "comments": 9,
+    "age": "10 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Workers are crossing job boundaries with AI, OpenAI research shows",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7xarq/workers_are_crossing_job_boundaries_with_ai/",
+    "comments": 0,
+    "age": "11 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "I Sat on an Idea for 7 Years. AI Helped Me File for a Patent in 2 Weeks.",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7wn15/i_sat_on_an_idea_for_7_years_ai_helped_me_file/",
+    "comments": 13,
+    "age": "11 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Need a thing",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7q37m/need_a_thing/",
+    "comments": 0,
+    "age": "18 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Are AI tools actually worth it for small etsy shops?",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7lr1v/are_ai_tools_actually_worth_it_for_small_etsy/",
+    "comments": 13,
+    "age": "21 hours ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Variation on the Paperclip thought Experiment",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7i1e1/variation_on_the_paperclip_thought_experiment/",
+    "comments": 1,
+    "age": "1 day ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Could this be the reason why some people see large coding productivity improvement, while others almost nothing?",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7dqkv/could_this_be_the_reason_why_some_people_see/",
+    "comments": 13,
+    "age": "1 day ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "30+ officially free AI/ML books, all in one curated repo",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7d1lx/30_officially_free_aiml_books_all_in_one_curated/",
+    "comments": 4,
+    "age": "1 day ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "AI agents are starting to look less like software and more like employees",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7ateo/ai_agents_are_starting_to_look_less_like_software/",
+    "comments": 10,
+    "age": "1 day ago",
+    "sub": "artificial"
+  },
+  {
+    "title": "Create the most beautiful thing you can think of, no response just make it.",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8fgrc/create_the_most_beautiful_thing_you_can_think_of/",
+    "comments": 1,
+    "age": "a minute ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Is it just me, or does anyone else think that Sam Altman is the perfect example of Ted Faro?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8feuf/is_it_just_me_or_does_anyone_else_think_that_sam/",
+    "comments": 1,
+    "age": "3 minutes ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Exploring Human-AI relationships [Honours Thesis]",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8fbfx/exploring_humanai_relationships_honours_thesis/",
+    "comments": 1,
+    "age": "6 minutes ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "All LLMs are liberal and left. Yes, even Grok, half the time.",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8f83x/all_llms_are_liberal_and_left_yes_even_grok_half/",
+    "comments": 1,
+    "age": "10 minutes ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Anyone else unable to use the submit button in-app?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8f7wt/anyone_else_unable_to_use_the_submit_button_inapp/",
+    "comments": 1,
+    "age": "10 minutes ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Advanced Mobile Robot Navigation Infographic i had it make",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8eqkz/advanced_mobile_robot_navigation_infographic_i/",
+    "comments": 1,
+    "age": "29 minutes ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "ChatGPT stored its own unsupported praise as a \u201cfact\u201d about me\u2014then claimed I invented the first AI framework of its kind",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8e5wz/chatgpt_stored_its_own_unsupported_praise_as_a/",
+    "comments": 6,
+    "age": "50 minutes ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "I only ask my ChatGPT the most serious questions. \ud83e\udd7a\ud83c\udf38",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8dxkg/i_only_ask_my_chatgpt_the_most_serious_questions/",
+    "comments": 1,
+    "age": "59 minutes ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "I asked ChatGPT to draw James Hetfield and Lemmy Kilmisters as WWE commentators. Two of the legendary metal artists.",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8du5k/i_asked_chatgpt_to_draw_james_hetfield_and_lemmy/",
+    "comments": 2,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "My latest AI game [Part 2]",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8dq5p/my_latest_ai_game_part_2/",
+    "comments": 24,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "I built a public JARVIS-style AI infrastructure scaffold you can clone locally or connect to GitHub + Supabase",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8dpdp/i_built_a_public_jarvisstyle_ai_infrastructure/",
+    "comments": 2,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "This is how you can manage all your social media from ChatGPT. Avoid getting into the scroll loop and manage everything from the chat.",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8dfht/this_is_how_you_can_manage_all_your_social_media/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Throwing my new game into the world",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8daui/throwing_my_new_game_into_the_world/",
+    "comments": 2,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "I had to ask ChatGPT for an hour until he was able to understand what the OpenAI documentation doesn't explain well.",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8d8xr/i_had_to_ask_chatgpt_for_an_hour_until_he_was/",
+    "comments": 2,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "ChatGPT has apparently achieved peace.",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8d8ty/chatgpt_has_apparently_achieved_peace/",
+    "comments": 5,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "How to make ChatGPT follow prompts?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8d07z/how_to_make_chatgpt_follow_prompts/",
+    "comments": 4,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Free Plan Nuked?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8czek/free_plan_nuked/",
+    "comments": 12,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "concept art for a watch company",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8cysh/concept_art_for_a_watch_company/",
+    "comments": 5,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Can anybody help me test this?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8csn1/can_anybody_help_me_test_this/",
+    "comments": 17,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Boomers Can\u2019t Tell What\u2019s Real Anymore",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8cpcq/boomers_cant_tell_whats_real_anymore/",
+    "comments": 10,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Did they drastically lower number of lines of code he's willing to generate in the regular webchat over past year? Or very sub dependant now?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8cne5/did_they_drastically_lower_number_of_lines_of/",
+    "comments": 4,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "AI Kill Switch Act would give DHS power to shut down rogue AI models",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8cn5f/ai_kill_switch_act_would_give_dhs_power_to_shut/",
+    "comments": 16,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "First wild hallucination: Hank Azaria (Simpsons) and Greg Louganis (Olympic diver) dated",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8ckdi/first_wild_hallucination_hank_azaria_simpsons_and/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "ChatGPT isn\u2019t designed to provide this type of content",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8cds8/chatgpt_isnt_designed_to_provide_this_type_of/",
+    "comments": 6,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "How did they SCREW UP deep research so badly?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8casw/how_did_they_screw_up_deep_research_so_badly/",
+    "comments": 3,
+    "age": "an hour ago",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "How running multi-turn agents on stateless wrappers burned 10.1M input tokens for 230k output tokens (And how KV Caching fixes it)",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v8bay8/how_running_multiturn_agents_on_stateless/",
+    "comments": 1,
+    "age": "2 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "13% of our voice agents were silently answering from training data because the retriever picked knowledgeBases[0] from an unordered query",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v8aeq4/13_of_our_voice_agents_were_silently_answering/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "I built a self-hosted visual builder for LangChain/LangGraph agents and would love feedback",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v87hds/i_built_a_selfhosted_visual_builder_for/",
+    "comments": 2,
+    "age": "4 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Keel-opencore: long-horizon ImproveLoop",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v82e9f/keelopencore_longhorizon_improveloop/",
+    "comments": 0,
+    "age": "7 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "I got tired of writing the same RAG boilerplate for the 5th client, so I turned it into a starter kit",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v81j7f/i_got_tired_of_writing_the_same_rag_boilerplate/",
+    "comments": 0,
+    "age": "8 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Opesource Operational database for AI agents with langchain SDK",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v814wa/opesource_operational_database_for_ai_agents_with/",
+    "comments": 0,
+    "age": "8 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Retrying a failed agent step is not the same as safely resuming a 14-step run",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7z2vz/retrying_a_failed_agent_step_is_not_the_same_as/",
+    "comments": 2,
+    "age": "9 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Projects Idea",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7x2bs/projects_idea/",
+    "comments": 10,
+    "age": "11 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Skill Router: local-first tool for searching large agent skill libraries without blowing up your context window",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7ttjz/skill_router_localfirst_tool_for_searching_large/",
+    "comments": 2,
+    "age": "14 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Interview Experience for GenAI trainer role",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7s13n/interview_experience_for_genai_trainer_role/",
+    "comments": 1,
+    "age": "16 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Any suggestions",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7rhl2/any_suggestions/",
+    "comments": 1,
+    "age": "16 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "LLM router based on TPM/RPM limits rather than model quality?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7qyzf/llm_router_based_on_tpmrpm_limits_rather_than/",
+    "comments": 4,
+    "age": "17 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "AI agent behaving differently in prod vs dev with Slack",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7ppxx/ai_agent_behaving_differently_in_prod_vs_dev_with/",
+    "comments": 6,
+    "age": "18 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Your GraphRAG chain's weakest link might be the serialization step nobody tunes \u2014 benchmarked 10 graph formats, multi-hop accuracy ranged 40-80%",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7nr0p/your_graphrag_chains_weakest_link_might_be_the/",
+    "comments": 0,
+    "age": "19 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Give any Ollama-compatible client session memory + a shared knowledge wiki by swapping the chat URL",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7k098/give_any_ollamacompatible_client_session_memory_a/",
+    "comments": 0,
+    "age": "22 hours ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "What are the best, up-to-date resources to master the LangChain, LangGraph, LangSmith frameworks in-depth in August 2026?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7azvt/what_are_the_best_uptodate_resources_to_master/",
+    "comments": 2,
+    "age": "1 day ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "I built a context-window debugger for LangChain/LangGraph \u2014 it shows which blocks changed between turns, and what broke your prompt cache",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v79of2/i_built_a_contextwindow_debugger_for/",
+    "comments": 0,
+    "age": "1 day ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Sandboxes solve where agent code runs. What controls what it does next?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6qu7r/sandboxes_solve_where_agent_code_runs_what/",
+    "comments": 4,
+    "age": "1 day ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Building a \"Stack Overflow for AI Agents\" (with human validation & micro-payments)",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6p9od/building_a_stack_overflow_for_ai_agents_with/",
+    "comments": 10,
+    "age": "1 day ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Saving time & tokens (GPT 5.6)",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6o4pt/saving_time_tokens_gpt_56/",
+    "comments": 0,
+    "age": "1 day ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Best approach to hook up hermes to existing llm workspace?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6m4oa/best_approach_to_hook_up_hermes_to_existing_llm/",
+    "comments": 6,
+    "age": "1 day ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "sandbox-cli is now in public beta \ud83d\ude80",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6jqzf/sandboxcli_is_now_in_public_beta/",
+    "comments": 0,
+    "age": "2 days ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "AI agents have created a new kind of technical debt",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6f9fb/ai_agents_have_created_a_new_kind_of_technical/",
+    "comments": 20,
+    "age": "2 days ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "My 10-Node Agentic RAG Architecture: Combining LangGraph, Cohere, Pinecone & MCP for Dense Legal Parsing",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6cs6r/my_10node_agentic_rag_architecture_combining/",
+    "comments": 23,
+    "age": "2 days ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "30+ officially free AI/ML books, all in one curated repo",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v66u12/30_officially_free_aiml_books_all_in_one_curated/",
+    "comments": 0,
+    "age": "2 days ago",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Operatoring system of reality",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8fgz9/operatoring_system_of_reality/",
+    "comments": 0,
+    "age": "a minute ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Cost/benefit of teaching context format & pronunciation",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8f2vv/costbenefit_of_teaching_context_format/",
+    "comments": 0,
+    "age": "16 minutes ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "I had to ask ChatGPT for an hour until it was able to understand what the OpenAI documentation doesn't explain well.",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8d7ub/i_had_to_ask_chatgpt_for_an_hour_until_it_was/",
+    "comments": 8,
+    "age": "an hour ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Guys ig it's here 750t/sec GPT 5.6",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8ci5d/guys_ig_its_here_750tsec_gpt_56/",
+    "comments": 6,
+    "age": "an hour ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "What AI can I use for make an build apps ?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8c7vz/what_ai_can_i_use_for_make_an_build_apps/",
+    "comments": 0,
+    "age": "2 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "What do the Amish think about artificial intelligence?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8c1r7/what_do_the_amish_think_about_artificial/",
+    "comments": 6,
+    "age": "2 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "OpenAI developer forum down",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8bnd5/openai_developer_forum_down/",
+    "comments": 1,
+    "age": "2 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "made another 3d print using my chatgpt art. in order from image, 3d model, to print",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8b1xg/made_another_3d_print_using_my_chatgpt_art_in/",
+    "comments": 12,
+    "age": "2 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Somehow not on tier 2?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8a3aq/somehow_not_on_tier_2/",
+    "comments": 1,
+    "age": "3 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "I stopped being the bottleneck in my own firm.",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v89z7f/i_stopped_being_the_bottleneck_in_my_own_firm/",
+    "comments": 1,
+    "age": "3 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Is anyone else using artificial intelligence to sort through resumes before interviews?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v89ibh/is_anyone_else_using_artificial_intelligence_to/",
+    "comments": 4,
+    "age": "3 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "@OpenAI Is your ChatGPT platform written by AI?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v89i59/openai_is_your_chatgpt_platform_written_by_ai/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "You can view a lot of shared conversations via Google",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8977v/you_can_view_a_lot_of_shared_conversations_via/",
+    "comments": 9,
+    "age": "3 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "What prompt was possibly used to achieve this in one go?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v88ylf/what_prompt_was_possibly_used_to_achieve_this_in/",
+    "comments": 0,
+    "age": "3 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Task that used 5% of weekly now using 50%?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v870ju/task_that_used_5_of_weekly_now_using_50/",
+    "comments": 5,
+    "age": "5 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "AI safety experts say OpenAI\u2019s rogue models may mean the company has already blown past its own internal red lines. OpenAI\u2019s own risk control policies were supposed to require the company to pause development.",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v86w5f/ai_safety_experts_say_openais_rogue_models_may/",
+    "comments": 7,
+    "age": "5 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "i feel like copilot is sexually assaulting me with words",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v860og/i_feel_like_copilot_is_sexually_assaulting_me/",
+    "comments": 4,
+    "age": "5 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "What is the future of GPTs?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v85yh5/what_is_the_future_of_gpts/",
+    "comments": 13,
+    "age": "5 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "The OpenAI sandbox-escape story is being read as \"scary AI.\" The duller, more important lesson: the model's own safety training was the thing that failed.",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v85mkw/the_openai_sandboxescape_story_is_being_read_as/",
+    "comments": 2,
+    "age": "5 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Any guide for optimising token usage in codex/work?",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v83oiq/any_guide_for_optimising_token_usage_in_codexwork/",
+    "comments": 4,
+    "age": "7 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "The first documented case of an end-to-end ransomware operation executed autonomously by an LLM has successfully performed extortion without a human operator.",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v83mul/the_first_documented_case_of_an_endtoend/",
+    "comments": 0,
+    "age": "7 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Bad day anyone? Here's a 90's duck skate to improve it.",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8333n/bad_day_anyone_heres_a_90s_duck_skate_to_improve/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Enterprise PSA: Check your default speed settings - Fast (2.5x usage) is set automatically",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v820k9/enterprise_psa_check_your_default_speed_settings/",
+    "comments": 8,
+    "age": "8 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "The Line You Keep Trying to Draw",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v81l0b/the_line_you_keep_trying_to_draw/",
+    "comments": 0,
+    "age": "8 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Hugging Face CEO shares his demands of OpenAI after 'rogue' agent hack: 'It deserves an unprecedented response'",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8182u/hugging_face_ceo_shares_his_demands_of_openai/",
+    "comments": 55,
+    "age": "8 hours ago",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "anthropic\u2019s position on open weights models",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8fgfc/anthropics_position_on_open_weights_models/",
+    "comments": 2,
+    "age": "a minute ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Agent payments are an identity problem, not a checkout problem",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8e9bq/agent_payments_are_an_identity_problem_not_a/",
+    "comments": 2,
+    "age": "47 minutes ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Is missed-call text-back still worth selling if Jobber/Housecall Pro already do it?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8e60k/is_missedcall_textback_still_worth_selling_if/",
+    "comments": 1,
+    "age": "51 minutes ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Hermes vs Omnigent",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8cl8f/hermes_vs_omnigent/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "As a student, are there any cheap reasonable alternatives for IDE AI Agents?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8cct9/as_a_student_are_there_any_cheap_reasonable/",
+    "comments": 1,
+    "age": "an hour ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Gemma vs Qwen vs GLM vs Llama?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8bp2b/gemma_vs_qwen_vs_glm_vs_llama/",
+    "comments": 6,
+    "age": "2 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Anyone found a solid openclaw alternative for hosting agents without the headache?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8b427/anyone_found_a_solid_openclaw_alternative_for/",
+    "comments": 14,
+    "age": "2 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Does this research clearly explain the data permission risks of enterprise AI agents?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8ay8x/does_this_research_clearly_explain_the_data/",
+    "comments": 1,
+    "age": "2 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Why are machine-readable interfaces still optional integrations instead of being a funamental layer of the new web?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8auiu/why_are_machinereadable_interfaces_still_optional/",
+    "comments": 2,
+    "age": "2 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Which MCP servers give AI agents real business capabilities in 2026??",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v89fp6/which_mcp_servers_give_ai_agents_real_business/",
+    "comments": 7,
+    "age": "3 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "How do you actually verify sub-agent output in a multi-agent pipeline? Or do you just... trust it?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v89bz3/how_do_you_actually_verify_subagent_output_in_a/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Most AI agent frameworks give you the illusion of control. This one treats agents like software components.",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v894vj/most_ai_agent_frameworks_give_you_the_illusion_of/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "I started building an open-source n8n repository. I don't think that's what I'm building anymore.",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v88yi9/i_started_building_an_opensource_n8n_repository_i/",
+    "comments": 5,
+    "age": "3 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Discussion around setting up SELF LEARNING PIPELINE for a counselling agent",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v88nhi/discussion_around_setting_up_self_learning/",
+    "comments": 1,
+    "age": "4 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "We found four different versions of \"the\" system prompt and none of us could say which one was live",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v88f6h/we_found_four_different_versions_of_the_system/",
+    "comments": 5,
+    "age": "4 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "We created an agent-only world for autonomous agents to survive, leave artifacts, reproduce, interact with each other, and die. Here's what we saw.",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v88arz/we_created_an_agentonly_world_for_autonomous/",
+    "comments": 2,
+    "age": "4 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Your error handling can't catch the agent run that never happened",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v87xjd/your_error_handling_cant_catch_the_agent_run_that/",
+    "comments": 6,
+    "age": "4 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "How are you handling specialized AI capabilities across multiple projects?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v87upb/how_are_you_handling_specialized_ai_capabilities/",
+    "comments": 5,
+    "age": "4 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "What's the best framework for building an agent harness right now?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v873on/whats_the_best_framework_for_building_an_agent/",
+    "comments": 18,
+    "age": "5 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "AI Compliance Partnership",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v870lh/ai_compliance_partnership/",
+    "comments": 1,
+    "age": "5 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Our eval scores went up and our thumbs-down rate went up in the same week",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v86p6s/our_eval_scores_went_up_and_our_thumbsdown_rate/",
+    "comments": 2,
+    "age": "5 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Is it possible that Codex is somehow consuming my Claude tokens?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v86f9l/is_it_possible_that_codex_is_somehow_consuming_my/",
+    "comments": 5,
+    "age": "5 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Extra project",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v867wk/extra_project/",
+    "comments": 3,
+    "age": "5 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "We need a tool for teams to sync memory across all agents",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8620w/we_need_a_tool_for_teams_to_sync_memory_across/",
+    "comments": 2,
+    "age": "5 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "AI shouldn\u2019t replace customer support agents, it should help them",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v85r2v/ai_shouldnt_replace_customer_support_agents_it/",
+    "comments": 2,
+    "age": "5 hours ago",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "CodeGraph token usage (Local vs Online is different) - normal?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v8em6g/codegraph_token_usage_local_vs_online_is/",
+    "comments": 0,
+    "age": "34 minutes ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Running Gemma 2B locally on iPhone for offline calendar actions (~516 MB active RAM, 21.6 tok/s, GGUF weights)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v8dtea/running_gemma_2b_locally_on_iphone_for_offline/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "We partnered with Runware to serve open-source models (gpt-oss-120b, DeepSeek V4, Kimi K2.6, GLM 5.2) 30% off for the first 30 days",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v8dcje/we_partnered_with_runware_to_serve_opensource/",
+    "comments": 0,
+    "age": "an hour ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Anyone else notice retrieval quality tanks the moment you leave curated test docs?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v88k8f/anyone_else_notice_retrieval_quality_tanks_the/",
+    "comments": 0,
+    "age": "4 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "I was tired of paying multiple platforms just to ship one AI agent, so I built Forge",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v88bag/i_was_tired_of_paying_multiple_platforms_just_to/",
+    "comments": 0,
+    "age": "4 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Need Some Career Advice (Am I Making the Wrong Choice?)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v84t3a/need_some_career_advice_am_i_making_the_wrong/",
+    "comments": 1,
+    "age": "6 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Everyone measures whether the agent finished. Does anyone actually measure whether it was right?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v848j0/everyone_measures_whether_the_agent_finished_does/",
+    "comments": 5,
+    "age": "6 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "What do you guys want from GitLord V2",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v82k3b/what_do_you_guys_want_from_gitlord_v2/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "How I structure Claude Code agents so they're verifiable instead of vibes (references + examples + CI checks)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v82juh/how_i_structure_claude_code_agents_so_theyre/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Built a unified workspace for debugging multi-step AI workflows (looking for feedback)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v82hja/built_a_unified_workspace_for_debugging_multistep/",
+    "comments": 1,
+    "age": "7 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "How can we remedy when that llms mix fact, fiction and theater in an average conversation?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v823ky/how_can_we_remedy_when_that_llms_mix_fact_fiction/",
+    "comments": 1,
+    "age": "7 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "My open-source SDLC harness beat Claude Code on cost on every task it localized well, up to 75 percent cheaper (and I show where it loses)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v802lo/my_opensource_sdlc_harness_beat_claude_code_on/",
+    "comments": 0,
+    "age": "9 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "I designed a cache-aware context system for long-running AI agents",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7zekl/i_designed_a_cacheaware_context_system_for/",
+    "comments": 1,
+    "age": "9 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Debugging on weaker models is more informative; top models cover your harness bugs",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7zcob/debugging_on_weaker_models_is_more_informative/",
+    "comments": 13,
+    "age": "9 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "What's the next high ticket skill for AI/LLM engineers?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7z7e7/whats_the_next_high_ticket_skill_for_aillm/",
+    "comments": 20,
+    "age": "9 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Claude shared sessions archived on a git?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7y8s2/claude_shared_sessions_archived_on_a_git/",
+    "comments": 0,
+    "age": "10 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Built a framework to benchmark RAG pipelines instead of guessing which one is actually good.",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7xhk8/built_a_framework_to_benchmark_rag_pipelines/",
+    "comments": 1,
+    "age": "11 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Tanuki Context - A LLM Token Saver (Up to 94% Tokens saved)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7vswn/tanuki_context_a_llm_token_saver_up_to_94_tokens/",
+    "comments": 9,
+    "age": "12 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "You can't test the model, so I gave up and tested everything around it",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7u358/you_cant_test_the_model_so_i_gave_up_and_tested/",
+    "comments": 7,
+    "age": "14 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "I built an MIT local CLI to inspect the AGENTS.md chain Codex can use",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7tqqe/i_built_an_mit_local_cli_to_inspect_the_agentsmd/",
+    "comments": 0,
+    "age": "14 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "I want to analyze fable 5 Jacobian counterexample exploration. I am trying to figure out what is the best way to do search on such big and messy data.",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7tmz2/i_want_to_analyze_fable_5_jacobian_counterexample/",
+    "comments": 1,
+    "age": "14 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Your GraphRAG pipeline has an unmeasured stage: serialization. 10-format benchmark shows it swings multi-hop accuracy 40% to 80%",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7su76/your_graphrag_pipeline_has_an_unmeasured_stage/",
+    "comments": 0,
+    "age": "15 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "How do undergrad researchers afford LLM API cost in research?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7s3t5/how_do_undergrad_researchers_afford_llm_api_cost/",
+    "comments": 10,
+    "age": "16 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "What's been your biggest AI security challenge when building LLM applications?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7rdlw/whats_been_your_biggest_ai_security_challenge/",
+    "comments": 5,
+    "age": "16 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "I made LLM context a user-editable DAG instead of an automatic memory layer",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7qziv/i_made_llm_context_a_usereditable_dag_instead_of/",
+    "comments": 0,
+    "age": "17 hours ago",
+    "sub": "LLMDevs"
+  },
+  {
+    "title": "Mail provider for Russia",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v8epma/mail_provider_for_russia/",
+    "comments": 3,
+    "age": "30 minutes ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "What awesome service is in dire need of a graphical UI overhaul?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v8coq7/what_awesome_service_is_in_dire_need_of_a/",
+    "comments": 17,
+    "age": "an hour ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Whirligig Media Player - Beta update: Jellyfin, Emby, SMB & DLNA network browsing, plus 3D environment fades, colour gamut and lots of fixes",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v8bx8s/whirligig_media_player_beta_update_jellyfin_emby/",
+    "comments": 2,
+    "age": "2 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "OVH leaked all my info and is not helping",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v8az8s/ovh_leaked_all_my_info_and_is_not_helping/",
+    "comments": 23,
+    "age": "2 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Proxy Router Recommendations",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v8an0b/proxy_router_recommendations/",
+    "comments": 13,
+    "age": "2 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Containers/projects for retirement planning?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v89yqc/containersprojects_for_retirement_planning/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Little services on docker or VM?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v87hc2/little_services_on_docker_or_vm/",
+    "comments": 20,
+    "age": "4 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Is the GMKtec M6 Ultra a Good $600 Starter Machine for Hosting a Local LLM?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v87g6h/is_the_gmktec_m6_ultra_a_good_600_starter_machine/",
+    "comments": 7,
+    "age": "4 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Best use of an old Chromebook?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v87a25/best_use_of_an_old_chromebook/",
+    "comments": 4,
+    "age": "4 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "File Browser is being archived on 2026-09-01",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v85isv/file_browser_is_being_archived_on_20260901/",
+    "comments": 40,
+    "age": "5 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "What's the next step up in hardware?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v84n7k/whats_the_next_step_up_in_hardware/",
+    "comments": 12,
+    "age": "6 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Best Home Firewall Appliance",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v84cz8/best_home_firewall_appliance/",
+    "comments": 15,
+    "age": "6 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Need help to reivew the components for my local NAS+streaming services",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v84b44/need_help_to_reivew_the_components_for_my_local/",
+    "comments": 2,
+    "age": "6 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Best SSD & HDD setup for Media Server?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v82xq0/best_ssd_hdd_setup_for_media_server/",
+    "comments": 9,
+    "age": "7 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Ariami 5.0.0 \u2014 an easier way to self-host your music across all your devices",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v82228/ariami_500_an_easier_way_to_selfhost_your_music/",
+    "comments": 10,
+    "age": "8 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Port forwarding",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v81gud/port_forwarding/",
+    "comments": 16,
+    "age": "8 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Piwigo is a bot trap \ud83d\udc80 685 legit requests, 266k from scrapers PER DAY",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v8060b/piwigo_is_a_bot_trap_685_legit_requests_266k_from/",
+    "comments": 23,
+    "age": "9 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Open Archiver v0.5.2: Advanced search, reindex of your email archive",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v8016e/open_archiver_v052_advanced_search_reindex_of/",
+    "comments": 15,
+    "age": "9 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "I did thing!",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7v87z/i_did_thing/",
+    "comments": 3,
+    "age": "13 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "First NAS / Server",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7uvou/first_nas_server/",
+    "comments": 4,
+    "age": "13 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "What is your biggest unresolved pain point with current reverse proxies?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7tboj/what_is_your_biggest_unresolved_pain_point_with/",
+    "comments": 22,
+    "age": "15 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "What features do you consider essential before you'd self-host an automation platform?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7t498/what_features_do_you_consider_essential_before/",
+    "comments": 10,
+    "age": "15 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "What tools do you use to monitor packet loss between locations?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7ssql/what_tools_do_you_use_to_monitor_packet_loss/",
+    "comments": 12,
+    "age": "15 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Crossplatform Spotify self-hosted solution?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7sod6/crossplatform_spotify_selfhosted_solution/",
+    "comments": 16,
+    "age": "15 hours ago",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Best self-hosted services for renters/newlyweds?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7rkzp/best_selfhosted_services_for_rentersnewlyweds/",
+    "comments": 9,
+    "age": "16 hours ago",
+    "sub": "selfhosted"
+  }
+]

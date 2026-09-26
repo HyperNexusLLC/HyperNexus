@@ -1,0 +1,328 @@
+# HyperNexus CI/CD Pipeline
+# Builds binaries, extensions, installers, and publishes to marketplace
+
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release"
+        required: true
+        default: "1.0.1"
+      publish_extensions:
+        description: "Publish VS Code extensions"
+        type: boolean
+        default: true
+
+env:
+  GO_VERSION: "1.22"
+  NODE_VERSION: "20"
+
+jobs:
+  # ============================================================
+  # BUILD GO BINARIES
+  # ============================================================
+  build-binaries:
+    name: Build Go Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: windows
+            goarch: amd64
+            ext: .exe
+          - goos: darwin
+            goarch: amd64
+            ext: ""
+          - goos: darwin
+            goarch: arm64
+            ext: ""
+          - goos: linux
+            goarch: amd64
+            ext: ""
+          - goos: linux
+            goarch: arm64
+            ext: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          go build -ldflags="-s -w -X main.version=$VERSION" \
+            -o hypernexus${{ matrix.ext }} ./cmd/hypernexus
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hypernexus-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: hypernexus${{ matrix.ext }}
+
+  # ============================================================
+  # BUILD VS CODE EXTENSIONS
+  # ============================================================
+  build-extensions:
+    name: Build VS Code Extensions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd extensions/vscode-hypernexus
+          npm ci
+
+      - name: Compile TypeScript
+        run: |
+          cd extensions/vscode-hypernexus
+          npm run compile
+
+      - name: Package HyperNexus extension
+        run: |
+          cd extensions/vscode-hypernexus
+          npx vsce package --allow-missing-releases
+
+      - name: Create TormentNexus extension
+        run: |
+          cp -r extensions/vscode-hypernexus extensions/vscode-tormentnexus
+          cd extensions/vscode-tormentnexus
+          # Update branding
+          sed -i 's/hypernexus/tormentnexus/g' package.json
+          sed -i 's/HyperNexus/TormentNexus/g' package.json
+          sed -i 's/HyperNexus LLC/TormentNexus LLC/g' package.json
+          npx vsce package --allow-missing-releases
+
+      - name: Upload HyperNexus extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-hypernexus
+          path: extensions/vscode-hypernexus/*.vsix
+
+      - name: Upload TormentNexus extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-tormentnexus
+          path: extensions/vscode-tormentnexus/*.vsix
+
+  # ============================================================
+  # BUILD INSTALLERS
+  # ============================================================
+  build-installers:
+    name: Build Installers
+    needs: build-binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-amd64
+          - os: macos-latest
+            platform: darwin-amd64
+          - os: macos-latest
+            platform: darwin-arm64
+          - os: ubuntu-latest
+            platform: linux-amd64
+          - os: ubuntu-latest
+            platform: linux-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: hypernexus-${{ matrix.platform }}
+          path: ./binary
+
+      - name: Build Windows installer
+        if: matrix.os == 'windows-latest'
+        run: |
+          # NSIS installer
+          choco install nsis -y
+          makensis installer/hypernexus.nsi
+
+      - name: Build macOS installer
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          # Create DMG
+          mkdir -p HyperNexus.app/Contents/MacOS
+          cp binary/hypernexus HyperNexus.app/Contents/MacOS/
+          create-dmg HyperNexus.app || true
+
+      - name: Build Linux installer
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          # Create AppImage
+          chmod +x binary/hypernexus
+          mkdir -p AppDir/usr/bin
+          cp binary/hypernexus AppDir/usr/bin/
+          npx electron-builder --linux AppImage || true
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.platform }}
+          path: |
+            *.exe
+            *.dmg
+            *.AppImage
+            *.deb
+            *.rpm
+
+  # ============================================================
+  # PUBLISH VS CODE EXTENSIONS
+  # ============================================================
+  publish-extensions:
+    name: Publish Extensions
+    needs: build-extensions
+    if: github.event.inputs.publish_extensions == 'true' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download HyperNexus extension
+        uses: actions/download-artifact@v4
+        with:
+          name: vscode-hypernexus
+          path: ./extensions
+
+      - name: Download TormentNexus extension
+        uses: actions/download-artifact@v4
+        with:
+          name: vscode-tormentnexus
+          path: ./extensions
+
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+        run: |
+          npx vsce publish --pat $VSCE_TOKEN -i extensions/vscode-hypernexus/*.vsix || true
+          npx vsce publish --pat $VSCE_TOKEN -i extensions/vscode-tormentnexus/*.vsix || true
+
+      - name: Publish to Open VSX
+        env:
+          OVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
+        run: |
+          npx ovsx publish --pat $OVSX_TOKEN -i extensions/vscode-hypernexus/*.vsix || true
+          npx ovsx publish --pat $OVSX_TOKEN -i extensions/vscode-tormentnexus/*.vsix || true
+
+  # ============================================================
+  # CREATE RELEASE
+  # ============================================================
+  create-release:
+    name: Create Release
+    needs:
+      [build-binaries, build-installers, build-extensions, publish-extensions]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create release archives
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          mkdir -p release
+
+          # Create platform archives
+          for platform in windows-amd64 darwin-amd64 darwin-arm64 linux-amd64 linux-arm64; do
+            cd artifacts/hypernexus-$platform
+            if [ -f hypernexus.exe ]; then
+              zip ../release/hypernexus-$platform.zip hypernexus.exe
+            else
+              tar czf ../release/hypernexus-$platform.tar.gz hypernexus
+            fi
+            cd ../..
+          done
+
+          # Copy extensions
+          cp artifacts/vscode-hypernexus/*.vsix release/
+          cp artifacts/vscode-tormentnexus/*.vsix release/
+
+          # Copy installers
+          cp artifacts/installer-*/* release/ 2>/dev/null || true
+
+          # Generate checksums
+          cd release && sha256sum * > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+  # ============================================================
+  # DEPLOY TO SERVER
+  # ============================================================
+  deploy:
+    name: Deploy
+    needs: create-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Deploy to releases server
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan hypernexus.site >> ~/.ssh/known_hosts
+
+          # Create version directory
+          ssh root@hypernexus.site "mkdir -p /var/www/releases.hypernexus.site/v$VERSION"
+
+          # Upload binaries
+          scp artifacts/hypernexus-windows-amd64/hypernexus.exe root@hypernexus.site:/var/www/releases.hypernexus.site/v$VERSION/
+          scp artifacts/hypernexus-darwin-*/hypernexus root@hypernexus.site:/var/www/releases.hypernexus.site/v$VERSION/
+          scp artifacts/hypernexus-linux-*/hypernexus root@hypernexus.site:/var/www/releases.hypernexus.site/v$VERSION/
+
+          # Upload installers
+          scp dist/install.ps1 root@hypernexus.site:/var/www/hypernexus.site/
+          scp dist/install.sh root@hypernexus.site:/var/www/hypernexus.site/
+
+          # Update latest symlink
+          ssh root@hypernexus.site "ln -sf /var/www/releases.hypernexus.site/v$VERSION /var/www/releases.hypernexus.site/latest"

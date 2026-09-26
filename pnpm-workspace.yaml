@@ -1,0 +1,6 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'mcp-servers/*'
+  - '!apps/cloud-orchestrator'
+  - '!apps/maestro'

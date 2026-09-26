@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  auth-db:
+    image: postgres:16
+    container_name: hypernexus_auth_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hypernexus_auth
+      POSTGRES_USER: hypernexus
+      POSTGRES_PASSWORD: hypernexus_auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - hypernexus-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d hypernexus_auth -U hypernexus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  hypernexus:
+    image: hypernexus/hypernexus:latest
+    container_name: hypernexus
+    ports:
+      - "7778:7778"
+    volumes:
+      - hypernexus-data:/root/.hypernexus
+    environment:
+      - TN_HOST=0.0.0.0
+      - TN_PORT=7778
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7778/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+volumes:
+  hypernexus-data:
+    driver: local
+  hypernexus-auth-data:
+    driver: local

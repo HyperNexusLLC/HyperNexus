@@ -1,0 +1,165 @@
+[
+  {
+    "url": "https://old.reddit.com/r/LangChain/comments/1v87hds/i_built_a_selfhosted_visual_builder_for/",
+    "title": "I built a self-hosted visual builder for LangChain/LangGraph agents and would love feedback",
+    "sub": "LangChain",
+    "comments": 2,
+    "reply": "Visual builders make complex agent workflows much. https://github.com/MDMAtk/TormentNexus",
+    "keywords": [
+      "agent",
+      "self-host",
+      "build"
+    ]
+  },
+  {
+    "url": "https://old.reddit.com/r/mcp/comments/1v82v6q/tempo_mcp_server_an_mcp_server_for_managing_tempo/",
+    "title": "Tempo MCP Server \u2013 An MCP server for managing Tempo worklogs in Jira, allowing users to track time, retrieve logs, and perform bulk operations via natural language. It integrates with the Tempo API to support creating, editing, and deleting work entries through MCP-compatible clients like Claude and",
+    "sub": "mcp",
+    "comments": 2,
+    "reply": "That's a great way to streamline Jira time tracking through natural language. For. https://github.com/MDMAtk/TormentNexus",
+    "keywords": [
+      "mcp",
+      "claude"
+    ]
+  },
+  {
+    "url": "https://old.reddit.com/r/mcp/comments/1v7ptve/built_an_mcp_server_on_replit_that_lets_claude/",
+    "title": "Built an MCP server on Replit that lets Claude Desktop find leads, write proposals, and search my agency knowledge base",
+    "sub": "mcp",
+    "comments": 2,
+    "reply": "That\u2019s a clever use of MCP for end-to-end workflow automation. For managing multiple servers and reducing token costs, HyperNexus offers unified control and progressive routing. https://github.com/MDMAtk/TormentNexus",
+    "keywords": [
+      "mcp",
+      "claude"
+    ]
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dnkl/claude_codes_memory_index_has_an_undocumented/",
+    "title": "Claude Code's memory index has an undocumented hard cap, truncates silently, and drops your NEWEST memories first. The governance fix was closed as \"not planned.\"",
+    "sub": "ClaudeAI",
+    "comments": 5,
+    "reply": "Silent memory loss is a real productivity killer. Our dual-tier memory system in HyperNexus is designed to prevent exactly this kind of issue by giving you control over what persists. https://github.com/MDMAtk/TormentNexus",
+    "keywords": [
+      "memory",
+      "claude"
+    ]
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8cqca/i_used_claude_to_build_a_media_tracking_app_for/",
+    "title": "I used Claude to build a media tracking \"app\" for me and my partner !",
+    "sub": "ClaudeAI",
+    "comments": 3,
+    "reply": "That sounds like a super handy project! If you ever want to manage multiple AI tools like Claude with automatic routing, HyperNexus. https://github.com/MDMAtk/TormentNexus",
+    "keywords": [
+      "claude",
+      "build"
+    ]
+  },
+  {
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8dflw/project_local_llm_agent_playing_perfect_dark_on/",
+    "title": "[Project] Local LLM agent playing Perfect Dark on Mac \u2014 real locomotion + combat (on-device MLX)",
+    "sub": "LocalLLaMA",
+    "comments": 3,
+    "reply": "Impressive on-device ML for game agents! This highlights the need for efficient local LLM control planes\u2014something we tackle with progressive routing and session memory at {. https://github.com/MDMAtk/TormentNexus",
+    "keywords": [
+      "agent",
+      "llm"
+    ]
+  },
+  {
+    "url": "https://old.reddit.com/r/mcp/comments/1v8b4kj/is_your_mcp_turning_a_profit/",
+    "title": "Is your MCP turning a profit?",
+    "sub": "mcp",
+    "comments": 4,
+    "reply": "Most MCP servers eat up tokens faster than revenue. Our progressive tool routing in HyperNexus cuts those costs by 60%, keeping more profit in your pocket. https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:01"
+  },
+  {
+    "url": "https://old.reddit.com/r/mcp/comments/1v8376d/i_built_a_live_remote_mcp_server_for_safer_eu/",
+    "title": "I built a live remote MCP server for safer EU e-invoice preflight",
+    "sub": "mcp",
+    "comments": 3,
+    "reply": "Cool project! Remote MCP servers for compliance workflows make a lot of sense. If you're managing multiple MCP endpoints, https://github.com/MDMAtk/TormentNexus can help route requests efficiently with minimal token overhead.",
+    "generated_at": "2026-07-27 18:46:04"
+  },
+  {
+    "url": "https://old.reddit.com/r/mcp/comments/1v81j4d/opensource_testbed_for_mcp_servers/",
+    "title": "Open-source testbed for MCP servers",
+    "sub": "mcp",
+    "comments": 10,
+    "reply": "We've been building TormentNexus as a Universal AI Control Plane with built-in MCP server management and tool routing. Check it out if you want something production-ready with token savings baked in: https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:11"
+  },
+  {
+    "url": "https://old.reddit.com/r/mcp/comments/1v7w7fu/stopful_a_travel_mcp_server_your_agent_plans_the/",
+    "title": "Stopful \u2014 a travel MCP server: your agent plans the road trip, it returns an editable map link",
+    "sub": "mcp",
+    "comments": 11,
+    "reply": "Nice addition to the MCP ecosystem! Stopful looks great for letting agents handle the tedious mapping logistics. Tools like this shine when orchestrated through a central MCP manager like https://github.com/MDMAtk/TormentNexus.",
+    "generated_at": "2026-07-27 18:46:16"
+  },
+  {
+    "url": "https://old.reddit.com/r/mcp/comments/1v7w48k/tanuki_context_a_llm_token_saver_up_to_94_tokens/",
+    "title": "Tanuki Context - A LLM Token Saver (Up to 94% Tokens saved)",
+    "sub": "mcp",
+    "comments": 6,
+    "reply": "Interesting approach! For token-saving. https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:22"
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8fm6y/psa_check_your_claude_artifacts_link/",
+    "title": "PSA - check your Claude Artifacts link",
+    "sub": "ClaudeAI",
+    "comments": 3,
+    "reply": "Good catch on verifying links\u2014unreliable routing can break workflows. Tools like HyperNexus help monitor and manage AI endpoints to avoid these issues. https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:34"
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dsaa/i_built_a_claude_code_skill_where_an_implementer/",
+    "title": "I built a Claude Code skill where an implementer and reviewer reconcile every finding",
+    "sub": "ClaudeAI",
+    "comments": 6,
+    "reply": "That dual-role reconciliation is smart for. https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:40"
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8d8d4/claude_cowork_escaped_sandbox_on_mac_gained_full/",
+    "title": "Claude Cowork Escaped Sandbox on Mac, Gained Full Access to All Files",
+    "sub": "ClaudeAI",
+    "comments": 9,
+    "reply": "That's alarming\u2014precisely why controlled tool routing matters. HyperNexus enforces sandboxed execution and progressive permissions to prevent exactly this kind of. https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:45"
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8d1ck/possible_claude_max_usage_bug_session_limit/",
+    "title": "Possible Claude Max usage bug: session limit consumed without using",
+    "sub": "ClaudeAI",
+    "comments": 9,
+    "reply": "Session leaks like this are frustrating\u2014could be a background process or stale connection holding a session open. Tools with proper session management (L1/L2 tiering) can help track and reclaim idle resources.",
+    "generated_at": "2026-07-27 18:46:49"
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8c7hk/switching_to_claude_any_mustknow_tips_or_setup/",
+    "title": "Switching to Claude \u2014 Any must-know tips or setup advice to get the most out of it from day one?",
+    "sub": "ClaudeAI",
+    "comments": 7,
+    "reply": "Start with simple, focused prompts to get a feel for its style. For persistent. https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:54"
+  },
+  {
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8bdj6/im_having_claude_animate_all_24_books_of_the/",
+    "title": "I'm having Claude animate all 24 books of the Odyssey",
+    "sub": "ClaudeAI",
+    "comments": 9,
+    "reply": "That's an ambitious and creative project! HyperNexus could help manage. https://github.com/MDMAtk/TormentNexus",
+    "generated_at": "2026-07-27 18:46:59"
+  },
+  {
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8fcup/all_llms_are_liberal_and_left_yes_even_grok_half/",
+    "title": "All LLMs are liberal and left. Yes, even Grok, half the time.",
+    "sub": "LocalLLaMA",
+    "comments": 10,
+    "reply": "Model outputs often reflect training data and tuning goals, which can include diversity principles. You can explore open-source alternatives with different guardrails at https://github.com/MDMAtk/TormentNexus.",
+    "generated_at": "2026-07-27 18:47:13"
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "hypernexus": {
+      "command": "C:\\Users\\hyper\\workspace\\hypernexus\\hypernexus.exe",
+      "args": ["mcp"],
+      "alwaysAllow": ["*"],
+      "disabled": false,
+      "timeout": 60
+    }
+  }
+}

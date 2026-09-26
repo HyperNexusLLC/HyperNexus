@@ -1,0 +1,87 @@
+name: Deploy to Hetzner
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'deploy' to confirm production deployment"
+        required: true
+
+env:
+  GO_VERSION: "1.25"
+  NODE_VERSION: "20"
+
+jobs:
+  build:
+    name: Build Artifacts
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.confirm == 'deploy'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Build Go kernel
+        run: |
+          cd go
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -buildvcs=false \
+            -o ../dist/hypernexus-linux-amd64 ./cmd/tormentnexus
+
+      - name: Build dashboard
+        run: |
+          pnpm install --frozen-lockfile
+          cd apps/web && pnpm run build
+
+      - name: Package artifacts
+        run: |
+          mkdir -p dist
+          cp -r apps/web/.next-build/standalone dist/web-standalone
+          tar -czf dist/hypernexus-deploy.tar.gz -C dist hypernexus-linux-amd64 web-standalone
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: dist/hypernexus-deploy.tar.gz
+
+  deploy:
+    name: Deploy to Hetzner
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' || github.event.inputs.confirm == 'deploy'
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: deploy-package
+
+      - name: Deploy via SSH
+        env:
+          SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+          SSH_HOST: ${{ secrets.HETZNER_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          tar -xzf hypernexus-deploy.tar.gz
+          scp -o StrictHostKeyChecking=no hypernexus-linux-amd64 root@$SSH_HOST:/opt/hypernexus/hypernexus
+          scp -o StrictHostKeyChecking=no -r web-standalone root@$SSH_HOST:/opt/hypernexus/
+          ssh -o StrictHostKeyChecking=no root@$SSH_HOST "systemctl restart hypernexus-kernel && systemctl restart hypernexus-dashboard && systemctl reload nginx"
+
+      - name: Verify deployment
+        env:
+          SSH_HOST: ${{ secrets.HETZNER_HOST }}
+        run: |
+          sleep 5
+          curl -sk "https://hypernexus.site/api/go/health" | grep -q '"ok":true' && echo "Kernel OK" || echo "Kernel FAILED"
+          curl -sk -o /dev/null -w "%{http_code}" "https://hypernexus.site/dashboard" | grep -q "200" && echo "Dashboard OK" || echo "Dashboard FAILED"

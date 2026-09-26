@@ -1,0 +1,64 @@
+name: HyperNexus CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: go/go.sum
+
+      - name: Build kernel
+        working-directory: go
+        run: go build -o ../bin/hypernexus-test.exe ./cmd/tormentnexus/
+
+      - name: Run unit tests
+        working-directory: go
+        run: go test ./internal/tools/ ./internal/memorystore/ ./internal/repograph/ ./foundation/repomap/ -v -timeout 60s
+
+      - name: Vet
+        working-directory: go
+        run: go vet ./internal/tools/ ./internal/memorystore/ ./internal/repograph/ ./foundation/repomap/
+
+  build-supervisor:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build supervisor
+        working-directory: packages/tormentnexus-supervisor
+        run: |
+          npm ci
+          npx tsc
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: go/go.sum
+
+      - name: Go vet (core packages)
+        working-directory: go
+        run: |
+          go vet ./internal/tools/...
+          go vet ./internal/memorystore/...
+          go vet ./internal/repograph/...
+          go vet ./foundation/repomap/...
+          go vet ./foundation/repomap/...

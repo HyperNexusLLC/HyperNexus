@@ -1,0 +1,109 @@
+{
+  "name": "hypernexus",
+  "displayName": "HyperNexus - Universal AI Control Plane",
+  "description": "Persistent memory, MCP tool routing, and cross-client context sharing for all AI tools",
+  "version": "1.0.0",
+  "publisher": "hypernexus",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/HyperNexusLLC/HyperNexus.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "mcp",
+    "memory",
+    "context",
+    "claude",
+    "cursor",
+    "copilot",
+    "llm"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "hypernexus.connect",
+        "title": "HyperNexus: Connect to Server"
+      },
+      {
+        "command": "hypernexus.disconnect",
+        "title": "HyperNexus: Disconnect"
+      },
+      {
+        "command": "hypernexus.saveMemory",
+        "title": "HyperNexus: Save Memory"
+      },
+      {
+        "command": "hypernexus.searchMemory",
+        "title": "HyperNexus: Search Memory"
+      },
+      {
+        "command": "hypernexus.showStatus",
+        "title": "HyperNexus: Show Status"
+      },
+      {
+        "command": "hypernexus.openDashboard",
+        "title": "HyperNexus: Open Dashboard"
+      }
+    ],
+    "configuration": {
+      "title": "HyperNexus",
+      "properties": {
+        "hypernexus.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8080/mcp",
+          "description": "HyperNexus MCP Server URL"
+        },
+        "hypernexus.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect on startup"
+        },
+        "hypernexus.enableMemory": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable persistent memory"
+        },
+        "hypernexus.enableToolRouting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable progressive MCP tool routing"
+        }
+      }
+    },
+    "mcpServers": {
+      "hypernexus": {
+        "command": "hypernexus",
+        "args": ["mcp"],
+        "env": {
+          "HN_EDITION": "corporate"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

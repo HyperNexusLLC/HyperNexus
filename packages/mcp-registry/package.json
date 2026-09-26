@@ -1,0 +1,14 @@
+{
+  "name": "@hypernexus/mcp-registry",
+  "version": "1.0.3",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  }
+}

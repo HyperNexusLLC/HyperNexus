@@ -1,0 +1,342 @@
+[
+  {
+    "date": "2026-08-29",
+    "day": "Saturday",
+    "theme": "indie",
+    "main_post": "Ship in public: 113 outreach emails sent, 1 response (auto-reply), 30 DM scripts ready, 0 downloads. Reality of building in public. We keep going.",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-08-30",
+    "day": "Sunday",
+    "theme": "call_to_action",
+    "main_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "secondary_post": "Local vector routing (sqlite-vec) + progressive tool loading = 92.7% fewer input tokens. Single 15MB binary. Zero deps.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-08-31",
+    "day": "Monday",
+    "theme": "architecture",
+    "main_post": "Why Go? 15MB binary, no runtime deps, sub-ms routing, cross-compiles everywhere. The right tool for the job.",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-01",
+    "day": "Tuesday",
+    "theme": "benchmark",
+    "main_post": "Benchmark: 76 tools loaded -> 2-7 per query. 8,994 tokens -> 660 average. $30K/year saved at 100K requests/mo. Run it yourself: github.com/robertpelloni/HyperNexus",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-02",
+    "day": "Wednesday",
+    "theme": "client_support",
+    "main_post": "One MCP endpoint. Every AI client connects. One daemon routes for all of them. That's the control plane idea.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-03",
+    "day": "Thursday",
+    "theme": "problem",
+    "main_post": "Your AI agent sends 50,000 tokens of tool schemas with every request. It needs 5. That's the whole pitch.",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-04",
+    "day": "Friday",
+    "theme": "solution",
+    "main_post": "The fix for context bloat isn't a bigger context window. It's sending less context. HyperNexus sends 2,500 tokens instead of 50,000.",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-05",
+    "day": "Saturday",
+    "theme": "indie",
+    "main_post": "Day 30 of building HyperNexus: zero customers, three first-runs, one auto-reply from OpenAI. The grind is the product.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-06",
+    "day": "Sunday",
+    "theme": "call_to_action",
+    "main_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "secondary_post": "Built a Go daemon that routes only the 2-7 tools an agent actually needs per request. 92.7% token reduction. Benchmark: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-07",
+    "day": "Monday",
+    "theme": "architecture",
+    "main_post": "The architecture is 3 layers: local embedding index, progressive router, and a thin MCP proxy. Each layer is <500 lines of Go.",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-08",
+    "day": "Tuesday",
+    "theme": "benchmark",
+    "main_post": "60-second benchmark. Reproducible. No cloud. Just run: python3 benchmark.py -- see the numbers yourself.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-09",
+    "day": "Wednesday",
+    "theme": "client_support",
+    "main_post": "Claude Desktop, Jan, Perplexity, Kimi, MiniMax, AnythingLLM, ZCode -- HyperNexus injects MCP configs into all of them automatically.",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-10",
+    "day": "Thursday",
+    "theme": "problem",
+    "main_post": "AI agents waste 80-90% of input tokens re-reading tool schemas on every request. Nobody talks about this because it's invisible -- until you see the bill.",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-11",
+    "day": "Friday",
+    "theme": "solution",
+    "main_post": "Local vector routing (sqlite-vec) + progressive tool loading = 92.7% fewer input tokens. Single 15MB binary. Zero deps.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-12",
+    "day": "Saturday",
+    "theme": "indie",
+    "main_post": "Nobody owes you a download. Every first-run is earned. Every response is a gift. Keep shipping.",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-13",
+    "day": "Sunday",
+    "theme": "call_to_action",
+    "main_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "secondary_post": "Sub-millisecond routing, <30MB RAM, 36+ AI clients supported. That's what 92.7% token reduction looks like when done right.",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-14",
+    "day": "Monday",
+    "theme": "architecture",
+    "main_post": "How it works: 1) Agent sends query 2) sqlite-vec matches intent to tools 3) Only relevant schemas injected 4) LLM sees clean context. That's the whole system.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-15",
+    "day": "Tuesday",
+    "theme": "benchmark",
+    "main_post": "I don't want you to trust my numbers. That's why the benchmark suite is in the repo. Run it. Verify it. Then we talk.",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-16",
+    "day": "Wednesday",
+    "theme": "client_support",
+    "main_post": "Works with 36+ AI clients: Cursor, Claude Code, Aider, Windsurf, Continue, Cline, Codex CLI, Gemini CLI, Qwen Code, and more.",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-17",
+    "day": "Thursday",
+    "theme": "problem",
+    "main_post": "Token costs aren't a model pricing problem. They're a context engineering problem. Most teams optimize the wrong layer.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-18",
+    "day": "Friday",
+    "theme": "solution",
+    "main_post": "Built a Go daemon that routes only the 2-7 tools an agent actually needs per request. 92.7% token reduction. Benchmark: github.com/robertpelloni/HyperNexus",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-19",
+    "day": "Saturday",
+    "theme": "indie",
+    "main_post": "Ship in public: 113 outreach emails sent, 1 response (auto-reply), 30 DM scripts ready, 0 downloads. Reality of building in public. We keep going.",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-20",
+    "day": "Sunday",
+    "theme": "call_to_action",
+    "main_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "secondary_post": "The fix for context bloat isn't a bigger context window. It's sending less context. HyperNexus sends 2,500 tokens instead of 50,000.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-21",
+    "day": "Monday",
+    "theme": "architecture",
+    "main_post": "sqlite-vec embeds live locally. Zero data leaves your machine. Your tool schemas, your context, your business -- private by default.",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-22",
+    "day": "Tuesday",
+    "theme": "benchmark",
+    "main_post": "Benchmark: 76 tools loaded -> 2-7 per query. 8,994 tokens -> 660 average. $30K/year saved at 100K requests/mo. Run it yourself: github.com/robertpelloni/HyperNexus",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-23",
+    "day": "Wednesday",
+    "theme": "client_support",
+    "main_post": "One MCP endpoint. Every AI client connects. One daemon routes for all of them. That's the control plane idea.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-24",
+    "day": "Thursday",
+    "theme": "problem",
+    "main_post": "Every MCP server you add doubles your context payload. Most agents never use 90% of the tools they load. The math is brutal.",
+    "secondary_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-25",
+    "day": "Friday",
+    "theme": "solution",
+    "main_post": "Sub-millisecond routing, <30MB RAM, 36+ AI clients supported. That's what 92.7% token reduction looks like when done right.",
+    "secondary_post": "Want to cut your agent token costs? The benchmark takes 60 seconds: github.com/robertpelloni/HyperNexus",
+    "platforms": [
+      "X",
+      "LinkedIn",
+      "Reddit"
+    ]
+  },
+  {
+    "date": "2026-09-26",
+    "day": "Saturday",
+    "theme": "indie",
+    "main_post": "Day 30 of building HyperNexus: zero customers, three first-runs, one auto-reply from OpenAI. The grind is the product.",
+    "secondary_post": "Free, open-source, self-hosted. Install in 2 minutes with one command: hypernexus.site/install.ps1",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  },
+  {
+    "date": "2026-09-27",
+    "day": "Sunday",
+    "theme": "call_to_action",
+    "main_post": "The control plane for your AI tools is open source now. Try it before the VC-funded competitors price it.",
+    "secondary_post": "Local vector routing (sqlite-vec) + progressive tool loading = 92.7% fewer input tokens. Single 15MB binary. Zero deps.",
+    "platforms": [
+      "X",
+      "LinkedIn"
+    ]
+  }
+]

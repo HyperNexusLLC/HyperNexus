@@ -1,0 +1,9 @@
+{
+  "edition": "hypernexus",
+  "product_name": "HyperNexus",
+  "company_name": "HyperNexus Team",
+  "tray_tooltip": "HyperNexus (Running)",
+  "dashboard_title": "HyperNexus Dashboard",
+  "config_dir": ".hypernexus",
+  "registry_key": "HyperNexus"
+}

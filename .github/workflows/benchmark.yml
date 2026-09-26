@@ -1,0 +1,70 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'go/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'go/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Go Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Run Go benchmarks
+        run: |
+          cd go
+          go test -bench=. -benchmem -benchtime=100x -run=^$ ./... 2>&1 | tee benchmark-results.txt
+
+      - name: Store benchmark results
+        uses: benchmark-action/github-action-benchmark@v1
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: HyperNexus Go Benchmarks
+          tool: 'go'
+          output-file-path: go/benchmark-results.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: false
+        continue-on-error: true
+
+  api-latency:
+    name: API Latency Baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Build kernel
+        run: cd go && go build -buildvcs=false -o ../bin/hypernexus ./cmd/tormentnexus
+
+      - name: Start kernel and measure latency
+        run: |
+          ./bin/hypernexus serve --port 7778 &
+          sleep 3
+          echo "=== API Latency Baseline ===" | tee latency-results.txt
+          for endpoint in /health /version /api/index /api/mcp/status /api/memory/search?query=test; do
+            for i in 1 2 3; do
+              curl -s -o /dev/null -w "%{time_total}" "http://127.0.0.1:7778$endpoint" | xargs -I{} echo "$endpoint: {}s" | tee -a latency-results.txt
+            done
+          done
+          kill %1
+        continue-on-error: true

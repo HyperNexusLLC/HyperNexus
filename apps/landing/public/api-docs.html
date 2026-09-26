@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HyperNexus API Documentation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background: #09090b;
+        color: #e4e4e7;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .hero {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+      .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #22c55e, #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hero p {
+        color: #a1a1aa;
+        font-size: 1.125rem;
+      }
+      .section {
+        margin-bottom: 3rem;
+      }
+      .section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #22c55e;
+      }
+      .endpoint {
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      .endpoint-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .method {
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+      .get {
+        background: #3b82f6;
+        color: white;
+      }
+      .post {
+        background: #22c55e;
+        color: black;
+      }
+      .put {
+        background: #f59e0b;
+        color: black;
+      }
+      .delete {
+        background: #ef4444;
+        color: white;
+      }
+      .path {
+        font-family: monospace;
+        font-size: 1.125rem;
+      }
+      .description {
+        color: #a1a1aa;
+        margin-bottom: 1rem;
+      }
+      .params {
+        margin-top: 1rem;
+      }
+      .param {
+        display: flex;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #27272a;
+      }
+      .param:last-child {
+        border-bottom: none;
+      }
+      .param-name {
+        font-family: monospace;
+        min-width: 150px;
+        color: #22c55e;
+      }
+      .param-type {
+        color: #3b82f6;
+        min-width: 100px;
+      }
+      .code {
+        background: #27272a;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        overflow-x: auto;
+        margin-top: 1rem;
+      }
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100vh;
+        background: #18181b;
+        border-right: 1px solid #27272a;
+        padding: 1rem;
+        overflow-y: auto;
+      }
+      .nav a {
+        display: block;
+        padding: 0.5rem;
+        color: #a1a1aa;
+        text-decoration: none;
+        border-radius: 4px;
+      }
+      .nav a:hover {
+        background: #27272a;
+        color: #e4e4e7;
+      }
+      .main {
+        margin-left: 270px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <h3 style="margin-bottom: 1rem">API Reference</h3>
+      <a href="#memory">Memory</a>
+      <a href="#tools">Tools</a>
+      <a href="#mcp">MCP</a>
+      <a href="#health">Health</a>
+      <a href="#auth">Auth</a>
+    </nav>
+
+    <div class="main">
+      <div class="container">
+        <div class="hero">
+          <h1>HyperNexus API</h1>
+          <p>REST API for HyperNexus AI Control Plane</p>
+        </div>
+
+        <div class="section" id="memory">
+          <h2>Memory</h2>
+
+          <div class="endpoint">
+            <div class="endpoint-header">
+              <span class="method post">POST</span>
+              <span class="path">/api/v1/memory/store</span>
+            </div>
+            <p class="description">
+              Store a memory with title, content, and tags
+            </p>
+            <div class="params">
+              <div class="param">
+                <span class="param-name">title</span>
+                <span class="param-type">string</span>
+                <span>Memory title</span>
+              </div>
+              <div class="param">
+                <span class="param-name">content</span>
+                <span class="param-type">string</span>
+                <span>Memory content</span>
+              </div>
+              <div class="param">
+                <span class="param-name">tags</span>
+                <span class="param-type">string[]</span>
+                <span>Optional tags</span>
+              </div>
+            </div>
+            <div class="code">
+              curl -X POST http://localhost:8080/api/v1/memory/store \ -H
+              "Content-Type: application/json" \ -d '{"title":"Auth
+              Decision","content":"Using JWT with
+              bcrypt","tags":["auth","security"]}'
+            </div>
+          </div>
+
+          <div class="endpoint">
+            <div class="endpoint-header">
+              <span class="method get">GET</span>
+              <span class="path">/api/v1/memory/search</span>
+            </div>
+            <p class="description">Search memories by query</p>
+            <div class="params">
+              <div class="param">
+                <span class="param-name">query</span>
+                <span class="param-type">string</span>
+                <span>Search query</span>
+              </div>
+              <div class="param">
+                <span class="param-name">limit</span>
+                <span class="param-type">number</span>
+                <span>Max results (default: 10)</span>
+              </div>
+            </div>
+            <div class="code">
+              curl
+              "http://localhost:8080/api/v1/memory/search?query=auth&limit=5"
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="tools">
+          <h2>Tools</h2>
+
+          <div class="endpoint">
+            <div class="endpoint-header">
+              <span class="method get">GET</span>
+              <span class="path">/api/v1/tools</span>
+            </div>
+            <p class="description">List all available MCP tools</p>
+            <div class="code">curl "http://localhost:8080/api/v1/tools"</div>
+          </div>
+
+          <div class="endpoint">
+            <div class="endpoint-header">
+              <span class="method post">POST</span>
+              <span class="path">/api/v1/tools/call</span>
+            </div>
+            <p class="description">Call an MCP tool</p>
+            <div class="params">
+              <div class="param">
+                <span class="param-name">tool</span>
+                <span class="param-type">string</span>
+                <span>Tool name</span>
+              </div>
+              <div class="param">
+                <span class="param-name">args</span>
+                <span class="param-type">object</span>
+                <span>Tool arguments</span>
+              </div>
+            </div>
+            <div class="code">
+              curl -X POST http://localhost:8080/api/v1/tools/call \ -H
+              "Content-Type: application/json" \ -d
+              '{"tool":"memory_search","args":{"query":"auth"}}'
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="mcp">
+          <h2>MCP</h2>
+
+          <div class="endpoint">
+            <div class="endpoint-header">
+              <span class="method get">GET</span>
+              <span class="path">/mcp</span>
+            </div>
+            <p class="description">MCP server endpoint (SSE transport)</p>
+            <div class="code">
+              # Connect via MCP client claude mcp add hypernexus
+              http://localhost:8080/mcp
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="health">
+          <h2>Health</h2>
+
+          <div class="endpoint">
+            <div class="endpoint-header">
+              <span class="method get">GET</span>
+              <span class="path">/health</span>
+            </div>
+            <p class="description">Health check endpoint</p>
+            <div class="code">
+              curl http://localhost:8080/health
+              {"ok":true,"service":"hypernexus-go","version":"1.0.1"}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

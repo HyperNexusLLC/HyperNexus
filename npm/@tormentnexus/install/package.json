@@ -1,0 +1,28 @@
+{
+  "name": "@hypernexus/install",
+  "version": "1.0.1",
+  "description": "HyperNexus One-Command Installer — Sets up MCP config, skills, hooks, and extensions for ALL 38+ AI coding clients",
+  "bin": {
+    "tninstall": "./cli.js"
+  },
+  "scripts": {
+    "install": "node setup.js"
+  },
+  "keywords": [
+    "hypernexus",
+    "install",
+    "mcp",
+    "ai-tools",
+    "setup"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/hypernexus-org/HyperNexus.git"
+  },
+  "license": "MIT",
+  "files": [
+    "setup.js",
+    "cli.js",
+    "package.json"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "plugins": {
+    "hypernexus@hypernexus-marketplace": {
+      "source": {
+        "source": "local",
+        "path": "C:\\Users\\hyper\\workspace\\hypernexus\\.claude\\plugins\\cache\\hypernexus"
+      }
+    }
+  }
+}
