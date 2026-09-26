@@ -1574,6 +1574,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/fts-search", s.handleMemoryFTSearch)
 	s.mux.HandleFunc("/api/memory/maintenance", s.handleMemoryMaintenance)
 	s.mux.HandleFunc("/api/memory/maintenance-local", s.handleMemoryMaintenanceLocal)
+	s.mux.HandleFunc("/api/memory/re-embed", s.handleMemoryReEmbed)
 	s.mux.HandleFunc("/api/memory/project/sync", s.handleProjectSync)
 	s.mux.HandleFunc("/api/memory/project/split", s.handleProjectSplit)
 	s.mux.HandleFunc("/api/memory/cold-archive", s.handleColdArchiveCount)

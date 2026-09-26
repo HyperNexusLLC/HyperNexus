@@ -1,12 +1,14 @@
 package memorystore
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math"
+	"net/http"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -18,6 +20,13 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/database"
+)
+
+const (
+	ollamaURL     = "http://localhost:11434/api/embed"
+	ollamaModel   = "nomic-embed-text"
+	ollamaDim     = 768
+	fallbackDim   = 384
 )
 
 type l1Entry struct {
@@ -186,8 +195,11 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 			return fmt.Errorf("memorystore commit embedding: %w", err)
 		}
 	} else if entry.Content != "" {
-		// Auto-generate a hash-based embedding for semantic search
-		vec := simpleEmbed(entry.Content, 384)
+		// Try Ollama for real semantic embeddings, fall back to hash-based
+		vec := ollamaEmbed(ctx, entry.Content)
+		if vec == nil {
+			vec = simpleEmbed(entry.Content, fallbackDim)
+		}
 		_, err = s.db.ExecContext(ctx, `
 			INSERT INTO vec_l2_vault (id, embedding)
 			VALUES (?, ?)
@@ -349,6 +361,14 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 
 	isVectorSearch := len(queryVec) > 0
 
+	// If we have text but no vector, try to get a real embedding from Ollama
+	if !isVectorSearch && queryText != "" {
+		if vec := ollamaEmbed(ctx, queryText); vec != nil {
+			queryVec = vec
+			isVectorSearch = true
+		}
+	}
+
 	if isVectorSearch {
 		// Vector search with optional metadata filters
 		var args []interface{}
@@ -412,8 +432,12 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 			s.incrementHeatLocked(ctx, c.record.ID)
 		}
 
-		results, err = s.fallbackL3Search(ctx, results, queryText, limit)
-		return results, err
+		if len(results) > 0 {
+			results, err = s.fallbackL3Search(ctx, results, queryText, limit)
+			return results, err
+		}
+		// Vector search returned 0 results — fall through to keyword search below
+		// This handles dimension mismatches (old 384-dim vs new 768-dim embeddings)
 	}
 
 	// Check L1 cache first for manual / working memory queries (supporting text filter)
@@ -542,16 +566,35 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 }
 
 func (s *VectorStore) fallbackL3Search(ctx context.Context, results []controlplane.L2VaultRecord, queryText string, limit int) ([]controlplane.L2VaultRecord, error) {
-	if len(results) > 0 || queryText == "" || s.coldArchive == nil {
+	if queryText == "" || s.coldArchive == nil {
 		return results, nil
 	}
+
+	// Always search L3 if we have room for more results
+	if len(results) >= limit {
+		return results, nil
+	}
+
+	// Unlock for L3 operations (Commit re-acquires the lock internally)
 	s.mu.Unlock()
 	defer s.mu.Lock()
-	coldResults, err := s.coldArchive.SearchCold(ctx, queryText, limit)
+
+	remaining := limit - len(results)
+	coldResults, err := s.coldArchive.SearchCold(ctx, queryText, remaining)
 	if err != nil {
 		return results, nil
 	}
+
+	// Deduplicate: don't add L3 results that are already in L2 results
+	existing := make(map[string]bool)
+	for _, r := range results {
+		existing[r.ID] = true
+	}
+
 	for _, r := range coldResults {
+		if existing[r.ID] {
+			continue
+		}
 		promoted, err := s.coldArchive.Promote(ctx, r.ID)
 		if err == nil && promoted != nil {
 			errCommit := s.Commit(ctx, *promoted)
@@ -1012,6 +1055,118 @@ func (s *VectorStore) MentalModelReflection(ctx context.Context) error {
 
 func (s *VectorStore) RelationStore() *RelationStore {
 	return s.relationStore
+}
+
+// ReEmbedAll re-embeds all L2 vault records using Ollama.
+// Intended for one-time migration from hash-based to real embeddings.
+// Returns (updated, skipped, errors) counts.
+func (s *VectorStore) ReEmbedAll(ctx context.Context) (int, int, int) {
+	s.mu.Lock()
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT v.id, l.content, LENGTH(v.embedding) as emb_len
+		FROM vec_l2_vault v
+		JOIN l2_vault l ON l.id = v.id
+		WHERE l.content != ''
+	`)
+	s.mu.Unlock()
+	if err != nil {
+		fmt.Printf("ReEmbedAll: query error: %v\n", err)
+		return 0, 0, 1
+	}
+	defer rows.Close()
+
+	type reEmbedTarget struct {
+		ID      string
+		Content string
+		EmbLen  int
+	}
+	var targets []reEmbedTarget
+	for rows.Next() {
+		var t reEmbedTarget
+		if err := rows.Scan(&t.ID, &t.Content, &t.EmbLen); err == nil {
+			targets = append(targets, t)
+		}
+	}
+
+	updated, skipped, errs := 0, 0, 0
+	for _, t := range targets {
+		// Skip if already has a 768-dim (Ollama) embedding
+		if t.EmbLen == ollamaDim*4 {
+			skipped++
+			continue
+		}
+
+		vec := ollamaEmbed(ctx, t.Content)
+		if vec == nil {
+			skipped++ // Ollama unavailable for this one
+			continue
+		}
+
+		s.mu.Lock()
+		_, err := s.db.ExecContext(ctx, `
+			UPDATE vec_l2_vault SET embedding = ? WHERE id = ?
+		`, encodeVec(vec), t.ID)
+		s.mu.Unlock()
+
+		if err != nil {
+			fmt.Printf("ReEmbedAll: update error for %s: %v\n", t.ID, err)
+			errs++
+		} else {
+			updated++
+		}
+
+		// Rate limit: don't hammer Ollama
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return updated, skipped, errs
+}
+
+// ollamaEmbed calls the local Ollama server to generate a real embedding vector.
+// Returns nil if Ollama is unreachable or returns an error — caller should fall back to simpleEmbed.
+func ollamaEmbed(ctx context.Context, text string) []float32 {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	payload := struct {
+		Model string `json:"model"`
+		Input string `json:"input"`
+	}{Model: ollamaModel, Input: text}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", ollamaURL, bytes.NewReader(body))
+	if err != nil {
+		return nil
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil // Ollama not running — silent fallback
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil
+	}
+
+	var result struct {
+		Embeddings [][]float32 `json:"embeddings"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil
+	}
+	if len(result.Embeddings) == 0 || len(result.Embeddings[0]) == 0 {
+		return nil
+	}
+
+	return result.Embeddings[0]
 }
 
 // simpleEmbed generates a deterministic hash-based embedding vector from text.

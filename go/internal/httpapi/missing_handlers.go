@@ -599,3 +599,25 @@ func (s *Server) handleLimboResurrect(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": rec})
 }
+
+func (s *Server) handleMemoryReEmbed(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+
+	if tools.GlobalVectorStore == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": "vector store not initialized"})
+		return
+	}
+
+	updated, skipped, errs := tools.GlobalVectorStore.ReEmbedAll(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data": map[string]any{
+			"updated": updated,
+			"skipped": skipped,
+			"errors":  errs,
+		},
+	})
+}

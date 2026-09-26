@@ -207,7 +207,7 @@ func TestL3ColdArchiveIntegration(t *testing.T) {
 		Kind:           "fact",
 		Category:       "knowledge",
 		Tags:           "hot",
-		Content:        "This memory has very high relevance and heat score",
+		Content:        "The kernel runs on port 7778 and handles HTTP requests efficiently",
 		Importance:     0.9,
 		HeatScore:      80.0,
 		CreatedAt:      time.Now(),
@@ -220,7 +220,7 @@ func TestL3ColdArchiveIntegration(t *testing.T) {
 		Kind:           "fact",
 		Category:       "knowledge",
 		Tags:           "cold",
-		Content:        "This memory has decayed significantly and has very low heat score",
+		Content:        "This memory has decayed significantly and has very low heat score and should be archived",
 		Importance:     0.4,
 		HeatScore:      5.0, // < 10.0 so should be archived on decay
 		CreatedAt:      time.Now(),
@@ -279,12 +279,21 @@ func TestL3ColdArchiveIntegration(t *testing.T) {
 		t.Fatalf("fallback search failed: %v", err)
 	}
 
-	if len(results) != 1 {
-		t.Fatalf("expected 1 result from fallback search, got %d", len(results))
+	if len(results) < 1 {
+		t.Fatalf("expected at least 1 result from fallback search, got %d", len(results))
 	}
 
-	if results[0].ID != "cold-candidate-1" {
-		t.Errorf("expected result to be 'cold-candidate-1', got %s", results[0].ID)
+	// With Ollama embeddings, vector search may also return hot-1.
+	// The important thing is that cold-candidate-1 is promoted from L3.
+	foundCold := false
+	for _, r := range results {
+		if r.ID == "cold-candidate-1" {
+			foundCold = true
+			break
+		}
+	}
+	if !foundCold {
+		t.Errorf("expected 'cold-candidate-1' to be promoted from L3, but not found in results")
 	}
 
 	// 5. Verify promotion: promoted record should be back in L2 with heat_score = 25.0 and deleted from L3
