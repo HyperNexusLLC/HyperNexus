@@ -8,7 +8,8 @@ param(
     [int]$MaxRestartAttempts = 3,
     [int]$CheckIntervalSec = 30,
     [string]$WebhookUrl = "",
-    [switch]$MonitorMCP
+    [switch]$MonitorMCP,
+    [switch]$MonitorOllama
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -43,6 +44,35 @@ function Test-MCPHealth {
     }
 }
 
+function Test-OllamaHealth {
+    try {
+        $response = Invoke-WebRequest -Uri "http://127.0.0.1:11434/api/tags" -UseBasicParsing -TimeoutSec 5
+        $json = $response.Content | ConvertFrom-Json
+        return $null -ne $json.models
+    } catch {
+        return $false
+    }
+}
+
+function Start-Ollama {
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting Ollama server..."
+    $ollamaPath = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
+    if (-not (Test-Path $ollamaPath)) {
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Ollama not found at $ollamaPath"
+        return $false
+    }
+    Start-Process -FilePath $ollamaPath -ArgumentList "serve" -WindowStyle Hidden
+    for ($i = 1; $i -le 10; $i++) {
+        Start-Sleep -Seconds 1
+        if (Test-OllamaHealth) {
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Ollama started (after ${i}s)"
+            return $true
+        }
+    }
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Ollama failed to start after 10s"
+    return $false
+}
+
 function Start-Kernel {
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting HyperNexus kernel..."
     Start-Process -FilePath $KernelPath -ArgumentList "serve" -WindowStyle Hidden
@@ -72,7 +102,15 @@ function Stop-Kernel {
 }
 
 # Main watchdog loop
-Write-Host "[$(Get-Date -Format 'HH:mm:ss')] HyperNexus Kernel Watchdog started (port=$Port, interval=${CheckIntervalSec}s, mcp=$MonitorMCP)"
+Write-Host "[$(Get-Date -Format 'HH:mm:ss')] HyperNexus Kernel Watchdog started (port=$Port, interval=${CheckIntervalSec}s, mcp=$MonitorMCP, ollama=$MonitorOllama)"
+
+# Ensure Ollama is running before kernel starts (for embeddings)
+if ($MonitorOllama) {
+    if (-not (Test-OllamaHealth)) {
+        Start-Ollama | Out-Null
+    }
+}
+
 $consecutiveFailures = 0
 $mcpFailures = 0
 
@@ -97,6 +135,13 @@ while ($true) {
                     if (Start-Kernel) { $mcpFailures = 0; $consecutiveFailures = 0 }
                 }
             }
+        }
+
+        # Optional Ollama health check
+        if ($MonitorOllama -and -not (Test-OllamaHealth)) {
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Ollama down, restarting..."
+            Send-Alert "Ollama server down. Restarting..."
+            Start-Ollama | Out-Null
         }
     } else {
         $consecutiveFailures++
