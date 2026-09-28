@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HyperNexus Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,sans-serif;padding:2rem}
+h1{font-size:1.8rem;font-weight:700;margin-bottom:1.5rem;background:linear-gradient(135deg,#ffd700,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin-bottom:2rem}
+.card{background:#12121a;border:1px solid #1e1e2e;border-radius:12px;padding:1.25rem;transition:border-color .2s}
+.card:hover{border-color:#ffd70040}
+.card h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;color:#888;margin-bottom:.75rem}
+.card .value{font-size:2rem;font-weight:700;color:#fff}
+.card .sub{font-size:.75rem;color:#666;margin-top:.25rem}
+.status{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.status.ok{background:#00e676;box-shadow:0 0 8px #00e67680}
+.status.err{background:#ff1744;box-shadow:0 0 8px #ff174480}
+.status.warn{background:#ffd700;box-shadow:0 0 8px #ffd70080}
+table{width:100%;border-collapse:collapse;margin-top:.5rem}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid #1e1e2e;font-size:.85rem}
+th{color:#888;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}
+td{color:#ccc}
+.footer{text-align:center;color:#444;font-size:.7rem;margin-top:2rem;letter-spacing:.1em}
+button{background:#1e1e2e;color:#ffd700;border:1px solid #ffd70040;padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-size:.8rem;transition:all .2s}
+button:hover{background:#ffd7001a;border-color:#ffd700}
+#actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+</style>
+</head>
+<body>
+<h1>HyperNexus Dashboard</h1>
+
+<div id="actions">
+  <button onclick="call('/api/memory/maintenance','POST')">Run Maintenance</button>
+  <button onclick="call('/api/memory/re-embed','POST')">Re-Embed All</button>
+  <button onclick="call('/api/memory/migrate-scratchpad','POST')">Migrate Scratchpad</button>
+  <button onclick="refresh()">Refresh</button>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Kernel Status</h2>
+    <div class="value" id="kernel-status"><span class="status ok"></span>Checking...</div>
+    <div class="sub" id="kernel-info"></div>
+  </div>
+  <div class="card">
+    <h2>Ollama Embeddings</h2>
+    <div class="value" id="ollama-status"><span class="status warn"></span>Checking...</div>
+    <div class="sub" id="ollama-info"></div>
+  </div>
+  <div class="card">
+    <h2>L2 Vault Memories</h2>
+    <div class="value" id="memory-count">-</div>
+    <div class="sub">Semantic search enabled</div>
+  </div>
+  <div class="card">
+    <h2>Scratchpad Keys</h2>
+    <div class="value" id="scratchpad-count">-</div>
+    <div class="sub" id="scratchpad-keys"></div>
+  </div>
+</div>
+
+<h2 style="color:#888;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem">Scratchpad Contents</h2>
+<div class="card" id="scratchpad-card" style="margin-bottom:1rem">
+  <table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody id="scratchpad-table"><tr><td colspan="2" style="color:#666">Loading...</td></tr></tbody></table>
+</div>
+
+<div id="toast" style="position:fixed;bottom:2rem;right:2rem;background:#1e1e2e;color:#ffd700;padding:.75rem 1.25rem;border-radius:8px;border:1px solid #ffd70040;display:none;font-size:.85rem;z-index:100"></div>
+
+<div class="footer">HyperNexus Kernel Dashboard &middot; Port 7778</div>
+
+<script>
+const API = window.location.origin;
+
+async function fetchJSON(path) {
+  try {
+    const r = await fetch(API + path);
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+async function call(path, method) {
+  try {
+    const r = await fetch(API + path, {method});
+    const j = await r.json();
+    toast(j.success ? 'Done: ' + path : 'Error: ' + (j.error || 'unknown'));
+    setTimeout(refresh, 1000);
+  } catch(e) { toast('Request failed: ' + e.message); }
+}
+
+async function refresh() {
+  // Kernel health
+  const health = await fetchJSON('/health');
+  if (health && health.ok) {
+    document.getElementById('kernel-status').innerHTML = '<span class="status ok"></span>Online';
+    document.getElementById('kernel-info').textContent = health.service + ' v' + health.version + ' · uptime ' + health.uptimeSec + 's';
+  } else {
+    document.getElementById('kernel-status').innerHTML = '<span class="status err"></span>Offline';
+  }
+
+  // Ollama
+  try {
+    const r = await fetch('http://localhost:11434/api/tags');
+    const j = await r.json();
+    if (j.models && j.models.length > 0) {
+      document.getElementById('ollama-status').innerHTML = '<span class="status ok"></span>Online';
+      document.getElementById('ollama-info').textContent = j.models.map(m => m.name).join(', ');
+    }
+  } catch(e) {
+    document.getElementById('ollama-status').innerHTML = '<span class="status err"></span>Offline';
+    document.getElementById('ollama-info').textContent = 'Ollama not reachable';
+  }
+
+  // Scratchpad
+  const sp = await fetchJSON('/api/memory/scratchpad/get');
+  if (sp && sp.scratchpad) {
+    const keys = Object.keys(sp.scratchpad);
+    document.getElementById('scratchpad-count').textContent = keys.length;
+    document.getElementById('scratchpad-keys').textContent = keys.join(', ');
+    const tbody = document.getElementById('scratchpad-table');
+    tbody.innerHTML = '';
+    keys.forEach(k => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td style="color:#ffd700;font-weight:600">' + k + '</td><td style="white-space:pre-wrap;max-width:600px;word-break:break-word">' + escHtml(sp.scratchpad[k]) + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Memory count (approximate)
+  const mem = await fetchJSON('/api/memory/list?limit=1');
+  if (mem) {
+    document.getElementById('memory-count').textContent = mem.total || mem.data?.length || '—';
+  }
+}
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+refresh();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>

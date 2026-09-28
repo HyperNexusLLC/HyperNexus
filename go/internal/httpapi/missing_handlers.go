@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	_ "embed"
 	"encoding/json"
 	"net/http"
 	"path/filepath"
@@ -11,6 +12,9 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/tools"
 )
+
+//go:embed dashboard.html
+var dashboardHTML string
 
 func (s *Server) handleGetMemory(w http.ResponseWriter, r *http.Request) {
 	s.handleMemoryList(w, r)
@@ -620,4 +624,34 @@ func (s *Server) handleMemoryReEmbed(w http.ResponseWriter, r *http.Request) {
 			"errors":  errs,
 		},
 	})
+}
+
+func (s *Server) handleMemoryMigrateScratchpad(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+
+	if tools.GlobalVectorStore == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": "vector store not initialized"})
+		return
+	}
+
+	migrated, err := tools.GlobalVectorStore.MigrateScratchpadToL2(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data": map[string]any{
+			"migrated": migrated,
+		},
+	})
+}
+
+func (s *Server) handleDashboard(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte(dashboardHTML))
 }

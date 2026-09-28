@@ -1018,13 +1018,18 @@ func (s *VectorStore) MentalModelReflection(ctx context.Context) error {
 	}
 	prompt += "\nSynthesize them into 1-3 generalized facts, project rules, or mental model guidelines. Return ONLY the new synthesized items, one per line, starting with 'Fact:' or 'Guideline:'. Do not write any preamble, explanation, or markdown formatting."
 
-	// Call LLM
+	// Call LLM — try AutoRoute first, fall back to Ollama
 	messages := []ai.Message{
 		{Role: "user", Content: prompt},
 	}
 	resp, err := ai.AutoRoute(ctx, messages)
 	if err != nil {
-		return fmt.Errorf("MentalModelReflection LLM call: %w", err)
+		// Fallback to Ollama for reflection
+		ollamaResp, ollamaErr := ollamaGenerate(ctx, prompt)
+		if ollamaErr != nil {
+			return fmt.Errorf("MentalModelReflection: both AutoRoute (%v) and Ollama (%v) failed", err, ollamaErr)
+		}
+		resp = &ai.LLMResponse{Content: ollamaResp}
 	}
 
 	lines := strings.Split(resp.Content, "\n")
@@ -1055,6 +1060,40 @@ func (s *VectorStore) MentalModelReflection(ctx context.Context) error {
 
 func (s *VectorStore) RelationStore() *RelationStore {
 	return s.relationStore
+}
+
+// MigrateScratchpadToL2 reads all scratchpad entries and commits them as L2 vault records.
+// This promotes ephemeral scratchpad knowledge into the semantic search index.
+func (s *VectorStore) MigrateScratchpadToL2(ctx context.Context) (int, error) {
+	entries, err := s.GetScratchpadMap(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("MigrateScratchpadToL2: %w", err)
+	}
+
+	migrated := 0
+	for key, value := range entries {
+		if strings.TrimSpace(value) == "" {
+			continue
+		}
+		entry := controlplane.L2VaultRecord{
+			ID:         fmt.Sprintf("scratchpad-%s", key),
+			SessionID:  "system",
+			Type:       controlplane.MemoryLongTerm,
+			Kind:       "fact",
+			Category:   "scratchpad",
+			Tags:       fmt.Sprintf("scratchpad,%s", key),
+			Content:    fmt.Sprintf("[%s] %s", key, value),
+			Importance: 0.7,
+			HeatScore:  60.0,
+			CreatedAt:  controlplane.Now(),
+		}
+		if err := s.Commit(ctx, entry); err != nil {
+			fmt.Printf("Warning: MigrateScratchpadToL2: failed to commit key %s: %v\n", key, err)
+			continue
+		}
+		migrated++
+	}
+	return migrated, nil
 }
 
 // ReEmbedAll re-embeds all L2 vault records using Ollama.
@@ -1167,6 +1206,45 @@ func ollamaEmbed(ctx context.Context, text string) []float32 {
 	}
 
 	return result.Embeddings[0]
+}
+
+// ollamaGenerate calls Ollama's /api/generate for text generation (used by MentalModelReflection).
+func ollamaGenerate(ctx context.Context, prompt string) (string, error) {
+	payload := struct {
+		Model  string `json:"model"`
+		Prompt string `json:"prompt"`
+		Stream bool   `json:"stream"`
+	}{Model: ollamaModel, Prompt: prompt, Stream: false}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "http://localhost:11434/api/generate", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("ollama generate: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("ollama generate: status %d", resp.StatusCode)
+	}
+
+	var result struct {
+		Response string `json:"response"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+	return result.Response, nil
 }
 
 // simpleEmbed generates a deterministic hash-based embedding vector from text.
