@@ -49,7 +49,8 @@ export async function GET(
 ) {
 	const resolvedParams = await params;
 	const pathSegments = resolvedParams.path.join("/");
-	const targetURL = `${TN_KERNEL_BASE}/${remapPath(pathSegments)}`;
+	const search = request.nextUrl.search || "";
+	const targetURL = `${TN_KERNEL_BASE}/${remapPath(pathSegments)}${search}`;
 
 	try {
 		const response = await fetch(targetURL, {
@@ -91,7 +92,8 @@ export async function POST(
 ) {
 	const resolvedParams = await params;
 	const pathSegments = resolvedParams.path.join("/");
-	const targetURL = `${TN_KERNEL_BASE}/${remapPath(pathSegments)}`;
+	const search = request.nextUrl.search || "";
+	const targetURL = `${TN_KERNEL_BASE}/${remapPath(pathSegments)}${search}`;
 
 	try {
 		let body: string | null = null;

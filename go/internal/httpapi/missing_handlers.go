@@ -45,11 +45,24 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 
 	payload := map[string]any{"query": query, "limit": limit}
 	var result any
-	upstreamBase, err := s.callUpstreamJSON(r.Context(), "memory.query", payload, &result)
-	if err == nil {
+	upstreamBase, upstreamErr := s.callUpstreamJSON(r.Context(), "memory.query", payload, &result)
+
+	// Always try local results too — addFact may have persisted locally even when
+	// upstream query is available (asymmetric bridge fallback).
+	localResults, localErr := s.localMemoryQueryResults(query, limit)
+	if localErr != nil {
+		localResults = nil
+	}
+
+	if upstreamErr == nil {
+		merged := result
+		if len(localResults) > 0 {
+			upstreamItems := toSlice(result)
+			merged = mergeMemoryResults(upstreamItems, localResults, limit)
+		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
-			"data":    result,
+			"data":    merged,
 			"bridge": map[string]any{
 				"upstreamBase": upstreamBase,
 				"procedure":    "memory.query",
@@ -58,7 +71,6 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, localErr := s.localMemoryQueryResults(query, limit)
 	if localErr != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"success": false,
@@ -69,13 +81,65 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
-		"data":    results,
+		"data":    localResults,
 		"bridge": map[string]any{
 			"fallback":  "go-local-memory",
 			"procedure": "memory.query",
 			"reason":    "upstream unavailable; using local persisted memory search",
 		},
 	})
+}
+
+// toSlice normalizes an upstream query result into a []map[string]any slice.
+func toSlice(result any) []map[string]any {
+	switch value := result.(type) {
+	case []map[string]any:
+		return value
+	case []any:
+		items := make([]map[string]any, 0, len(value))
+		for _, entry := range value {
+			if item, ok := entry.(map[string]any); ok {
+				items = append(items, item)
+			}
+		}
+		return items
+	case map[string]any:
+		if nested, ok := value["results"].([]any); ok {
+			items := make([]map[string]any, 0, len(nested))
+			for _, entry := range nested {
+				if item, ok := entry.(map[string]any); ok {
+					items = append(items, item)
+				}
+			}
+			return items
+		}
+		return []map[string]any{value}
+	default:
+		return nil
+	}
+}
+
+// mergeMemoryResults combines upstream and local results, dedupes by id, and caps at limit.
+func mergeMemoryResults(upstream, local []map[string]any, limit int) []map[string]any {
+	seen := map[string]struct{}{}
+	merged := make([]map[string]any, 0, len(upstream)+len(local))
+	for _, item := range append(append([]map[string]any{}, upstream...), local...) {
+		id := stringValue(item["id"])
+		if id == "" {
+			id = stringValue(item["uuid"])
+		}
+		if id != "" {
+			if _, dup := seen[id]; dup {
+				continue
+			}
+			seen[id] = struct{}{}
+		}
+		merged = append(merged, item)
+	}
+	if limit > 0 && len(merged) > limit {
+		merged = merged[:limit]
+	}
+	return merged
 }
 
 func (s *Server) handleMemoryContexts(w http.ResponseWriter, r *http.Request) {

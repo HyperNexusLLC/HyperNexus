@@ -172,15 +172,19 @@ func (s *Server) handleMCPSearchTools(w http.ResponseWriter, r *http.Request) {
 		for key, value := range inventoryBridgeMeta(view) {
 			bridge[key] = value
 		}
+		results := fallbackSearchMCPInventoryTools(query, view, 20)
+		// Also search built-in accessory tools (bash, read, write, search, etc.)
+		accessoryResults := s.searchAccessoryTools(query, 20-len(results))
+		results = append(results, accessoryResults...)
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
-			"data":    fallbackSearchMCPInventoryTools(query, view, 20),
+			"data":    results,
 			"bridge":  bridge,
 		})
 		return
 	}
 
-	_, summary, localErr := s.localMCPSummary(r.Context())
+	_, _, localErr := s.localMCPSummary(r.Context())
 	if localErr != nil {
 		if invErr != nil {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": localErr.Error()})
@@ -195,9 +199,11 @@ func (s *Server) handleMCPSearchTools(w http.ResponseWriter, r *http.Request) {
 		for key, value := range inventoryBridgeMeta(view) {
 			bridge[key] = value
 		}
+		// Search built-in accessory tools even when inventory is empty
+		results := s.searchAccessoryTools(query, 20)
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
-			"data":    []map[string]any{},
+			"data":    results,
 			"bridge":  bridge,
 		})
 		return
@@ -205,11 +211,11 @@ func (s *Server) handleMCPSearchTools(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
-		"data":    fallbackSearchMCPTools(summary.InstalledHarnesses, query),
+		"data":    s.searchAccessoryTools(query, 20),
 		"bridge": map[string]any{
 			"fallback":  "go-local-mcp",
 			"procedure": "mcp.searchTools",
-			"reason":    "upstream unavailable; using local MCP inventory cache",
+			"reason":    "upstream unavailable; searching built-in accessory tools",
 		},
 	})
 }
@@ -660,6 +666,53 @@ func (s *Server) injectAlwaysOnStatus(tools []map[string]any) []map[string]any {
 		tool["native"] = isGoNative && !isNativeDisabled
 	}
 	return tools
+}
+
+// searchAccessoryTools searches built-in accessory tools (bash, read, write, search, etc.)
+// by matching query tokens against tool name and description.
+func (s *Server) searchAccessoryTools(query string, limit int) []map[string]any {
+	if limit <= 0 {
+		return nil
+	}
+	qTokens := mcp.Tokenize(query)
+	if len(qTokens) == 0 {
+		return nil
+	}
+	allTools := s.mergeAccessoryTools(nil)
+	results := make([]map[string]any, 0, limit)
+	for _, t := range allTools {
+		name, _ := t["name"].(string)
+		desc, _ := t["description"].(string)
+		nameTokens := mcp.Tokenize(name)
+		descTokens := mcp.Tokenize(desc)
+		score := 0.0
+		matchReason := ""
+		for _, q := range qTokens {
+			for _, nt := range nameTokens {
+				if strings.Contains(nt, q) {
+					score += 10.0
+					matchReason = "Matched tool name"
+				}
+			}
+			for _, dt := range descTokens {
+				if strings.Contains(dt, q) {
+					score += 3.0
+					if matchReason == "" {
+						matchReason = "Matched description"
+					}
+				}
+			}
+		}
+		if score > 0 {
+			t["score"] = score
+			t["matchReason"] = matchReason
+			results = append(results, t)
+			if len(results) >= limit {
+				break
+			}
+		}
+	}
+	return results
 }
 
 func (s *Server) mergeAccessoryTools(toolsList []map[string]any) []map[string]any {

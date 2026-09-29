@@ -292,6 +292,24 @@ func loadLiveInventory(workspaceRoot, mainConfigDir string) (*Inventory, error) 
 	}
 
 	sortInventory(inventory)
+
+	// Warmup: when the tool list is empty but servers exist, generate pseudo-tools
+	// from server names and descriptions so mcp.searchTools has something to index.
+	if len(inventory.Tools) == 0 && len(inventory.Servers) > 0 {
+		for _, s := range inventory.Servers {
+			desc := s.Description
+			if desc == "" {
+				desc = "MCP server " + s.Name
+			}
+			inventory.Tools = append(inventory.Tools, ToolEntryFromMetadata(s.Name, MetadataTool{
+				Name:        s.Name,
+				Description: desc,
+				InputSchema: map[string]any{"type": "object", "properties": map[string]any{}},
+			}))
+		}
+		sortInventory(inventory)
+	}
+
 	return inventory, nil
 }
 

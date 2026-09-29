@@ -152,3 +152,28 @@ Completed comprehensive repository synchronization and intelligent merge across 
 - 20 keys in server .env still need rotation (checklist in notes.md)
 - Weak Reddit passwords (Temppass0!) need changing
 - Marketing campaigns run via `python scripts/campaign_scheduler.py execute`
+
+
+
+## 2026-09-22T18:30:00Z — MiMo Addons in Installers + Global Extensions (T24)
+
+### Done
+- Created `addons/mimo/` package: 16 Desktop tools (was 6), 2 skills (hypernexus + hypernexus-ops), 6 MiMoCode commands, hooks, orchestrator agent
+- Tools bundled with esbuild+zod (same format as built-in MiMo Desktop tools)
+- Installer integration: NSIS (SecMiMo), install.bat, install-gui.ps1, install-gui.py, install-client-support.py (mimocode + mimo-desktop + install_mimo_addons), npm cli.js/setup.js (MIMO_TARGETS), linux/macos install.sh
+- Rebuilt NSIS: hypernexus-setup.exe (corporate, 6 sections) + tormentnexus-setup.exe — both 17.9MB with MiMo Addons section
+- Fixed pre-existing NSIS bug: nested double quotes in Cloud Connection FileWrite (lines 239/242/243) — use $\" escaping
+- Rebuilt npm tarball: hypernexus-install-1.0.1.tgz
+- Installed live: MiMoCode (skill+commands+hooks+agent+MCP), MiMo Desktop (2 skills + 16 tools), Agents (2 skills)
+
+### New global extension
+- `hypernexus-ops` skill: production deploy/runbook for Hetzner, systemd, health checks, marketing campaigns, key rotation
+
+### 16 Desktop tools
+search_memory, memory_vector_search, memory_list, add_fact, record_observation, knowledge_graph, context_harvest, session_search, session_context, mcp_search, tool_discover, mcp_call, code_search, repomap, system_status, billing_status
+
+### Gotchas
+- MiMo Desktop tools MUST be esbuild bundles with zod inlined (args are real zod objects)
+- Tools with empty args (`{}`) tree-shake zod to ~1.3KB; tools with args are ~440KB
+- NSIS FileWrite breaks on nested double quotes — use $\" for literal quotes
+- build-tools.mjs resolves zod from `~/.config/mimocode/node_modules/zod`, esbuild from HyperNexus pnpm store

@@ -1195,6 +1195,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/billing/webhook", s.handleBillingWebhook)
 	s.mux.HandleFunc("/api/mcp/status", s.handleMCPStatus)
 	s.mux.HandleFunc("/api/system/overview", s.handleSystemOverview)
+	s.mux.HandleFunc("/api/system/status", s.handleSystemOverview)
 	s.mux.HandleFunc("/api/mcp/servers/runtime", s.handleMCPRuntimeServers)
 	s.mux.HandleFunc("/api/mcp/servers", s.handleMCPServersList)
 	s.mux.HandleFunc("/api/mcp/servers/configured", s.handleMCPConfiguredServers)

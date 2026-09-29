@@ -67,6 +67,14 @@ const CLIENTS = [
   ".omnigent", ".citadel", ".agent-fusion", ".herdr", ".claude-squad",
   ".qwen-code", ".qwen", ".pi", ".kimi-code", ".moonshot",
   ".cliproxyapi", ".vscode", ".jetbrains", ".hermes",
+  ".config/mimocode",
+];
+
+// MiMo addon install targets
+const MIMO_TARGETS = [
+  { name: "MiMoCode CLI", dir: path.join(HOME, ".config", "mimocode"), tools: false },
+  { name: "MiMo Desktop", dir: path.join(HOME, "AppData", "Roaming", "Xiaomi MiMo AI", "engine-config"), tools: true },
+  { name: "Agents skill", dir: path.join(HOME, ".agents", "skills"), tools: false },
 ];
 
 function install() {
@@ -98,9 +106,43 @@ function install() {
     }
   }
 
-  console.log(`✅ ${count} AI clients configured`);
+  // MiMo addons
+  const addonsDir = path.join(__dirname, "..", "..", "..", "addons", "mimo");
+  for (const t of MIMO_TARGETS) {
+    try {
+      const skillDst = t.name === "Agents skill"
+        ? path.join(t.dir, "hypernexus")
+        : path.join(t.dir, "skills", "hypernexus");
+      fs.mkdirSync(skillDst, { recursive: true });
+      const skillSrc = path.join(addonsDir, "skills", "hypernexus", "SKILL.md");
+      if (fs.existsSync(skillSrc)) fs.copyFileSync(skillSrc, path.join(skillDst, "SKILL.md"));
+      if (t.tools) {
+        const toolsSrc = path.join(addonsDir, "tools", "dist");
+        const toolsDst = path.join(t.dir, "tools");
+        if (fs.existsSync(toolsSrc)) {
+          fs.mkdirSync(toolsDst, { recursive: true });
+          for (const f of fs.readdirSync(toolsSrc).filter((x) => x.endsWith(".js"))) {
+            fs.copyFileSync(path.join(toolsSrc, f), path.join(toolsDst, f));
+          }
+        }
+      }
+      if (t.name === "MiMoCode CLI") {
+        for (const sub of ["commands", "hooks", "agents"]) {
+          const src = path.join(addonsDir, "mimocode", sub);
+          if (fs.existsSync(src)) {
+            fs.mkdirSync(path.join(t.dir, sub), { recursive: true });
+            for (const f of fs.readdirSync(src)) fs.copyFileSync(path.join(src, f), path.join(t.dir, sub, f));
+          }
+        }
+      }
+      count++;
+    } catch {}
+  }
+
+  console.log(`✅ ${count} AI clients + MiMo addons configured`);
   console.log("   MCP servers wired to HyperNexus");
   console.log("   Skills installed for all agents");
+  console.log("   MiMo Desktop tools + MiMoCode commands installed");
   console.log("\nNext: hypernexus serve\n");
 }
 

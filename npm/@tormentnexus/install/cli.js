@@ -101,6 +101,14 @@ const CLIENTS = [
 	".vscode",
 	".jetbrains",
 	".hermes",
+	".config/mimocode",
+];
+
+// MiMo-specific install targets (skill + tools + MCP config)
+const MIMO_TARGETS = [
+	{ name: "MiMoCode CLI", configDir: path.join(HOME, ".config", "mimocode"), tools: false },
+	{ name: "MiMo Desktop", configDir: path.join(HOME, "AppData", "Roaming", "Xiaomi MiMo AI", "engine-config"), tools: true },
+	{ name: "Agents skill", configDir: path.join(HOME, ".agents", "skills"), tools: false },
 ];
 
 // Download file
@@ -214,9 +222,73 @@ function configureMCP() {
 		} catch {}
 	}
 
-	console.log(`✅ ${count} AI clients configured`);
+	// MiMo addon installation (skill + tools + commands + MCP)
+	console.log("\nConfiguring MiMo addons...\n");
+	const addonsDir = path.join(__dirname, "..", "..", "..", "addons", "mimo");
+	for (const t of MIMO_TARGETS) {
+		try {
+			// Skill
+			const skillDst = t.name === "Agents skill"
+				? path.join(t.configDir, "hypernexus")
+				: path.join(t.configDir, "skills", "hypernexus");
+			fs.mkdirSync(skillDst, { recursive: true });
+			const skillSrc = path.join(addonsDir, "skills", "hypernexus", "SKILL.md");
+			if (fs.existsSync(skillSrc)) fs.copyFileSync(skillSrc, path.join(skillDst, "SKILL.md"));
+			for (const loc of ["en-US.json", "zh-CN.json"]) {
+				const lp = path.join(addonsDir, "skills", "hypernexus", "locales", loc);
+				if (fs.existsSync(lp)) {
+					fs.mkdirSync(path.join(skillDst, "locales"), { recursive: true });
+					fs.copyFileSync(lp, path.join(skillDst, "locales", loc));
+				}
+			}
+			// Desktop tools
+			if (t.tools) {
+				const toolsSrc = path.join(addonsDir, "tools", "dist");
+				const toolsDst = path.join(t.configDir, "tools");
+				if (fs.existsSync(toolsSrc)) {
+					fs.mkdirSync(toolsDst, { recursive: true });
+					for (const f of fs.readdirSync(toolsSrc).filter((x) => x.endsWith(".js"))) {
+						fs.copyFileSync(path.join(toolsSrc, f), path.join(toolsDst, f));
+					}
+				}
+			}
+			// MiMoCode commands/hooks/agents
+			if (t.name === "MiMoCode CLI") {
+				for (const sub of ["commands", "hooks", "agents"]) {
+					const src = path.join(addonsDir, "mimocode", sub);
+					if (fs.existsSync(src)) {
+						fs.mkdirSync(path.join(t.configDir, sub), { recursive: true });
+						for (const f of fs.readdirSync(src)) {
+							fs.copyFileSync(path.join(src, f), path.join(t.configDir, sub, f));
+						}
+					}
+				}
+				// Merge MCP config
+				const cfgPath = path.join(t.configDir, "mimocode.jsonc");
+				let cfg = {};
+				if (fs.existsSync(cfgPath)) {
+					try {
+						const raw = fs.readFileSync(cfgPath, "utf8").replace(/\/\/.*$/gm, "").replace(/,\s*([}\]])/g, "$1");
+						cfg = JSON.parse(raw);
+					} catch {}
+				}
+				cfg.mcp = cfg.mcp || {};
+				cfg.mcp.hypernexus = {
+					type: "local",
+					command: [platform === "win32" ? "hypernexus.exe" : "hypernexus", "mcp"],
+					env: { HYPERNEXUS_WORKSPACE_ROOT: process.cwd(), HN_EDITION: IS_CORPORATE ? "corporate" : "hypernexus" },
+				};
+				fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+			}
+			console.log(`  ✅ ${t.name}`);
+			count++;
+		} catch {}
+	}
+
+	console.log(`✅ ${count} AI clients + MiMo addons configured`);
 	console.log("   MCP servers wired to HyperNexus");
 	console.log("   Skills installed for all agents");
+	console.log("   16 MiMo Desktop tools + MiMoCode commands installed");
 }
 
 // Main

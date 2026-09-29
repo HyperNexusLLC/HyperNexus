@@ -115,6 +115,16 @@ else
 fi
 echo ""
 
+# Install MiMo addons
+echo "  [5.5/6] Installing MiMo addons..."
+ADDON_INSTALLER="$SCRIPT_DIR/../../addons/mimo/install.js"
+if [ -f "$ADDON_INSTALLER" ] && command -v node >/dev/null 2>&1; then
+	node "$ADDON_INSTALLER" >/dev/null 2>&1 && echo -e "        ${GREEN}OK${NC} - MiMo addons installed" || echo -e "        ${YELLOW}WARN${NC} - MiMo addon install had errors"
+else
+	echo -e "        ${YELLOW}SKIP${NC} - addons/mimo/install.js or node not found"
+fi
+echo ""
+
 # Create launchd service (macOS)
 echo "  [6/6] Creating launchd service..."
 PLIST_FILE="$HOME/Library/LaunchAgents/com.hypernexus.kernel.plist"

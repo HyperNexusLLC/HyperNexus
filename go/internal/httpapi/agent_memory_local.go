@@ -330,6 +330,9 @@ func (s *Server) localAddFactMemory(payload map[string]any) (map[string]any, err
 	metadata["source"] = firstNonEmptyString(stringValue(metadata["source"]), "memory_fact")
 	metadata["tags"] = tags
 	metadata["memoryKind"] = "fact"
+	if title := strings.TrimSpace(stringValue(payload["title"])); title != "" {
+		metadata["title"] = title
+	}
 
 	record, err := s.localAddAgentMemoryEntry(
 		stringValue(payload["content"]),

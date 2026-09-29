@@ -186,6 +186,45 @@ Section "Start Menu Shortcuts" SecStartMenu
   CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
+Section "MiMo Addons" SecMiMo
+  ; ── MiMoCode CLI ──
+  SetOutPath "$PROFILE\.config\mimocode\skills\hypernexus"
+  File /r "..\addons\mimo\skills\hypernexus\*.*"
+  SetOutPath "$PROFILE\.config\mimocode\commands"
+  File /r "..\addons\mimo\mimocode\commands\*.*"
+  SetOutPath "$PROFILE\.config\mimocode\hooks"
+  File /r "..\addons\mimo\mimocode\hooks\*.*"
+  SetOutPath "$PROFILE\.config\mimocode\agents"
+  File /r "..\addons\mimo\mimocode\agents\*.*"
+
+  ; MiMoCode MCP config
+  IfFileExists "$PROFILE\.config\mimocode\mimocode.jsonc" mimo_cfg_skip
+    FileOpen $0 "$PROFILE\.config\mimocode\mimocode.jsonc" w
+    FileWrite $0 '{$\r$\n'
+    FileWrite $0 '  "mcp": {$\r$\n'
+    FileWrite $0 '    "hypernexus": {$\r$\n'
+    FileWrite $0 '      "type": "local",$\r$\n'
+    FileWrite $0 '      "command": ["$INSTDIR\bin\${EXE_NAME}", "mcp"],$\r$\n'
+    FileWrite $0 '      "env": {"HYPERNEXUS_WORKSPACE_ROOT": "$PROFILE\workspace", "HN_EDITION": "${EDITION}"}$\r$\n'
+    FileWrite $0 '    }$\r$\n'
+    FileWrite $0 '  }$\r$\n'
+    FileWrite $0 '}$\r$\n'
+    FileClose $0
+  mimo_cfg_skip:
+
+  ; ── MiMo Desktop (if present) ──
+  IfFileExists "$APPDATA\Xiaomi MiMo AI\engine-config" 0 mimo_desktop_skip
+    SetOutPath "$APPDATA\Xiaomi MiMo AI\engine-config\skills\hypernexus"
+    File /r "..\addons\mimo\skills\hypernexus\*.*"
+    SetOutPath "$APPDATA\Xiaomi MiMo AI\engine-config\tools"
+    File /r "..\addons\mimo\tools\dist\*.*"
+  mimo_desktop_skip:
+
+  ; ── Agents compat skill ──
+  SetOutPath "$PROFILE\.agents\skills\hypernexus"
+  File /r "..\addons\mimo\skills\hypernexus\*.*"
+SectionEnd
+
 !ifdef CORPORATE
 Section "Cloud Connection" SecCloud
   ; Additional cloud connection configuration for corporate edition
@@ -197,11 +236,11 @@ Section "Cloud Connection" SecCloud
   FileWrite $0 "echo Connecting to HyperNexus Cloud...$\r$\n"
   FileWrite $0 "echo.$\r$\n"
   FileWrite $0 "echo Please enter your HyperNexus Cloud credentials:$\r$\n"
-  FileWrite $0 "set /p CLOUD_AUTH="Authentication Token: "$\r$\n"
+  FileWrite $0 "set /p CLOUD_AUTH=$\"Authentication Token: $\"$\r$\n"
   FileWrite $0 "echo.$\r$\n"
   FileWrite $0 "echo Saving configuration...$\r$\n"
-  FileWrite $0 "setx HN_CLOUD_AUTH "%CLOUD_AUTH%"$\r$\n"
-  FileWrite $0 "setx HN_CLOUD_ENDPOINT "https://api.hypernexus.io"$\r$\n"
+  FileWrite $0 "setx HN_CLOUD_AUTH $\"%CLOUD_AUTH%$\"$\r$\n"
+  FileWrite $0 "setx HN_CLOUD_ENDPOINT $\"https://api.hypernexus.io$\"$\r$\n"
   FileWrite $0 "echo.$\r$\n"
   FileWrite $0 "echo Configuration saved! Please restart ${PRODUCT_NAME}.$\r$\n"
   FileWrite $0 "pause$\r$\n"
@@ -218,6 +257,7 @@ SectionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${SecConfig} "Create default configuration files"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecPath} "Add ${PRODUCT_NAME} to system PATH"
   !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} "Create Start Menu shortcuts"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecMiMo} "Install MiMo addons: MiMoCode skill/commands/hooks/agent + 16 Desktop tools + MCP config"
   !ifdef CORPORATE
     !insertmacro MUI_DESCRIPTION_TEXT ${SecCloud} "Configure cloud connection to HyperNexus Cloud"
   !endif

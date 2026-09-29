@@ -127,6 +127,45 @@ func (s *Server) localMemoryQueryResults(query string, limit int) ([]map[string]
 	if err != nil {
 		return nil, err
 	}
+	// Merge agent-memory store (where addFact/observations/prompts/summaries write).
+	// Without this, facts stored via localAddFactMemory are invisible to search.
+	seenIDs := map[string]struct{}{}
+	for _, m := range memories {
+		if id := stringValue(m["uuid"]); id != "" {
+			seenIDs[id] = struct{}{}
+		}
+		if id := stringValue(m["id"]); id != "" {
+			seenIDs[id] = struct{}{}
+		}
+	}
+	if agentRecords, agentErr := s.localAgentMemories(); agentErr == nil {
+		for _, rec := range agentRecords {
+			if _, dup := seenIDs[rec.ID]; dup {
+				continue
+			}
+			seenIDs[rec.ID] = struct{}{}
+			meta := cloneMap(rec.Metadata)
+			if meta == nil {
+				meta = map[string]any{}
+			}
+			if _, ok := meta["memoryKind"]; !ok {
+				meta["memoryKind"] = "agent_memory"
+			}
+			memories = append(memories, map[string]any{
+				"uuid":      rec.ID,
+				"id":        rec.ID,
+				"content":   rec.Content,
+				"title":     stringValue(meta["title"]),
+				"source":    stringValue(meta["source"]),
+				"metadata":  meta,
+				"userId":    "default",
+				"agentId":   rec.Namespace,
+				"createdAt": rec.CreatedAt,
+				"type":      rec.Type,
+				"namespace": rec.Namespace,
+			})
+		}
+	}
 	tokens := localUniqueStrings(nil, strings.Fields(strings.ToLower(strings.TrimSpace(query)))...)
 	if len(tokens) == 0 && strings.TrimSpace(query) != "" {
 		tokens = []string{strings.ToLower(strings.TrimSpace(query))}
@@ -156,6 +195,7 @@ func (s *Server) localMemoryQueryResults(query string, limit int) ([]map[string]
 		scored = append(scored, scoredRecord{
 			record: map[string]any{
 				"id":       id,
+				"title":    stringValue(record["title"]),
 				"content":  stringValue(record["content"]),
 				"metadata": resultMetadata,
 				"score":    score,

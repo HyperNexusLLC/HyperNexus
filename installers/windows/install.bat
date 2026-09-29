@@ -107,6 +107,20 @@ echo }
 echo        OK - config.json created
 echo.
 
+:: Install MiMo addons
+echo  [5.5/6] Installing MiMo addons...
+if exist "%~dp0..\..\addons\mimo\install.js" (
+    node "%~dp0..\..\addons\mimo\install.js" >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo        OK - MiMoCode + MiMo Desktop + Agents addons installed
+    ) else (
+        echo        WARN - MiMo addon installer returned errors
+    )
+) else (
+    echo        SKIP - addons\mimo\install.js not found
+)
+echo.
+
 :: Add to PATH
 echo  [5/6] Adding to system PATH...
 setx PATH "%PATH%;%INSTALL_DIR%" /M >nul 2>&1

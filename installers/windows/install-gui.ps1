@@ -277,6 +277,22 @@ $btnInstall.Add_Click({
         $shortcut.Save()
         
         Log "       OK - Shortcuts created"
+        SetProgress 95
+
+        # Step 6: MiMo addons (MiMoCode + MiMo Desktop + Agents)
+        SetStatus "Installing MiMo addons..."
+        Log "[6/6] Installing MiMo addons..."
+        $addonInstaller = Join-Path $PSScriptRoot "..\..\addons\mimo\install.js"
+        if (Test-Path $addonInstaller) {
+            try {
+                node $addonInstaller 2>&1 | ForEach-Object { Log "       $_" }
+                Log "       OK - MiMoCode + MiMo Desktop + Agents addons installed"
+            } catch {
+                Log "       WARN - MiMo addon install: $($_.Exception.Message)"
+            }
+        } else {
+            Log "       SKIP - addons/mimo/install.js not found"
+        }
         SetProgress 100
         
         Log ""

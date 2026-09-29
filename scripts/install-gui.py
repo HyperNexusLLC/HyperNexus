@@ -50,6 +50,8 @@ CLIENTS = [
     "VS Code",
     "JetBrains",
     "Hermes",
+    "MiMoCode",
+    "MiMo Desktop",
 ]
 
 
@@ -228,10 +230,11 @@ class InstallerApp:
             self.install_btn.configure(
                 text="Installation Complete!", bg=self.GREEN, state="normal"
             )
-            self.status_var.set("38 clients installed successfully")
+            self.status_var.set("All clients + MiMo addons installed successfully")
             messagebox.showinfo(
                 "Success",
-                "TormentNexus support installed for ALL clients!\n\n"
+                "TormentNexus support installed for ALL clients!\n"
+                "MiMo addons installed: MiMoCode + MiMo Desktop + Agents\n\n"
                 "Start the kernel: tormentnexus serve\n"
                 "Open dashboard: http://localhost:7779",
             )

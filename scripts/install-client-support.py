@@ -292,6 +292,25 @@ CLIENTS = {
         "commands": False,
         "ext": False,
     },
+    # MiMo ecosystem
+    "mimocode": {
+        "dirs": [".config/mimocode"],
+        "skills": True,
+        "mcp": True,
+        "commands": True,
+        "hooks": True,
+        "agents": True,
+        "ext": False,
+    },
+    "mimo-desktop": {
+        "dirs": ["AppData/Roaming/Xiaomi MiMo AI/engine-config"],
+        "skills": True,
+        "mcp": True,
+        "tools": True,
+        "commands": False,
+        "hooks": False,
+        "ext": False,
+    },
 }
 
 
@@ -406,6 +425,73 @@ with persistent memory, tool orchestration, and session management.
 4. Check the cold archive for historical context
 5. Use tn_context_harvest for complex multi-step tasks
 """
+
+
+def install_mimo_addons(mode="corporate"):
+    """Install HyperNexus MiMo addons: MiMoCode skill/commands/hooks/agent + Desktop tools + Agents skill."""
+    addon_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "addons", "mimo")
+    addon_root = os.path.normpath(addon_root)
+    home = os.path.expanduser("~")
+
+    targets = [
+        ("MiMoCode CLI", os.path.join(home, ".config", "mimocode"), False),
+        ("MiMo Desktop", os.path.join(home, "AppData", "Roaming", "Xiaomi MiMo AI", "engine-config"), True),
+        ("Agents skill", os.path.join(home, ".agents", "skills"), False),
+    ]
+
+    skill_src = os.path.join(addon_root, "skills", "hypernexus")
+    tools_src = os.path.join(addon_root, "tools", "dist")
+
+    for name, base, want_tools in targets:
+        skill_dst = (
+            os.path.join(base, "hypernexus")
+            if name == "Agents skill"
+            else os.path.join(base, "skills", "hypernexus")
+        )
+        if os.path.isdir(skill_src):
+            shutil.copytree(skill_src, skill_dst, dirs_exist_ok=True)
+            print(f"  {name} skill -> {skill_dst}")
+        if want_tools and os.path.isdir(tools_src):
+            tools_dst = os.path.join(base, "tools")
+            os.makedirs(tools_dst, exist_ok=True)
+            for f in os.listdir(tools_src):
+                if f.endswith(".js"):
+                    shutil.copy2(os.path.join(tools_src, f), os.path.join(tools_dst, f))
+            print(f"  {name} tools -> {tools_dst}")
+        if name == "MiMoCode CLI":
+            for sub in ("commands", "hooks", "agents"):
+                src = os.path.join(addon_root, "mimocode", sub)
+                if os.path.isdir(src):
+                    dst = os.path.join(base, sub)
+                    os.makedirs(dst, exist_ok=True)
+                    for f in os.listdir(src):
+                        shutil.copy2(os.path.join(src, f), os.path.join(dst, f))
+                    print(f"  {name} {sub} -> {dst}")
+            # MCP config
+            cfg_path = os.path.join(base, "mimocode.jsonc")
+            cfg = {}
+            if os.path.exists(cfg_path):
+                try:
+                    with open(cfg_path) as fh:
+                        raw = fh.read()
+                    import re as _re
+                    raw = _re.sub(r"//.*$", "", raw, flags=_re.MULTILINE)
+                    cfg = json.loads(raw or "{}")
+                except Exception:
+                    cfg = {}
+            cfg.setdefault("mcp", {})["hypernexus"] = {
+                "type": "local",
+                "command": ["hypernexus.exe" if SYSTEM == "Windows" else "hypernexus", "mcp"],
+                "env": {
+                    "HYPERNEXUS_WORKSPACE_ROOT": os.path.join(home, "workspace"),
+                    "HN_EDITION": "corporate" if mode == "corporate" else "hypernexus",
+                },
+            }
+            with open(cfg_path, "w") as fh:
+                json.dump(cfg, fh, indent=2)
+            print(f"  {name} MCP config -> {cfg_path}")
+
+    print("MiMo addons installed (MiMoCode + MiMo Desktop + Agents).")
 
 
 def install():
@@ -641,6 +727,14 @@ def install():
             os.makedirs(base, exist_ok=True)
             with open(os.path.join(base, "SKILL.md"), "w") as f:
                 f.write(get_skill_content())
+
+    # MiMo addons (MiMoCode + MiMo Desktop + Agents skill)
+    print("\n--- Installing MiMo Addons ---")
+    install_mimo_addons(mode)
+
+    # MiMo addons (MiMoCode + MiMo Desktop + Agents skill)
+    print("\n--- Installing MiMo Addons ---")
+    install_mimo_addons(mode)
 
     print(f"\n{installed} clients supported. NONE LEFT BEHIND.")
     print("TormentNexus now works with every AI coding agent on your system.")
