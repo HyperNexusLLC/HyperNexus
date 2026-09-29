@@ -35,6 +35,7 @@ button:hover{background:#ffd7001a;border-color:#ffd700}
   <button onclick="call('/api/memory/maintenance','POST')">Run Maintenance</button>
   <button onclick="call('/api/memory/re-embed','POST')">Re-Embed All</button>
   <button onclick="call('/api/memory/migrate-scratchpad','POST')">Migrate Scratchpad</button>
+  <button onclick="exportL2()">Export L2</button>
   <button onclick="refresh()">Refresh</button>
 </div>
 
@@ -59,6 +60,22 @@ button:hover{background:#ffd7001a;border-color:#ffd700}
     <div class="value" id="scratchpad-count">-</div>
     <div class="sub" id="scratchpad-keys"></div>
   </div>
+  <div class="card">
+    <h2>Knowledge Graph</h2>
+    <div class="value" id="graph-count">-</div>
+    <div class="sub" id="graph-types">relations by type</div>
+  </div>
+</div>
+
+<h2 style="color:#888;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem">Knowledge Graph (RelationStore)</h2>
+<div class="card" style="margin-bottom:1rem">
+  <canvas id="graph-canvas" width="900" height="320" style="width:100%;height:320px;background:#0d0d14;border-radius:8px"></canvas>
+  <div class="sub" id="graph-legend" style="margin-top:.5rem"></div>
+</div>
+
+<h2 style="color:#888;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem">Recent Edges</h2>
+<div class="card" id="graph-edges-card" style="margin-bottom:1rem">
+  <table><thead><tr><th>Source</th><th>Target</th><th>Type</th><th>Weight</th></tr></thead><tbody id="graph-edges"><tr><td colspan="4" style="color:#666">Loading...</td></tr></tbody></table>
 </div>
 
 <h2 style="color:#888;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem">Scratchpad Contents</h2>
@@ -138,6 +155,91 @@ async function refresh() {
   if (mem) {
     document.getElementById('memory-count').textContent = mem.total || mem.data?.length || '—';
   }
+
+  // Knowledge graph
+  await refreshGraph();
+}
+
+async function refreshGraph() {
+  const g = await fetchJSON('/api/memory/graph?limit=200');
+  if (!g || !g.success) return;
+  const data = g.data || {};
+  const nodes = data.nodes || [];
+  const edges = data.edges || [];
+  const stats = data.stats || {};
+  document.getElementById('graph-count').textContent = edges.length + ' edges / ' + nodes.length + ' nodes';
+  const byType = stats.relations_by_type || {};
+  document.getElementById('graph-types').textContent = Object.keys(byType).length
+    ? Object.entries(byType).map(([k,v]) => k + ':' + v).join(' · ')
+    : 'no relations yet';
+
+  const tbody = document.getElementById('graph-edges');
+  tbody.innerHTML = '';
+  edges.slice(0, 20).forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + escHtml(e.source) + '</td><td>' + escHtml(e.target) + '</td><td style="color:#ffd700">' + escHtml(e.type) + '</td><td>' + (e.weight||0).toFixed(2) + '</td>';
+    tbody.appendChild(tr);
+  });
+  if (!edges.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#666">No relations yet — use memory_extract_relations or POST /api/memory/relations/add</td></tr>';
+  }
+
+  drawGraph(nodes, edges);
+}
+
+function drawGraph(nodes, edges) {
+  const canvas = document.getElementById('graph-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if (!nodes.length) {
+    ctx.fillStyle = '#444';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('No relation data', 20, 30);
+    return;
+  }
+  const pos = {};
+  const cx = W/2, cy = H/2, R = Math.min(W,H)*0.38;
+  nodes.forEach((n, i) => {
+    const a = (2*Math.PI*i)/nodes.length;
+    pos[n.id] = {x: cx + R*Math.cos(a), y: cy + R*Math.sin(a)};
+  });
+  edges.forEach(e => {
+    const a = pos[e.source], b = pos[e.target];
+    if (!a || !b) return;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    const w = Math.max(1, Math.min(4, (e.weight||0.5)*3));
+    ctx.lineWidth = w;
+    ctx.strokeStyle = 'rgba(255,215,0,0.35)';
+    ctx.stroke();
+  });
+  nodes.forEach(n => {
+    const p = pos[n.id];
+    if (!p) return;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 6, 0, Math.PI*2);
+    ctx.fillStyle = '#ffd700';
+    ctx.fill();
+    ctx.fillStyle = '#aaa';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(n.label, p.x+8, p.y+3);
+  });
+}
+
+async function exportL2() {
+  try {
+    const r = await fetch(API + '/api/memory/l2/export');
+    const j = await r.json();
+    if (!j.success) { toast('Export failed'); return; }
+    const blob = new Blob([JSON.stringify(j.data, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'l2-export-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    toast('Exported ' + (j.data.count||0) + ' memories');
+  } catch(e) { toast('Export error: ' + e.message); }
 }
 
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }

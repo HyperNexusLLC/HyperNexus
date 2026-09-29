@@ -2,15 +2,27 @@ name: HyperNexus CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, clean-main]
   pull_request:
-    branches: [main]
+    branches: [main, clean-main]
 
 jobs:
   test:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Avoid NTFS issues with historical go/NUL path if reintroduced
+          clean: true
+
+      - name: Guard against go/NUL
+        shell: pwsh
+        run: |
+          if (Test-Path -LiteralPath 'go/NUL') {
+            Write-Host 'Removing dangerous go/NUL path from working tree'
+            git update-index --remove --force-remove go/NUL 2>$null
+            Remove-Item -LiteralPath 'go/NUL' -Force -ErrorAction SilentlyContinue
+          }
 
       - uses: actions/setup-go@v5
         with:
@@ -19,15 +31,18 @@ jobs:
 
       - name: Build kernel
         working-directory: go
-        run: go build -o ../bin/hypernexus-test.exe ./cmd/tormentnexus/
+        run: go build -buildvcs=false -o ../bin/hypernexus-test.exe ./cmd/tormentnexus/
 
       - name: Run unit tests
         working-directory: go
-        run: go test ./internal/tools/ ./internal/memorystore/ ./internal/repograph/ ./foundation/repomap/ -v -timeout 60s
+        env:
+          # Unit tests must not require live Ollama; embed falls back to simpleEmbed
+          OLLAMA_HOST: http://127.0.0.1:11434
+        run: go test ./internal/tools/ ./internal/memorystore/ ./internal/repograph/ ./foundation/repomap/ ./internal/httpapi/ -count=1 -timeout 120s
 
       - name: Vet
         working-directory: go
-        run: go vet ./internal/tools/ ./internal/memorystore/ ./internal/repograph/ ./foundation/repomap/
+        run: go vet ./internal/tools/ ./internal/memorystore/ ./internal/repograph/ ./foundation/repomap/ ./internal/httpapi/
 
   build-supervisor:
     runs-on: windows-latest
@@ -61,4 +76,4 @@ jobs:
           go vet ./internal/memorystore/...
           go vet ./internal/repograph/...
           go vet ./foundation/repomap/...
-          go vet ./foundation/repomap/...
+          go vet ./internal/httpapi/...

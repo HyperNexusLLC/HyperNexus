@@ -1092,6 +1092,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/add-history", s.handleMemoryAddHistory)
 	s.mux.HandleFunc("/api/memory/relations/add", s.handleMemoryAddRelation)
 	s.mux.HandleFunc("/api/memory/relations/get", s.handleMemoryGetRelations)
+	s.mux.HandleFunc("/api/memory/relations/graph", s.handleMemoryGraph)
 	s.mux.HandleFunc("/api/memory/spaced-repetition/due", s.handleMemorySpacedRepetitionDue)
 	s.mux.HandleFunc("/api/memory/spaced-repetition/review", s.handleMemorySpacedRepetitionReview)
 	s.mux.HandleFunc("/api/memory/sleep-cycle", s.handleMemorySleepCycle)
@@ -1577,6 +1578,9 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/maintenance-local", s.handleMemoryMaintenanceLocal)
 	s.mux.HandleFunc("/api/memory/re-embed", s.handleMemoryReEmbed)
 	s.mux.HandleFunc("/api/memory/migrate-scratchpad", s.handleMemoryMigrateScratchpad)
+	s.mux.HandleFunc("/api/memory/l2/export", s.handleL2Export)
+	s.mux.HandleFunc("/api/memory/l2/import", s.handleL2Import)
+	s.mux.HandleFunc("/api/memory/graph", s.handleMemoryGraph)
 	s.mux.HandleFunc("/dashboard", s.handleDashboard)
 	s.mux.HandleFunc("/api/memory/project/sync", s.handleProjectSync)
 	s.mux.HandleFunc("/api/memory/project/split", s.handleProjectSplit)
@@ -4451,6 +4455,29 @@ func (s *Server) handleMemoryAddFact(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": localErr.Error(), "detail": localErr.Error()})
 		return
 	}
+
+	// Dual-write into L2 VectorStore so semantic search / export / re-embed see the fact
+	if tools.GlobalVectorStore != nil {
+		content, _ := payload["content"].(string)
+		title, _ := payload["title"].(string)
+		if content != "" {
+			rec := controlplane.L2VaultRecord{
+				ID:         fmt.Sprintf("fact-%d", time.Now().UnixNano()),
+				SessionID:  "local-add-fact",
+				Type:       controlplane.MemoryType("working"),
+				Kind:       "fact",
+				Category:   "semantic",
+				Content:    content,
+				Importance: 0.5,
+				HeatScore:  100,
+			}
+			if title != "" {
+				rec.Tags = "title=" + title
+			}
+			_ = tools.GlobalVectorStore.Commit(r.Context(), rec)
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{

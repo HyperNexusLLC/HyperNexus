@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/ai"
+	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/orchestration"
 )
 
@@ -48,10 +49,32 @@ func (s *Server) handleAgentChat(w http.ResponseWriter, r *http.Request) {
 
 	llmResp, fallbackErr := ai.AutoRoute(r.Context(), messages)
 	if fallbackErr != nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"success": false,
-			"error":   fallbackErr.Error(),
-			"detail":  fallbackErr.Error(),
+		// Local Ollama fallback for agent chat / tool routing when cloud AutoRoute is down
+		prompt := payload.Message
+		if prompt == "" && len(payload.History) > 0 {
+			prompt = payload.History[len(payload.History)-1].Content
+		}
+		ollamaOut, ollamaErr := memorystore.OllamaChat(r.Context(), prompt)
+		if ollamaErr != nil {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{
+				"success": false,
+				"error":   fallbackErr.Error(),
+				"detail":  "AutoRoute and Ollama both failed: " + ollamaErr.Error(),
+			})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data": map[string]any{
+				"content":  ollamaOut,
+				"provider": "ollama",
+				"model":    "nomic-embed-text",
+			},
+			"bridge": map[string]any{
+				"fallback":  "ollama-local",
+				"procedure": "agent.chat",
+				"reason":    "AutoRoute unavailable; using local Ollama generation",
+			},
 		})
 		return
 	}
