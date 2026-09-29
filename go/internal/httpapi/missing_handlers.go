@@ -54,11 +54,33 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 		localResults = nil
 	}
 
+	// Also search the VectorStore (Ollama-backed semantic search)
+	var vectorResults []map[string]any
+	if tools.GlobalVectorStore != nil {
+		records, vErr := tools.GlobalVectorStore.SemanticSearch(r.Context(), query, limit)
+		if vErr == nil {
+			for _, rec := range records {
+				vectorResults = append(vectorResults, map[string]any{
+					"id":       rec.ID,
+					"content":  rec.Content,
+					"category": rec.Category,
+					"kind":     rec.Kind,
+					"tags":     rec.Tags,
+					"source":   "vectorstore",
+				})
+			}
+		}
+	}
+
 	if upstreamErr == nil {
 		merged := result
 		if len(localResults) > 0 {
 			upstreamItems := toSlice(result)
 			merged = mergeMemoryResults(upstreamItems, localResults, limit)
+		}
+		if len(vectorResults) > 0 {
+			mergedItems := toSlice(merged)
+			merged = mergeMemoryResults(mergedItems, vectorResults, limit)
 		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
@@ -79,9 +101,13 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	mergedLocal := make([]map[string]any, 0, len(localResults)+len(vectorResults))
+	mergedLocal = append(mergedLocal, localResults...)
+	mergedLocal = append(mergedLocal, vectorResults...)
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
-		"data":    localResults,
+		"data":    mergedLocal,
 		"bridge": map[string]any{
 			"fallback":  "go-local-memory",
 			"procedure": "memory.query",
