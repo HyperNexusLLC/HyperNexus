@@ -147,7 +147,7 @@ func generateFoundationRepomap(cwd string, body foundationrepomap.Options) (foun
 	if body.BaseDir == "" {
 		body.BaseDir = cwd
 	}
-	return foundationrepomap.Generate(r.Context(), body)
+	return foundationrepomap.Generate(context.Background(), body)
 }
 
 func createFoundationSession(cwd string, body foundationSessionCreateRequest) (*foundationpi.SessionFile, error) {

@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/core",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "AI Control Plane with Persistent Memory - 26,000+ MCP Tools",
   "main": "index.js",
   "bin": {

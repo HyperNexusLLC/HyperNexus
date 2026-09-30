@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/browser-extension-pkg",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "hypernexus Browser Extension for Hub Connectivity",
   "scripts": {
     "build": "echo \"stub package\"",

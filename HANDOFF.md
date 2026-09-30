@@ -1,5 +1,60 @@
 ﻿# HANDOFF.md â€” Session Handoff
 
+
+## Session Date: 2026-09-24
+
+## Summary
+
+Comprehensive repository synchronization, intelligent branch merge, submodule update, and version bump to 1.0.5.
+
+## Completed Tasks
+
+### 1. Upstream Tracking & Submodule Sanitization
+
+- Fetched all remotes and tags for root repo and all submodules
+- Synced local `main` with remote (fast-forward to `fc731eb86`)
+- Updated 3 submodules to latest tracking commits:
+  - `lumbros.me` -> `16261e00c` (heads/main)
+  - `vendor/deepseek-harness` -> `639ed01539` (dsh-v0.2.0-rc.2, 8177 commits fast-forwarded)
+  - `vendor/grok-build` -> `2bdd1d6a6` (heads/main)
+- Discovered new `lumbros.me` submodule (candlestixxx/lumbros.me)
+
+### 2. Dual-Direction Intelligent Merge Engine
+
+#### Forward Merges (Features -> Main)
+
+- **clean-main** (`a897b44b8`): Fast-forward merged - MCP tool schemas, GraphRAG relation extraction, L2 export/import, Ollama chat fallback, CI hardening (12 files, +1131/-126)
+- **feature/cloud-dashboard-mcp-sse**: Cherry-picked 14 valuable files (no merge base - unrelated histories):
+  - packages/core/src/daemons/hyperingest/BobbyBookmarksSyncWorker.ts
+  - packages/core/src/daemons/hyperingest/LinkCrawlerWorker.ts
+  - packages/core/src/data/mcp_registry.json
+  - 4 skill definitions (frontend-design, mcp-builder, treesitter-expert, web-research)
+  - scripts/assimilate_all_resources.py, scripts/bobbybookmarks_sync.py, scripts/fix_and_test_go_tools.py
+  - watchdog.py, config/mcp_servers.json, Dockerfile.prod, SUBMODULES_INDEX.md
+- **github-clean / github-mirror-clean**: Skipped - intentionally separate clean mirrors
+- **origin-tormentnexus/main**: Skipped - old fork, unique code only in backups
+
+#### Reverse Merges (Main -> Features)
+
+- **feature/cloud-dashboard-mcp-sse**: 400+ add/add conflicts from unrelated histories. Aborted per conflict-ownership protocol. Branch owner must rebase.
+
+#### Conflict Resolutions
+
+- go/cmd_root/foundation_http.go:150: Fixed undefined r - replaced r.Context() with context.Background()
+
+### 3. Version Governance
+
+- Bumped VERSION: 1.0.3 -> 1.0.5
+- Synced version across 35 packages via scripts/sync-versions.mjs
+
+## Next Steps
+
+- Commit and push all changes
+- Deploy to Hetzner if needed
+- Feature branch owner should rebase feature/cloud-dashboard-mcp-sse onto main
+
+---
+
 ## Session Date: 2026-08-21
 
 ## Summary
