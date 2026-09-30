@@ -11,6 +11,7 @@ import (
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/cache"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/mcp"
+	"gitlab.com/HyperNexusLLC/HyperNexus/internal/tools"
 	roottools "gitlab.com/HyperNexusLLC/HyperNexus/tools"
 )
 
@@ -761,7 +762,7 @@ func (s *Server) mergeAccessoryTools(toolsList []map[string]any) []map[string]an
 		}
 	}
 
-	// 2. Merge Go-native internal tools
+	// 2. Merge Go-native internal tools (schemas from tools.NativeToolMeta)
 	if s.toolsRegistry != nil {
 		for _, name := range s.toolsRegistry.List() {
 			if seen[name] {
@@ -770,96 +771,17 @@ func (s *Server) mergeAccessoryTools(toolsList []map[string]any) []map[string]an
 			seen[name] = true
 
 			desc := "Go-native built-in tool"
-			properties := map[string]any{}
-			required := []string{}
-
-			switch name {
-			case "read_file":
-				desc = "Read the contents of a file"
-				properties["path"] = map[string]any{"type": "string", "description": "Absolute path to the file"}
-				required = []string{"path"}
-			case "write_file":
-				desc = "Create or overwrite a file with contents"
-				properties["path"] = map[string]any{"type": "string", "description": "Absolute path to the file"}
-				properties["content"] = map[string]any{"type": "string", "description": "Content to write"}
-				required = []string{"path", "content"}
-			case "list_dir":
-				desc = "List files and subdirectories"
-				properties["path"] = map[string]any{"type": "string", "description": "Absolute path to the directory"}
-				required = []string{"path"}
-			case "delete_file":
-				desc = "Remove a file from filesystem"
-				properties["path"] = map[string]any{"type": "string", "description": "Absolute path to the file"}
-				required = []string{"path"}
-			case "ripgrep", "search_text":
-				desc = "Search for exact text or pattern in workspace files"
-				properties["query"] = map[string]any{"type": "string", "description": "Search term or regex pattern"}
-				properties["path"] = map[string]any{"type": "string", "description": "Optional search directory"}
-				required = []string{"query"}
-			case "search_web":
-				desc = "Perform a web search for a query"
-				properties["query"] = map[string]any{"type": "string", "description": "Search query"}
-				required = []string{"query"}
-			case "probe":
-				desc = "Send a HTTP GET request to check URL status"
-				properties["url"] = map[string]any{"type": "string", "description": "Target URL to probe"}
-				required = []string{"url"}
-			case "code_research":
-				desc = "Analyze codebase structure and find matching code elements"
-				properties["query"] = map[string]any{"type": "string", "description": "Code component or search string"}
-				required = []string{"query"}
-			case "search_semantic":
-				desc = "Perform semantic search across vectorized workspace memories"
-				properties["query"] = map[string]any{"type": "string", "description": "Search query"}
-				required = []string{"query"}
-			case "search_regex":
-				desc = "Run regex search on workspace files"
-				properties["query"] = map[string]any{"type": "string", "description": "Regex pattern"}
-				required = []string{"query"}
-			case "fetch", "get":
-				desc = "Fetch content from a URL via GET request"
-				properties["url"] = map[string]any{"type": "string", "description": "URL to fetch"}
-				required = []string{"url"}
-			case "post":
-				desc = "Send a POST request with body to a URL"
-				properties["url"] = map[string]any{"type": "string", "description": "URL to send POST to"}
-				properties["body"] = map[string]any{"type": "string", "description": "Optional raw request body"}
-				required = []string{"url"}
-			case "browser_action":
-				desc = "Interact with headless browser"
-				properties["action"] = map[string]any{"type": "string", "description": "Browser action (goto, click, fill, type, content)"}
-				properties["url"] = map[string]any{"type": "string", "description": "Optional URL target"}
-				required = []string{"action"}
-			case "evolve":
-				desc = "Analyze tool usage telemetry and propose code repairs"
-			case "run_dag":
-				desc = "Execute a structured DAG task flow"
-			case "memory_scratchpad_get":
-				desc = "Retrieve a value from the core memory scratchpad (e.g. 'persona' or 'human')"
-				properties["key"] = map[string]any{"type": "string", "description": "Key to retrieve"}
-				required = []string{"key"}
-			case "memory_scratchpad_set":
-				desc = "Write/overwrite a value in the core memory scratchpad"
-				properties["key"] = map[string]any{"type": "string", "description": "Key to set"}
-				properties["value"] = map[string]any{"type": "string", "description": "Content/value to write"}
-				required = []string{"key", "value"}
-			case "memory_scratchpad_append":
-				desc = "Append text to an existing core memory scratchpad value"
-				properties["key"] = map[string]any{"type": "string", "description": "Key to append to"}
-				properties["value"] = map[string]any{"type": "string", "description": "Content/text to append"}
-				required = []string{"key", "value"}
-			case "memory_extract_relations":
-				desc = "Extract entities and relationships from a text block and store them in the graph RelationStore"
-				properties["text"] = map[string]any{"type": "string", "description": "Text block to extract relations from"}
-				required = []string{"text"}
-			}
-
 			inputSchema := map[string]any{
 				"type":       "object",
-				"properties": properties,
+				"properties": map[string]any{},
 			}
-			if len(required) > 0 {
-				inputSchema["required"] = required
+			if meta, hasMeta := tools.NativeToolMeta(name); hasMeta {
+				if meta.Description != "" {
+					desc = meta.Description
+				}
+				if meta.Schema != nil {
+					inputSchema = map[string]any(meta.Schema)
+				}
 			}
 
 			toolMap := map[string]any{

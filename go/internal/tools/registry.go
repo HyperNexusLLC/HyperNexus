@@ -104,6 +104,8 @@ func NewRegistry() *Registry {
 	r.Register("memory_scratchpad_get", HandleScratchpadGet)
 	r.Register("memory_scratchpad_set", HandleScratchpadSet)
 	r.Register("memory_scratchpad_append", HandleScratchpadAppend)
+	r.Register("memory_extract_relations", HandleExtractRelations)
+	r.Register("memory_extract_relations_batch", HandleExtractRelationsBatch)
 	// Core I/O tools — accessible via POST /api/agent/tool
 	r.Register("bash", HandleBash)
 	r.Register("ls", HandleListDir)
@@ -158,31 +160,25 @@ func (r *Registry) HasTool(name string) bool {
 func (r *Registry) List() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	var names []string
+	names := make([]string, 0, len(r.handlers))
 	for name := range r.handlers {
 		names = append(names, name)
 	}
 	return names
+}
 
+// Schema returns the MCP inputSchema for a registered native tool.
+func (r *Registry) Schema(name string) (ToolSchema, bool) {
+	meta, ok := NativeToolMeta(name)
+	if !ok {
+		return ToolSchema{"type": "object", "properties": map[string]any{}}, false
+	}
+	return meta.Schema, true
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Describe returns name/description/inputSchema for a registered native tool.
+func (r *Registry) Describe(name string) (ToolMeta, bool) {
+	return NativeToolMeta(name)
 }
 
 var _ = json.Marshal

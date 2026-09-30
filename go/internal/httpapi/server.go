@@ -7264,20 +7264,30 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 
 	var payload struct {
 		Name      string                 `json:"name"`
+		ToolName  string                 `json:"toolName"`
 		Arguments map[string]interface{} `json:"arguments"`
+		Args      map[string]interface{} `json:"args"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
+	toolName := payload.Name
+	if toolName == "" {
+		toolName = payload.ToolName
+	}
+	args := payload.Arguments
+	if args == nil {
+		args = payload.Args
+	}
 
 	// 1. Try native Go tool handlers first (Total Autonomy)
 	// Only disable if the tool is EXPLICITLY set to false in native-tools.json
 	cfg := s.loadNativeConfig()
-	val, explicit := cfg[payload.Name]
+	val, explicit := cfg[toolName]
 	isNativeDisabled := explicit && !val
-	if s.toolsRegistry != nil && s.toolsRegistry.HasTool(payload.Name) && !isNativeDisabled {
-		result, err := s.toolsRegistry.Execute(r.Context(), payload.Name, payload.Arguments)
+	if s.toolsRegistry != nil && s.toolsRegistry.HasTool(toolName) && !isNativeDisabled {
+		result, err := s.toolsRegistry.Execute(r.Context(), toolName, args)
 
 		// Audit Tool Execution (Commercial Tier)
 		if s.auditor != nil {
@@ -7285,7 +7295,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				status = "FAILURE: " + err.Error()
 			}
-			s.auditor.LogToolExecution("system", payload.Name, payload.Arguments, status)
+			s.auditor.LogToolExecution("system", toolName, args, status)
 		}
 
 		if err == nil {
@@ -7294,7 +7304,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 				"data":    result,
 				"bridge": map[string]any{
 					"source": "go-native-tool",
-					"tool":   payload.Name,
+					"tool":   toolName,
 				},
 			})
 			return
@@ -7310,7 +7320,10 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Try upstream Node server (Bridge)
 	var result any
-	upstreamBase, err := s.callUpstreamJSON(r.Context(), "agent.runTool", payload, &result)
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "agent.runTool", map[string]any{
+		"name":      toolName,
+		"arguments": args,
+	}, &result)
 	if err == nil {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
@@ -7327,7 +7340,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 		"success": false,
 		"error":   "Tool not found or upstream unavailable",
-		"detail":  fmt.Sprintf("Tool '%s' not implemented in Go and Node server is unreachable.", payload.Name),
+		"detail":  fmt.Sprintf("Tool '%s' not implemented in Go and Node server is unreachable.", toolName),
 	})
 }
 
