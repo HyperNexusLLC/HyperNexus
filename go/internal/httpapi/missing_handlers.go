@@ -762,6 +762,35 @@ func (s *Server) handleMemoryMigrateScratchpad(w http.ResponseWriter, r *http.Re
 	})
 }
 
+// requireWriteAuth enforces the dashboard token on mutating memory APIs when set.
+// GET/read endpoints stay open so semantic search still works for local agents.
+func (s *Server) requireWriteAuth(w http.ResponseWriter, r *http.Request) bool {
+	token := strings.TrimSpace(os.Getenv("HYPERNEXUS_DASHBOARD_TOKEN"))
+	if token == "" {
+		return true
+	}
+	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
+		return true
+	}
+	got := r.URL.Query().Get("token")
+	if got == "" {
+		got = strings.TrimSpace(r.Header.Get("X-Dashboard-Token"))
+	}
+	if got == "" {
+		if c, err := r.Cookie("hn_dash_token"); err == nil {
+			got = c.Value
+		}
+	}
+	if got != token {
+		writeJSON(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"error":   "dashboard token required for write operations",
+		})
+		return false
+	}
+	return true
+}
+
 func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	// Optional shared-token auth: set HYPERNEXUS_DASHBOARD_TOKEN to require it.
 	token := strings.TrimSpace(os.Getenv("HYPERNEXUS_DASHBOARD_TOKEN"))

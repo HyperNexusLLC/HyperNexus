@@ -53,8 +53,8 @@ func (s *VectorStore) ExportMemories(ctx context.Context, filePath string) error
 		m.Category = category
 		m.Tags = tags
 		m.SourceURL = sourceURL
-		m.LastAccessedAt, _ = time.Parse("2006-01-02 15:04:05", lastAccessed)
-		m.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
+		m.LastAccessedAt = parseMemTime(lastAccessed)
+		m.CreatedAt = parseMemTime(createdAt)
 
 		memories = append(memories, m)
 	}
@@ -107,8 +107,8 @@ func (s *VectorStore) ExportMemoriesJSON(ctx context.Context) (*MemoryExport, er
 		m.Category = category
 		m.Tags = tags
 		m.SourceURL = sourceURL
-		m.LastAccessedAt, _ = time.Parse("2006-01-02 15:04:05", lastAccessed)
-		m.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
+		m.LastAccessedAt = parseMemTime(lastAccessed)
+		m.CreatedAt = parseMemTime(createdAt)
 
 		memories = append(memories, m)
 	}
@@ -120,6 +120,27 @@ func (s *VectorStore) ExportMemoriesJSON(ctx context.Context) (*MemoryExport, er
 		Count:      len(memories),
 		Memories:   memories,
 	}, nil
+}
+
+// parseMemTime accepts SQLite datetime, RFC3339, and zero/empty values.
+func parseMemTime(s string) time.Time {
+	s = strings.TrimSpace(s)
+	if s == "" || s == "0001-01-01 00:00:00" || s == "0001-01-01T00:00:00Z" {
+		return time.Time{}
+	}
+	layouts := []string{
+		"2006-01-02 15:04:05",
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02 15:04:05.999999999-07:00",
+		"2006-01-02",
+	}
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t
+		}
+	}
+	return time.Time{}
 }
 
 // ImportMemoriesJSON imports memories from a MemoryExport payload (no file I/O).

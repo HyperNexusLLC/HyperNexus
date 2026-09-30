@@ -1087,10 +1087,20 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 }
 
 func (s *Server) registerRoutes() {
+	// Write-protected wrapper for mutating memory APIs
+	guard := func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			if !s.requireWriteAuth(w, r) {
+				return
+			}
+			h(w, r)
+		}
+	}
+
 	s.mux.HandleFunc("/api/memory/list", s.handleMemoryList)
-	s.mux.HandleFunc("/api/memory/add", s.handleMemoryAdd)
-	s.mux.HandleFunc("/api/memory/add-history", s.handleMemoryAddHistory)
-	s.mux.HandleFunc("/api/memory/relations/add", s.handleMemoryAddRelation)
+	s.mux.HandleFunc("/api/memory/add", guard(s.handleMemoryAdd))
+	s.mux.HandleFunc("/api/memory/add-history", guard(s.handleMemoryAddHistory))
+	s.mux.HandleFunc("/api/memory/relations/add", guard(s.handleMemoryAddRelation))
 	s.mux.HandleFunc("/api/memory/relations/get", s.handleMemoryGetRelations)
 	s.mux.HandleFunc("/api/memory/relations/graph", s.handleMemoryGraph)
 	s.mux.HandleFunc("/api/memory/spaced-repetition/due", s.handleMemorySpacedRepetitionDue)
@@ -1310,7 +1320,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/context/delete", s.handleMemoryContextDelete)
 	s.mux.HandleFunc("/api/memory/agent-stats", s.handleMemoryAgentStats)
 	s.mux.HandleFunc("/api/memory/agent-search", s.handleMemoryAgentSearch)
-	s.mux.HandleFunc("/api/memory/facts/add", s.handleMemoryAddFact)
+	s.mux.HandleFunc("/api/memory/facts/add", guard(s.handleMemoryAddFact))
 	s.mux.HandleFunc("/api/memory/observations/record", s.handleMemoryRecordObservation)
 	s.mux.HandleFunc("/api/memory/observations/recent", s.handleMemoryRecentObservations)
 	s.mux.HandleFunc("/api/memory/observations/search", s.handleMemorySearchObservations)
@@ -1576,12 +1586,12 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/fts-search", s.handleMemoryFTSearch)
 	s.mux.HandleFunc("/api/memory/maintenance", s.handleMemoryMaintenance)
 	s.mux.HandleFunc("/api/memory/maintenance-local", s.handleMemoryMaintenanceLocal)
-	s.mux.HandleFunc("/api/memory/re-embed", s.handleMemoryReEmbed)
-	s.mux.HandleFunc("/api/memory/migrate-scratchpad", s.handleMemoryMigrateScratchpad)
+	s.mux.HandleFunc("/api/memory/re-embed", guard(s.handleMemoryReEmbed))
+	s.mux.HandleFunc("/api/memory/migrate-scratchpad", guard(s.handleMemoryMigrateScratchpad))
 	s.mux.HandleFunc("/api/memory/l2/export", s.handleL2Export)
-	s.mux.HandleFunc("/api/memory/l2/import", s.handleL2Import)
+	s.mux.HandleFunc("/api/memory/l2/import", guard(s.handleL2Import))
 	s.mux.HandleFunc("/api/memory/graph", s.handleMemoryGraph)
-	s.mux.HandleFunc("/api/memory/graph/cleanup", s.handleMemoryGraphCleanup)
+	s.mux.HandleFunc("/api/memory/graph/cleanup", guard(s.handleMemoryGraphCleanup))
 	s.mux.HandleFunc("/dashboard", s.handleDashboard)
 	s.mux.HandleFunc("/api/memory/project/sync", s.handleProjectSync)
 	s.mux.HandleFunc("/api/memory/project/split", s.handleProjectSplit)

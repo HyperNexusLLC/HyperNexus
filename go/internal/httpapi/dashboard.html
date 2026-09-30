@@ -31,6 +31,14 @@ button:hover{background:#ffd7001a;border-color:#ffd700}
 <body>
 <h1>HyperNexus Dashboard</h1>
 
+<div id="login" style="display:none;max-width:420px;margin:2rem 0;padding:1.25rem;background:#12121a;border:1px solid #1e1e2e;border-radius:12px">
+  <h2 style="font-size:1rem;color:#ffd700;margin-bottom:.75rem">Dashboard token required</h2>
+  <input id="token-input" type="password" placeholder="Paste HYPERNEXUS_DASHBOARD_TOKEN"
+    style="width:100%;padding:.65rem .75rem;border-radius:8px;border:1px solid #333;background:#0a0a0f;color:#eee;margin-bottom:.75rem" />
+  <button onclick="saveToken()">Unlock</button>
+  <div class="sub" id="login-msg" style="margin-top:.5rem;color:#f66"></div>
+</div>
+
 <div id="actions">
   <button onclick="call('/api/memory/maintenance','POST')">Run Maintenance</button>
   <button onclick="call('/api/memory/re-embed','POST')">Re-Embed All</button>
@@ -90,9 +98,32 @@ button:hover{background:#ffd7001a;border-color:#ffd700}
 <script>
 const API = window.location.origin;
 
+function getToken() {
+  return localStorage.getItem('hn_dash_token') || new URLSearchParams(location.search).get('token') || '';
+}
+
+function saveToken() {
+  const v = document.getElementById('token-input').value.trim();
+  if (!v) return;
+  localStorage.setItem('hn_dash_token', v);
+  document.getElementById('login').style.display = 'none';
+  refresh();
+}
+
+function authHeaders() {
+  const t = getToken();
+  return t ? { 'X-Dashboard-Token': t } : {};
+}
+
+function showLogin() {
+  const el = document.getElementById('login');
+  if (el) el.style.display = 'block';
+}
+
 async function fetchJSON(path) {
   try {
-    const r = await fetch(API + path);
+    const r = await fetch(API + path, { headers: authHeaders() });
+    if (r.status === 401) { showLogin(); return null; }
     return await r.json();
   } catch(e) { return null; }
 }
@@ -105,7 +136,8 @@ function toast(msg) {
 
 async function call(path, method) {
   try {
-    const r = await fetch(API + path, {method});
+    const r = await fetch(API + path, { method, headers: authHeaders() });
+    if (r.status === 401) { showLogin(); return; }
     const j = await r.json();
     toast(j.success ? 'Done: ' + path : 'Error: ' + (j.error || 'unknown'));
     setTimeout(refresh, 1000);
@@ -230,7 +262,8 @@ function drawGraph(nodes, edges) {
 
 async function exportL2() {
   try {
-    const r = await fetch(API + '/api/memory/l2/export');
+    const r = await fetch(API + '/api/memory/l2/export', { headers: authHeaders() });
+    if (r.status === 401) { showLogin(); return; }
     const j = await r.json();
     if (!j.success) { toast('Export failed'); return; }
     const blob = new Blob([JSON.stringify(j.data, null, 2)], {type:'application/json'});

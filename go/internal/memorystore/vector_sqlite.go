@@ -155,6 +155,9 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 	if entry.LastAccessedAt.IsZero() {
 		entry.LastAccessedAt = time.Now()
 	}
+	if entry.CreatedAt.IsZero() {
+		entry.CreatedAt = time.Now()
+	}
 	if entry.Kind == "" {
 		entry.Kind = "fact"
 	}
@@ -919,6 +922,7 @@ func cosineSim(a, b []float32) float64 {
 }
 
 // AddRelation creates or updates a relational edge between two L2 memories (GraphRAG relation mapping).
+// Also dual-writes to RelationStore (memory_relations) so both tables stay in sync.
 func (s *VectorStore) AddRelation(ctx context.Context, sourceID, targetID, relType string, weight float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -928,7 +932,19 @@ func (s *VectorStore) AddRelation(ctx context.Context, sourceID, targetID, relTy
 		VALUES (?, ?, ?, ?)
 		ON CONFLICT(source_id, target_id, relation_type) DO UPDATE SET weight = excluded.weight
 	`, sourceID, targetID, relType, weight)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Dual-write to memory_relations (RelationStore) when available
+	if s.relationStore != nil {
+		_, _ = s.db.ExecContext(ctx, `
+			INSERT INTO memory_relations (source_id, target_id, rel_type, weight, metadata)
+			VALUES (?, ?, ?, ?, '{}')
+			ON CONFLICT(source_id, target_id, rel_type) DO UPDATE SET weight = excluded.weight
+		`, sourceID, targetID, relType, weight)
+	}
+	return nil
 }
 
 // GetRelations returns all incoming and outgoing relations for a specific memory ID.

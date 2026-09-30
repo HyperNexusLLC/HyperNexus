@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-09-30
+
+### Added
+
+- **L2 export/import API** — `/api/memory/l2/export` + `/l2/import` for VectorStore backup/transfer
+- **Knowledge graph API + UI** — `/api/memory/graph`, canvas viz, edges table, entity labels (`ent-ollama`)
+- **GraphRAG relation extraction** — `memory_extract_relations` + batch corpus extractor (pattern + Ollama + co-occurrence)
+- **MCP tool schemas** — `tools.NativeToolMeta` catalog with full `inputSchema` for all native tools
+- **Ollama chat fallback** — `agent.chat` falls back to local Ollama when AutoRoute fails
+- **Dashboard token auth** — `HYPERNEXUS_DASHBOARD_TOKEN` with login form; write APIs guarded
+- **Relation-aware search** — GraphRAG neighbor boost in `SemanticSearch`
+- **Search `sources` array** — `/api/memory/search` reports upstream / local-json / vectorstore
+- **Deploy + backup automation** — `deploy-hetzner.yml`, `scripts/backup-l2.sh` (daily cron), L2 round-trip test
+
+### Fixed
+
+- **Over-superseding** — contradiction detector uses Jaccard + word-boundary polarity; upsert skips conflict detection
+- **memory_relations FTS** — proper external-content FTS5 delete triggers; legacy table dropped on open
+- **L2 import silent failures** — `memory_type` CHECK normalized; per-record errors returned
+- **Export timestamps** — flexible parse (RFC3339 / SQLite datetime); zero CreatedAt defaulted on commit
+- **Hashed entity IDs** — `/api/memory/graph/cleanup` drops opaque `ent-xxxxxxxx` edges
+- **MCP configs** — serena uvx args split; missing binaries converted to uvx/npx (0 missing)
+- **agent tool API** — accepts `name`/`toolName` and `arguments`/`args` aliases
+
+### Verified
+
+- L2 round-trip stable: 27 export → import 27 → 27
+- Graph 36+ nodes after slug IDs and cleanup
+- Dashboard 401 without token, 200 with token
+
+---
+
 ## [1.0.1] - 2026-07-17
 
 ### Fixed
