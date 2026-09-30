@@ -3,7 +3,7 @@
     "tormentnexus-supervisor": {
       "command": "node",
       "args": [
-        "C:\\Users\\hyper\\workspace\\tormentnexus\\packages\\tormentnexus-supervisor\\dist\\index.js"
+        "C:\\Users\\hyper\\workspace\\HyperNexus\\packages\\tormentnexus-supervisor\\dist\\index.js"
       ],
       "env": {
         "NODE_ENV": "production"
@@ -379,8 +379,9 @@
       "alwaysOn": true
     },
     "anyquery": {
-      "command": "anyquery",
+      "command": "uvx",
       "args": [
+        "anyquery",
         "mcp",
         "--stdio",
         "--database",
@@ -499,8 +500,9 @@
       "alwaysOn": true
     },
     "ChunkHound": {
-      "command": "chunkhound",
+      "command": "uvx",
       "args": [
+        "chunkhound",
         "mcp"
       ],
       "env": [],
@@ -523,8 +525,9 @@
       "alwaysOn": true
     },
     "semgrep": {
-      "command": "semgrep",
+      "command": "uvx",
       "args": [
+        "semgrep",
         "mcp"
       ],
       "env": [
@@ -664,14 +667,19 @@
       "alwaysOn": true
     },
     "yahoo-finance-server": {
-      "command": "yahoo-finance-server",
-      "args": [],
+      "command": "npx",
+      "args": [
+        "-y",
+        "yahoo-finance-mcp"
+      ],
       "env": [],
       "alwaysOn": true
     },
     "mcp-yfinance-server": {
-      "command": "mcp-yfinance-server",
-      "args": [],
+      "command": "uvx",
+      "args": [
+        "mcp-server-yfinance"
+      ],
       "env": [],
       "alwaysOn": true
     },
@@ -716,8 +724,10 @@
       "alwaysOn": true
     },
     "imagesorcery-mcp": {
-      "command": "imagesorcery-mcp",
-      "args": [],
+      "command": "uvx",
+      "args": [
+        "imagesorcery-mcp"
+      ],
       "env": [],
       "alwaysOn": true
     },
@@ -758,7 +768,8 @@
     "serena": {
       "command": "uvx",
       "args": [
-        "--from git+https://github.com/ortormentnexus/serena",
+        "--from",
+        "git+https://github.com/ortormentnexus/serena",
         "serena",
         "start-mcp-server",
         "--context",

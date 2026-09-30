@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -741,7 +742,28 @@ func (s *Server) handleMemoryMigrateScratchpad(w http.ResponseWriter, r *http.Re
 	})
 }
 
-func (s *Server) handleDashboard(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
+	// Optional shared-token auth: set HYPERNEXUS_DASHBOARD_TOKEN to require it.
+	token := strings.TrimSpace(os.Getenv("HYPERNEXUS_DASHBOARD_TOKEN"))
+	if token != "" {
+		got := r.URL.Query().Get("token")
+		if got == "" {
+			got = strings.TrimSpace(r.Header.Get("X-Dashboard-Token"))
+		}
+		if got == "" {
+			if c, err := r.Cookie("hn_dash_token"); err == nil {
+				got = c.Value
+			}
+		}
+		if got != token {
+			w.Header().Set("WWW-Authenticate", `Bearer realm="hypernexus-dashboard"`)
+			writeJSON(w, http.StatusUnauthorized, map[string]any{
+				"success": false,
+				"error":   "dashboard token required (HYPERNEXUS_DASHBOARD_TOKEN)",
+			})
+			return
+		}
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(dashboardHTML))
 }
