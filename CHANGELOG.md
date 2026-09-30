@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - L2 import/cleanup reject unauthenticated writes (401); accept `X-Dashboard-Token` and `?token=`
 - Dashboard returns 401 without token on live Hetzner kernel
+- Bearer token auth live on Hetzner (import/cleanup 200 with `Authorization: Bearer`)
+- GitHub secrets set; HyperNexus CI green; `deploy-hetzner.yml` green (push + workflow_dispatch)
+
+### Fixed
+
+- **repomap tests** — `Generate` calls updated for `context.Context` first arg
+- **deploy-hetzner.yml** — secrets not allowed in `if:`; gate via `env.HAS_SSH_KEY`; extract `scripts/ci-deploy-hetzner.sh`
+- **deploy-landing.yml** — removed duplicate `deploy-hypernexus` job key
 
 ---
 

@@ -50,12 +50,11 @@ HyperNexus memory stack hardened end-to-end: L2 export/import, GraphRAG extracti
 
 ## Next agent must
 
-1. **GitHub secrets** — `gh` is NOT logged in (blocked on user `gh auth login`). Then:
-   - `gh secret set HETZNER_SSH_KEY --body "$(Get-Content ~\.ssh\id_ed25519 -Raw)"`
-   - `gh secret set HETZNER_KNOWN_HOSTS --body "5.161.250.43 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMyQFzZa+hPrs8qZ4hQLogP5UnC8M5dj5M4VZSN5DcZl"`
-2. Verify `ci.yml` + `deploy-hetzner.yml` green on GitHub Actions after secrets
+1. ~~GitHub secrets~~ — **DONE** `HETZNER_SSH_KEY` + `HETZNER_KNOWN_HOSTS` set (2026-09-30). `gh` logged in as `robertpelloni`.
+2. ~~Verify CI~~ — **DONE** HyperNexus CI green (build/lint/test) + `deploy-hetzner.yml` green (push + workflow_dispatch)
 3. Re-embed / re-extract after any VectorStore schema change
 4. Build Linux with `GOOS=linux GOARCH=amd64 CGO_ENABLED=0` — never ship Windows `.exe` to Hetzner
+5. CI deploy uses `scripts/ci-deploy-hetzner.sh` (gzip + size check + smoke tests). Secrets-in-`if` is invalid — use `env.HAS_SSH_KEY`.
 
 ## Branch / remotes
 
