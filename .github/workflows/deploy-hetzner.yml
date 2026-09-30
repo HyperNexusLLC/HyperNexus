@@ -5,12 +5,16 @@ on:
     branches: [clean-main]
     paths:
       - "go/**"
+      - "scripts/ci-deploy-hetzner.sh"
       - ".github/workflows/deploy-hetzner.yml"
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      HAS_SSH_KEY: ${{ secrets.HETZNER_SSH_KEY != '' }}
+      HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,51 +32,16 @@ jobs:
         run: go build -buildvcs=false -o ../bin/hypernexus-linux-amd64 ./cmd/tormentnexus/
 
       - name: Install SSH key
-        if: ${{ secrets.HETZNER_SSH_KEY != '' }}
+        if: env.HAS_SSH_KEY == 'true'
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.HETZNER_SSH_KEY }}
           known_hosts: ${{ secrets.HETZNER_KNOWN_HOSTS }}
 
-      - name: Deploy binary and restart kernel
-        if: ${{ secrets.HETZNER_SSH_KEY != '' }}
-        env:
-          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '5.161.250.43' }}
-        run: |
-          set -euo pipefail
-          gzip -c bin/hypernexus-linux-amd64 > bin/hypernexus-linux-amd64.gz
-          LOCAL_SIZE=$(wc -c < bin/hypernexus-linux-amd64)
-          echo "local binary size: $LOCAL_SIZE"
-          scp -o StrictHostKeyChecking=accept-new bin/hypernexus-linux-amd64.gz root@$HETZNER_HOST:/opt/tormentnexus/tormentnexus-new.gz
-          ssh root@$HETZNER_HOST "set -e
-            gunzip -c /opt/tormentnexus/tormentnexus-new.gz > /opt/tormentnexus/tormentnexus-new
-            rm -f /opt/tormentnexus/tormentnexus-new.gz
-            REMOTE_SIZE=\$(wc -c < /opt/tormentnexus/tormentnexus-new)
-            echo \"remote binary size: \$REMOTE_SIZE\"
-            test \"\$REMOTE_SIZE\" = \"$LOCAL_SIZE\"
-            systemctl stop hypernexus-kernel
-            mv /opt/tormentnexus/tormentnexus /opt/tormentnexus/tormentnexus.bak
-            mv /opt/tormentnexus/tormentnexus-new /opt/tormentnexus/tormentnexus
-            chmod +x /opt/tormentnexus/tormentnexus
-            systemctl start hypernexus-kernel
-            sleep 3
-            curl -sf http://127.0.0.1:7778/health"
+      - name: Deploy binary and smoke test
+        if: env.HAS_SSH_KEY == 'true'
+        run: bash scripts/ci-deploy-hetzner.sh bin/hypernexus-linux-amd64
 
-      - name: Smoke test live endpoints
-        if: ${{ secrets.HETZNER_SSH_KEY != '' }}
-        env:
-          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '5.161.250.43' }}
-        run: |
-          set -euo pipefail
-          # Health via nginx proxy
-          curl -sf "https://hypernexus.site/api/go/health" | grep -q '"ok":true'
-          # Dashboard must reject unauthenticated access
-          code=$(curl -sk -o /dev/null -w '%{http_code}' "https://hypernexus.site/kernel-dashboard")
-          test "$code" = "401"
-          # Write API must reject unauthenticated import
-          code=$(curl -sk -o /dev/null -w '%{http_code}' -X POST \
-            -H 'Content-Type: application/json' \
-            -d '{"memories":[]}' \
-            "https://hypernexus.site/api/memory/l2/import")
-          test "$code" = "401"
-          echo "smoke tests passed"
+      - name: Skip notice
+        if: env.HAS_SSH_KEY != 'true'
+        run: echo "HETZNER_SSH_KEY secret not set; skipping deploy."

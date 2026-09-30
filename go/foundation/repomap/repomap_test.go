@@ -1,6 +1,7 @@
 package repomap
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +14,7 @@ func TestGenerateBuildsRankedRepoMap(t *testing.T) {
 	mustWrite(t, filepath.Join(dir, "pkg", "worker.go"), "package pkg\n\ntype Worker struct {}\n\nfunc Run() {}\n")
 	mustWrite(t, filepath.Join(dir, "pkg", "worker_test.go"), "package pkg\n\nfunc TestWorker() {}\n")
 
-	result, err := Generate(Options{BaseDir: dir, MentionedIdents: []string{"Worker"}, MaxFiles: 10})
+	result, err := Generate(context.Background(), Options{BaseDir: dir, MentionedIdents: []string{"Worker"}, MaxFiles: 10})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +36,7 @@ func TestGenerateUsesReferenceGraphGroundworkForRanking(t *testing.T) {
 	dir := t.TempDir()
 	mustWrite(t, filepath.Join(dir, "main.go"), "package main\n\nfunc main() {\n  _ = Worker{}\n  Run()\n}\n")
 	mustWrite(t, filepath.Join(dir, "worker.go"), "package main\n\ntype Worker struct {}\n\nfunc Run() {}\n")
-	result, err := Generate(Options{BaseDir: dir, MaxFiles: 10})
+	result, err := Generate(context.Background(), Options{BaseDir: dir, MaxFiles: 10})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +51,7 @@ func TestGenerateUsesReferenceGraphGroundworkForRanking(t *testing.T) {
 func TestGenerateIncludesTestsWhenRequested(t *testing.T) {
 	dir := t.TempDir()
 	mustWrite(t, filepath.Join(dir, "main_test.go"), "package main\n\nfunc TestMain() {}\n")
-	result, err := Generate(Options{BaseDir: dir, IncludeTests: true})
+	result, err := Generate(context.Background(), Options{BaseDir: dir, IncludeTests: true})
 	if err != nil {
 		t.Fatal(err)
 	}
