@@ -1581,6 +1581,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/l2/export", s.handleL2Export)
 	s.mux.HandleFunc("/api/memory/l2/import", s.handleL2Import)
 	s.mux.HandleFunc("/api/memory/graph", s.handleMemoryGraph)
+	s.mux.HandleFunc("/api/memory/graph/cleanup", s.handleMemoryGraphCleanup)
 	s.mux.HandleFunc("/dashboard", s.handleDashboard)
 	s.mux.HandleFunc("/api/memory/project/sync", s.handleProjectSync)
 	s.mux.HandleFunc("/api/memory/project/split", s.handleProjectSplit)

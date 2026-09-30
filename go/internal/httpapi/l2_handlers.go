@@ -10,6 +10,27 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/tools"
 )
 
+// handleMemoryGraphCleanup rewrites hashed entity IDs and returns counts.
+func (s *Server) handleMemoryGraphCleanup(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+	if tools.GlobalVectorStore == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": "vector store not initialized"})
+		return
+	}
+	rewritten, removed, err := tools.GlobalVectorStore.CleanupHashedEntityIDs(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"rewritten": rewritten, "removed": removed},
+	})
+}
+
 // handleL2Export returns the full L2 vault as a portable JSON bundle for backup/transfer.
 func (s *Server) handleL2Export(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {

@@ -86,6 +86,7 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
 			"data":    merged,
+			"sources": searchSources(upstreamBase != "", len(localResults) > 0, len(vectorResults) > 0),
 			"bridge": map[string]any{
 				"upstreamBase": upstreamBase,
 				"procedure":    "memory.query",
@@ -109,12 +110,31 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data":    mergedLocal,
+		"sources": searchSources(false, len(localResults) > 0, len(vectorResults) > 0),
 		"bridge": map[string]any{
 			"fallback":  "go-local-memory",
 			"procedure": "memory.query",
 			"reason":    "upstream unavailable; using local persisted memory search",
 		},
 	})
+}
+
+// searchSources reports which memory backends contributed to a response.
+func searchSources(upstream, local, vector bool) []string {
+	var src []string
+	if upstream {
+		src = append(src, "upstream")
+	}
+	if local {
+		src = append(src, "local-json")
+	}
+	if vector {
+		src = append(src, "vectorstore")
+	}
+	if len(src) == 0 {
+		src = []string{"none"}
+	}
+	return src
 }
 
 // toSlice normalizes an upstream query result into a []map[string]any slice.
