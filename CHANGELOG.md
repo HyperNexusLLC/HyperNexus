@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.5] - 2026-09-30
+
+### Added
+
+- **Bearer token auth** — dashboard and write APIs accept `Authorization: Bearer <token>` in addition to `X-Dashboard-Token`, `?token=`, and `hn_dash_token` cookie
+- **Deploy smoke tests** — `deploy-hetzner.yml` verifies binary size after transfer and checks live health/dashboard/write-API auth after restart
+
+### Verified
+
+- L2 import/cleanup reject unauthenticated writes (401); accept `X-Dashboard-Token` and `?token=`
+- Dashboard returns 401 without token on live Hetzner kernel
+
+---
+
 ## [1.0.4] - 2026-09-30
 
 ### Added

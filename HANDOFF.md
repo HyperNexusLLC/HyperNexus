@@ -27,10 +27,18 @@ HyperNexus memory stack hardened end-to-end: L2 export/import, GraphRAG extracti
 
 ### Ops
 - Dashboard `HYPERNEXUS_DASHBOARD_TOKEN` (login form + write-API guard)
+- Write auth accepts `X-Dashboard-Token`, `?token=`, `Authorization: Bearer`, `hn_dash_token` cookie
 - `scripts/backup-l2.sh` cron `17 3 * * *` on Hetzner (keep 14)
-- `.github/workflows/deploy-hetzner.yml` (needs `HETZNER_SSH_KEY` secret)
+- `.github/workflows/deploy-hetzner.yml` (gzip + size check + smoke tests; needs `HETZNER_SSH_KEY` secret)
 - `scripts/test-l2-roundtrip.ps1` + `scripts/hetzner-setup.sh`
 - Nginx `/kernel-dashboard` → `:7778/dashboard`
+
+### Live auth verification (2026-09-30)
+- `POST /api/memory/l2/import` without/with wrong token → 401
+- `POST /api/memory/l2/import` with `X-Dashboard-Token` or `?token=` → 200
+- `POST /api/memory/graph/cleanup` without token → 401; with token → 200
+- `GET /kernel-dashboard` without token → 401
+- `GET /api/memory/l2/export` remains open (read path for local agents)
 
 ## Hetzner state
 
@@ -42,10 +50,10 @@ HyperNexus memory stack hardened end-to-end: L2 export/import, GraphRAG extracti
 
 ## Next agent must
 
-1. **GitHub secrets** (user to run `gh auth login` first, or paste in UI):
-   - `HETZNER_SSH_KEY` = `~/.ssh/id_ed25519` private key
-   - `HETZNER_KNOWN_HOSTS` = `5.161.250.43 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMyQFzZa+hPrs8qZ4hQLogP5UnC8M5dj5M4VZSN5DcZl`
-2. Verify `ci.yml` green on GitHub Actions after push
+1. **GitHub secrets** — `gh` is NOT logged in (blocked on user `gh auth login`). Then:
+   - `gh secret set HETZNER_SSH_KEY --body "$(Get-Content ~\.ssh\id_ed25519 -Raw)"`
+   - `gh secret set HETZNER_KNOWN_HOSTS --body "5.161.250.43 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMyQFzZa+hPrs8qZ4hQLogP5UnC8M5dj5M4VZSN5DcZl"`
+2. Verify `ci.yml` + `deploy-hetzner.yml` green on GitHub Actions after secrets
 3. Re-embed / re-extract after any VectorStore schema change
 4. Build Linux with `GOOS=linux GOARCH=amd64 CGO_ENABLED=0` — never ship Windows `.exe` to Hetzner
 

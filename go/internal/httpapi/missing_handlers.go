@@ -762,6 +762,27 @@ func (s *Server) handleMemoryMigrateScratchpad(w http.ResponseWriter, r *http.Re
 	})
 }
 
+// dashboardTokenFromRequest accepts ?token=, X-Dashboard-Token, Authorization: Bearer,
+// or the hn_dash_token cookie — first non-empty wins.
+func dashboardTokenFromRequest(r *http.Request) string {
+	if got := strings.TrimSpace(r.URL.Query().Get("token")); got != "" {
+		return got
+	}
+	if got := strings.TrimSpace(r.Header.Get("X-Dashboard-Token")); got != "" {
+		return got
+	}
+	if auth := strings.TrimSpace(r.Header.Get("Authorization")); auth != "" {
+		const prefix = "Bearer "
+		if len(auth) > len(prefix) && strings.EqualFold(auth[:len(prefix)], prefix) {
+			return strings.TrimSpace(auth[len(prefix):])
+		}
+	}
+	if c, err := r.Cookie("hn_dash_token"); err == nil {
+		return strings.TrimSpace(c.Value)
+	}
+	return ""
+}
+
 // requireWriteAuth enforces the dashboard token on mutating memory APIs when set.
 // GET/read endpoints stay open so semantic search still works for local agents.
 func (s *Server) requireWriteAuth(w http.ResponseWriter, r *http.Request) bool {
@@ -772,16 +793,7 @@ func (s *Server) requireWriteAuth(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
 		return true
 	}
-	got := r.URL.Query().Get("token")
-	if got == "" {
-		got = strings.TrimSpace(r.Header.Get("X-Dashboard-Token"))
-	}
-	if got == "" {
-		if c, err := r.Cookie("hn_dash_token"); err == nil {
-			got = c.Value
-		}
-	}
-	if got != token {
+	if dashboardTokenFromRequest(r) != token {
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
 			"success": false,
 			"error":   "dashboard token required for write operations",
@@ -795,16 +807,7 @@ func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	// Optional shared-token auth: set HYPERNEXUS_DASHBOARD_TOKEN to require it.
 	token := strings.TrimSpace(os.Getenv("HYPERNEXUS_DASHBOARD_TOKEN"))
 	if token != "" {
-		got := r.URL.Query().Get("token")
-		if got == "" {
-			got = strings.TrimSpace(r.Header.Get("X-Dashboard-Token"))
-		}
-		if got == "" {
-			if c, err := r.Cookie("hn_dash_token"); err == nil {
-				got = c.Value
-			}
-		}
-		if got != token {
+		if dashboardTokenFromRequest(r) != token {
 			w.Header().Set("WWW-Authenticate", `Bearer realm="hypernexus-dashboard"`)
 			writeJSON(w, http.StatusUnauthorized, map[string]any{
 				"success": false,
