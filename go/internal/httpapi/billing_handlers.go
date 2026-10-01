@@ -602,12 +602,18 @@ func buildLocalBillingModelPricingResponse() map[string]any {
 	entries := providers.Catalog(statuses)
 	models := make([]map[string]any, 0, len(entries))
 	for _, entry := range entries {
+		inputPrice, outputPrice, known := providers.ModelPricePer1k(entry.DefaultModel)
+		var inputVal, outputVal any
+		if known {
+			inputVal = inputPrice
+			outputVal = outputPrice
+		}
 		models = append(models, map[string]any{
 			"id":               entry.DefaultModel,
 			"provider":         entry.Provider,
 			"name":             entry.Name,
-			"inputPricePer1k":  nil,
-			"outputPricePer1k": nil,
+			"inputPricePer1k":  inputVal,
+			"outputPricePer1k": outputVal,
 			"contextWindow":    nil,
 			"tier":             "standard",
 			"recommended":      entry.Configured || entry.Authenticated,

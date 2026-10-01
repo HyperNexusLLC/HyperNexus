@@ -6299,6 +6299,21 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 	}
 
 	aggregated := s.localMetrics().ProviderBreakdown()
+	// Estimate USD cost from token counts + static model pricing.
+	costByProvider := make(map[string]float64)
+	for _, ev := range s.localMetrics().GetRoutingHistory(500) {
+		name := ev.Provider
+		if name == "" {
+			name = "unknown"
+		}
+		costByProvider[name] += providers.EstimateCostUSD(ev.Model, ev.TokenInput, ev.TokenOutput)
+	}
+	for i := range aggregated {
+		if cost := costByProvider[aggregated[i].Provider]; cost > 0 {
+			aggregated[i].TotalCostUsd = math.Round(cost*10000) / 10000
+			aggregated[i].Cost = aggregated[i].TotalCostUsd
+		}
+	}
 	// Overlay live token/cost totals from the quota tracker when present.
 	if s.quotaManager != nil {
 		byName := make(map[string]*metrics.ProviderUsage, len(aggregated))
@@ -6312,8 +6327,11 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 			key := strings.ToLower(q.Provider)
 			if usage, ok := byName[key]; ok {
 				usage.TokenCount = int(q.TokensUsed)
-				usage.TotalCostUsd = 10.0 - q.CreditsLeft
-				usage.Cost = usage.TotalCostUsd
+				// Prefer estimated model cost; fall back to quota credit burn.
+				if usage.TotalCostUsd == 0 {
+					usage.TotalCostUsd = 10.0 - q.CreditsLeft
+					usage.Cost = usage.TotalCostUsd
+				}
 			} else {
 				aggregated = append(aggregated, metrics.ProviderUsage{
 					Provider:     q.Provider,
@@ -6330,11 +6348,13 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 
 	totalRequests := 0
 	totalTokens := 0
+	totalCost := 0.0
 	latencySum := 0.0
 	latencyN := 0
 	for _, usage := range aggregated {
 		totalRequests += usage.RequestCount
 		totalTokens += usage.TokenCount
+		totalCost += usage.TotalCostUsd
 		if usage.AvgLatencyMs > 0 && usage.RequestCount > 0 {
 			latencySum += usage.AvgLatencyMs * float64(usage.RequestCount)
 			latencyN += usage.RequestCount
@@ -6348,7 +6368,7 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{
-			"totalCost":      0,
+			"totalCost":      math.Round(totalCost*10000) / 10000,
 			"totalRequests":  totalRequests,
 			"totalTokens":    totalTokens,
 			"averageLatency": averageLatency,
