@@ -1,5 +1,61 @@
 # HANDOFF.md — Session Handoff
 
+## Session Date: 2026-10-01 (T35 EXECUTIVE PROTOCOL)
+
+## Summary
+
+Full repository synchronization, intelligent merge engine, dashboard navigation redesign, kernel rebuild, catalog.db repair, and production verification.
+
+## Completed (T35)
+
+### Step 1: Repo Sync & Submodule Sanitization
+- Fetched all remotes (GitHub + GitLab) and all tags
+- Merged `clean-main` twice (12 new commits T55-T60 + earlier batch)
+- 3 submodules checked recursively (lumbros.me, vendor/deepseek-harness, vendor/grok-build) — all up-to-date, no nested submodules
+- VERSION: 1.0.5 → 1.0.8 (merged from clean-main)
+
+### Step 2: Dual-Direction Intelligent Merge
+- Cherry-picked 79 `go/internal/` files from `feature/cloud-dashboard-mcp-sse` (L3 archive, gossip, skill evolution, catalog indexer, enterprise audit, mcpimpl tools)
+- Cherry-picked 5 analysis docs (ANALYSIS_MISSING_FEATURES, future_memory_spec, PORTING_MAP, FEATURE_ASSESSMENT, MCP_ASSIMILATION_REPORT)
+- Resolved all mcpimpl redeclaration conflicts: kept richer `mcp_servers_batch.go` / `stubs_completed*.go` implementations over individual stubs
+- Renamed `HandleAddMemory` → `HandleAddCodebaseMemory` to preserve both VectorStore and file-based memory implementations
+- Full `go build ./...` passes
+
+### Step 3: Dashboard Navigation Redesign
+- **Critical bug fixed**: sidebar hrefs pointed to `?tab=page-a/b/c/d` but dashboard uses anchor sections (`#mission-control`, `#memory-graphrag`, etc.)
+- All sidebar clicks fell through to wrong tab — now link to correct section anchors
+- Reorganized 7 sections by high-value: Overview > Agents > Tools > Memory > Infra > Integrations > Admin
+- All items have descriptive tooltips
+- Dashboard builds clean
+
+### Step 3b: Kernel Rebuild & catalog.db Repair
+- **Found**: running kernel binary was from Aug 9 (v1.0.0-b1) — massively outdated vs source (v1.0.8)
+- **Found**: `catalog.db` and `tormentnexus.db` were Git LFS pointer files, not SQLite databases
+- Rebuilt kernel from source, backed up corrupted DBs as `.lfs-pointer.bak`
+- Fresh kernel started: all 8 API endpoints return 200
+- catalog.db now rebuilds successfully ("Successfully synced Go-native registered tools")
+
+### Step 3c: Production Verification
+- Kernel (port 7778): 200 on /health, /api/startup/status, /api/metrics/stats, /api/mcp/status, /api/memory/search, /api/index, /api/runtime/status, /api/metrics/provider-breakdown
+- Dashboard (port 7779): 200
+- tRPC: 200
+- Startup checks: "All Go startup checks passed"
+
+## Known Issues
+- No `hypernexus.lic` license file — running under free limitations
+- SessionImport: 38 errors out of 100 discovered (sessions already imported, 162 skipped)
+- `mcpConfigAvailable: false`, `repoConfigAvailable: false` in startup checks (non-critical)
+- Gossip P2P mesh discovery fails on port 4301 conflict (only one instance can bind)
+- Git LFS objects for catalog.db/tormentnexus.db unavailable on remote — DBs rebuild from scratch
+
+## Next agent must
+- Wire more dashboard pages to kernel HTTP fallbacks (mcp/search, mcp/inspector, mcp/ai-tools still tRPC-only)
+- `integration-catalog.ts` is a stub — integrations page shows zeros regardless of data
+- Watchdog `-MonitorOllama` still needs admin PowerShell
+- Consider adding `hypernexus.lic` for full feature access
+
+---
+
 ## Session Date: 2026-10-01 (T55–T60)
 
 ## Summary

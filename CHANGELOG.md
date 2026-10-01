@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.10] - 2026-10-01
+
+### Fixed
+- **Sidebar navigation** — links pointed to `?tab=page-a/b/c/d` but dashboard uses anchor sections. All sidebar clicks now correctly scroll to `#mission-control`, `#memory-graphrag`, `#mcp-registry`, `#research-workflows`, `#integrations`, `#governance-billing`.
+- **catalog.db corruption** — Git LFS pointer files replaced real SQLite databases. Backed up as `.lfs-pointer.bak`, kernel rebuilds catalog on startup.
+- **Stale kernel binary** — running binary was from Aug 9 (v1.0.0-b1); rebuilt from source (v1.0.8). All API endpoints now return 200.
+
+### Added
+- **Intelligent merge from feature branch** — 79 `go/internal/` files (L3 cold archive, P2P gossip, skill evolution engine, catalog indexer, enterprise audit, 70+ mcpimpl tool handlers)
+- **Analysis documentation** — ANALYSIS_MISSING_FEATURES.md, future_memory_spec.md, PORTING_MAP.md, TORMENTNEXUS_FEATURE_ASSESSMENT.md, MCP_ASSIMILATION_REPORT.md
+- **Sidebar redesign** — 7 value-ordered sections (Overview > Agents > Tools > Memory > Infra > Integrations > Admin) with descriptive tooltips on every item
+
 ## [1.0.9] - 2026-10-01
 
 ### Added
