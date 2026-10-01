@@ -12,15 +12,16 @@ import { buildSystemEnvironmentRows, buildSystemStartupNotice } from '../mcp/sys
 import { getEventBusMetric, getMcpRouterMetric } from './health-metrics';
 import { getConnectedServerKeys, normalizeHealthServers } from './health-server-list';
 import { buildHealthStartupViewModel } from './health-startup-view-model';
+import { useStartupStatus, useMcpStatus } from '@/hooks/use-startup-status';
 
 export default function HealthDashboard() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const utils = trpc.useUtils();
     const toolsClient = trpc.tools as any;
 
-    const { data: mcpStatus, refetch: refetchMcpStatus } = trpc.mcp.getStatus.useQuery();
-    const { data: startupStatus, refetch: refetchStartup } = trpc.startupStatus.useQuery(undefined, { refetchInterval: 5000 });
-    const { data: servers, refetch: refetchServers } = trpc.mcpServers.list.useQuery();
+    const { data: mcpStatus, refetch: refetchMcpStatus } = useMcpStatus();
+    const { data: startupStatus, refetch: refetchStartup } = useStartupStatus(5000);
+    const { data: servers, refetch: refetchServers } = trpc.mcpServers.list.useQuery(undefined, { retry: false });
     const installArtifactsQuery = toolsClient?.detectInstallSurfaces?.useQuery
         ? toolsClient.detectInstallSurfaces.useQuery(undefined, { refetchInterval: 10000 })
         : ({ data: null, refetch: async () => undefined } as { data: null; refetch: () => Promise<unknown> });

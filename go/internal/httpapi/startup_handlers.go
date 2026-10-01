@@ -22,6 +22,7 @@ type StartupBlockingReason struct {
 type StartupStatus struct {
 	Status          string                  `json:"status"`
 	Ready           bool                    `json:"ready"`
+	Uptime          int64                   `json:"uptime"`
 	Summary         string                  `json:"summary"`
 	BlockingReasons []StartupBlockingReason `json:"blockingReasons"`
 	Checks          map[string]any          `json:"checks"`
@@ -138,9 +139,73 @@ func (s *Server) buildStartupStatus(ctx context.Context) (StartupStatus, error) 
 		}
 	}
 
+	// Dashboard-compatible check sections (DashboardStartupStatus shape).
+	mcpAggregator := map[string]any{
+		"ready":            false,
+		"serverCount":      0,
+		"connectedCount":   0,
+		"persistedServerCount": 0,
+		"persistedToolCount":   0,
+		"inventoryReady":   false,
+	}
+	if view, viewErr := s.localMCPInventoryView(); viewErr == nil && view.Inventory != nil {
+		serverCount := len(view.Inventory.Servers)
+		toolCount := len(view.Inventory.Tools)
+		mcpAggregator["ready"] = true
+		mcpAggregator["serverCount"] = serverCount
+		mcpAggregator["persistedServerCount"] = serverCount
+		mcpAggregator["persistedToolCount"] = toolCount
+		mcpAggregator["advertisedServerCount"] = serverCount
+		mcpAggregator["advertisedToolCount"] = toolCount
+		mcpAggregator["inventoryReady"] = true
+		mcpAggregator["inventorySource"] = view.InventorySource
+	}
+
+	sessionList := s.supervisorManager.ListSessions()
+	sessionSupervisor := map[string]any{
+		"ready":        supervisorReady,
+		"sessionCount": len(sessionList),
+	}
+
+	extensionBridge := map[string]any{
+		"ready":                true,
+		"acceptingConnections": true,
+		"clientCount":          0,
+		"hasConnectedClients":  false,
+	}
+
+	executionEnvironment := map[string]any{
+		"ready":                false,
+		"shellCount":           0,
+		"verifiedShellCount":   0,
+		"toolCount":            0,
+		"verifiedToolCount":    0,
+		"harnessCount":         0,
+		"verifiedHarnessCount": 0,
+		"supportsPowerShell":   false,
+		"supportsPosixShell":   false,
+	}
+	if execData, execErr := s.localExecutionEnvironment(ctx); execErr == nil {
+		if summary, ok := execData["summary"].(map[string]any); ok {
+			executionEnvironment["ready"] = summary["ready"]
+			executionEnvironment["preferredShellId"] = summary["preferredShellId"]
+			executionEnvironment["preferredShellLabel"] = summary["preferredShellLabel"]
+			executionEnvironment["shellCount"] = summary["shellCount"]
+			executionEnvironment["verifiedShellCount"] = summary["verifiedShellCount"]
+			executionEnvironment["toolCount"] = summary["toolCount"]
+			executionEnvironment["verifiedToolCount"] = summary["verifiedToolCount"]
+			executionEnvironment["harnessCount"] = summary["harnessCount"]
+			executionEnvironment["verifiedHarnessCount"] = summary["verifiedHarnessCount"]
+			executionEnvironment["supportsPowerShell"] = summary["supportsPowerShell"]
+			executionEnvironment["supportsPosixShell"] = summary["supportsPosixShell"]
+			executionEnvironment["notes"] = summary["notes"]
+		}
+	}
+
 	return StartupStatus{
 		Status:          "running",
 		Ready:           len(blockingReasons) == 0,
+		Uptime:          time.Since(s.startedAt).Milliseconds(),
 		Summary:         summary,
 		BlockingReasons: blockingReasons,
 		Checks: map[string]any{
@@ -153,6 +218,8 @@ func (s *Server) buildStartupStatus(ctx context.Context) (StartupStatus, error) 
 			},
 			"memory": map[string]any{
 				"ready":                   memoryStatus.Exists,
+				"initialized":             memoryStatus.Exists,
+				"agentMemory":             memoryStatus.Exists,
 				"storePath":               memoryStatus.StorePath,
 				"totalEntries":            memoryStatus.TotalEntries,
 				"presentDefaultSections":  memoryStatus.PresentDefaultSectionCount,
@@ -176,6 +243,15 @@ func (s *Server) buildStartupStatus(ctx context.Context) (StartupStatus, error) 
 				"inlineTranscriptCount":        importedStats.InlineTranscriptCount,
 				"archivedTranscriptCount":      importedStats.ArchivedTranscriptCount,
 				"missingRetentionSummaryCount": importedStats.MissingRetentionSummaryCount,
+			},
+			// Dashboard-compatible sections
+			"mcpAggregator":       mcpAggregator,
+			"sessionSupervisor":   sessionSupervisor,
+			"extensionBridge":     extensionBridge,
+			"executionEnvironment": executionEnvironment,
+			"configSync": map[string]any{
+				"ready":  true,
+				"status": nil,
 			},
 		},
 	}, nil

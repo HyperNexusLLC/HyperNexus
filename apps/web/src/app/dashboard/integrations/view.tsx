@@ -18,6 +18,7 @@ import {
     getStatusBadgeClasses,
     type StartupStatusSummary,
 } from './integration-catalog';
+import { useStartupStatus, useBrowserStatus } from '@/hooks/use-startup-status';
 
 function StatCard({
     title,
@@ -53,9 +54,9 @@ export default function IntegrationsDashboard() {
     const mcpServersClient = trpc.mcpServers as any;
     const toolsClient = trpc.tools as any;
 
-    const startupStatusQuery = trpc.startupStatus.useQuery(undefined, { refetchInterval: 10000 });
-    const browserStatusQuery = trpc.browser.status.useQuery(undefined, { refetchInterval: 5000 });
-    const syncTargetsQuery = mcpServersClient.syncTargets.useQuery();
+    const startupStatusQuery = useStartupStatus(10000);
+    const browserStatusQuery = useBrowserStatus(5000);
+    const syncTargetsQuery = mcpServersClient.syncTargets.useQuery(undefined, { retry: false });
     const cliDetectionsQuery = toolsClient?.detectCliHarnesses?.useQuery
         ? toolsClient.detectCliHarnesses.useQuery()
         : ({ data: [], isLoading: false } as { data: []; isLoading: boolean });
