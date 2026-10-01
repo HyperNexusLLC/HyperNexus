@@ -8,7 +8,8 @@ import (
 
 // recordLLMRouting captures a routing decision in the local metrics ring buffer.
 // Safe when metrics is uninitialized; never fails the LLM call.
-func recordLLMRouting(provider, model, strategy string, start time.Time, err error) {
+// resp may be nil on error paths; token counts are taken from it when present.
+func recordLLMRouting(provider, model, strategy string, start time.Time, resp *LLMResponse, err error) {
 	ms := metrics.GetMetricsService()
 	if ms == nil {
 		return
@@ -24,6 +25,10 @@ func recordLLMRouting(provider, model, strategy string, start time.Time, err err
 	if err != nil {
 		ev.Error = err.Error()
 	}
+	if resp != nil {
+		ev.TokenInput = resp.Usage.InputTokens
+		ev.TokenOutput = resp.Usage.OutputTokens
+	}
 	ms.RecordRouting(ev)
 	latency := ev.LatencyMs
 	success := 1.0
@@ -37,4 +42,10 @@ func recordLLMRouting(provider, model, strategy string, start time.Time, err err
 		"success":  map[bool]string{true: "true", false: "false"}[err == nil],
 	})
 	ms.Track("llm_success", success, map[string]string{"provider": provider})
+	if ev.TokenInput+ev.TokenOutput > 0 {
+		ms.Track("llm_tokens", float64(ev.TokenInput+ev.TokenOutput), map[string]string{
+			"provider": provider,
+			"model":    model,
+		})
+	}
 }

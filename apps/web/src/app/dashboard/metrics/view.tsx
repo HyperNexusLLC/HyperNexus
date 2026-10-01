@@ -16,27 +16,65 @@ interface RoutingRow {
     error?: string;
 }
 
+interface ProviderRow {
+    provider?: string;
+    requestCount?: number;
+    requests?: number;
+    successCount?: number;
+    errorCount?: number;
+    avgLatencyMs?: number;
+    tokenCount?: number;
+    totalCostUsd?: number;
+    cost?: number;
+    status?: string;
+}
+
+const asRows = (body: unknown): RoutingRow[] => {
+    const data = (body as { data?: unknown })?.data;
+    if (Array.isArray(data)) return data as RoutingRow[];
+    if (Array.isArray((data as { events?: unknown })?.events)) {
+        return (data as { events: RoutingRow[] }).events;
+    }
+    return [];
+};
+
+const asProviderRows = (body: unknown): ProviderRow[] => {
+    const data = (body as { data?: { providers?: unknown } })?.data;
+    const providers = data?.providers;
+    return Array.isArray(providers) ? (providers as ProviderRow[]) : [];
+};
+
 export default function MetricsPage() {
     const { data, error, isLoading } = trpc.metrics.getStats.useQuery(
         { windowMs: 3600000 },
-        { refetchInterval: 5000 }
+        { refetchInterval: 5000, retry: false }
     );
     const [routing, setRouting] = React.useState<RoutingRow[]>([]);
+    const [providers, setProviders] = React.useState<ProviderRow[]>([]);
+    const [localStats, setLocalStats] = React.useState<unknown>(null);
 
     React.useEffect(() => {
         let cancelled = false;
         const load = async () => {
             try {
-                const res = await fetch("/api/go/api/metrics/routing-history?limit=20");
-                const body = await res.json();
-                const rows = Array.isArray(body?.data)
-                    ? body.data
-                    : Array.isArray(body?.data?.events)
-                        ? body.data.events
-                        : [];
-                if (!cancelled) setRouting(rows as RoutingRow[]);
+                const [routingRes, providerRes, statsRes] = await Promise.all([
+                    fetch("/api/go/api/metrics/routing-history?limit=20"),
+                    fetch("/api/go/api/metrics/provider-breakdown"),
+                    fetch("/api/go/api/metrics/stats?windowMs=3600000"),
+                ]);
+                const routingBody = await routingRes.json();
+                const providerBody = await providerRes.json();
+                const statsBody = await statsRes.json();
+                if (cancelled) return;
+                setRouting(asRows(routingBody));
+                setProviders(asProviderRows(providerBody));
+                setLocalStats(statsBody?.data ?? null);
             } catch {
-                if (!cancelled) setRouting([]);
+                if (!cancelled) {
+                    setRouting([]);
+                    setProviders([]);
+                    setLocalStats(null);
+                }
             }
         };
         void load();
@@ -54,7 +92,13 @@ export default function MetricsPage() {
         return `${b} B`;
     };
 
-    const normalized = normalizeMetricsData(data);
+    // Prefer live tRPC stats; fall back to the kernel's local metrics store.
+    const statsSource = (data ?? localStats) as Record<string, unknown> | null;
+    const normalized = normalizeMetricsData(statsSource);
+    const providerRows = providers.length > 0
+        ? providers
+        : ((statsSource as { providerBreakdown?: ProviderRow[] } | null)?.providerBreakdown ?? []);
+    const showStats = Boolean(statsSource);
 
     return (
         <div className="p-6 space-y-6">
@@ -75,7 +119,7 @@ export default function MetricsPage() {
                 <div className="text-muted-foreground animate-pulse">Loading metrics...</div>
             )}
 
-            {data && (
+            {showStats && (
                 <>
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -151,6 +195,55 @@ export default function MetricsPage() {
                     )}
                 </>
             )}
+
+            {/* Provider Breakdown */}
+            <div className="bg-card border rounded-lg p-6">
+                <h2 className="text-lg font-semibold mb-4">Provider Breakdown</h2>
+                {providerRows.length === 0 ? (
+                    <p className="text-muted-foreground italic">No provider traffic recorded yet.</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-muted-foreground border-b">
+                                    <th className="py-2 pr-3">Provider</th>
+                                    <th className="py-2 pr-3">Requests</th>
+                                    <th className="py-2 pr-3">OK</th>
+                                    <th className="py-2 pr-3">Errors</th>
+                                    <th className="py-2 pr-3">Avg Latency</th>
+                                    <th className="py-2 pr-3">Tokens</th>
+                                    <th className="py-2 pr-3">Cost</th>
+                                    <th className="py-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {providerRows.map((row, i) => {
+                                    const requests = row.requestCount ?? row.requests ?? 0;
+                                    const cost = row.totalCostUsd ?? row.cost ?? 0;
+                                    return (
+                                        <tr key={`${row.provider ?? i}`} className="border-b border-border/50">
+                                            <td className="py-2 pr-3">{row.provider || '—'}</td>
+                                            <td className="py-2 pr-3">{requests}</td>
+                                            <td className="py-2 pr-3 text-green-400">{row.successCount ?? 0}</td>
+                                            <td className="py-2 pr-3 text-red-400">{row.errorCount ?? 0}</td>
+                                            <td className="py-2 pr-3">
+                                                {typeof row.avgLatencyMs === 'number' && row.avgLatencyMs > 0
+                                                    ? `${Math.round(row.avgLatencyMs)}ms`
+                                                    : '—'}
+                                            </td>
+                                            <td className="py-2 pr-3">{row.tokenCount ?? 0}</td>
+                                            <td className="py-2 pr-3">
+                                                {cost > 0 ? `$${cost.toFixed(4)}` : '—'}
+                                            </td>
+                                            <td className="py-2">{row.status || '—'}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
 
             {/* Routing History — always shown (local fallback store) */}
             <div className="bg-card border rounded-lg p-6">

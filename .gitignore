@@ -168,8 +168,9 @@ apps/web/.tsc-current.txt
 **/test-results/
 test_logs/
 logs/
-docs/sessions/
 docs/sessions/*.json
+docs/sessions/*.sqlite
+docs/sessions/*.db
 
 # === Archive (dead code, kept on disk only) ===
 # archive/ is now tracked for preserving removed files
@@ -223,7 +224,7 @@ deploy-artifacts/
 vendor/
 
 # === Build artifacts ===
-bin/hypernexus-linux-amd64
+bin/hypernexus-linux-amd64*
 bin/hypernexus.exe
 
 # === Vendor ===

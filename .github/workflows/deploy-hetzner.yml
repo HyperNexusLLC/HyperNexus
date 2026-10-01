@@ -16,11 +16,11 @@ jobs:
       HAS_SSH_KEY: ${{ secrets.HETZNER_SSH_KEY != '' }}
       HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.22"
+          go-version: "1.25"
           cache-dependency-path: go/go.sum
 
       - name: Cross-compile Linux kernel

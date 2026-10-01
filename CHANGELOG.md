@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.9] - 2026-10-01
+
+### Added
+- **HTTP fallback for startupStatus** — health, system, and integrations pages survive tRPC outages via kernel HTTP. New `use-startup-status.ts` hook with tRPC primary + kernel fallback for startupStatus, browserStatus, mcpStatus.
+- **Dashboard-compatible startup checks** — `/api/startup/status` now returns `mcpAggregator`, `sessionSupervisor`, `extensionBridge`, `executionEnvironment`, `configSync` matching the `DashboardStartupStatus` shape. Includes `uptime` field.
+
+## [1.0.8] - 2026-10-01
+
+### Added
+
+- **Real provider breakdown** — `/api/metrics/provider-breakdown` aggregates request/success/error counts, avg latency, models, and last-used from local routing history (was hardcoded zeros). Merged with the provider catalog.
+- **Token usage in routing** — `RoutingEvent.tokenInput/tokenOutput` recorded from LLM `Usage`; provider breakdown `tokenCount` aggregates them and overlays live `QuotaManager` totals
+- **Model-pricing cost estimates** — `providers.EstimateCostUSD` + static price table; `totalCostUsd` on provider breakdown and billing model-pricing preview; dashboard Cost column
+- **Metrics stats enrichment** — local stats fallback now includes `providerBreakdown` and `routingHistory` so one call feeds the dashboard
+- **Routing history persistence** — `metrics.MetricsService.SetRoutingPersistence` loads/saves the 500-event ring to `MainConfigDir/metrics/routing-history.json` (atomic write). Survives kernel restarts (verified on Hetzner).
+- **Dashboard metrics fallback** — `/dashboard/metrics` fetches kernel HTTP stats/provider-breakdown when tRPC is down; new Provider Breakdown table
+
+### Changed
+
+- **GitHub Actions Node 22** — `actions/checkout@v5`, `setup-go@v6`, `setup-node@v5`, `node-version: 22` / Go 1.25 across workflows (clears Node 20 deprecation warnings)
+
+### Fixed
+
+- **Routing persistence wiring** — `ensureMetricsPersistence` ran before `s.metricsService` was assigned, so the disk-backed ring was set on the unused global singleton
+
+---
+
 ## [1.0.7] - 2026-10-01
 
 ### Added

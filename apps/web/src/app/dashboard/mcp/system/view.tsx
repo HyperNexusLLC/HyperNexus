@@ -23,6 +23,7 @@ import {
 	buildSystemStartupNotice,
 	buildSystemStatusCards,
 } from "./system-status-helpers";
+import { useStartupStatus, useBrowserStatus, useMcpStatus } from "@/hooks/use-startup-status";
 
 function getStatusCardColor(status: string): string {
 	if (status === "Healthy" || status === "Ready" || status === "Listening") {
@@ -37,12 +38,10 @@ function getStatusCardColor(status: string): string {
 }
 
 export default function SystemStatusDashboard() {
-	const { data: status, refetch } = trpc.mcp.getStatus.useQuery();
+	const { data: status, refetch } = useMcpStatus();
 	const toolsClient = trpc.tools as any;
-	const { data: startupStatus, refetch: refetchStartup } =
-		trpc.startupStatus.useQuery(undefined, { refetchInterval: 5000 });
-	const { data: browserStatus, refetch: refetchBrowser } =
-		trpc.browser.status.useQuery(undefined, { refetchInterval: 5000 });
+	const { data: startupStatus, refetch: refetchStartup } = useStartupStatus(5000);
+	const { data: browserStatus, refetch: refetchBrowser } = useBrowserStatus(5000);
 	const installArtifactsQuery = toolsClient?.detectInstallSurfaces?.useQuery
 		? toolsClient.detectInstallSurfaces.useQuery(undefined, {
 				refetchInterval: 10000,

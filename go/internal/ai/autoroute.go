@@ -30,7 +30,7 @@ func (r *Router) Route(ctx context.Context, taskType string, messages []Message)
 
     start := time.Now()
     resp, genErr := selection.Factory(selection.APIKey).GenerateText(ctx, selection.DefaultModel, messages)
-    recordLLMRouting(selection.ProviderName, selection.DefaultModel, "router:"+taskType, start, genErr)
+    recordLLMRouting(selection.ProviderName, selection.DefaultModel, "router:"+taskType, start, resp, genErr)
     return resp, genErr
 }
 

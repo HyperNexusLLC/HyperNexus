@@ -739,6 +739,7 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.a2aBroker.SetEventBus(&eventBusAdapter{server.eventBus})
 	server.pairOrchestrator.SetEventBus(&eventBusAdapter{server.eventBus})
 	server.metricsService = metrics.NewMetricsService()
+	server.ensureMetricsPersistence()
 	server.sessionManager = session.NewSessionManager(100)
 	server.fleetManager = orchestration.NewFleetManagerPlus(memoryVS, &eventBusAdapter{server.eventBus}, server.supervisorManager)
 	server.a2aBroker.SetSignalProcessor(server.fleetManager)
@@ -2053,7 +2054,7 @@ func (s *Server) handleAPIIndex(w http.ResponseWriter, _ *http.Request) {
 				{Path: "/api/metrics/track", Category: "ops", Description: "Track a custom metric event through the TypeScript control plane."},
 				{Path: "/api/metrics/system-snapshot", Category: "ops", Description: "Read a real-time system resource snapshot, with a native Go fallback when the TypeScript metrics router is unavailable."},
 				{Path: "/api/metrics/timeline", Category: "ops", Description: "Read downsampled metrics timeline data, with a local zero-state Go fallback when the TypeScript metrics router is unavailable."},
-				{Path: "/api/metrics/provider-breakdown", Category: "ops", Description: "Read provider request, latency, and cost breakdowns, with a local zero-usage Go fallback when the TypeScript metrics router is unavailable."},
+				{Path: "/api/metrics/provider-breakdown", Category: "ops", Description: "Read provider request, latency, and cost breakdowns aggregated from local routing history, with a Go fallback when the TypeScript metrics router is unavailable."},
 				{Path: "/api/metrics/monitoring", Category: "ops", Description: "Toggle TypeScript metrics monitoring state."},
 				{Path: "/api/metrics/routing-history", Category: "ops", Description: "Read recent LLM routing and failover decisions, with a local empty-state Go fallback when the TypeScript metrics router is unavailable."},
 				{Path: "/api/logs", Category: "ops", Description: "List observability logs, with a local hypernexus.db fallback when the TypeScript log store is unavailable."},
@@ -5929,6 +5930,62 @@ func (s *Server) localMetrics() *metrics.MetricsService {
 	return metrics.GetMetricsService()
 }
 
+// ensureMetricsPersistence wires disk-backed routing history once per process.
+func (s *Server) ensureMetricsPersistence() {
+	path := filepath.Join(s.cfg.MainConfigDir, "metrics", "routing-history.json")
+	s.localMetrics().SetRoutingPersistence(path)
+}
+
+// mergeProviderCatalog fills catalog-only providers that have no routing traffic yet.
+func mergeProviderCatalog(aggregated []metrics.ProviderUsage, catalog []providers.CatalogEntry) []map[string]any {
+	seen := make(map[string]bool, len(aggregated))
+	rows := make([]map[string]any, 0, len(aggregated)+len(catalog))
+	for _, usage := range aggregated {
+		seen[strings.ToLower(usage.Provider)] = true
+		rows = append(rows, map[string]any{
+			"provider":     usage.Provider,
+			"requestCount": usage.RequestCount,
+			"requests":     usage.Requests,
+			"successCount": usage.SuccessCount,
+			"errorCount":   usage.ErrorCount,
+			"avgLatencyMs": math.Round(usage.AvgLatencyMs*100) / 100,
+			"totalCostUsd": usage.TotalCostUsd,
+			"cost":         usage.Cost,
+			"tokenCount":   usage.TokenCount,
+			"models":       usage.Models,
+			"lastUsedAt":   usage.LastUsedAt,
+			"status":       usage.Status,
+		})
+	}
+	for _, provider := range catalog {
+		key := strings.ToLower(provider.Name)
+		if seen[key] || seen[strings.ToLower(provider.Provider)] {
+			continue
+		}
+		status := "idle"
+		if provider.Authenticated {
+			status = "ok"
+		} else if provider.Configured {
+			status = "configured"
+		}
+		rows = append(rows, map[string]any{
+			"provider":     provider.Name,
+			"requestCount": 0,
+			"requests":     0,
+			"successCount": 0,
+			"errorCount":   0,
+			"avgLatencyMs": 0,
+			"totalCostUsd": 0,
+			"cost":         0,
+			"tokenCount":   0,
+			"models":       []string{},
+			"lastUsedAt":   0,
+			"status":       status,
+		})
+	}
+	return rows
+}
+
 func (s *Server) handleMetricsStats(w http.ResponseWriter, r *http.Request) {
 	payload := map[string]any{}
 	windowMs := 3600000
@@ -5957,17 +6014,24 @@ func (s *Server) handleMetricsStats(w http.ResponseWriter, r *http.Request) {
 	if series == nil {
 		series = []metrics.DownsampledBucket{}
 	}
+	providerRows := mergeProviderCatalog(s.localMetrics().ProviderBreakdown(), providers.Catalog(providers.Snapshot()))
+	routing := s.localMetrics().GetRoutingHistory(20)
+	if routing == nil {
+		routing = []metrics.RoutingEvent{}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{
-			"windowMs":    local.WindowMs,
-			"totalEvents": local.TotalEvents,
-			"counts":      local.Counts,
-			"averages":    local.Averages,
-			"counters":    local.Counters,
-			"gauges":      local.Gauges,
-			"histograms":  local.Histograms,
-			"series":      series,
+			"windowMs":          local.WindowMs,
+			"totalEvents":       local.TotalEvents,
+			"counts":            local.Counts,
+			"averages":          local.Averages,
+			"counters":          local.Counters,
+			"gauges":            local.Gauges,
+			"histograms":        local.Histograms,
+			"series":            series,
+			"providerBreakdown": providerRows,
+			"routingHistory":    routing,
 		},
 		"bridge": map[string]any{
 			"fallback":  "go-local-metrics",
@@ -6056,18 +6120,41 @@ func (s *Server) recordLocalMetric(payload any) {
 	if _, hasRouting := m["provider"]; hasRouting {
 		if _, hasTool := m["toolName"]; hasTool || mtype == "routing" {
 			ms.RecordRouting(metrics.RoutingEvent{
-				RequestID: optionalString(m, "requestId"),
-				Provider:  optionalString(m, "provider"),
-				Model:     optionalString(m, "model"),
-				ToolName:  optionalString(m, "toolName"),
-				Strategy:  optionalString(m, "strategy"),
-				LatencyMs: value,
-				Success:   m["success"] != false,
-				Error:     optionalString(m, "error"),
-				Tags:      tags,
+				RequestID:   optionalString(m, "requestId"),
+				Provider:    optionalString(m, "provider"),
+				Model:       optionalString(m, "model"),
+				ToolName:    optionalString(m, "toolName"),
+				Strategy:    optionalString(m, "strategy"),
+				LatencyMs:   value,
+				Success:     m["success"] != false,
+				Error:       optionalString(m, "error"),
+				TokenInput:  optionalInt(m, "tokenInput"),
+				TokenOutput: optionalInt(m, "tokenOutput"),
+				Tags:        tags,
 			})
 		}
 	}
+}
+
+// optionalInt returns an int form of map[key], or 0 when absent/nil.
+func optionalInt(m map[string]any, key string) int {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return 0
+	}
+	switch n := v.(type) {
+	case float64:
+		return int(n)
+	case int:
+		return n
+	case int64:
+		return int(n)
+	case json.Number:
+		if f, err := n.Float64(); err == nil {
+			return int(f)
+		}
+	}
+	return 0
 }
 
 // optionalString returns a string form of map[key], or "" when absent/nil.
@@ -6211,29 +6298,86 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	statuses := providers.Snapshot()
-	catalog := providers.Catalog(statuses)
-	providersPreview := make([]map[string]any, 0, len(catalog))
-	for _, provider := range catalog {
-		providersPreview = append(providersPreview, map[string]any{
-			"provider": provider.Name,
-			"cost":     0,
-			"requests": 0,
-		})
+	aggregated := s.localMetrics().ProviderBreakdown()
+	// Estimate USD cost from token counts + static model pricing.
+	costByProvider := make(map[string]float64)
+	for _, ev := range s.localMetrics().GetRoutingHistory(500) {
+		name := ev.Provider
+		if name == "" {
+			name = "unknown"
+		}
+		costByProvider[name] += providers.EstimateCostUSD(ev.Model, ev.TokenInput, ev.TokenOutput)
+	}
+	for i := range aggregated {
+		if cost := costByProvider[aggregated[i].Provider]; cost > 0 {
+			aggregated[i].TotalCostUsd = math.Round(cost*10000) / 10000
+			aggregated[i].Cost = aggregated[i].TotalCostUsd
+		}
+	}
+	// Overlay live token/cost totals from the quota tracker when present.
+	if s.quotaManager != nil {
+		byName := make(map[string]*metrics.ProviderUsage, len(aggregated))
+		for i := range aggregated {
+			byName[strings.ToLower(aggregated[i].Provider)] = &aggregated[i]
+		}
+		for _, q := range s.quotaManager.GetQuotas() {
+			if q == nil || q.TokensUsed == 0 {
+				continue
+			}
+			key := strings.ToLower(q.Provider)
+			if usage, ok := byName[key]; ok {
+				usage.TokenCount = int(q.TokensUsed)
+				// Prefer estimated model cost; fall back to quota credit burn.
+				if usage.TotalCostUsd == 0 {
+					usage.TotalCostUsd = 10.0 - q.CreditsLeft
+					usage.Cost = usage.TotalCostUsd
+				}
+			} else {
+				aggregated = append(aggregated, metrics.ProviderUsage{
+					Provider:     q.Provider,
+					TokenCount:   int(q.TokensUsed),
+					TotalCostUsd: 10.0 - q.CreditsLeft,
+					Cost:         10.0 - q.CreditsLeft,
+					Status:       "ok",
+					Models:       []string{},
+				})
+			}
+		}
+	}
+	rows := mergeProviderCatalog(aggregated, providers.Catalog(providers.Snapshot()))
+
+	totalRequests := 0
+	totalTokens := 0
+	totalCost := 0.0
+	latencySum := 0.0
+	latencyN := 0
+	for _, usage := range aggregated {
+		totalRequests += usage.RequestCount
+		totalTokens += usage.TokenCount
+		totalCost += usage.TotalCostUsd
+		if usage.AvgLatencyMs > 0 && usage.RequestCount > 0 {
+			latencySum += usage.AvgLatencyMs * float64(usage.RequestCount)
+			latencyN += usage.RequestCount
+		}
+	}
+	averageLatency := 0.0
+	if latencyN > 0 {
+		averageLatency = math.Round(latencySum/float64(latencyN)*100) / 100
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{
-			"totalCost":      0,
-			"totalRequests":  0,
-			"averageLatency": 0,
-			"providers":      providersPreview,
+			"totalCost":      math.Round(totalCost*10000) / 10000,
+			"totalRequests":  totalRequests,
+			"totalTokens":    totalTokens,
+			"averageLatency": averageLatency,
+			"providers":      rows,
 		},
 		"bridge": map[string]any{
-			"fallback":  "go-local-metrics-preview",
+			"fallback":  "go-local-metrics",
 			"procedure": "metrics.getProviderBreakdown",
-			"reason":    "upstream unavailable; using local provider catalog with zeroed usage",
+			"reason":    "upstream unavailable; aggregating local routing history with provider catalog",
 		},
 	})
 }
