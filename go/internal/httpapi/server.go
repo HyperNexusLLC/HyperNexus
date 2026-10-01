@@ -6120,18 +6120,41 @@ func (s *Server) recordLocalMetric(payload any) {
 	if _, hasRouting := m["provider"]; hasRouting {
 		if _, hasTool := m["toolName"]; hasTool || mtype == "routing" {
 			ms.RecordRouting(metrics.RoutingEvent{
-				RequestID: optionalString(m, "requestId"),
-				Provider:  optionalString(m, "provider"),
-				Model:     optionalString(m, "model"),
-				ToolName:  optionalString(m, "toolName"),
-				Strategy:  optionalString(m, "strategy"),
-				LatencyMs: value,
-				Success:   m["success"] != false,
-				Error:     optionalString(m, "error"),
-				Tags:      tags,
+				RequestID:   optionalString(m, "requestId"),
+				Provider:    optionalString(m, "provider"),
+				Model:       optionalString(m, "model"),
+				ToolName:    optionalString(m, "toolName"),
+				Strategy:    optionalString(m, "strategy"),
+				LatencyMs:   value,
+				Success:     m["success"] != false,
+				Error:       optionalString(m, "error"),
+				TokenInput:  optionalInt(m, "tokenInput"),
+				TokenOutput: optionalInt(m, "tokenOutput"),
+				Tags:        tags,
 			})
 		}
 	}
+}
+
+// optionalInt returns an int form of map[key], or 0 when absent/nil.
+func optionalInt(m map[string]any, key string) int {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return 0
+	}
+	switch n := v.(type) {
+	case float64:
+		return int(n)
+	case int:
+		return n
+	case int64:
+		return int(n)
+	case json.Number:
+		if f, err := n.Float64(); err == nil {
+			return int(f)
+		}
+	}
+	return 0
 }
 
 // optionalString returns a string form of map[key], or "" when absent/nil.
@@ -6276,13 +6299,42 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 	}
 
 	aggregated := s.localMetrics().ProviderBreakdown()
+	// Overlay live token/cost totals from the quota tracker when present.
+	if s.quotaManager != nil {
+		byName := make(map[string]*metrics.ProviderUsage, len(aggregated))
+		for i := range aggregated {
+			byName[strings.ToLower(aggregated[i].Provider)] = &aggregated[i]
+		}
+		for _, q := range s.quotaManager.GetQuotas() {
+			if q == nil || q.TokensUsed == 0 {
+				continue
+			}
+			key := strings.ToLower(q.Provider)
+			if usage, ok := byName[key]; ok {
+				usage.TokenCount = int(q.TokensUsed)
+				usage.TotalCostUsd = 10.0 - q.CreditsLeft
+				usage.Cost = usage.TotalCostUsd
+			} else {
+				aggregated = append(aggregated, metrics.ProviderUsage{
+					Provider:     q.Provider,
+					TokenCount:   int(q.TokensUsed),
+					TotalCostUsd: 10.0 - q.CreditsLeft,
+					Cost:         10.0 - q.CreditsLeft,
+					Status:       "ok",
+					Models:       []string{},
+				})
+			}
+		}
+	}
 	rows := mergeProviderCatalog(aggregated, providers.Catalog(providers.Snapshot()))
 
 	totalRequests := 0
+	totalTokens := 0
 	latencySum := 0.0
 	latencyN := 0
 	for _, usage := range aggregated {
 		totalRequests += usage.RequestCount
+		totalTokens += usage.TokenCount
 		if usage.AvgLatencyMs > 0 && usage.RequestCount > 0 {
 			latencySum += usage.AvgLatencyMs * float64(usage.RequestCount)
 			latencyN += usage.RequestCount
@@ -6298,6 +6350,7 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 		"data": map[string]any{
 			"totalCost":      0,
 			"totalRequests":  totalRequests,
+			"totalTokens":    totalTokens,
 			"averageLatency": averageLatency,
 			"providers":      rows,
 		},

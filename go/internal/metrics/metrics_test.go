@@ -8,10 +8,10 @@ import (
 
 func TestProviderBreakdownAggregatesRoutingHistory(t *testing.T) {
 	ms := NewMetricsService()
-	ms.RecordRouting(RoutingEvent{Provider: "OpenAI", Model: "gpt-4o", ToolName: "codebase_search", LatencyMs: 120, Success: true})
-	ms.RecordRouting(RoutingEvent{Provider: "OpenAI", Model: "gpt-4o-mini", LatencyMs: 80, Success: true})
+	ms.RecordRouting(RoutingEvent{Provider: "OpenAI", Model: "gpt-4o", ToolName: "codebase_search", LatencyMs: 120, Success: true, TokenInput: 100, TokenOutput: 50})
+	ms.RecordRouting(RoutingEvent{Provider: "OpenAI", Model: "gpt-4o-mini", LatencyMs: 80, Success: true, TokenInput: 20, TokenOutput: 10})
 	ms.RecordRouting(RoutingEvent{Provider: "OpenAI", Model: "gpt-4o", LatencyMs: 200, Success: false, Error: "timeout"})
-	ms.RecordRouting(RoutingEvent{Provider: "Anthropic", Model: "claude-3-7-sonnet-20250219", LatencyMs: 300, Success: true})
+	ms.RecordRouting(RoutingEvent{Provider: "Anthropic", Model: "claude-3-7-sonnet-20250219", LatencyMs: 300, Success: true, TokenInput: 40, TokenOutput: 60})
 
 	rows := ms.ProviderBreakdown()
 	if len(rows) != 2 {
@@ -21,6 +21,9 @@ func TestProviderBreakdownAggregatesRoutingHistory(t *testing.T) {
 	openai := rows[0]
 	if openai.Provider != "OpenAI" || openai.RequestCount != 3 || openai.SuccessCount != 2 || openai.ErrorCount != 1 {
 		t.Fatalf("unexpected OpenAI aggregation: %+v", openai)
+	}
+	if openai.TokenCount != 180 {
+		t.Fatalf("expected OpenAI tokenCount 180, got %d", openai.TokenCount)
 	}
 	if openai.Status != "degraded" {
 		t.Fatalf("expected degraded status after error, got %q", openai.Status)
@@ -37,6 +40,9 @@ func TestProviderBreakdownAggregatesRoutingHistory(t *testing.T) {
 	anthropic := rows[1]
 	if anthropic.Provider != "Anthropic" || anthropic.RequestCount != 1 || anthropic.AvgLatencyMs != 300 {
 		t.Fatalf("unexpected Anthropic aggregation: %+v", anthropic)
+	}
+	if anthropic.TokenCount != 100 {
+		t.Fatalf("expected Anthropic tokenCount 100, got %d", anthropic.TokenCount)
 	}
 }
 

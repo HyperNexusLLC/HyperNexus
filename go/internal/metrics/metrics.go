@@ -86,6 +86,8 @@ type RoutingEvent struct {
 	LatencyMs   float64           `json:"latencyMs,omitempty"`
 	Success     bool              `json:"success"`
 	Error       string            `json:"error,omitempty"`
+	TokenInput  int               `json:"tokenInput,omitempty"`
+	TokenOutput int               `json:"tokenOutput,omitempty"`
 	Tags        map[string]string `json:"tags,omitempty"`
 }
 
@@ -631,6 +633,7 @@ func (ms *MetricsService) ProviderBreakdown() []ProviderUsage {
 		if ev.Model != "" {
 			a.models[ev.Model] = struct{}{}
 		}
+		a.usage.TokenCount += ev.TokenInput + ev.TokenOutput
 		if ev.Timestamp > a.usage.LastUsedAt {
 			a.usage.LastUsedAt = ev.Timestamp
 		}

@@ -427,7 +427,7 @@ func AutoRoute(ctx context.Context, messages []Message) (*LLMResponse, error) {
 	}
 	start := time.Now()
 	resp, err := selection.Factory(selection.APIKey).GenerateText(ctx, selection.DefaultModel, messages)
-	recordLLMRouting(selection.ProviderName, selection.DefaultModel, "autoroute", start, err)
+	recordLLMRouting(selection.ProviderName, selection.DefaultModel, "autoroute", start, resp, err)
 	return resp, err
 }
 
@@ -441,7 +441,7 @@ func AutoRouteWithModel(ctx context.Context, model string, messages []Message) (
 	}
 	start := time.Now()
 	resp, err := selection.Factory(selection.APIKey).GenerateText(ctx, model, messages)
-	recordLLMRouting(selection.ProviderName, model, "autoroute-model", start, err)
+	recordLLMRouting(selection.ProviderName, model, "autoroute-model", start, resp, err)
 	return resp, err
 }
 
