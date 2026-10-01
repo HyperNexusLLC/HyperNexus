@@ -1,26 +1,27 @@
 # HANDOFF.md — Session Handoff
 
-## Session Date: 2026-10-01 (T55–T57)
+## Session Date: 2026-10-01 (T55–T58)
 
 ## Summary
 
-Provider breakdown aggregation, routing history persistence, dashboard HTTP fallbacks, Actions Node 22. Commit `7c0cc93` (v1.0.8).
+Provider breakdown aggregation, routing persistence, token usage, dashboard HTTP fallbacks, Actions Node 22/Go 1.25. Commits `7c0cc93`..`e988a56` (v1.0.8). Live on Hetzner; CI green.
 
-## Completed (T55–T57)
+## Completed (T55–T58)
 
-- `metrics.ProviderBreakdown()` aggregates routing history per provider (requests/ok/errors/avg latency/models/status)
+- `metrics.ProviderBreakdown()` aggregates routing history per provider (requests/ok/errors/avg latency/models/tokens/status)
 - `mergeProviderCatalog` merges routing usage with `providers.Catalog` (catalog-only providers show as idle)
 - `/api/metrics/stats` fallback includes `providerBreakdown` + `routingHistory`
-- `SetRoutingPersistence` + `saveRouting`/`loadRoutingFrom` — JSON ring at `MainConfigDir/metrics/routing-history.json`
-- `Server.ensureMetricsPersistence` wires it at `New()` (skipped under `testing.Testing()`)
+- `SetRoutingPersistence` + `saveRouting`/`loadRoutingFrom` — JSON ring at `MainConfigDir/metrics/routing-history.json` (on Hetzner: `/opt/tormentnexus/.hypernexus/metrics/routing-history.json`)
+- `ensureMetricsPersistence` MUST run AFTER `server.metricsService = metrics.NewMetricsService()` (earlier wiring hit the discarded global)
+- `RoutingEvent.tokenInput/tokenOutput` from LLM `Usage`; quota tracker overlay in provider breakdown
 - Dashboard metrics: HTTP fallback when tRPC down + Provider Breakdown table
-- Actions: checkout@v5, setup-go@v6, setup-node@v5, node-version 22 / NODE_VERSION 22
+- Actions: checkout@v5, setup-go@v6, setup-node@v5, node 22, Go 1.25, `package-manager-cache: false` for npm-only jobs
 
 ## Next agent must
 
-- Deploy kernel (26276000 bytes stripped) + dashboard overlay to Hetzner if not yet live
-- Verify smoke: `/api/metrics/provider-breakdown` shows real counts; routing history survives restart
 - Watchdog `-MonitorOllama` still needs admin PowerShell
+- Consider model-pricing cost estimates for `totalCostUsd` (still 0)
+- Optional: wire more dashboard pages to kernel HTTP fallbacks
 
 ---
 ## Session Date: 2026-10-01 (T53/T54)

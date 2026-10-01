@@ -12,13 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Real provider breakdown** — `/api/metrics/provider-breakdown` aggregates request/success/error counts, avg latency, models, and last-used from local routing history (was hardcoded zeros). Merged with the provider catalog.
+- **Token usage in routing** — `RoutingEvent.tokenInput/tokenOutput` recorded from LLM `Usage`; provider breakdown `tokenCount` aggregates them and overlays live `QuotaManager` totals
 - **Metrics stats enrichment** — local stats fallback now includes `providerBreakdown` and `routingHistory` so one call feeds the dashboard
-- **Routing history persistence** — `metrics.MetricsService.SetRoutingPersistence` loads/saves the 500-event ring to `~/.hypernexus/metrics/routing-history.json` (atomic write). Survives kernel restarts.
+- **Routing history persistence** — `metrics.MetricsService.SetRoutingPersistence` loads/saves the 500-event ring to `MainConfigDir/metrics/routing-history.json` (atomic write). Survives kernel restarts (verified on Hetzner).
 - **Dashboard metrics fallback** — `/dashboard/metrics` fetches kernel HTTP stats/provider-breakdown when tRPC is down; new Provider Breakdown table
 
 ### Changed
 
-- **GitHub Actions Node 22** — `actions/checkout@v5`, `setup-go@v6`, `setup-node@v5`, `node-version: 22` across all workflows (clears Node 20 deprecation warnings)
+- **GitHub Actions Node 22** — `actions/checkout@v5`, `setup-go@v6`, `setup-node@v5`, `node-version: 22` / Go 1.25 across workflows (clears Node 20 deprecation warnings)
+
+### Fixed
+
+- **Routing persistence wiring** — `ensureMetricsPersistence` ran before `s.metricsService` was assigned, so the disk-backed ring was set on the unused global singleton
 
 ---
 
