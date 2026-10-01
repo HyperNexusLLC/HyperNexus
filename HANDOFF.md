@@ -1,5 +1,35 @@
 # HANDOFF.md — Session Handoff
 
+## Session Date: 2026-10-01
+
+## Summary
+
+Metrics local fallbacks, skill working-set API, and Next.js dashboard redeploy. Commit `5ecbbf6` on `clean-main` (v1.0.6). Kernel + dashboard live on Hetzner.
+
+## Completed (2026-10-01)
+
+### Metrics (T50)
+- `metrics.MetricsService` extended: `GetTimeline`, `RecordRouting`, `GetRoutingHistory` (500-entry ring)
+- `handleMetricsStats` / `Timeline` / `RoutingHistory` fall back to local store (200, `fallback: go-local-metrics`) when upstream tRPC is down
+- `handleMetricsTrack` always dual-writes locally via `recordLocalMetric`; routing-shaped payloads feed routing history
+
+### Skills (T51)
+- `handleSkillLoad` / `Unload` / `ListLoaded` implemented against an in-memory working set (was 501)
+- Routes: `GET/POST /api/skills/load|unload|list-loaded` (`?id=` or JSON `{"id":"..."}`)
+
+### Dashboard (T52)
+- `apps/web` rebuilt (Next.js 16.2.6 standalone, BUILD_ID `P9HUWlTE6tqDCp2aXxkua`)
+- Deployed via overlay: keep Hetzner `node_modules`, replace `.next-build`/`.next`/`server.js`/`public`
+- `hypernexus-dashboard.service` active on `:7779`; `/dashboard` 200
+
+### Live smoke (Hetzner)
+- `GET /api/metrics/stats` → 200 `go-local-metrics`
+- `GET /api/metrics/timeline` + `/routing-history` → 200 local fallbacks
+- `GET /api/skills/load?id=smoke-skill` → 200; `list-loaded` shows it; `unload` removes it
+- `GET :7779/dashboard` → 200; kernel `/dashboard` still 401 without token
+
+---
+
 ## Session Date: 2026-09-30
 
 ## Summary
@@ -55,6 +85,8 @@ HyperNexus memory stack hardened end-to-end: L2 export/import, GraphRAG extracti
 3. Re-embed / re-extract after any VectorStore schema change
 4. Build Linux with `GOOS=linux GOARCH=amd64 CGO_ENABLED=0` — never ship Windows `.exe` to Hetzner
 5. CI deploy uses `scripts/ci-deploy-hetzner.sh` (gzip + size check + smoke tests). Secrets-in-`if` is invalid — use `env.HAS_SSH_KEY`.
+
+6. **Dashboard overlay deploy** — Windows pnpm standalone `node_modules` are broken symlinks on Linux. Keep Hetzner `node_modules`, overlay only `.next-build`/`.next`/`server.js`/`public`. Full standalone tar from Windows fails with `Cannot find module 'next'`.
 
 ## Branch / remotes
 

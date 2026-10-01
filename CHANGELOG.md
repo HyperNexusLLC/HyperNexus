@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.6] - 2026-10-01
+
+### Added
+
+- **Local metrics event store fallbacks** — `/api/metrics/stats`, `/timeline`, `/routing-history` return 200 from `metrics.MetricsService` when upstream tRPC is down (was 503)
+- **Metrics dual-write** — `/api/metrics/track` always records locally; routing-shaped payloads feed a 500-entry routing history ring
+- **Skill working-set API** — `/api/skills/load`, `/unload`, `/list-loaded` backed by an in-memory working set (was 501 stubs)
+- **Next.js dashboard redeploy** — standalone build live on Hetzner `:7779` (`hypernexus-dashboard.service`)
+
+### Verified
+
+- Metrics stats/timeline/routing-history 200 with `fallback: go-local-metrics` on live Hetzner kernel
+- Skill load → list-loaded → unload round-trip green on Hetzner
+- Dashboard `/dashboard` 200 on `:7779` after overlay deploy (BUILD_ID `P9HUWlTE6tqDCp2aXxkua`)
+
+### Fixed
+
+- **Metrics fallback tests** — expected 503 preview; now assert 200 local-store responses
+- **Windows pnpm symlinks break Linux standalone** — overlay deploy keeps Hetzner `node_modules` and replaces only `.next-build`/`.next`/`server.js`/`public`
+
+---
+
 ## [1.0.5] - 2026-09-30
 
 ### Added
