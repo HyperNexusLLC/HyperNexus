@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2026-10-01
+
+### Added
+
+- **Live routing history** — `AutoRoute`, `AutoRouteWithModel`, `Router.Route`, and `/api/agent/tool` record `RoutingEvent`s into the local metrics ring (provider, model, tool, strategy, latency, success)
+- **Dashboard skills working set** — load/unload buttons and a Working Set panel on `/dashboard/skills` backed by `/api/skills/load|unload|list-loaded`
+- **Dashboard routing history** — `/dashboard/metrics` shows recent routing decisions (auto-refresh 10s)
+
+### Fixed
+
+- **`<nil>` leakage** — `metrics.track` routing normalization used `fmt.Sprint` on missing map keys; empty fields now serialize as `""`
+- **Stale process on :7778** — `/usr/local/bin/hypernexus` script wrapper held the port after binary swap; deploy script now kills listeners before install
+
+---
+
 ## [1.0.6] - 2026-10-01
 
 ### Added

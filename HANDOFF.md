@@ -1,5 +1,22 @@
 # HANDOFF.md — Session Handoff
 
+## Session Date: 2026-10-01 (T53/T54)
+
+## Summary
+
+Live routing history + dashboard wiring. Commit `4a3fb3a` (v1.0.7). Kernel 695f03cb + dashboard BUILD_ID `hAnndr1G1UQ1DrCgy_qfg` live on Hetzner.
+
+## Completed (T53/T54)
+
+- `ai.recordLLMRouting` hooks AutoRoute / AutoRouteWithModel / Router.Route
+- `handleAgentRunTool` records tool routing (go-native / upstream / unavailable)
+- Dashboard `/dashboard/skills`: working-set panel + Load/Unload
+- Dashboard `/dashboard/metrics`: routing history table
+- Fixed `fmt.Sprint` `<nil>` leak in `recordLocalMetric`
+- Deploy gotcha: `/usr/local/bin/hypernexus` script wrapper holds :7778 — kill listeners before binary swap
+
+---
+
 ## Session Date: 2026-10-01
 
 ## Summary
