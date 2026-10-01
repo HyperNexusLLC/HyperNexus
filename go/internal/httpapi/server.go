@@ -1087,10 +1087,20 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 }
 
 func (s *Server) registerRoutes() {
+	// Write-protected wrapper for mutating memory APIs
+	guard := func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			if !s.requireWriteAuth(w, r) {
+				return
+			}
+			h(w, r)
+		}
+	}
+
 	s.mux.HandleFunc("/api/memory/list", s.handleMemoryList)
-	s.mux.HandleFunc("/api/memory/add", s.handleMemoryAdd)
-	s.mux.HandleFunc("/api/memory/add-history", s.handleMemoryAddHistory)
-	s.mux.HandleFunc("/api/memory/relations/add", s.handleMemoryAddRelation)
+	s.mux.HandleFunc("/api/memory/add", guard(s.handleMemoryAdd))
+	s.mux.HandleFunc("/api/memory/add-history", guard(s.handleMemoryAddHistory))
+	s.mux.HandleFunc("/api/memory/relations/add", guard(s.handleMemoryAddRelation))
 	s.mux.HandleFunc("/api/memory/relations/get", s.handleMemoryGetRelations)
 	s.mux.HandleFunc("/api/memory/relations/graph", s.handleMemoryGraph)
 	s.mux.HandleFunc("/api/memory/spaced-repetition/due", s.handleMemorySpacedRepetitionDue)
@@ -1310,7 +1320,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/context/delete", s.handleMemoryContextDelete)
 	s.mux.HandleFunc("/api/memory/agent-stats", s.handleMemoryAgentStats)
 	s.mux.HandleFunc("/api/memory/agent-search", s.handleMemoryAgentSearch)
-	s.mux.HandleFunc("/api/memory/facts/add", s.handleMemoryAddFact)
+	s.mux.HandleFunc("/api/memory/facts/add", guard(s.handleMemoryAddFact))
 	s.mux.HandleFunc("/api/memory/observations/record", s.handleMemoryRecordObservation)
 	s.mux.HandleFunc("/api/memory/observations/recent", s.handleMemoryRecentObservations)
 	s.mux.HandleFunc("/api/memory/observations/search", s.handleMemorySearchObservations)
@@ -1576,11 +1586,12 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/fts-search", s.handleMemoryFTSearch)
 	s.mux.HandleFunc("/api/memory/maintenance", s.handleMemoryMaintenance)
 	s.mux.HandleFunc("/api/memory/maintenance-local", s.handleMemoryMaintenanceLocal)
-	s.mux.HandleFunc("/api/memory/re-embed", s.handleMemoryReEmbed)
-	s.mux.HandleFunc("/api/memory/migrate-scratchpad", s.handleMemoryMigrateScratchpad)
+	s.mux.HandleFunc("/api/memory/re-embed", guard(s.handleMemoryReEmbed))
+	s.mux.HandleFunc("/api/memory/migrate-scratchpad", guard(s.handleMemoryMigrateScratchpad))
 	s.mux.HandleFunc("/api/memory/l2/export", s.handleL2Export)
-	s.mux.HandleFunc("/api/memory/l2/import", s.handleL2Import)
+	s.mux.HandleFunc("/api/memory/l2/import", guard(s.handleL2Import))
 	s.mux.HandleFunc("/api/memory/graph", s.handleMemoryGraph)
+	s.mux.HandleFunc("/api/memory/graph/cleanup", guard(s.handleMemoryGraphCleanup))
 	s.mux.HandleFunc("/dashboard", s.handleDashboard)
 	s.mux.HandleFunc("/api/memory/project/sync", s.handleProjectSync)
 	s.mux.HandleFunc("/api/memory/project/split", s.handleProjectSplit)
@@ -5911,6 +5922,13 @@ func (s *Server) handleTestsResults(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) localMetrics() *metrics.MetricsService {
+	if s.metricsService != nil {
+		return s.metricsService
+	}
+	return metrics.GetMetricsService()
+}
+
 func (s *Server) handleMetricsStats(w http.ResponseWriter, r *http.Request) {
 	payload := map[string]any{}
 	windowMs := 3600000
@@ -5934,26 +5952,134 @@ func (s *Server) handleMetricsStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-		"success": false,
-		"error":   "Metrics stats are unavailable: upstream metrics service is unavailable and the local event store is not implemented.",
+	local := s.localMetrics().GetStats(int64(windowMs))
+	series := local.Series
+	if series == nil {
+		series = []metrics.DownsampledBucket{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
 		"data": map[string]any{
-			"windowMs":    windowMs,
-			"totalEvents": 0,
-			"counts":      map[string]any{},
-			"averages":    map[string]any{},
-			"series":      []any{},
+			"windowMs":    local.WindowMs,
+			"totalEvents": local.TotalEvents,
+			"counts":      local.Counts,
+			"averages":    local.Averages,
+			"counters":    local.Counters,
+			"gauges":      local.Gauges,
+			"histograms":  local.Histograms,
+			"series":      series,
 		},
 		"bridge": map[string]any{
-			"fallback":  "go-local-metrics-preview",
+			"fallback":  "go-local-metrics",
 			"procedure": "metrics.getStats",
-			"reason":    "upstream unavailable; local metrics event store is not implemented",
+			"reason":    "upstream unavailable; using local metrics event store",
 		},
 	})
 }
 
 func (s *Server) handleMetricsTrack(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "metrics.track")
+	var payload any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{
+			"success": false,
+			"error":   "invalid JSON body",
+		})
+		return
+	}
+	// Always record locally so fallbacks have data even when upstream is down.
+	s.recordLocalMetric(payload)
+
+	result, err := interop.CallTRPCProcedure(r.Context(), s.cfg.MainLockPath(), "metrics.track", payload)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data":    map[string]any{"recorded": true, "local": true},
+			"bridge": map[string]any{
+				"fallback":  "go-local-metrics",
+				"procedure": "metrics.track",
+				"reason":    "upstream unavailable; recorded in local metrics event store",
+			},
+		})
+		return
+	}
+
+	var data any
+	_ = json.Unmarshal(result.Data, &data)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    data,
+		"bridge": map[string]any{
+			"upstreamBase": result.BaseURL,
+			"procedure":    "metrics.track",
+			"local":        true,
+		},
+	})
+}
+
+// recordLocalMetric normalizes a metrics.track payload into the local event store.
+func (s *Server) recordLocalMetric(payload any) {
+	ms := s.localMetrics()
+	m, ok := payload.(map[string]any)
+	if !ok {
+		return
+	}
+	mtype := "event"
+	if v, ok := m["type"].(string); ok && v != "" {
+		mtype = v
+	} else if v, ok := m["metricType"].(string); ok && v != "" {
+		mtype = v
+	} else if v, ok := m["name"].(string); ok && v != "" {
+		mtype = v
+	}
+	value := 1.0
+	switch v := m["value"].(type) {
+	case float64:
+		value = v
+	case int:
+		value = float64(v)
+	case int64:
+		value = float64(v)
+	case json.Number:
+		if f, err := v.Float64(); err == nil {
+			value = f
+		}
+	}
+	tags := map[string]string{}
+	if raw, ok := m["tags"].(map[string]any); ok {
+		for k, v := range raw {
+			tags[k] = fmt.Sprint(v)
+		}
+	}
+	ms.Track(mtype, value, tags)
+
+	// Routing-shaped payloads also feed the routing history buffer.
+	if _, hasRouting := m["provider"]; hasRouting {
+		if _, hasTool := m["toolName"]; hasTool || mtype == "routing" {
+			ms.RecordRouting(metrics.RoutingEvent{
+				RequestID: optionalString(m, "requestId"),
+				Provider:  optionalString(m, "provider"),
+				Model:     optionalString(m, "model"),
+				ToolName:  optionalString(m, "toolName"),
+				Strategy:  optionalString(m, "strategy"),
+				LatencyMs: value,
+				Success:   m["success"] != false,
+				Error:     optionalString(m, "error"),
+				Tags:      tags,
+			})
+		}
+	}
+}
+
+// optionalString returns a string form of map[key], or "" when absent/nil.
+func optionalString(m map[string]any, key string) string {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return fmt.Sprint(v)
 }
 
 func (s *Server) handleMetricsSystemSnapshot(w http.ResponseWriter, r *http.Request) {
@@ -6047,21 +6173,25 @@ func (s *Server) handleMetricsTimeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-		"success": false,
-		"error":   "Metrics timeline is unavailable: upstream metrics service is unavailable and the local event store is not implemented.",
+	local := s.localMetrics().GetTimeline(int64(windowMs), buckets, metricType)
+	series := local.Series
+	if series == nil {
+		series = []metrics.DownsampledBucket{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
 		"data": map[string]any{
-			"windowMs":   windowMs,
-			"buckets":    buckets,
-			"metricType": metricType,
-			"series":     []any{},
-			"counts":     map[string]any{},
-			"averages":   map[string]any{},
+			"windowMs":   local.WindowMs,
+			"buckets":    local.Buckets,
+			"metricType": local.MetricType,
+			"series":     series,
+			"counts":     local.Counts,
+			"averages":   local.Averages,
 		},
 		"bridge": map[string]any{
-			"fallback":  "go-local-metrics-preview",
+			"fallback":  "go-local-metrics",
 			"procedure": "metrics.getTimeline",
-			"reason":    "upstream unavailable; local metrics event store is not implemented",
+			"reason":    "upstream unavailable; using local metrics event store",
 		},
 	})
 }
@@ -6114,9 +6244,13 @@ func (s *Server) handleMetricsMonitoring(w http.ResponseWriter, r *http.Request)
 
 func (s *Server) handleMetricsRoutingHistory(w http.ResponseWriter, r *http.Request) {
 	payload := map[string]any{}
-	if limit := strings.TrimSpace(r.URL.Query().Get("limit")); limit != "" {
-		if parsed, err := strconv.Atoi(limit); err == nil {
+	limit := 50
+	if limitParam := strings.TrimSpace(r.URL.Query().Get("limit")); limitParam != "" {
+		if parsed, err := strconv.Atoi(limitParam); err == nil {
 			payload["limit"] = parsed
+			if parsed > 0 {
+				limit = parsed
+			}
 		}
 	}
 	var result any
@@ -6133,14 +6267,14 @@ func (s *Server) handleMetricsRoutingHistory(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-		"success": false,
-		"error":   "Routing history is unavailable: upstream metrics service is unavailable and the local routing history buffer is not implemented.",
-		"data":    []any{},
+	history := s.localMetrics().GetRoutingHistory(limit)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    history,
 		"bridge": map[string]any{
-			"fallback":  "go-local-metrics-preview",
+			"fallback":  "go-local-metrics",
 			"procedure": "metrics.getRoutingHistory",
-			"reason":    "upstream unavailable; local routing history buffer is not implemented",
+			"reason":    "upstream unavailable; using local routing history buffer",
 		},
 	})
 }
@@ -7281,6 +7415,26 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 		args = payload.Args
 	}
 
+	toolStart := time.Now()
+	recordToolRouting := func(strategy string, success bool, errMsg string) {
+		ms := s.localMetrics()
+		if ms == nil {
+			return
+		}
+		ms.RecordRouting(metrics.RoutingEvent{
+			Timestamp: time.Now().UnixMilli(),
+			ToolName:  toolName,
+			Strategy:  strategy,
+			LatencyMs: float64(time.Since(toolStart).Milliseconds()),
+			Success:   success,
+			Error:     errMsg,
+		})
+		ms.Track("tool_request", float64(time.Since(toolStart).Milliseconds()), map[string]string{
+			"tool":     toolName,
+			"strategy": strategy,
+		})
+	}
+
 	// 1. Try native Go tool handlers first (Total Autonomy)
 	// Only disable if the tool is EXPLICITLY set to false in native-tools.json
 	cfg := s.loadNativeConfig()
@@ -7299,6 +7453,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err == nil {
+			recordToolRouting("go-native", true, "")
 			writeJSON(w, http.StatusOK, map[string]any{
 				"success": true,
 				"data":    result,
@@ -7310,6 +7465,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// If native tool fails, return the error
+		recordToolRouting("go-native", false, err.Error())
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"success": false,
 			"error":   err.Error(),
@@ -7325,6 +7481,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 		"arguments": args,
 	}, &result)
 	if err == nil {
+		recordToolRouting("upstream", true, "")
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
 			"data":    result,
@@ -7337,6 +7494,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Fallback: Descriptive error
+	recordToolRouting("unavailable", false, "tool not found or upstream unavailable")
 	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 		"success": false,
 		"error":   "Tool not found or upstream unavailable",

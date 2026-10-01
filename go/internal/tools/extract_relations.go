@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
 )
 
 var (
@@ -27,6 +29,19 @@ func HandleExtractRelations(ctx context.Context, args map[string]interface{}) (T
 
 	entities := extractEntities(text)
 	edges := extractPatternRelations(text, entities)
+
+	// Ollama pass catches non-pattern relations when a local model is available
+	if llmEdges, ok := extractRelationsOllama(ctx, text); ok {
+		for _, e := range llmEdges {
+			edges = append(edges, e)
+		}
+		if len(entities) < 12 {
+			for _, e := range llmEdges {
+				entities = appendUnique(entities, e.Source)
+				entities = appendUnique(entities, e.Target)
+			}
+		}
+	}
 
 	// Co-occurrence edges between top entities (capped)
 	if len(entities) > 1 && len(edges) < 8 {
@@ -172,6 +187,85 @@ type relationEdge struct {
 	Weight float64 `json:"weight"`
 }
 
+// extractRelationsOllama asks local Ollama to emit JSON relation triples.
+// Returns ok=false when Ollama is down or the reply is unparseable.
+func extractRelationsOllama(ctx context.Context, text string) ([]relationEdge, bool) {
+	prompt := `Extract entity relationships as a JSON array. Each item: {"source":"...","target":"...","type":"uses|depends_on|implements|part_of|related_to|manages"}. Entities are proper nouns or technical terms. Return ONLY JSON, no prose.
+
+TEXT:
+` + truncateText(text, 1200)
+
+	out, err := memorystore.OllamaChat(ctx, prompt)
+	if err != nil || strings.TrimSpace(out) == "" {
+		return nil, false
+	}
+
+	jsonStr := extractJSONBlock(out)
+	var raw []struct {
+		Source string `json:"source"`
+		Target string `json:"target"`
+		Type   string `json:"type"`
+	}
+	if err := json.Unmarshal([]byte(jsonStr), &raw); err != nil {
+		return nil, false
+	}
+
+	var edges []relationEdge
+	seen := map[string]bool{}
+	for _, r := range raw {
+		src := strings.TrimSpace(r.Source)
+		tgt := strings.TrimSpace(r.Target)
+		if src == "" || tgt == "" || strings.EqualFold(src, tgt) {
+			continue
+		}
+		rel := normalizeRel(r.Type)
+		key := strings.ToLower(src + "|" + rel + "|" + tgt)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		edges = append(edges, relationEdge{Source: src, Target: tgt, Type: rel, Weight: 0.85})
+		if len(edges) >= 12 {
+			break
+		}
+	}
+	return edges, len(edges) > 0
+}
+
+func extractJSONBlock(s string) string {
+	start := strings.Index(s, "[")
+	end := strings.LastIndex(s, "]")
+	if start >= 0 && end > start {
+		return s[start : end+1]
+	}
+	start = strings.Index(s, "{")
+	end = strings.LastIndex(s, "}")
+	if start >= 0 && end > start {
+		return s[start : end+1]
+	}
+	return s
+}
+
+func truncateText(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
+}
+
+func appendUnique(list []string, v string) []string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return list
+	}
+	for _, x := range list {
+		if strings.EqualFold(x, v) {
+			return list
+		}
+	}
+	return append(list, v)
+}
+
 func extractEntities(text string) []string {
 	seen := map[string]bool{}
 	var out []string
@@ -239,12 +333,44 @@ func normalizeRel(verb string) string {
 }
 
 func memIDFor(name string) string {
-	h := uint32(2166136261)
-	for _, c := range strings.ToLower(name) {
-		h ^= uint32(c)
-		h *= 16777619
+	// Readable slug so graph UI can show real entity names (ent-ollama, ent-hypernexus)
+	slug := strings.ToLower(strings.TrimSpace(name))
+	slug = strings.ReplaceAll(slug, " ", "-")
+	slug = strings.ReplaceAll(slug, "_", "-")
+	slug = strings.ReplaceAll(slug, "/", "-")
+	slug = strings.ReplaceAll(slug, ".", "-")
+	var b strings.Builder
+	for _, r := range slug {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+			b.WriteRune(r)
+		}
 	}
-	return fmt.Sprintf("ent-%08x", h)
+	cleaned := strings.Trim(b.String(), "-")
+	if cleaned == "" {
+		h := uint32(2166136261)
+		for _, c := range strings.ToLower(name) {
+			h ^= uint32(c)
+			h *= 16777619
+		}
+		return fmt.Sprintf("ent-%08x", h)
+	}
+	if len(cleaned) > 40 {
+		cleaned = cleaned[:40]
+	}
+	return "ent-" + cleaned
+}
+
+// LabelFromID turns entity/memory node IDs into human-readable labels.
+func LabelFromID(id string) string {
+	if strings.HasPrefix(id, "ent-") {
+		name := strings.TrimPrefix(id, "ent-")
+		name = strings.ReplaceAll(name, "-", " ")
+		if name == "" {
+			return id
+		}
+		return strings.ToUpper(name[:1]) + name[1:]
+	}
+	return id
 }
 
 func isMemID(s string) bool {

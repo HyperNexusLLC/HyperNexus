@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -85,6 +86,7 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
 			"data":    merged,
+			"sources": searchSources(upstreamBase != "", len(localResults) > 0, len(vectorResults) > 0),
 			"bridge": map[string]any{
 				"upstreamBase": upstreamBase,
 				"procedure":    "memory.query",
@@ -108,12 +110,31 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data":    mergedLocal,
+		"sources": searchSources(false, len(localResults) > 0, len(vectorResults) > 0),
 		"bridge": map[string]any{
 			"fallback":  "go-local-memory",
 			"procedure": "memory.query",
 			"reason":    "upstream unavailable; using local persisted memory search",
 		},
 	})
+}
+
+// searchSources reports which memory backends contributed to a response.
+func searchSources(upstream, local, vector bool) []string {
+	var src []string
+	if upstream {
+		src = append(src, "upstream")
+	}
+	if local {
+		src = append(src, "local-json")
+	}
+	if vector {
+		src = append(src, "vectorstore")
+	}
+	if len(src) == 0 {
+		src = []string{"none"}
+	}
+	return src
 }
 
 // toSlice normalizes an upstream query result into a []map[string]any slice.
@@ -741,7 +762,60 @@ func (s *Server) handleMemoryMigrateScratchpad(w http.ResponseWriter, r *http.Re
 	})
 }
 
-func (s *Server) handleDashboard(w http.ResponseWriter, _ *http.Request) {
+// dashboardTokenFromRequest accepts ?token=, X-Dashboard-Token, Authorization: Bearer,
+// or the hn_dash_token cookie — first non-empty wins.
+func dashboardTokenFromRequest(r *http.Request) string {
+	if got := strings.TrimSpace(r.URL.Query().Get("token")); got != "" {
+		return got
+	}
+	if got := strings.TrimSpace(r.Header.Get("X-Dashboard-Token")); got != "" {
+		return got
+	}
+	if auth := strings.TrimSpace(r.Header.Get("Authorization")); auth != "" {
+		const prefix = "Bearer "
+		if len(auth) > len(prefix) && strings.EqualFold(auth[:len(prefix)], prefix) {
+			return strings.TrimSpace(auth[len(prefix):])
+		}
+	}
+	if c, err := r.Cookie("hn_dash_token"); err == nil {
+		return strings.TrimSpace(c.Value)
+	}
+	return ""
+}
+
+// requireWriteAuth enforces the dashboard token on mutating memory APIs when set.
+// GET/read endpoints stay open so semantic search still works for local agents.
+func (s *Server) requireWriteAuth(w http.ResponseWriter, r *http.Request) bool {
+	token := strings.TrimSpace(os.Getenv("HYPERNEXUS_DASHBOARD_TOKEN"))
+	if token == "" {
+		return true
+	}
+	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
+		return true
+	}
+	if dashboardTokenFromRequest(r) != token {
+		writeJSON(w, http.StatusUnauthorized, map[string]any{
+			"success": false,
+			"error":   "dashboard token required for write operations",
+		})
+		return false
+	}
+	return true
+}
+
+func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
+	// Optional shared-token auth: set HYPERNEXUS_DASHBOARD_TOKEN to require it.
+	token := strings.TrimSpace(os.Getenv("HYPERNEXUS_DASHBOARD_TOKEN"))
+	if token != "" {
+		if dashboardTokenFromRequest(r) != token {
+			w.Header().Set("WWW-Authenticate", `Bearer realm="hypernexus-dashboard"`)
+			writeJSON(w, http.StatusUnauthorized, map[string]any{
+				"success": false,
+				"error":   "dashboard token required (HYPERNEXUS_DASHBOARD_TOKEN)",
+			})
+			return
+		}
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(dashboardHTML))
 }

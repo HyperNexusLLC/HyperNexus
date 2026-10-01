@@ -1,14 +1,51 @@
 'use client';
 
+import * as React from 'react';
 import { trpc } from "@/utils/trpc";
 import { normalizeMetricsData } from './metrics-page-normalizers';
 
+interface RoutingRow {
+    timestamp?: number;
+    requestId?: string;
+    provider?: string;
+    model?: string;
+    toolName?: string;
+    strategy?: string;
+    latencyMs?: number;
+    success?: boolean;
+    error?: string;
+}
 
 export default function MetricsPage() {
     const { data, error, isLoading } = trpc.metrics.getStats.useQuery(
         { windowMs: 3600000 },
         { refetchInterval: 5000 }
     );
+    const [routing, setRouting] = React.useState<RoutingRow[]>([]);
+
+    React.useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            try {
+                const res = await fetch("/api/go/api/metrics/routing-history?limit=20");
+                const body = await res.json();
+                const rows = Array.isArray(body?.data)
+                    ? body.data
+                    : Array.isArray(body?.data?.events)
+                        ? body.data.events
+                        : [];
+                if (!cancelled) setRouting(rows as RoutingRow[]);
+            } catch {
+                if (!cancelled) setRouting([]);
+            }
+        };
+        void load();
+        const id = setInterval(load, 10000);
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
+    }, []);
 
     const formatBytes = (b: number) => {
         if (b > 1073741824) return `${(b / 1073741824).toFixed(1)} GB`;
@@ -114,6 +151,51 @@ export default function MetricsPage() {
                     )}
                 </>
             )}
+
+            {/* Routing History — always shown (local fallback store) */}
+            <div className="bg-card border rounded-lg p-6">
+                <h2 className="text-lg font-semibold mb-4">Routing History</h2>
+                {routing.length === 0 ? (
+                    <p className="text-muted-foreground italic">No routing decisions recorded yet.</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-muted-foreground border-b">
+                                    <th className="py-2 pr-3">Time</th>
+                                    <th className="py-2 pr-3">Provider</th>
+                                    <th className="py-2 pr-3">Model</th>
+                                    <th className="py-2 pr-3">Tool</th>
+                                    <th className="py-2 pr-3">Strategy</th>
+                                    <th className="py-2 pr-3">Latency</th>
+                                    <th className="py-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {routing.map((row, i) => (
+                                    <tr key={i} className="border-b border-border/50">
+                                        <td className="py-2 pr-3 text-muted-foreground">
+                                            {row.timestamp ? new Date(row.timestamp).toLocaleTimeString() : '—'}
+                                        </td>
+                                        <td className="py-2 pr-3">{row.provider || '—'}</td>
+                                        <td className="py-2 pr-3 font-mono text-xs">{row.model || '—'}</td>
+                                        <td className="py-2 pr-3 font-mono text-xs">{row.toolName || '—'}</td>
+                                        <td className="py-2 pr-3">{row.strategy || '—'}</td>
+                                        <td className="py-2 pr-3">
+                                            {typeof row.latencyMs === 'number' ? `${Math.round(row.latencyMs)}ms` : '—'}
+                                        </td>
+                                        <td className="py-2">
+                                            <span className={row.success ? 'text-green-400' : 'text-red-400'}>
+                                                {row.success ? 'ok' : (row.error || 'fail')}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

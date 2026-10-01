@@ -7,6 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2026-10-01
+
+### Added
+
+- **Live routing history** — `AutoRoute`, `AutoRouteWithModel`, `Router.Route`, and `/api/agent/tool` record `RoutingEvent`s into the local metrics ring (provider, model, tool, strategy, latency, success)
+- **Dashboard skills working set** — load/unload buttons and a Working Set panel on `/dashboard/skills` backed by `/api/skills/load|unload|list-loaded`
+- **Dashboard routing history** — `/dashboard/metrics` shows recent routing decisions (auto-refresh 10s)
+
+### Fixed
+
+- **`<nil>` leakage** — `metrics.track` routing normalization used `fmt.Sprint` on missing map keys; empty fields now serialize as `""`
+- **Stale process on :7778** — `/usr/local/bin/hypernexus` script wrapper held the port after binary swap; deploy script now kills listeners before install
+
+---
+
+## [1.0.6] - 2026-10-01
+
+### Added
+
+- **Local metrics event store fallbacks** — `/api/metrics/stats`, `/timeline`, `/routing-history` return 200 from `metrics.MetricsService` when upstream tRPC is down (was 503)
+- **Metrics dual-write** — `/api/metrics/track` always records locally; routing-shaped payloads feed a 500-entry routing history ring
+- **Skill working-set API** — `/api/skills/load`, `/unload`, `/list-loaded` backed by an in-memory working set (was 501 stubs)
+- **Next.js dashboard redeploy** — standalone build live on Hetzner `:7779` (`hypernexus-dashboard.service`)
+
+### Verified
+
+- Metrics stats/timeline/routing-history 200 with `fallback: go-local-metrics` on live Hetzner kernel
+- Skill load → list-loaded → unload round-trip green on Hetzner
+- Dashboard `/dashboard` 200 on `:7779` after overlay deploy (BUILD_ID `P9HUWlTE6tqDCp2aXxkua`)
+
+### Fixed
+
+- **Metrics fallback tests** — expected 503 preview; now assert 200 local-store responses
+- **Windows pnpm symlinks break Linux standalone** — overlay deploy keeps Hetzner `node_modules` and replaces only `.next-build`/`.next`/`server.js`/`public`
+
+---
+
+## [1.0.5] - 2026-09-30
+
+### Added
+
+- **Bearer token auth** — dashboard and write APIs accept `Authorization: Bearer <token>` in addition to `X-Dashboard-Token`, `?token=`, and `hn_dash_token` cookie
+- **Deploy smoke tests** — `deploy-hetzner.yml` verifies binary size after transfer and checks live health/dashboard/write-API auth after restart
+
+### Verified
+
+- L2 import/cleanup reject unauthenticated writes (401); accept `X-Dashboard-Token` and `?token=`
+- Dashboard returns 401 without token on live Hetzner kernel
+- Bearer token auth live on Hetzner (import/cleanup 200 with `Authorization: Bearer`)
+- GitHub secrets set; HyperNexus CI green; `deploy-hetzner.yml` green (push + workflow_dispatch)
+
+### Fixed
+
+- **repomap tests** — `Generate` calls updated for `context.Context` first arg
+- **deploy-hetzner.yml** — secrets not allowed in `if:`; gate via `env.HAS_SSH_KEY`; extract `scripts/ci-deploy-hetzner.sh`
+- **deploy-landing.yml** — removed duplicate `deploy-hypernexus` job key
+
+---
+
+## [1.0.4] - 2026-09-30
+
+### Added
+
+- **L2 export/import API** — `/api/memory/l2/export` + `/l2/import` for VectorStore backup/transfer
+- **Knowledge graph API + UI** — `/api/memory/graph`, canvas viz, edges table, entity labels (`ent-ollama`)
+- **GraphRAG relation extraction** — `memory_extract_relations` + batch corpus extractor (pattern + Ollama + co-occurrence)
+- **MCP tool schemas** — `tools.NativeToolMeta` catalog with full `inputSchema` for all native tools
+- **Ollama chat fallback** — `agent.chat` falls back to local Ollama when AutoRoute fails
+- **Dashboard token auth** — `HYPERNEXUS_DASHBOARD_TOKEN` with login form; write APIs guarded
+- **Relation-aware search** — GraphRAG neighbor boost in `SemanticSearch`
+- **Search `sources` array** — `/api/memory/search` reports upstream / local-json / vectorstore
+- **Deploy + backup automation** — `deploy-hetzner.yml`, `scripts/backup-l2.sh` (daily cron), L2 round-trip test
+
+### Fixed
+
+- **Over-superseding** — contradiction detector uses Jaccard + word-boundary polarity; upsert skips conflict detection
+- **memory_relations FTS** — proper external-content FTS5 delete triggers; legacy table dropped on open
+- **L2 import silent failures** — `memory_type` CHECK normalized; per-record errors returned
+- **Export timestamps** — flexible parse (RFC3339 / SQLite datetime); zero CreatedAt defaulted on commit
+- **Hashed entity IDs** — `/api/memory/graph/cleanup` drops opaque `ent-xxxxxxxx` edges
+- **MCP configs** — serena uvx args split; missing binaries converted to uvx/npx (0 missing)
+- **agent tool API** — accepts `name`/`toolName` and `arguments`/`args` aliases
+
+### Verified
+
+- L2 round-trip stable: 27 export → import 27 → 27
+- Graph 36+ nodes after slug IDs and cleanup
+- Dashboard 401 without token, 200 with token
+
+---
+
 ## [1.0.1] - 2026-07-17
 
 ### Fixed

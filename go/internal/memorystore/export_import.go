@@ -2,9 +2,11 @@ package memorystore
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
@@ -51,8 +53,8 @@ func (s *VectorStore) ExportMemories(ctx context.Context, filePath string) error
 		m.Category = category
 		m.Tags = tags
 		m.SourceURL = sourceURL
-		m.LastAccessedAt, _ = time.Parse("2006-01-02 15:04:05", lastAccessed)
-		m.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
+		m.LastAccessedAt = parseMemTime(lastAccessed)
+		m.CreatedAt = parseMemTime(createdAt)
 
 		memories = append(memories, m)
 	}
@@ -105,8 +107,8 @@ func (s *VectorStore) ExportMemoriesJSON(ctx context.Context) (*MemoryExport, er
 		m.Category = category
 		m.Tags = tags
 		m.SourceURL = sourceURL
-		m.LastAccessedAt, _ = time.Parse("2006-01-02 15:04:05", lastAccessed)
-		m.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
+		m.LastAccessedAt = parseMemTime(lastAccessed)
+		m.CreatedAt = parseMemTime(createdAt)
 
 		memories = append(memories, m)
 	}
@@ -118,6 +120,27 @@ func (s *VectorStore) ExportMemoriesJSON(ctx context.Context) (*MemoryExport, er
 		Count:      len(memories),
 		Memories:   memories,
 	}, nil
+}
+
+// parseMemTime accepts SQLite datetime, RFC3339, and zero/empty values.
+func parseMemTime(s string) time.Time {
+	s = strings.TrimSpace(s)
+	if s == "" || s == "0001-01-01 00:00:00" || s == "0001-01-01T00:00:00Z" {
+		return time.Time{}
+	}
+	layouts := []string{
+		"2006-01-02 15:04:05",
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02 15:04:05.999999999-07:00",
+		"2006-01-02",
+	}
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t
+		}
+	}
+	return time.Time{}
 }
 
 // ImportMemoriesJSON imports memories from a MemoryExport payload (no file I/O).
@@ -178,6 +201,95 @@ func (s *VectorStore) ListAllRelations(ctx context.Context, limit int) ([]contro
 		rels = append(rels, r)
 	}
 	return rels, nil
+}
+
+// CleanupHashedEntityIDs rewrites legacy ent-XXXXXXXX hashed node IDs to readable
+// slugs when the target is an L2 memory (uses memory content), otherwise drops
+// opaque hash-only edges. Returns (rewritten, removed) counts.
+func (s *VectorStore) CleanupHashedEntityIDs(ctx context.Context) (int, int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Hash pattern: ent- + 8 hex chars
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT source_id, target_id, relation_type, weight FROM l2_relations
+	`)
+	if err != nil {
+		return 0, 0, err
+	}
+	type edge struct{ src, tgt, rel string; w float64 }
+	var edges []edge
+	for rows.Next() {
+		var e edge
+		if rows.Scan(&e.src, &e.tgt, &e.rel, &e.w) == nil {
+			edges = append(edges, e)
+		}
+	}
+	rows.Close()
+
+	rewritten, removed := 0, 0
+	for _, e := range edges {
+		srcHashed := isHashedEntID(e.src)
+		tgtHashed := isHashedEntID(e.tgt)
+		// Drop any edge touching an unrecoverable hashed entity node
+		if srcHashed || tgtHashed {
+			_, _ = s.db.ExecContext(ctx, `DELETE FROM l2_relations WHERE source_id=? AND target_id=? AND relation_type=?`, e.src, e.tgt, e.rel)
+			removed++
+			continue
+		}
+		newSrc, okSrc := rewriteEntityID(ctx, s.db, e.src)
+		newTgt, okTgt := rewriteEntityID(ctx, s.db, e.tgt)
+		if !okSrc && !okTgt {
+			continue
+		}
+		if newSrc == e.src && newTgt == e.tgt {
+			continue
+		}
+		_, err := s.db.ExecContext(ctx, `
+			INSERT INTO l2_relations (source_id, target_id, relation_type, weight)
+			VALUES (?, ?, ?, ?)
+			ON CONFLICT(source_id, target_id, relation_type) DO UPDATE SET weight = excluded.weight
+		`, newSrc, newTgt, e.rel, e.w)
+		if err != nil {
+			continue
+		}
+		if newSrc != e.src || newTgt != e.tgt {
+			_, _ = s.db.ExecContext(ctx, `DELETE FROM l2_relations WHERE source_id=? AND target_id=? AND relation_type=?`, e.src, e.tgt, e.rel)
+			rewritten++
+		}
+	}
+	return rewritten, removed, nil
+}
+
+func isHashedEntID(id string) bool {
+	if !strings.HasPrefix(id, "ent-") {
+		return false
+	}
+	rest := strings.TrimPrefix(id, "ent-")
+	if len(rest) != 8 {
+		return false
+	}
+	for _, c := range rest {
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
+}
+
+// rewriteEntityID converts hashed ent- IDs to slug form when possible.
+func rewriteEntityID(ctx context.Context, db *sql.DB, id string) (string, bool) {
+	if !isHashedEntID(id) {
+		return id, false
+	}
+	// If this ID is also a memory, keep it — memory IDs are already meaningful to the graph UI
+	var content string
+	err := db.QueryRowContext(ctx, `SELECT content FROM l2_vault WHERE id = ?`, id).Scan(&content)
+	if err == nil && content != "" {
+		return id, true
+	}
+	// Cannot recover original name from hash alone
+	return id, false
 }
 
 // ImportMemories imports memories from a JSON file

@@ -34,9 +34,8 @@ CREATE INDEX IF NOT EXISTS idx_relations_source ON memory_relations(source_id);
 CREATE INDEX IF NOT EXISTS idx_relations_target ON memory_relations(target_id);
 CREATE INDEX IF NOT EXISTS idx_relations_type   ON memory_relations(rel_type);
 
--- Full-text search on relation metadata
+-- Full-text search on relation metadata (external-content FTS5)
 CREATE VIRTUAL TABLE IF NOT EXISTS memory_relations_fts USING fts5(
-    relation_id UNINDEXED,
     metadata,
     content='memory_relations',
     content_rowid='id',
@@ -44,17 +43,31 @@ CREATE VIRTUAL TABLE IF NOT EXISTS memory_relations_fts USING fts5(
 );
 
 CREATE TRIGGER IF NOT EXISTS relations_ai AFTER INSERT ON memory_relations BEGIN
-    INSERT INTO memory_relations_fts(rowid, relation_id, metadata)
-    VALUES (new.id, new.id, new.metadata);
+    INSERT INTO memory_relations_fts(rowid, metadata)
+    VALUES (new.id, new.metadata);
 END;
 
 CREATE TRIGGER IF NOT EXISTS relations_ad AFTER DELETE ON memory_relations BEGIN
-    DELETE FROM memory_relations_fts WHERE relation_id = old.id;
+    INSERT INTO memory_relations_fts(memory_relations_fts, rowid, metadata)
+    VALUES ('delete', old.id, old.metadata);
+END;
+
+CREATE TRIGGER IF NOT EXISTS relations_au AFTER UPDATE ON memory_relations BEGIN
+    INSERT INTO memory_relations_fts(memory_relations_fts, rowid, metadata)
+    VALUES ('delete', old.id, old.metadata);
+    INSERT INTO memory_relations_fts(rowid, metadata)
+    VALUES (new.id, new.metadata);
 END;
 `
 
 // NewRelationStore opens (or creates) the relation store.
 func NewRelationStore(db *sql.DB) (*RelationStore, error) {
+	// Drop legacy broken FTS table (old schema used relation_id column that fts5 rejects)
+	_, _ = db.Exec(`DROP TRIGGER IF EXISTS relations_ai`)
+	_, _ = db.Exec(`DROP TRIGGER IF EXISTS relations_ad`)
+	_, _ = db.Exec(`DROP TRIGGER IF EXISTS relations_au`)
+	_, _ = db.Exec(`DROP TABLE IF EXISTS memory_relations_fts`)
+
 	if _, err := db.Exec(relationSchemaSQL); err != nil {
 		return nil, fmt.Errorf("relation schema: %w", err)
 	}

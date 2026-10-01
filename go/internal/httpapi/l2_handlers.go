@@ -4,10 +4,32 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/tools"
 )
+
+// handleMemoryGraphCleanup rewrites hashed entity IDs and returns counts.
+func (s *Server) handleMemoryGraphCleanup(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+	if tools.GlobalVectorStore == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": "vector store not initialized"})
+		return
+	}
+	rewritten, removed, err := tools.GlobalVectorStore.CleanupHashedEntityIDs(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"rewritten": rewritten, "removed": removed},
+	})
+}
 
 // handleL2Export returns the full L2 vault as a portable JSON bundle for backup/transfer.
 func (s *Server) handleL2Export(w http.ResponseWriter, r *http.Request) {
@@ -100,14 +122,39 @@ func (s *Server) handleMemoryGraph(w http.ResponseWriter, r *http.Request) {
 		Weight float64 `json:"weight"`
 	}
 
+	// Resolve readable labels: entity slugs + memory content previews
+	memLabels := map[string]string{}
+	if db := tools.GlobalVectorStore.DB(); db != nil {
+		rows, _ := db.QueryContext(r.Context(), `SELECT id, content FROM l2_vault LIMIT 500`)
+		if rows != nil {
+			defer rows.Close()
+			for rows.Next() {
+				var id, content string
+				if rows.Scan(&id, &content) == nil {
+					memLabels[id] = previewContent(content, 28)
+				}
+			}
+		}
+	}
+
+	labelFor := func(id string) string {
+		if lbl, ok := memLabels[id]; ok && lbl != "" {
+			return lbl
+		}
+		if strings.HasPrefix(id, "ent-") {
+			return entityLabel(id)
+		}
+		return truncateLabel(id)
+	}
+
 	nodes := map[string]node{}
 	edges := make([]edge, 0, len(rels))
 	for _, rel := range rels {
 		if _, ok := nodes[rel.SourceID]; !ok {
-			nodes[rel.SourceID] = node{ID: rel.SourceID, Label: truncateLabel(rel.SourceID)}
+			nodes[rel.SourceID] = node{ID: rel.SourceID, Label: labelFor(rel.SourceID)}
 		}
 		if _, ok := nodes[rel.TargetID]; !ok {
-			nodes[rel.TargetID] = node{ID: rel.TargetID, Label: truncateLabel(rel.TargetID)}
+			nodes[rel.TargetID] = node{ID: rel.TargetID, Label: labelFor(rel.TargetID)}
 		}
 		edges = append(edges, edge{
 			Source: rel.SourceID,
@@ -139,4 +186,32 @@ func truncateLabel(id string) string {
 		return id[:12] + "…"
 	}
 	return id
+}
+
+// entityLabel turns ent-ollama / ent-nomic-embed-text into readable names.
+func entityLabel(id string) string {
+	name := strings.TrimPrefix(id, "ent-")
+	name = strings.ReplaceAll(name, "-", " ")
+	if name == "" {
+		return id
+	}
+	return strings.ToUpper(name[:1]) + name[1:]
+}
+
+// previewContent extracts a short human label from raw or JSON-wrapped memory content.
+func previewContent(content string, max int) string {
+	c := strings.TrimSpace(content)
+	if strings.HasPrefix(c, "{") {
+		var wrapped map[string]any
+		if err := json.Unmarshal([]byte(c), &wrapped); err == nil {
+			if inner, ok := wrapped["content"].(string); ok {
+				c = strings.TrimSpace(inner)
+			}
+		}
+	}
+	c = strings.Join(strings.Fields(c), " ")
+	if max > 0 && len(c) > max {
+		c = c[:max] + "…"
+	}
+	return c
 }

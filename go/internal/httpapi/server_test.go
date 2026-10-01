@@ -4245,24 +4245,35 @@ func TestMetricsReadEndpointsFallBackToLocalPreview(t *testing.T) {
 
 	server := New(config.Default(), stubDetector{})
 
+	// Seed local store: one generic event plus a routing-shaped event.
+	trackRecorder := httptest.NewRecorder()
+	trackRequest := httptest.NewRequest(http.MethodPost, "/api/metrics/track", strings.NewReader(
+		`{"type":"requests","value":1,"tags":{"route":"/api/test"},"provider":"OpenAI","toolName":"codebase_search","model":"gpt-4o","strategy":"auto","success":true}`,
+	))
+	trackRequest.Header.Set("Content-Type", "application/json")
+	server.Handler().ServeHTTP(trackRecorder, trackRequest)
+	if trackRecorder.Code != http.StatusOK {
+		t.Fatalf("expected metrics track 200, got %d with body %s", trackRecorder.Code, trackRecorder.Body.String())
+	}
+
 	statsRecorder := httptest.NewRecorder()
 	statsRequest := httptest.NewRequest(http.MethodGet, "/api/metrics/stats?windowMs=60000", nil)
 	server.Handler().ServeHTTP(statsRecorder, statsRequest)
-	if statsRecorder.Code != http.StatusServiceUnavailable {
-		t.Fatalf("expected metrics stats fallback 503, got %d with body %s", statsRecorder.Code, statsRecorder.Body.String())
+	if statsRecorder.Code != http.StatusOK {
+		t.Fatalf("expected metrics stats fallback 200, got %d with body %s", statsRecorder.Code, statsRecorder.Body.String())
 	}
-	if !strings.Contains(statsRecorder.Body.String(), `"success":false`) || !strings.Contains(statsRecorder.Body.String(), `"fallback":"go-local-metrics-preview"`) || !strings.Contains(statsRecorder.Body.String(), `"windowMs":60000`) || !strings.Contains(statsRecorder.Body.String(), `"totalEvents":0`) {
-		t.Fatalf("expected metrics stats local preview, got %s", statsRecorder.Body.String())
+	if !strings.Contains(statsRecorder.Body.String(), `"success":true`) || !strings.Contains(statsRecorder.Body.String(), `"fallback":"go-local-metrics"`) || !strings.Contains(statsRecorder.Body.String(), `"windowMs":60000`) || !strings.Contains(statsRecorder.Body.String(), `"totalEvents":1`) {
+		t.Fatalf("expected metrics stats local store, got %s", statsRecorder.Body.String())
 	}
 
 	timelineRecorder := httptest.NewRecorder()
 	timelineRequest := httptest.NewRequest(http.MethodGet, "/api/metrics/timeline?windowMs=60000&buckets=10&metricType=requests", nil)
 	server.Handler().ServeHTTP(timelineRecorder, timelineRequest)
-	if timelineRecorder.Code != http.StatusServiceUnavailable {
-		t.Fatalf("expected metrics timeline fallback 503, got %d with body %s", timelineRecorder.Code, timelineRecorder.Body.String())
+	if timelineRecorder.Code != http.StatusOK {
+		t.Fatalf("expected metrics timeline fallback 200, got %d with body %s", timelineRecorder.Code, timelineRecorder.Body.String())
 	}
-	if !strings.Contains(timelineRecorder.Body.String(), `"success":false`) || !strings.Contains(timelineRecorder.Body.String(), `"fallback":"go-local-metrics-preview"`) || !strings.Contains(timelineRecorder.Body.String(), `"buckets":10`) || !strings.Contains(timelineRecorder.Body.String(), `"metricType":"requests"`) {
-		t.Fatalf("expected metrics timeline local preview, got %s", timelineRecorder.Body.String())
+	if !strings.Contains(timelineRecorder.Body.String(), `"success":true`) || !strings.Contains(timelineRecorder.Body.String(), `"fallback":"go-local-metrics"`) || !strings.Contains(timelineRecorder.Body.String(), `"buckets":10`) || !strings.Contains(timelineRecorder.Body.String(), `"metricType":"requests"`) {
+		t.Fatalf("expected metrics timeline local store, got %s", timelineRecorder.Body.String())
 	}
 
 	providerBreakdownRecorder := httptest.NewRecorder()
@@ -4278,11 +4289,12 @@ func TestMetricsReadEndpointsFallBackToLocalPreview(t *testing.T) {
 	routingHistoryRecorder := httptest.NewRecorder()
 	routingHistoryRequest := httptest.NewRequest(http.MethodGet, "/api/metrics/routing-history?limit=7", nil)
 	server.Handler().ServeHTTP(routingHistoryRecorder, routingHistoryRequest)
-	if routingHistoryRecorder.Code != http.StatusServiceUnavailable {
-		t.Fatalf("expected routing history fallback 503, got %d with body %s", routingHistoryRecorder.Code, routingHistoryRecorder.Body.String())
+	if routingHistoryRecorder.Code != http.StatusOK {
+		t.Fatalf("expected routing history fallback 200, got %d with body %s", routingHistoryRecorder.Code, routingHistoryRecorder.Body.String())
 	}
-	if !strings.Contains(routingHistoryRecorder.Body.String(), `"success":false`) || !strings.Contains(routingHistoryRecorder.Body.String(), `"fallback":"go-local-metrics-preview"`) || !strings.Contains(routingHistoryRecorder.Body.String(), `"data":[]`) {
-		t.Fatalf("expected routing history local preview, got %s", routingHistoryRecorder.Body.String())
+	body := routingHistoryRecorder.Body.String()
+	if !strings.Contains(body, `"fallback":"go-local-metrics"`) || !strings.Contains(body, `"provider":"OpenAI"`) || !strings.Contains(body, `"toolName":"codebase_search"`) {
+		t.Fatalf("expected routing history local store, got %s", body)
 	}
 }
 

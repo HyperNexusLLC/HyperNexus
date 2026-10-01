@@ -135,12 +135,17 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Check for conflicting memories before committing
-	conflicts, _ := s.detectConflicts(ctx, entry)
-	if len(conflicts) > 0 {
-		// Mark the old memory as superseded
-		for _, conflict := range conflicts {
-			s.db.ExecContext(ctx, `UPDATE l2_vault SET memory_kind = 'superseded', tags = tags || ',superseded-by:' || ? WHERE id = ?`, entry.ID, conflict.ID)
+	// Only run conflict detection for brand-new IDs. Upserting an existing
+	// record (import restore) must never cascade-supersede its neighbors.
+	var exists int
+	_ = s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM l2_vault WHERE id = ?`, entry.ID).Scan(&exists)
+	if exists == 0 {
+		conflicts, _ := s.detectConflicts(ctx, entry)
+		if len(conflicts) > 0 {
+			// Mark the old memory as superseded
+			for _, conflict := range conflicts {
+				s.db.ExecContext(ctx, `UPDATE l2_vault SET memory_kind = 'superseded', tags = tags || ',superseded-by:' || ? WHERE id = ?`, entry.ID, conflict.ID)
+			}
 		}
 	}
 
@@ -149,6 +154,9 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 	}
 	if entry.LastAccessedAt.IsZero() {
 		entry.LastAccessedAt = time.Now()
+	}
+	if entry.CreatedAt.IsZero() {
+		entry.CreatedAt = time.Now()
 	}
 	if entry.Kind == "" {
 		entry.Kind = "fact"
@@ -227,7 +235,8 @@ func (s *VectorStore) evictColdestL1Locked() {
 	delete(s.l1Cache, coldestKey)
 }
 
-// detectConflicts finds existing memories that may contradict the new entry
+// detectConflicts finds existing memories that are near-duplicates or clear contradictions.
+// Only high-confidence conflicts are returned so distinct facts are never superseded.
 func (s *VectorStore) detectConflicts(ctx context.Context, entry controlplane.L2VaultRecord) ([]controlplane.L2VaultRecord, error) {
 	results, err := s.semanticSearchLocked(ctx, entry.Content, 5)
 	if err != nil {
@@ -246,48 +255,113 @@ func (s *VectorStore) detectConflicts(ctx context.Context, entry controlplane.L2
 	return conflicts, nil
 }
 
-// isContradiction checks if two memory contents likely contradict each other
+// isContradiction returns true only for exact duplicates or high-overlap contradictions.
+// Broad substring pairs (e.g. "is" / "is not") are intentionally NOT used — they
+// fire on nearly every memory and caused mass over-supersede.
 func isContradiction(newContent, existingContent string) bool {
-	newLower := strings.ToLower(newContent)
-	existLower := strings.ToLower(existingContent)
+	newNorm := normalizeMemText(newContent)
+	existNorm := normalizeMemText(existingContent)
 
-	// Quick exact-match skip
-	if newLower == existLower {
-		return true // duplicate
+	// Exact (normalized) duplicate — safe to supersede
+	if newNorm == existNorm {
+		return true
 	}
 
-	negationPairs := []struct{ positive, negative string }{
-		{"is", "is not"}, {"was", "was not"}, {"can", "cannot"},
-		{"will", "will not"}, {"should", "should not"},
-		{"true", "false"}, {"yes", "no"},
-		{"enabled", "disabled"}, {"active", "inactive"},
-		{"works", "broken"}, {"fixed", "unfixed"},
-		{"passing", "failing"}, {"up", "down"},
-		{"fast", "slow"}, {"secure", "insecure"},
+	// Near-duplicate: very high token overlap
+	overlap := jaccardTokens(newNorm, existNorm)
+	if overlap >= 0.9 {
+		return true
 	}
 
-	matchCount := 0
-	for _, pair := range negationPairs {
-		if (strings.Contains(newLower, pair.positive) && strings.Contains(existLower, pair.negative)) ||
-			(strings.Contains(newLower, pair.negative) && strings.Contains(existLower, pair.positive)) {
-			matchCount++
-		}
+	// High overlap + opposite polarity on the SAME claim
+	if overlap >= 0.6 && hasOppositePolarity(newNorm, existNorm) {
+		return true
 	}
 
-	// Also check if same topic but different values (e.g. "port 7778" vs "port 8080")
-	if matchCount == 0 {
-		// Check for shared keywords with different numbers
-		newNumbers := extractNumbers(newLower)
-		existNumbers := extractNumbers(existLower)
-		if len(newNumbers) > 0 && len(existNumbers) > 0 {
-			sharedWords := sharedKeywords(newLower, existLower)
-			if sharedWords >= 3 && !slicesOverlap(newNumbers, existNumbers) {
-				return true
+	// Same topic, conflicting numeric values (port 7778 vs 8080)
+	newNumbers := extractNumbers(newNorm)
+	existNumbers := extractNumbers(existNorm)
+	if overlap >= 0.7 && len(newNumbers) > 0 && len(existNumbers) > 0 && !slicesOverlap(newNumbers, existNumbers) {
+		return true
+	}
+
+	return false
+}
+
+func normalizeMemText(s string) string {
+	s = strings.ToLower(s)
+	// Unwrap JSON-encoded memory payloads: prefer "content" field when present
+	if strings.HasPrefix(strings.TrimSpace(s), "{") {
+		var wrapped map[string]any
+		if err := json.Unmarshal([]byte(s), &wrapped); err == nil {
+			if c, ok := wrapped["content"].(string); ok {
+				s = strings.ToLower(c)
 			}
 		}
 	}
+	return strings.Join(strings.Fields(s), " ")
+}
 
-	return matchCount > 0
+func jaccardTokens(a, b string) float64 {
+	setA := tokenize(a)
+	setB := tokenize(b)
+	if len(setA) == 0 || len(setB) == 0 {
+		return 0
+	}
+	inter := 0
+	for w := range setA {
+		if setB[w] {
+			inter++
+		}
+	}
+	union := len(setA) + len(setB) - inter
+	if union == 0 {
+		return 0
+	}
+	return float64(inter) / float64(union)
+}
+
+func tokenize(s string) map[string]bool {
+	out := map[string]bool{}
+	for _, w := range strings.Fields(s) {
+		if len(w) >= 3 {
+			out[w] = true
+		}
+	}
+	return out
+}
+
+// hasOppositePolarity detects word-boundary negation flips (works / does not work)
+// rather than raw substring matches.
+func hasOppositePolarity(a, b string) bool {
+	pairs := [][2]string{
+		{"is not", "is"},
+		{"are not", "are"},
+		{"does not", "does"},
+		{"did not", "did"},
+		{"will not", "will"},
+		{"cannot", "can"},
+		{"can not", "can"},
+		{"disabled", "enabled"},
+		{"inactive", "active"},
+		{"broken", "works"},
+		{"failing", "passing"},
+		{"false", "true"},
+		{"insecure", "secure"},
+	}
+	for _, p := range pairs {
+		if containsPhrase(a, p[0]) && containsPhrase(b, p[1]) {
+			return true
+		}
+		if containsPhrase(b, p[0]) && containsPhrase(a, p[1]) {
+			return true
+		}
+	}
+	return false
+}
+
+func containsPhrase(s, phrase string) bool {
+	return strings.Contains(" "+s+" ", " "+phrase+" ")
 }
 
 func extractNumbers(s string) []string {
@@ -322,10 +396,98 @@ func slicesOverlap(a, b []string) bool {
 	return false
 }
 
+// scored pairs a vault record with a search relevance score.
+type scored struct {
+	record controlplane.L2VaultRecord
+	score  float64
+}
+
 func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit int) ([]controlplane.L2VaultRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.semanticSearchLocked(ctx, query, limit)
+}
+
+// boostWithRelationsLocked expands top candidates with GraphRAG neighbors.
+// Neighbors of high-scoring hits get a modest score bump so related facts surface.
+func (s *VectorStore) boostWithRelationsLocked(ctx context.Context, candidates []scored, maxCandidates int) []scored {
+	if len(candidates) == 0 {
+		return candidates
+	}
+	seen := map[string]int{}
+	for i, c := range candidates {
+		seen[c.record.ID] = i
+	}
+
+	// Look at top hits and their one-hop neighbors
+	seedCount := len(candidates)
+	if seedCount > 5 {
+		seedCount = 5
+	}
+	for i := 0; i < seedCount; i++ {
+		seedID := candidates[i].record.ID
+		seedScore := candidates[i].score
+		rows, err := s.db.QueryContext(ctx, `
+			SELECT source_id, target_id, relation_type, weight
+			FROM l2_relations
+			WHERE source_id = ? OR target_id = ?
+			LIMIT 12
+		`, seedID, seedID)
+		if err != nil {
+			continue
+		}
+		for rows.Next() {
+			var src, tgt, relType string
+			var weight float64
+			if rows.Scan(&src, &tgt, &relType, &weight) != nil {
+				continue
+			}
+			neighbor := tgt
+			if neighbor == seedID {
+				neighbor = src
+			}
+			if neighbor == seedID {
+				continue
+			}
+			// Reward strong semantic edges more than co-occurrence
+			edgeBoost := 0.08 * weight
+			switch {
+			case strings.HasPrefix(relType, "depends_on") || strings.HasPrefix(relType, "implements"):
+				edgeBoost += 0.05
+			case strings.HasPrefix(relType, "supersedes"):
+				edgeBoost *= 0.25 // don't elevate superseded material
+			case strings.HasPrefix(relType, "co_occurs"):
+				edgeBoost *= 0.5
+			}
+
+			if idx, ok := seen[neighbor]; ok {
+				candidates[idx].score += edgeBoost
+				continue
+			}
+			if len(candidates) >= maxCandidates {
+				continue
+			}
+			// Load neighbor record
+			var r controlplane.L2VaultRecord
+			var mType string
+			err := s.db.QueryRowContext(ctx, `
+				SELECT id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at
+				FROM l2_vault WHERE id = ?
+			`, neighbor).Scan(&r.ID, &r.SessionID, &mType, &r.Kind, &r.Category, &r.Tags, &r.SourceURL, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt)
+			if err != nil {
+				continue
+			}
+			r.Type = controlplane.MemoryType(mType)
+			neighborScore := seedScore*0.45 + edgeBoost
+			if neighborScore < 0.15 {
+				continue
+			}
+			seen[neighbor] = len(candidates)
+			candidates = append(candidates, scored{record: r, score: neighborScore})
+		}
+		rows.Close()
+	}
+	return candidates
 }
 
 func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, limit int) ([]controlplane.L2VaultRecord, error) {
@@ -393,10 +555,6 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 		}
 		defer rows.Close()
 
-		type scored struct {
-			record controlplane.L2VaultRecord
-			score  float64
-		}
 		var candidates []scored
 
 		for rows.Next() {
@@ -417,6 +575,9 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 				candidates = append(candidates, scored{record: r, score: boostedSim})
 			}
 		}
+
+		// GraphRAG boost: pull in related memories via l2_relations edges
+		candidates = s.boostWithRelationsLocked(ctx, candidates, limit*2)
 
 		sort.Slice(candidates, func(i, j int) bool {
 			return candidates[i].score > candidates[j].score
@@ -761,6 +922,7 @@ func cosineSim(a, b []float32) float64 {
 }
 
 // AddRelation creates or updates a relational edge between two L2 memories (GraphRAG relation mapping).
+// Also dual-writes to RelationStore (memory_relations) so both tables stay in sync.
 func (s *VectorStore) AddRelation(ctx context.Context, sourceID, targetID, relType string, weight float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -770,7 +932,19 @@ func (s *VectorStore) AddRelation(ctx context.Context, sourceID, targetID, relTy
 		VALUES (?, ?, ?, ?)
 		ON CONFLICT(source_id, target_id, relation_type) DO UPDATE SET weight = excluded.weight
 	`, sourceID, targetID, relType, weight)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Dual-write to memory_relations (RelationStore) when available
+	if s.relationStore != nil {
+		_, _ = s.db.ExecContext(ctx, `
+			INSERT INTO memory_relations (source_id, target_id, rel_type, weight, metadata)
+			VALUES (?, ?, ?, ?, '{}')
+			ON CONFLICT(source_id, target_id, rel_type) DO UPDATE SET weight = excluded.weight
+		`, sourceID, targetID, relType, weight)
+	}
+	return nil
 }
 
 // GetRelations returns all incoming and outgoing relations for a specific memory ID.

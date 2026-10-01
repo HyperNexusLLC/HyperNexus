@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-    "gitlab.com/HyperNexusLLC/HyperNexus/internal/providers"
+	"time"
+
+	"gitlab.com/HyperNexusLLC/HyperNexus/internal/providers"
 )
 
 type Router struct {
@@ -26,7 +28,10 @@ func (r *Router) Route(ctx context.Context, taskType string, messages []Message)
         return nil, fmt.Errorf("provider %s not found", providerName)
     }
 
-    return selection.Factory(selection.APIKey).GenerateText(ctx, selection.DefaultModel, messages)
+    start := time.Now()
+    resp, genErr := selection.Factory(selection.APIKey).GenerateText(ctx, selection.DefaultModel, messages)
+    recordLLMRouting(selection.ProviderName, selection.DefaultModel, "router:"+taskType, start, genErr)
+    return resp, genErr
 }
 
 func getProviderSelection(name string) (providerSelection, bool) {

@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/orchestration"
@@ -186,38 +187,107 @@ func TestSkillHandlerListMethodNotAllowed(t *testing.T) {
 	}
 }
 
-// TestSkillHandlerLoadStub verifies the load stub returns 501.
-func TestSkillHandlerLoadStub(t *testing.T) {
+// TestSkillHandlerLoad loads a skill into the working set.
+func TestSkillHandlerLoad(t *testing.T) {
+	orchestration.GlobalSkillRegistry.RegisterAgentSkill("http://agent1:4300", "skill-load-me")
+
+	s := &Server{}
+	req := httptest.NewRequest(http.MethodGet, "/api/skills/load?id=skill-load-me", nil)
+	w := httptest.NewRecorder()
+	s.handleSkillLoad(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		Success bool `json:"success"`
+		Skill   struct {
+			ID string `json:"id"`
+		} `json:"skill"`
+	}
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if !resp.Success || resp.Skill.ID != "skill-load-me" {
+		t.Fatalf("unexpected load response: %+v", resp)
+	}
+}
+
+// TestSkillHandlerLoadMissingID verifies 400 without id.
+func TestSkillHandlerLoadMissingID(t *testing.T) {
 	s := &Server{}
 	req := httptest.NewRequest(http.MethodGet, "/api/skills/load", nil)
 	w := httptest.NewRecorder()
 	s.handleSkillLoad(w, req)
 
-	if w.Code != http.StatusNotImplemented {
-		t.Fatalf("expected 501, got %d", w.Code)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
 	}
 }
 
-// TestSkillHandlerUnloadStub verifies the unload stub returns 501.
-func TestSkillHandlerUnloadStub(t *testing.T) {
+// TestSkillHandlerUnload removes a skill from the working set.
+func TestSkillHandlerUnload(t *testing.T) {
+	orchestration.GlobalSkillRegistry.RegisterAgentSkill("http://agent1:4300", "skill-unload-me")
 	s := &Server{}
-	req := httptest.NewRequest(http.MethodGet, "/api/skills/unload", nil)
+	loadReq := httptest.NewRequest(http.MethodGet, "/api/skills/load?id=skill-unload-me", nil)
+	loadW := httptest.NewRecorder()
+	s.handleSkillLoad(loadW, loadReq)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/skills/unload?id=skill-unload-me", nil)
 	w := httptest.NewRecorder()
 	s.handleSkillUnload(w, req)
 
-	if w.Code != http.StatusNotImplemented {
-		t.Fatalf("expected 501, got %d", w.Code)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		Success bool `json:"success"`
+		Removed bool `json:"removed"`
+	}
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if !resp.Success || !resp.Removed {
+		t.Fatalf("expected removed=true, got %+v", resp)
 	}
 }
 
-// TestSkillHandlerListLoadedStub verifies the list-loaded stub returns 501.
-func TestSkillHandlerListLoadedStub(t *testing.T) {
+// TestSkillHandlerListLoaded returns the active working set.
+func TestSkillHandlerListLoaded(t *testing.T) {
+	orchestration.GlobalSkillRegistry.RegisterAgentSkill("http://agent1:4300", "skill-listed")
 	s := &Server{}
+	loadReq := httptest.NewRequest(http.MethodPost, "/api/skills/load", strings.NewReader(`{"id":"skill-listed"}`))
+	loadReq.Header.Set("Content-Type", "application/json")
+	loadW := httptest.NewRecorder()
+	s.handleSkillLoad(loadW, loadReq)
+
 	req := httptest.NewRequest(http.MethodGet, "/api/skills/list-loaded", nil)
 	w := httptest.NewRecorder()
 	s.handleSkillListLoaded(w, req)
 
-	if w.Code != http.StatusNotImplemented {
-		t.Fatalf("expected 501, got %d", w.Code)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		Success bool `json:"success"`
+		Count   int  `json:"count"`
+		Skills  []struct {
+			ID string `json:"id"`
+		} `json:"skills"`
+	}
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if !resp.Success {
+		t.Fatal("expected success")
+	}
+	found := false
+	for _, sk := range resp.Skills {
+		if sk.ID == "skill-listed" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected skill-listed in loaded set, got %+v", resp.Skills)
 	}
 }

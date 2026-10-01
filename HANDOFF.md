@@ -1,5 +1,7 @@
-﻿# HANDOFF.md â€” Session Handoff
+# HANDOFF.md — Session Handoff
 
+
+## Session Date: 2026-10-01 (T53/T54)
 
 ## Session Date: 2026-09-24
 
@@ -59,106 +61,120 @@ Comprehensive repository synchronization, intelligent branch merge, submodule up
 
 ## Summary
 
-Completed comprehensive repository synchronization and intelligent merge across all local repositories.
+Live routing history + dashboard wiring. Commit `4a3fb3a` (v1.0.7). Kernel 695f03cb + dashboard BUILD_ID `hAnndr1G1UQ1DrCgy_qfg` live on Hetzner.
 
-## Completed Tasks
+## Completed (T53/T54)
 
-### 1. Repository Sync & Fetch
+- `ai.recordLLMRouting` hooks AutoRoute / AutoRouteWithModel / Router.Route
+- `handleAgentRunTool` records tool routing (go-native / upstream / unavailable)
+- Dashboard `/dashboard/skills`: working-set panel + Load/Unload
+- Dashboard `/dashboard/metrics`: routing history table
+- Fixed `fmt.Sprint` `<nil>` leak in `recordLocalMetric`
+- Deploy gotcha: `/usr/local/bin/hypernexus` script wrapper holds :7778 — kill listeners before binary swap
 
-- Fetched all remotes and tags for HyperNexus and all submodules
-- Updated submodules to latest commits
-- Verified workspace cleanliness
+---
 
-### 2. Feature Branch Merges
+## Session Date: 2026-10-01
 
-#### HyperNexus
+## Summary
 
-- **feature/cloud-dashboard-mcp-sse-389806464713532918**: Already merged into main (0 unique commits)
-- All feature branches reviewed and up-to-date
+Metrics local fallbacks, skill working-set API, and Next.js dashboard redeploy. Commit `5ecbbf6` on `clean-main` (v1.0.6). Kernel + dashboard live on Hetzner.
 
-#### jules-autopilot
+## Completed (2026-10-01)
 
-- **upstream/feat-session-kanban-board-4406113728067866336**: Merged with conflict resolution
-  - Kept HEAD version of `app-layout.tsx` (more modular architecture)
-  - Removed conflicting `package-lock.json`
-- **upstream/fix-remove-debug-logs-16472708773165476071**: Merged
-  - Kept `app/api/jules/route.ts` and `route.test.ts` with debug logs removed
+### Metrics (T50)
+- `metrics.MetricsService` extended: `GetTimeline`, `RecordRouting`, `GetRoutingHistory` (500-entry ring)
+- `handleMetricsStats` / `Timeline` / `RoutingHistory` fall back to local store (200, `fallback: go-local-metrics`) when upstream tRPC is down
+- `handleMetricsTrack` always dual-writes locally via `recordLocalMetric`; routing-shaped payloads feed routing history
 
-#### freellm
+### Skills (T51)
+- `handleSkillLoad` / `Unload` / `ListLoaded` implemented against an in-memory working set (was 501)
+- Routes: `GET/POST /api/skills/load|unload|list-loaded` (`?id=` or JSON `{"id":"..."}`)
 
-- **dependabot/go_modules/go_modules-9c5197dcb8**: Merged
-  - Resolved go.mod/go.sum conflicts by accepting newer dependency versions
+### Dashboard (T52)
+- `apps/web` rebuilt (Next.js 16.2.6 standalone, BUILD_ID `P9HUWlTE6tqDCp2aXxkua`)
+- Deployed via overlay: keep Hetzner `node_modules`, replace `.next-build`/`.next`/`server.js`/`public`
+- `hypernexus-dashboard.service` active on `:7779`; `/dashboard` 200
 
-#### Repos with No Unique Commits
+### Live smoke (Hetzner)
+- `GET /api/metrics/stats` → 200 `go-local-metrics`
+- `GET /api/metrics/timeline` + `/routing-history` → 200 local fallbacks
+- `GET /api/skills/load?id=smoke-skill` → 200; `list-loaded` shows it; `unload` removes it
+- `GET :7779/dashboard` → 200; kernel `/dashboard` still 401 without token
 
-- bobmani, bobsgameonlinejava, bobzilla, multimousergy, superdawmcp, warp, ksm-v2: All feature branches had 0 unique commits relative to main
+---
 
-### 3. Documentation & Versioning
+## Session Date: 2026-09-30
 
-- Updated VERSION to 1.0.2
-- Updated CHANGELOG.md with v1.0.2 release notes
-- Created MCP observability dashboard (`/dashboard/mcp`)
-- Created testimonials page (`/testimonials`)
-- Created changelog page (`/changelog`)
+## Summary
 
-### 4. Infrastructure Fixes
+HyperNexus memory stack hardened end-to-end: L2 export/import, GraphRAG extraction + visualization, MCP tool schemas, Ollama fallbacks, dashboard auth, deploy/backup automation. Work pushed to `clean-main` as `c6bfaae` → `a897b44` → `bd065da` → `60ba63f` (+ this commit).
 
-- Fixed TormentNexus dashboard branding (HYPERNEXUS â†’ TORMENTNEXUS)
-- Fixed nginx proxy configuration for telemetry API
-- Verified all services operational on hypernexus.site
+## Completed
 
-## Pushed Changes
+### Memory & Graph
+- `/api/memory/l2/export` + `import` with error reporting; round-trip stable (27→27)
+- `memory_extract_relations` + `memory_extract_relations_batch` (pattern + Ollama JSON triples)
+- `/api/memory/graph` with entity slug labels (`ent-ollama`) and memory previews
+- `/api/memory/graph/cleanup` drops opaque hashed `ent-xxxxxxxx` nodes
+- Conflict detector: Jaccard ≥0.9 / polarity flips / conflicting numbers only; upsert does not cascade-supersede
+- Relation-aware `SemanticSearch` boosts `l2_relations` neighbors
+- `search` returns `sources: [upstream|local-json|vectorstore]`
+- Dual-write `AddRelation` → `l2_relations` + `memory_relations`
+- FTS5 external-content delete triggers fixed; legacy table dropped on open
 
-- HyperNexus: pushed to origin/main and gitlab/main
-- jules-autopilot: pushed to origin/main (ea117c9..e0885e1)
-- freellm: pushed to origin/main (9addbfa..f44ec6d)
+### MCP / Tools
+- `tools.NativeToolMeta` — full `inputSchema` for 34 native tools (replaces incomplete switch)
+- `memory_extract_relations(_batch)` registered in kernel registry
+- `/api/agent/tool` accepts `name|toolName` + `arguments|args`
+- mcp.jsonc: 0 missing binaries (uvx/npx fallbacks); serena `--from` args split
 
-## Current State
+### Ops
+- Dashboard `HYPERNEXUS_DASHBOARD_TOKEN` (login form + write-API guard)
+- Write auth accepts `X-Dashboard-Token`, `?token=`, `Authorization: Bearer`, `hn_dash_token` cookie
+- `scripts/backup-l2.sh` cron `17 3 * * *` on Hetzner (keep 14)
+- `.github/workflows/deploy-hetzner.yml` (gzip + size check + smoke tests; needs `HETZNER_SSH_KEY` secret)
+- `scripts/test-l2-roundtrip.ps1` + `scripts/hetzner-setup.sh`
+- Nginx `/kernel-dashboard` → `:7778/dashboard`
 
-- All repositories synchronized
-- All feature branches reviewed and merged where applicable
-- Version bumped to 1.0.2
-- All services running on hypernexus.site
+### Live auth verification (2026-09-30)
+- `POST /api/memory/l2/import` without/with wrong token → 401
+- `POST /api/memory/l2/import` with `X-Dashboard-Token` or `?token=` → 200
+- `POST /api/memory/graph/cleanup` without token → 401; with token → 200
+- `GET /kernel-dashboard` without token → 401
+- `GET /api/memory/l2/export` remains open (read path for local agents)
 
-## Next Steps
+## Hetzner state
 
-- Monitor MCP observability dashboard for traffic
-- Launch marketing campaigns (4chan /g/, Reddit, Product Hunt)
-- Continue feature development based on user feedback
+- Kernel `/opt/tormentnexus/tormentnexus` (Linux amd64), systemd `hypernexus-kernel` port 7778
+- Ollama systemd enabled, `nomic-embed-text`
+- Dashboard token file: `/root/.hn-dashboard-token`
+- L2 backups: `/opt/tormentnexus/backups/l2`
+- Graph ~36 nodes / 103+ edges; 25 long_term memories after supersede fix
 
-## 2026-09-22T11:16:54Z â€” Bridge Cleanup (v1.0.3)
+## Next agent must
 
-**What was done:**
-- Removed all dead TypeScript bridge code from the Go kernel (`sessionbridge.go`, `discovery.go`, `service_connectivity.go`, `system_overview_handler.go`)
-- Flipped to Go-local-first: `callUpstreamJSON` returns immediately unless `HYPERNEXUS_TRPC_UPSTREAM` is set
-- Fixed stale port defaults (4300â†’7778, 3000â†’7779)
-- Cleaned `start.sh` (removed dead TS control plane launch)
-- Rewrote `docs/ARCHITECTURE.md` to reflect current architecture
-- All builds clean, all modified package tests pass, `go vet` clean
+1. ~~GitHub secrets~~ — **DONE** `HETZNER_SSH_KEY` + `HETZNER_KNOWN_HOSTS` set (2026-09-30). `gh` logged in as `robertpelloni`.
+2. ~~Verify CI~~ — **DONE** HyperNexus CI green (build/lint/test) + `deploy-hetzner.yml` green (push + workflow_dispatch)
+3. Re-embed / re-extract after any VectorStore schema change
+4. Build Linux with `GOOS=linux GOARCH=amd64 CGO_ENABLED=0` — never ship Windows `.exe` to Hetzner
+5. CI deploy uses `scripts/ci-deploy-hetzner.sh` (gzip + size check + smoke tests). Secrets-in-`if` is invalid — use `env.HAS_SSH_KEY`.
 
-**What the next agent must know:**
-- The `bridge.fallback` / `"upstream unavailable"` messages in API responses are gone as a primary pattern
-- External tRPC upstream is opt-in only via `HYPERNEXUS_TRPC_UPSTREAM` env var
-- Remaining httpapi test failures (links_backlog SQL schema, git log env, catalog_stats 404) are pre-existing and unrelated
-- HyperNexus MCP is now integrated into MiMoCode (global config + skill) and MiMo Desktop (skill + 6 tools)
+6. **Dashboard overlay deploy** — Windows pnpm standalone `node_modules` are broken symlinks on Linux. Keep Hetzner `node_modules`, overlay only `.next-build`/`.next`/`server.js`/`public`. Full standalone tar from Windows fails with `Cannot find module 'next'`.
 
-## 2026-09-22T15:42:13Z â€” MiMoCode Integration + Bridge Cleanup + Test Fixes (v1.0.3)
+## Branch / remotes
 
-**What was done:**
-- Installed HyperNexus MCP into MiMoCode (global `mimocode.jsonc` + skill at `~/.config/mimocode/skills/hypernexus/`) and MiMo Desktop (skill + 6 tools at `engine-config/`)
-- Removed all dead TypeScript bridge code from Go kernel (8 files). Go-local is now primary path. `HYPERNEXUS_TRPC_UPSTREAM` opt-in for external upstream.
-- Fixed 9 of 11 pre-existing test failures: links_backlog schema (`researched_at`, `raw_payload`), DB path mismatch (`catalog.db`â†’`hypernexus.db`), `goSidecar` naming, `/api/catalog/stats` route registration
-- Fixed dashboard build: added `drizzle-orm` + `pg` deps, `db` export with schema generic
-- Imported 67 MCP servers from `settings/mcp.jsonc` into kernel DB
-- Fixed MCP create/list storage mismatch (JSONC vs DB merge)
+- Branch: `clean-main` (not `main`)
+- Remotes: `github`, `gitlab` (no `origin`)
+- Push both: `git push github clean-main; git push gitlab clean-main`
 
-**What the next agent must know:**
-- Production Hetzner (`hypernexus.site`) is running v1.0.0-b1 â€” needs manual SSH deploy of `bin/hypernexus.exe` + `apps/web/.next-build/standalone/`
-- Remaining 2 test failures: `TestSessionContextEndpoint` (tool payload shape in `session_context_handlers.go`), `TestGitLogFallsBackLocally` (`localGitLog` runs in real repo instead of test temp dir â€” check `config.Default().WorkspaceRoot`)
-- `bridge.fallback` / `"upstream unavailable"` messages are gone as primary pattern
-- Dashboard build requires `pnpm` (not npm) due to workspace protocol
+## Useful scripts (repo)
 
-## 2026-09-22T16:27:07Z â€” Hetzner Production Deployment Complete (v1.0.3)
+- `scripts/backup-l2.sh` — Hetzner L2/agent-memory backup
+- `scripts/test-l2-roundtrip.ps1` — export/import verification
+- `scripts/hetzner-setup.sh` — deploy + token + cron one-shot
+
+## 2026-09-22T16:27:07Z — Hetzner Production Deployment Complete (v1.0.3)
 
 **Deployed to production (hypernexus.site):**
 - Go kernel: /opt/tormentnexus/tormentnexus (systemd service created)
@@ -173,7 +189,7 @@ Completed comprehensive repository synchronization and intelligent merge across 
 - Deploy: `./scripts/create-deploy-package.sh` then `./scripts/deploy-hetzner.sh hetzner`
 - GitHub CLI authenticated (robertpelloni) but repo is on GitLab
 
-## Deployment Complete â€” 2026-09-22
+## Deployment Complete — 2026-09-22
 
 **Production (hypernexus.site) fully deployed:**
 - Go kernel: v1.0.0-b1, 554 API routes, systemd managed
