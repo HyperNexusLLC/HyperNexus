@@ -6056,18 +6056,30 @@ func (s *Server) recordLocalMetric(payload any) {
 	if _, hasRouting := m["provider"]; hasRouting {
 		if _, hasTool := m["toolName"]; hasTool || mtype == "routing" {
 			ms.RecordRouting(metrics.RoutingEvent{
-				RequestID: fmt.Sprint(m["requestId"]),
-				Provider:  fmt.Sprint(m["provider"]),
-				Model:     fmt.Sprint(m["model"]),
-				ToolName:  fmt.Sprint(m["toolName"]),
-				Strategy:  fmt.Sprint(m["strategy"]),
+				RequestID: optionalString(m, "requestId"),
+				Provider:  optionalString(m, "provider"),
+				Model:     optionalString(m, "model"),
+				ToolName:  optionalString(m, "toolName"),
+				Strategy:  optionalString(m, "strategy"),
 				LatencyMs: value,
 				Success:   m["success"] != false,
-				Error:     fmt.Sprint(m["error"]),
+				Error:     optionalString(m, "error"),
 				Tags:      tags,
 			})
 		}
 	}
+}
+
+// optionalString returns a string form of map[key], or "" when absent/nil.
+func optionalString(m map[string]any, key string) string {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return fmt.Sprint(v)
 }
 
 func (s *Server) handleMetricsSystemSnapshot(w http.ResponseWriter, r *http.Request) {
@@ -7403,6 +7415,26 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 		args = payload.Args
 	}
 
+	toolStart := time.Now()
+	recordToolRouting := func(strategy string, success bool, errMsg string) {
+		ms := s.localMetrics()
+		if ms == nil {
+			return
+		}
+		ms.RecordRouting(metrics.RoutingEvent{
+			Timestamp: time.Now().UnixMilli(),
+			ToolName:  toolName,
+			Strategy:  strategy,
+			LatencyMs: float64(time.Since(toolStart).Milliseconds()),
+			Success:   success,
+			Error:     errMsg,
+		})
+		ms.Track("tool_request", float64(time.Since(toolStart).Milliseconds()), map[string]string{
+			"tool":     toolName,
+			"strategy": strategy,
+		})
+	}
+
 	// 1. Try native Go tool handlers first (Total Autonomy)
 	// Only disable if the tool is EXPLICITLY set to false in native-tools.json
 	cfg := s.loadNativeConfig()
@@ -7421,6 +7453,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err == nil {
+			recordToolRouting("go-native", true, "")
 			writeJSON(w, http.StatusOK, map[string]any{
 				"success": true,
 				"data":    result,
@@ -7432,6 +7465,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// If native tool fails, return the error
+		recordToolRouting("go-native", false, err.Error())
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"success": false,
 			"error":   err.Error(),
@@ -7447,6 +7481,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 		"arguments": args,
 	}, &result)
 	if err == nil {
+		recordToolRouting("upstream", true, "")
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
 			"data":    result,
@@ -7459,6 +7494,7 @@ func (s *Server) handleAgentRunTool(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Fallback: Descriptive error
+	recordToolRouting("unavailable", false, "tool not found or upstream unavailable")
 	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 		"success": false,
 		"error":   "Tool not found or upstream unavailable",

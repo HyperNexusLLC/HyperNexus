@@ -425,7 +425,10 @@ func AutoRoute(ctx context.Context, messages []Message) (*LLMResponse, error) {
 	if !ok {
 		return nil, fmt.Errorf("no LLM provider configured")
 	}
-	return selection.Factory(selection.APIKey).GenerateText(ctx, selection.DefaultModel, messages)
+	start := time.Now()
+	resp, err := selection.Factory(selection.APIKey).GenerateText(ctx, selection.DefaultModel, messages)
+	recordLLMRouting(selection.ProviderName, selection.DefaultModel, "autoroute", start, err)
+	return resp, err
 }
 
 func AutoRouteWithModel(ctx context.Context, model string, messages []Message) (*LLMResponse, error) {
@@ -436,7 +439,10 @@ func AutoRouteWithModel(ctx context.Context, model string, messages []Message) (
 	if model == "" {
 		model = selection.DefaultModel
 	}
-	return selection.Factory(selection.APIKey).GenerateText(ctx, model, messages)
+	start := time.Now()
+	resp, err := selection.Factory(selection.APIKey).GenerateText(ctx, model, messages)
+	recordLLMRouting(selection.ProviderName, model, "autoroute-model", start, err)
+	return resp, err
 }
 
 func ListConfiguredProviders() []string {

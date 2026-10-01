@@ -29,6 +29,13 @@ interface SkillListItem {
 	path: string;
 }
 
+interface LoadedSkill {
+	id: string;
+	loadedAt?: string;
+	useCount?: number;
+	autoLoaded?: boolean;
+}
+
 function normalizeSkills(value: unknown): SkillListItem[] {
 	if (!Array.isArray(value)) return [];
 
@@ -45,16 +52,53 @@ function normalizeSkills(value: unknown): SkillListItem[] {
 	});
 }
 
+function normalizeLoaded(value: unknown): LoadedSkill[] {
+	if (!Array.isArray(value)) return [];
+	return value.filter((item): item is LoadedSkill => {
+		if (!item || typeof item !== "object") return false;
+		return typeof (item as LoadedSkill).id === "string";
+	});
+}
+
 export default function SkillsPage() {
 	const [topic, setTopic] = useState("");
 	const [logs, setLogs] = useState<string[]>([]);
 	const [status, setStatus] = useState<
 		"idle" | "assimilating" | "success" | "error"
 	>("idle");
+	const [loaded, setLoaded] = useState<LoadedSkill[]>([]);
+	const [busyId, setBusyId] = useState<string | null>(null);
 
 	// List existing skills
 	const { data: skills, refetch } = trpc.skills.list.useQuery();
 	const skillList = normalizeSkills(skills);
+
+	const refreshLoaded = React.useCallback(async () => {
+		try {
+			const res = await fetch("/api/go/api/skills/list-loaded");
+			const body = await res.json();
+			setLoaded(normalizeLoaded(body?.skills ?? body?.data?.skills ?? body?.data));
+		} catch {
+			setLoaded([]);
+		}
+	}, []);
+
+	React.useEffect(() => {
+		void refreshLoaded();
+	}, [refreshLoaded]);
+
+	const toggleLoaded = async (id: string, shouldLoad: boolean) => {
+		setBusyId(id);
+		try {
+			const path = shouldLoad ? "load" : "unload";
+			await fetch(`/api/go/api/skills/${path}?id=${encodeURIComponent(id)}`, {
+				method: shouldLoad ? "POST" : "GET",
+			});
+			await refreshLoaded();
+		} finally {
+			setBusyId(null);
+		}
+	};
 
 	const assimilateMutation = trpc.skills.assimilate.useMutation({
 		onMutate: () => {
@@ -170,20 +214,79 @@ export default function SkillsPage() {
 								</p>
 							)}
 							<div className="grid grid-cols-1 gap-2">
-								{skillList.map((skill, i) => (
-									<div
-										key={i}
-										className="flex items-center justify-between p-3 rounded-md border border-zinc-800 bg-zinc-900/50"
-									>
-										<div className="font-medium">{skill.name}</div>
-										<Badge variant="outline">Active</Badge>
-									</div>
-								))}
+								{skillList.map((skill, i) => {
+									const isLoaded = loaded.some((s) => s.id === skill.id);
+									return (
+										<div
+											key={i}
+											className="flex items-center justify-between p-3 rounded-md border border-zinc-800 bg-zinc-900/50"
+										>
+											<div className="font-medium">{skill.name}</div>
+											<div className="flex items-center gap-2">
+												<Badge variant="outline">
+													{isLoaded ? "Loaded" : "Active"}
+												</Badge>
+												<Button
+													size="sm"
+													variant="outline"
+													disabled={busyId === skill.id}
+													onClick={() => void toggleLoaded(skill.id, !isLoaded)}
+												>
+													{isLoaded ? "Unload" : "Load"}
+												</Button>
+											</div>
+										</div>
+									);
+								})}
 							</div>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
+
+			{/* Working Set */}
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">
+						<CheckCircle2 className="w-5 h-5 text-amber-400" /> Working Set
+					</CardTitle>
+					<CardDescription>
+						Currently loaded skills ({loaded.length}) — unload to free context
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{loaded.length === 0 ? (
+						<p className="text-muted-foreground italic">
+							No skills in the working set.
+						</p>
+					) : (
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+							{loaded.map((skill) => (
+								<div
+									key={skill.id}
+									className="flex items-center justify-between p-3 rounded-md border border-amber-900/40 bg-amber-950/10"
+								>
+									<div>
+										<div className="font-medium">{skill.id}</div>
+										<div className="text-xs text-muted-foreground">
+											{skill.useCount ?? 0} uses
+											{skill.autoLoaded ? " · auto" : ""}
+										</div>
+									</div>
+									<Button
+										size="sm"
+										variant="outline"
+										disabled={busyId === skill.id}
+										onClick={() => void toggleLoaded(skill.id, false)}
+									>
+										Unload
+									</Button>
+								</div>
+							))}
+						</div>
+					)}
+				</CardContent>
+			</Card>
 		</div>
 	);
 }
