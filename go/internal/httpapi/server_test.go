@@ -4243,7 +4243,9 @@ func TestMetricsReadEndpointsFallBackToLocalPreview(t *testing.T) {
 	t.Setenv("HYPERNEXUS_TRPC_UPSTREAM", "http://127.0.0.1:1/trpc")
 	t.Setenv("OPENAI_API_KEY", "test-openai-key")
 
-	server := New(config.Default(), stubDetector{})
+	cfg := config.Default()
+	cfg.MainConfigDir = t.TempDir()
+	server := New(cfg, stubDetector{})
 
 	// Seed local store: one generic event plus a routing-shaped event.
 	trackRecorder := httptest.NewRecorder()
@@ -4295,6 +4297,19 @@ func TestMetricsReadEndpointsFallBackToLocalPreview(t *testing.T) {
 	body := routingHistoryRecorder.Body.String()
 	if !strings.Contains(body, `"fallback":"go-local-metrics"`) || !strings.Contains(body, `"provider":"OpenAI"`) || !strings.Contains(body, `"toolName":"codebase_search"`) {
 		t.Fatalf("expected routing history local store, got %s", body)
+	}
+
+	// Routing history must be persisted so it survives kernel restarts.
+	persistPath := filepath.Join(cfg.MainConfigDir, "metrics", "routing-history.json")
+	if _, err := os.Stat(persistPath); err != nil {
+		t.Fatalf("expected routing history persist file at %s: %v", persistPath, err)
+	}
+	persisted, err := os.ReadFile(persistPath)
+	if err != nil {
+		t.Fatalf("failed to read persist file: %v", err)
+	}
+	if !strings.Contains(string(persisted), `"provider":"OpenAI"`) {
+		t.Fatalf("expected persisted routing to include OpenAI, got %s", string(persisted))
 	}
 }
 

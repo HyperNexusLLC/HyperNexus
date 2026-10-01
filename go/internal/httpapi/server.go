@@ -33,7 +33,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"testing"
 	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo"
@@ -529,7 +528,6 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.pairOrchestrator.SetupFrontierSquad()
 	server.directorNotes = orchestration.NewDirectorNotesManager()
 	server.expertManager = hsync.NewExpertManager(server.goDirector, server.mcpPredictor)
-	server.ensureMetricsPersistence()
 
 	// Initialize catalog.db tables if they are missing
 	if catalogDB, err := database.Open("sqlite", filepath.Join(cfg.WorkspaceRoot, "catalog.db")); err == nil {
@@ -741,6 +739,7 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.a2aBroker.SetEventBus(&eventBusAdapter{server.eventBus})
 	server.pairOrchestrator.SetEventBus(&eventBusAdapter{server.eventBus})
 	server.metricsService = metrics.NewMetricsService()
+	server.ensureMetricsPersistence()
 	server.sessionManager = session.NewSessionManager(100)
 	server.fleetManager = orchestration.NewFleetManagerPlus(memoryVS, &eventBusAdapter{server.eventBus}, server.supervisorManager)
 	server.a2aBroker.SetSignalProcessor(server.fleetManager)
@@ -5933,9 +5932,6 @@ func (s *Server) localMetrics() *metrics.MetricsService {
 
 // ensureMetricsPersistence wires disk-backed routing history once per process.
 func (s *Server) ensureMetricsPersistence() {
-	if testing.Testing() {
-		return
-	}
 	path := filepath.Join(s.cfg.MainConfigDir, "metrics", "routing-history.json")
 	s.localMetrics().SetRoutingPersistence(path)
 }
