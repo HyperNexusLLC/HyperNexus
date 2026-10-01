@@ -24,6 +24,8 @@ interface ProviderRow {
     errorCount?: number;
     avgLatencyMs?: number;
     tokenCount?: number;
+    totalCostUsd?: number;
+    cost?: number;
     status?: string;
 }
 
@@ -210,12 +212,14 @@ export default function MetricsPage() {
                                     <th className="py-2 pr-3">Errors</th>
                                     <th className="py-2 pr-3">Avg Latency</th>
                                     <th className="py-2 pr-3">Tokens</th>
+                                    <th className="py-2 pr-3">Cost</th>
                                     <th className="py-2">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {providerRows.map((row, i) => {
                                     const requests = row.requestCount ?? row.requests ?? 0;
+                                    const cost = row.totalCostUsd ?? row.cost ?? 0;
                                     return (
                                         <tr key={`${row.provider ?? i}`} className="border-b border-border/50">
                                             <td className="py-2 pr-3">{row.provider || '—'}</td>
@@ -228,6 +232,9 @@ export default function MetricsPage() {
                                                     : '—'}
                                             </td>
                                             <td className="py-2 pr-3">{row.tokenCount ?? 0}</td>
+                                            <td className="py-2 pr-3">
+                                                {cost > 0 ? `$${cost.toFixed(4)}` : '—'}
+                                            </td>
                                             <td className="py-2">{row.status || '—'}</td>
                                         </tr>
                                     );
