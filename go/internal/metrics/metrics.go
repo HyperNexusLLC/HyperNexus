@@ -62,6 +62,30 @@ type DownsampledBucket struct {
 	ValueAvg float64 `json:"value_avg"`
 }
 
+// TimelineResult is the response shape for getTimeline.
+type TimelineResult struct {
+	WindowMs   int64                    `json:"windowMs"`
+	Buckets    int                      `json:"buckets"`
+	MetricType string                   `json:"metricType"`
+	Series     []DownsampledBucket      `json:"series"`
+	Counts     map[string]float64       `json:"counts"`
+	Averages   map[string]float64       `json:"averages"`
+}
+
+// RoutingEvent records a single model/tool routing decision.
+type RoutingEvent struct {
+	Timestamp   int64             `json:"timestamp"`
+	RequestID   string            `json:"requestId,omitempty"`
+	Provider    string            `json:"provider,omitempty"`
+	Model       string            `json:"model,omitempty"`
+	ToolName    string            `json:"toolName,omitempty"`
+	Strategy    string            `json:"strategy,omitempty"`
+	LatencyMs   float64           `json:"latencyMs,omitempty"`
+	Success     bool              `json:"success"`
+	Error       string            `json:"error,omitempty"`
+	Tags        map[string]string `json:"tags,omitempty"`
+}
+
 // labeledValue stores a metric value with optional labels.
 type labeledValue struct {
 	value  float64
@@ -75,6 +99,10 @@ type MetricsService struct {
 	// Legacy event stream
 	events    []MetricEvent
 	maxEvents int
+
+	// Routing history ring buffer
+	routing    []RoutingEvent
+	maxRouting int
 
 	// Typed metric storage
 	counters      map[string]*labeledValue
@@ -101,6 +129,8 @@ func GetMetricsService() *MetricsService {
 	inst := &MetricsService{
 		events:     make([]MetricEvent, 0, 10000),
 		maxEvents:  10000,
+		routing:    make([]RoutingEvent, 0, 500),
+		maxRouting: 500,
 		counters:   make(map[string]*labeledValue),
 		gauges:     make(map[string]*labeledValue),
 		histograms: make(map[string][]float64),
@@ -117,6 +147,8 @@ func NewMetricsService() *MetricsService {
 	return &MetricsService{
 		events:     make([]MetricEvent, 0, 10000),
 		maxEvents:  10000,
+		routing:    make([]RoutingEvent, 0, 500),
+		maxRouting: 500,
 		counters:   make(map[string]*labeledValue),
 		gauges:     make(map[string]*labeledValue),
 		histograms: make(map[string][]float64),
@@ -407,6 +439,96 @@ func (ms *MetricsService) GetStats(windowMs int64) *StatsResult {
 	}
 }
 
+// GetTimeline returns a downsampled series for the window, optionally filtered by metric type.
+func (ms *MetricsService) GetTimeline(windowMs int64, buckets int, metricType string) *TimelineResult {
+	if windowMs <= 0 {
+		windowMs = 3600000
+	}
+	if buckets <= 0 {
+		buckets = 60
+	}
+	now := time.Now().UnixMilli()
+	cutoff := now - windowMs
+
+	ms.mu.RLock()
+	var relevant []MetricEvent
+	for _, e := range ms.events {
+		if e.Timestamp <= cutoff {
+			continue
+		}
+		if metricType != "" && metricType != "all" && e.Type != metricType {
+			continue
+		}
+		relevant = append(relevant, e)
+	}
+	ms.mu.RUnlock()
+
+	counts := make(map[string]float64)
+	sums := make(map[string]float64)
+	typeCounts := make(map[string]int)
+	for _, e := range relevant {
+		counts[e.Type] += e.Value
+		sums[e.Type] += e.Value
+		typeCounts[e.Type]++
+	}
+	averages := make(map[string]float64)
+	for k, sum := range sums {
+		averages[k] = sum / float64(typeCounts[k])
+	}
+
+	series := ms.downsample(relevant, buckets)
+	if series == nil {
+		series = []DownsampledBucket{}
+	}
+
+	return &TimelineResult{
+		WindowMs:   windowMs,
+		Buckets:    buckets,
+		MetricType: metricType,
+		Series:     series,
+		Counts:     counts,
+		Averages:   averages,
+	}
+}
+
+// RecordRouting appends a routing decision to the local history buffer.
+func (ms *MetricsService) RecordRouting(ev RoutingEvent) {
+	if ev.Timestamp == 0 {
+		ev.Timestamp = time.Now().UnixMilli()
+	}
+	ms.mu.Lock()
+	ms.routing = append(ms.routing, ev)
+	if ms.maxRouting <= 0 {
+		ms.maxRouting = 500
+	}
+	if len(ms.routing) > ms.maxRouting {
+		ms.routing = ms.routing[len(ms.routing)-ms.maxRouting:]
+	}
+	ms.mu.Unlock()
+}
+
+// GetRoutingHistory returns up to limit recent routing events (newest first).
+func (ms *MetricsService) GetRoutingHistory(limit int) []RoutingEvent {
+	if limit <= 0 {
+		limit = 50
+	}
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
+	n := len(ms.routing)
+	if n == 0 {
+		return []RoutingEvent{}
+	}
+	start := n - limit
+	if start < 0 {
+		start = 0
+	}
+	out := make([]RoutingEvent, 0, n-start)
+	for i := n - 1; i >= start; i-- {
+		out = append(out, ms.routing[i])
+	}
+	return out
+}
+
 // StartMonitoring begins periodic system metrics collection.
 func (ms *MetricsService) StartMonitoring(intervalMs int64) {
 	if intervalMs <= 0 {
@@ -449,6 +571,7 @@ func (ms *MetricsService) Reset() {
 	ms.gauges = make(map[string]*labeledValue)
 	ms.histograms = make(map[string][]float64)
 	ms.events = nil
+	ms.routing = nil
 	ms.mu.Unlock()
 }
 
