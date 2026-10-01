@@ -4282,8 +4282,8 @@ func TestMetricsReadEndpointsFallBackToLocalPreview(t *testing.T) {
 	if providerBreakdownRecorder.Code != http.StatusOK {
 		t.Fatalf("expected provider breakdown fallback 200, got %d with body %s", providerBreakdownRecorder.Code, providerBreakdownRecorder.Body.String())
 	}
-	if !strings.Contains(providerBreakdownRecorder.Body.String(), `"fallback":"go-local-metrics-preview"`) || !strings.Contains(providerBreakdownRecorder.Body.String(), `"provider":"OpenAI"`) || !strings.Contains(providerBreakdownRecorder.Body.String(), `"requests":0`) {
-		t.Fatalf("expected provider breakdown local preview, got %s", providerBreakdownRecorder.Body.String())
+	if !strings.Contains(providerBreakdownRecorder.Body.String(), `"fallback":"go-local-metrics"`) || !strings.Contains(providerBreakdownRecorder.Body.String(), `"provider":"OpenAI"`) || !strings.Contains(providerBreakdownRecorder.Body.String(), `"requestCount":1`) {
+		t.Fatalf("expected provider breakdown from local routing history, got %s", providerBreakdownRecorder.Body.String())
 	}
 
 	routingHistoryRecorder := httptest.NewRecorder()

@@ -7,8 +7,11 @@
 package metrics
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"sync"
@@ -86,6 +89,23 @@ type RoutingEvent struct {
 	Tags        map[string]string `json:"tags,omitempty"`
 }
 
+// ProviderUsage aggregates routing outcomes for one provider.
+type ProviderUsage struct {
+	Provider     string   `json:"provider"`
+	RequestCount int      `json:"requestCount"`
+	SuccessCount int      `json:"successCount"`
+	ErrorCount   int      `json:"errorCount"`
+	AvgLatencyMs float64  `json:"avgLatencyMs"`
+	TotalCostUsd float64  `json:"totalCostUsd"`
+	TokenCount   int      `json:"tokenCount"`
+	Models       []string `json:"models"`
+	LastUsedAt   int64    `json:"lastUsedAt"`
+	Status       string   `json:"status"`
+	// Legacy fields kept for older dashboard payloads.
+	Requests int     `json:"requests"`
+	Cost     float64 `json:"cost"`
+}
+
 // labeledValue stores a metric value with optional labels.
 type labeledValue struct {
 	value  float64
@@ -101,8 +121,9 @@ type MetricsService struct {
 	maxEvents int
 
 	// Routing history ring buffer
-	routing    []RoutingEvent
-	maxRouting int
+	routing     []RoutingEvent
+	maxRouting  int
+	persistPath string
 
 	// Typed metric storage
 	counters      map[string]*labeledValue
@@ -491,6 +512,64 @@ func (ms *MetricsService) GetTimeline(windowMs int64, buckets int, metricType st
 	}
 }
 
+// SetRoutingPersistence enables disk-backed routing history at path and loads
+// any existing ring. An empty path disables persistence.
+func (ms *MetricsService) SetRoutingPersistence(path string) {
+	ms.mu.Lock()
+	ms.persistPath = path
+	ms.mu.Unlock()
+	if path == "" {
+		return
+	}
+	ms.loadRoutingFrom(path)
+}
+
+func (ms *MetricsService) loadRoutingFrom(path string) {
+	data, err := os.ReadFile(path)
+	if err != nil || len(data) == 0 {
+		return
+	}
+	var events []RoutingEvent
+	if err := json.Unmarshal(data, &events); err != nil {
+		return
+	}
+	ms.mu.Lock()
+	if ms.maxRouting <= 0 {
+		ms.maxRouting = 500
+	}
+	if len(events) > ms.maxRouting {
+		events = events[len(events)-ms.maxRouting:]
+	}
+	ms.routing = append(ms.routing, events...)
+	if len(ms.routing) > ms.maxRouting {
+		ms.routing = ms.routing[len(ms.routing)-ms.maxRouting:]
+	}
+	ms.mu.Unlock()
+}
+
+func (ms *MetricsService) saveRouting() {
+	ms.mu.RLock()
+	path := ms.persistPath
+	events := make([]RoutingEvent, len(ms.routing))
+	copy(events, ms.routing)
+	ms.mu.RUnlock()
+	if path == "" {
+		return
+	}
+	data, err := json.Marshal(events)
+	if err != nil {
+		return
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return
+	}
+	_ = os.Rename(tmp, path)
+}
+
 // RecordRouting appends a routing decision to the local history buffer.
 func (ms *MetricsService) RecordRouting(ev RoutingEvent) {
 	if ev.Timestamp == 0 {
@@ -505,6 +584,76 @@ func (ms *MetricsService) RecordRouting(ev RoutingEvent) {
 		ms.routing = ms.routing[len(ms.routing)-ms.maxRouting:]
 	}
 	ms.mu.Unlock()
+	ms.saveRouting()
+}
+
+// ProviderBreakdown aggregates routing history per provider (newest data wins).
+func (ms *MetricsService) ProviderBreakdown() []ProviderUsage {
+	ms.mu.RLock()
+	events := make([]RoutingEvent, len(ms.routing))
+	copy(events, ms.routing)
+	ms.mu.RUnlock()
+
+	type agg struct {
+		usage  ProviderUsage
+		models map[string]struct{}
+		latSum float64
+		latN   int
+	}
+	byProvider := make(map[string]*agg)
+	order := make([]string, 0)
+	for _, ev := range events {
+		name := ev.Provider
+		if name == "" {
+			name = "unknown"
+		}
+		a := byProvider[name]
+		if a == nil {
+			a = &agg{
+				usage:  ProviderUsage{Provider: name, Status: "ok", Models: []string{}},
+				models: make(map[string]struct{}),
+			}
+			byProvider[name] = a
+			order = append(order, name)
+		}
+		a.usage.RequestCount++
+		a.usage.Requests++
+		if ev.Success {
+			a.usage.SuccessCount++
+		} else {
+			a.usage.ErrorCount++
+			a.usage.Status = "degraded"
+		}
+		if ev.LatencyMs > 0 {
+			a.latSum += ev.LatencyMs
+			a.latN++
+		}
+		if ev.Model != "" {
+			a.models[ev.Model] = struct{}{}
+		}
+		if ev.Timestamp > a.usage.LastUsedAt {
+			a.usage.LastUsedAt = ev.Timestamp
+		}
+	}
+
+	out := make([]ProviderUsage, 0, len(order))
+	for _, name := range order {
+		a := byProvider[name]
+		if a.latN > 0 {
+			a.usage.AvgLatencyMs = a.latSum / float64(a.latN)
+		}
+		models := make([]string, 0, len(a.models))
+		for m := range a.models {
+			models = append(models, m)
+		}
+		sort.Strings(models)
+		a.usage.Models = models
+		out = append(out, a.usage)
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].RequestCount > out[j].RequestCount
+	})
+	return out
 }
 
 // GetRoutingHistory returns up to limit recent routing events (newest first).

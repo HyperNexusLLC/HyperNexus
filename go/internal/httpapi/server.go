@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo"
@@ -528,6 +529,7 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.pairOrchestrator.SetupFrontierSquad()
 	server.directorNotes = orchestration.NewDirectorNotesManager()
 	server.expertManager = hsync.NewExpertManager(server.goDirector, server.mcpPredictor)
+	server.ensureMetricsPersistence()
 
 	// Initialize catalog.db tables if they are missing
 	if catalogDB, err := database.Open("sqlite", filepath.Join(cfg.WorkspaceRoot, "catalog.db")); err == nil {
@@ -2053,7 +2055,7 @@ func (s *Server) handleAPIIndex(w http.ResponseWriter, _ *http.Request) {
 				{Path: "/api/metrics/track", Category: "ops", Description: "Track a custom metric event through the TypeScript control plane."},
 				{Path: "/api/metrics/system-snapshot", Category: "ops", Description: "Read a real-time system resource snapshot, with a native Go fallback when the TypeScript metrics router is unavailable."},
 				{Path: "/api/metrics/timeline", Category: "ops", Description: "Read downsampled metrics timeline data, with a local zero-state Go fallback when the TypeScript metrics router is unavailable."},
-				{Path: "/api/metrics/provider-breakdown", Category: "ops", Description: "Read provider request, latency, and cost breakdowns, with a local zero-usage Go fallback when the TypeScript metrics router is unavailable."},
+				{Path: "/api/metrics/provider-breakdown", Category: "ops", Description: "Read provider request, latency, and cost breakdowns aggregated from local routing history, with a Go fallback when the TypeScript metrics router is unavailable."},
 				{Path: "/api/metrics/monitoring", Category: "ops", Description: "Toggle TypeScript metrics monitoring state."},
 				{Path: "/api/metrics/routing-history", Category: "ops", Description: "Read recent LLM routing and failover decisions, with a local empty-state Go fallback when the TypeScript metrics router is unavailable."},
 				{Path: "/api/logs", Category: "ops", Description: "List observability logs, with a local hypernexus.db fallback when the TypeScript log store is unavailable."},
@@ -5929,6 +5931,65 @@ func (s *Server) localMetrics() *metrics.MetricsService {
 	return metrics.GetMetricsService()
 }
 
+// ensureMetricsPersistence wires disk-backed routing history once per process.
+func (s *Server) ensureMetricsPersistence() {
+	if testing.Testing() {
+		return
+	}
+	path := filepath.Join(s.cfg.MainConfigDir, "metrics", "routing-history.json")
+	s.localMetrics().SetRoutingPersistence(path)
+}
+
+// mergeProviderCatalog fills catalog-only providers that have no routing traffic yet.
+func mergeProviderCatalog(aggregated []metrics.ProviderUsage, catalog []providers.CatalogEntry) []map[string]any {
+	seen := make(map[string]bool, len(aggregated))
+	rows := make([]map[string]any, 0, len(aggregated)+len(catalog))
+	for _, usage := range aggregated {
+		seen[strings.ToLower(usage.Provider)] = true
+		rows = append(rows, map[string]any{
+			"provider":     usage.Provider,
+			"requestCount": usage.RequestCount,
+			"requests":     usage.Requests,
+			"successCount": usage.SuccessCount,
+			"errorCount":   usage.ErrorCount,
+			"avgLatencyMs": math.Round(usage.AvgLatencyMs*100) / 100,
+			"totalCostUsd": usage.TotalCostUsd,
+			"cost":         usage.Cost,
+			"tokenCount":   usage.TokenCount,
+			"models":       usage.Models,
+			"lastUsedAt":   usage.LastUsedAt,
+			"status":       usage.Status,
+		})
+	}
+	for _, provider := range catalog {
+		key := strings.ToLower(provider.Name)
+		if seen[key] || seen[strings.ToLower(provider.Provider)] {
+			continue
+		}
+		status := "idle"
+		if provider.Authenticated {
+			status = "ok"
+		} else if provider.Configured {
+			status = "configured"
+		}
+		rows = append(rows, map[string]any{
+			"provider":     provider.Name,
+			"requestCount": 0,
+			"requests":     0,
+			"successCount": 0,
+			"errorCount":   0,
+			"avgLatencyMs": 0,
+			"totalCostUsd": 0,
+			"cost":         0,
+			"tokenCount":   0,
+			"models":       []string{},
+			"lastUsedAt":   0,
+			"status":       status,
+		})
+	}
+	return rows
+}
+
 func (s *Server) handleMetricsStats(w http.ResponseWriter, r *http.Request) {
 	payload := map[string]any{}
 	windowMs := 3600000
@@ -5957,17 +6018,24 @@ func (s *Server) handleMetricsStats(w http.ResponseWriter, r *http.Request) {
 	if series == nil {
 		series = []metrics.DownsampledBucket{}
 	}
+	providerRows := mergeProviderCatalog(s.localMetrics().ProviderBreakdown(), providers.Catalog(providers.Snapshot()))
+	routing := s.localMetrics().GetRoutingHistory(20)
+	if routing == nil {
+		routing = []metrics.RoutingEvent{}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{
-			"windowMs":    local.WindowMs,
-			"totalEvents": local.TotalEvents,
-			"counts":      local.Counts,
-			"averages":    local.Averages,
-			"counters":    local.Counters,
-			"gauges":      local.Gauges,
-			"histograms":  local.Histograms,
-			"series":      series,
+			"windowMs":          local.WindowMs,
+			"totalEvents":       local.TotalEvents,
+			"counts":            local.Counts,
+			"averages":          local.Averages,
+			"counters":          local.Counters,
+			"gauges":            local.Gauges,
+			"histograms":        local.Histograms,
+			"series":            series,
+			"providerBreakdown": providerRows,
+			"routingHistory":    routing,
 		},
 		"bridge": map[string]any{
 			"fallback":  "go-local-metrics",
@@ -6211,29 +6279,36 @@ func (s *Server) handleMetricsProviderBreakdown(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	statuses := providers.Snapshot()
-	catalog := providers.Catalog(statuses)
-	providersPreview := make([]map[string]any, 0, len(catalog))
-	for _, provider := range catalog {
-		providersPreview = append(providersPreview, map[string]any{
-			"provider": provider.Name,
-			"cost":     0,
-			"requests": 0,
-		})
+	aggregated := s.localMetrics().ProviderBreakdown()
+	rows := mergeProviderCatalog(aggregated, providers.Catalog(providers.Snapshot()))
+
+	totalRequests := 0
+	latencySum := 0.0
+	latencyN := 0
+	for _, usage := range aggregated {
+		totalRequests += usage.RequestCount
+		if usage.AvgLatencyMs > 0 && usage.RequestCount > 0 {
+			latencySum += usage.AvgLatencyMs * float64(usage.RequestCount)
+			latencyN += usage.RequestCount
+		}
+	}
+	averageLatency := 0.0
+	if latencyN > 0 {
+		averageLatency = math.Round(latencySum/float64(latencyN)*100) / 100
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{
 			"totalCost":      0,
-			"totalRequests":  0,
-			"averageLatency": 0,
-			"providers":      providersPreview,
+			"totalRequests":  totalRequests,
+			"averageLatency": averageLatency,
+			"providers":      rows,
 		},
 		"bridge": map[string]any{
-			"fallback":  "go-local-metrics-preview",
+			"fallback":  "go-local-metrics",
 			"procedure": "metrics.getProviderBreakdown",
-			"reason":    "upstream unavailable; using local provider catalog with zeroed usage",
+			"reason":    "upstream unavailable; aggregating local routing history with provider catalog",
 		},
 	})
 }
