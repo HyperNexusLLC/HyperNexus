@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.8] - 2026-10-01
+
+### Added
+
+- **Real provider breakdown** — `/api/metrics/provider-breakdown` aggregates request/success/error counts, avg latency, models, and last-used from local routing history (was hardcoded zeros). Merged with the provider catalog.
+- **Metrics stats enrichment** — local stats fallback now includes `providerBreakdown` and `routingHistory` so one call feeds the dashboard
+- **Routing history persistence** — `metrics.MetricsService.SetRoutingPersistence` loads/saves the 500-event ring to `~/.hypernexus/metrics/routing-history.json` (atomic write). Survives kernel restarts.
+- **Dashboard metrics fallback** — `/dashboard/metrics` fetches kernel HTTP stats/provider-breakdown when tRPC is down; new Provider Breakdown table
+
+### Changed
+
+- **GitHub Actions Node 22** — `actions/checkout@v5`, `setup-go@v6`, `setup-node@v5`, `node-version: 22` across all workflows (clears Node 20 deprecation warnings)
+
+---
+
 ## [1.0.7] - 2026-10-01
 
 ### Added

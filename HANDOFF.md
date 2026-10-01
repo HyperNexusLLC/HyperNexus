@@ -1,5 +1,28 @@
 # HANDOFF.md — Session Handoff
 
+## Session Date: 2026-10-01 (T55–T57)
+
+## Summary
+
+Provider breakdown aggregation, routing history persistence, dashboard HTTP fallbacks, Actions Node 22. Commit `7c0cc93` (v1.0.8).
+
+## Completed (T55–T57)
+
+- `metrics.ProviderBreakdown()` aggregates routing history per provider (requests/ok/errors/avg latency/models/status)
+- `mergeProviderCatalog` merges routing usage with `providers.Catalog` (catalog-only providers show as idle)
+- `/api/metrics/stats` fallback includes `providerBreakdown` + `routingHistory`
+- `SetRoutingPersistence` + `saveRouting`/`loadRoutingFrom` — JSON ring at `MainConfigDir/metrics/routing-history.json`
+- `Server.ensureMetricsPersistence` wires it at `New()` (skipped under `testing.Testing()`)
+- Dashboard metrics: HTTP fallback when tRPC down + Provider Breakdown table
+- Actions: checkout@v5, setup-go@v6, setup-node@v5, node-version 22 / NODE_VERSION 22
+
+## Next agent must
+
+- Deploy kernel (26276000 bytes stripped) + dashboard overlay to Hetzner if not yet live
+- Verify smoke: `/api/metrics/provider-breakdown` shows real counts; routing history survives restart
+- Watchdog `-MonitorOllama` still needs admin PowerShell
+
+---
 ## Session Date: 2026-10-01 (T53/T54)
 
 ## Summary
