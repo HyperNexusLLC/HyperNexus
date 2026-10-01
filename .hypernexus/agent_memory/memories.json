@@ -1,0 +1,298 @@
+{
+  "memories": [
+    {
+      "id": "2158411077ff129f",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.4091099Z",
+      "accessedAt": "2026-09-23T23:16:07.4091099Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "52c2b4ca1272bd36",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.4130194Z",
+      "accessedAt": "2026-09-23T23:16:07.4130194Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "52860bbe1860a168",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.4215267Z",
+      "accessedAt": "2026-09-23T23:16:07.4215267Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "4933a9245030949e",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.4247985Z",
+      "accessedAt": "2026-09-23T23:16:07.4247985Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "ff4ceed7ccc3111b",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.4269825Z",
+      "accessedAt": "2026-09-23T23:16:07.4269825Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "38395b61f31d3f7b",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.4281046Z",
+      "accessedAt": "2026-09-23T23:16:07.4281046Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "47417d34f4411498",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.437477Z",
+      "accessedAt": "2026-09-23T23:16:07.437477Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "29a729355b597fe8",
+      "content": "localMemoryQueryResults now merges agent_memory store alongside contexts.json. Facts written by localAddFactMemory are now visible to memory.query search.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25"
+        ]
+      },
+      "createdAt": "2026-09-23T23:16:07.4435409Z",
+      "accessedAt": "2026-09-23T23:16:07.4435409Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "9dc16036ac104b18",
+      "content": "Root cause: localAddFactMemory wrote to agent_memory/memories.json but localMemoryQueryResults read from memory/contexts.json — two different stores. Fix: localMemoryQueryResults now merges agent-memory records into the search pool with ID dedup. Live round-trip verified (store-\u003esearch returns results). Full httpapi test suite green (42s).",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25",
+          "kernel"
+        ]
+      },
+      "createdAt": "2026-09-23T23:18:06.6350646Z",
+      "accessedAt": "2026-09-23T23:18:06.6350646Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "88ca5b0fa737734d",
+      "content": "Root cause: localAddFactMemory wrote to agent_memory/memories.json but localMemoryQueryResults read from memory/contexts.json. Fix: localMemoryQueryResults now merges agent-memory records with ID dedup. Live round-trip verified.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25",
+          "kernel"
+        ]
+      },
+      "createdAt": "2026-09-23T23:18:06.646608Z",
+      "accessedAt": "2026-09-23T23:18:06.646608Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "40e12b0d2fe65df4",
+      "content": "Root cause: localAddFactMemory wrote to agent_memory/memories.json but localMemoryQueryResults read from memory/contexts.json. Fix: localMemoryQueryResults now merges agent-memory records with ID dedup. Live round-trip verified.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25",
+          "kernel"
+        ]
+      },
+      "createdAt": "2026-09-23T23:18:06.6493261Z",
+      "accessedAt": "2026-09-23T23:18:06.6493261Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "8faefb1c0ecc962a",
+      "content": "Root cause: localAddFactMemory wrote to agent_memory/memories.json but localMemoryQueryResults read from memory/contexts.json. Fix: localMemoryQueryResults now merges agent-memory records with ID dedup. Live round-trip verified.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25",
+          "kernel"
+        ]
+      },
+      "createdAt": "2026-09-23T23:18:06.6509202Z",
+      "accessedAt": "2026-09-23T23:18:06.6509202Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "7d472b06a1333d52",
+      "content": "Root cause: localAddFactMemory wrote to agent_memory/memories.json but localMemoryQueryResults read from memory/contexts.json. Fix: localMemoryQueryResults now merges agent-memory records with ID dedup. Live round-trip verified.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25",
+          "kernel"
+        ]
+      },
+      "createdAt": "2026-09-23T23:18:06.6542109Z",
+      "accessedAt": "2026-09-23T23:18:06.6542109Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "e01512e61c293eb4",
+      "content": "Root cause: localAddFactMemory wrote to agent_memory/memories.json but localMemoryQueryResults read from memory/contexts.json. Fix: localMemoryQueryResults now merges agent-memory records with ID dedup. Live round-trip verified.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25",
+          "kernel"
+        ]
+      },
+      "createdAt": "2026-09-23T23:18:06.6681011Z",
+      "accessedAt": "2026-09-23T23:18:06.6681011Z",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "c927f809be1bea3a",
+      "content": "Root cause: localAddFactMemory wrote to agent_memory/memories.json but localMemoryQueryResults read from memory/contexts.json. Fix: localMemoryQueryResults now merges agent-memory records with ID dedup. Live round-trip verified.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "bugfix",
+          "memory",
+          "T25",
+          "kernel"
+        ]
+      },
+      "createdAt": "2026-09-23T23:18:06.6810732Z",
+      "accessedAt": "2026-09-23T23:18:06.6810732Z",
+      "accessCount": 0,
+      "ttl": null
+    }
+  ],
+  "savedAt": "2026-09-23T23:18:06.6810732Z",
+  "version": 1
+}
