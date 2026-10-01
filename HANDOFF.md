@@ -4,7 +4,7 @@
 
 ## Summary
 
-Provider breakdown, routing persistence, token usage, cost estimates, startupStatus HTTP fallbacks, Actions Node 22/Go 1.25. Commits `7c0cc93`..`e988a56` (v1.0.9). Live on Hetzner; CI green.
+Provider breakdown, routing persistence, token usage, cost estimates, startupStatus HTTP fallbacks, Actions Node 22/Go 1.25. Commits `7c0cc93`..`747c5a7` (v1.0.9). Live on Hetzner; CI green. Full session export: docs/sessions/2026-10-01-t55-t60.md.
 
 ## Completed (T55–T60)
 
