@@ -1,12 +1,12 @@
 # HANDOFF.md — Session Handoff
 
-## Session Date: 2026-10-01 (T55–T58)
+## Session Date: 2026-10-01 (T55–T60)
 
 ## Summary
 
-Provider breakdown aggregation, routing persistence, token usage, dashboard HTTP fallbacks, Actions Node 22/Go 1.25. Commits `7c0cc93`..`e988a56` (v1.0.8). Live on Hetzner; CI green.
+Provider breakdown, routing persistence, token usage, cost estimates, startupStatus HTTP fallbacks, Actions Node 22/Go 1.25. Commits `7c0cc93`..`e988a56` (v1.0.9). Live on Hetzner; CI green.
 
-## Completed (T55–T58)
+## Completed (T55–T60)
 
 - `metrics.ProviderBreakdown()` aggregates routing history per provider (requests/ok/errors/avg latency/models/tokens/status)
 - `mergeProviderCatalog` merges routing usage with `providers.Catalog` (catalog-only providers show as idle)
@@ -14,14 +14,17 @@ Provider breakdown aggregation, routing persistence, token usage, dashboard HTTP
 - `SetRoutingPersistence` + `saveRouting`/`loadRoutingFrom` — JSON ring at `MainConfigDir/metrics/routing-history.json` (on Hetzner: `/opt/tormentnexus/.hypernexus/metrics/routing-history.json`)
 - `ensureMetricsPersistence` MUST run AFTER `server.metricsService = metrics.NewMetricsService()` (earlier wiring hit the discarded global)
 - `RoutingEvent.tokenInput/tokenOutput` from LLM `Usage`; quota tracker overlay in provider breakdown
-- Dashboard metrics: HTTP fallback when tRPC down + Provider Breakdown table
+- Dashboard metrics: HTTP fallback + Provider Breakdown table with cost column
+- `providers.EstimateCostUSD` + model price table for `totalCostUsd`
+- **HTTP fallback for startupStatus** - health/system/integrations pages survive tRPC outages via `use-startup-status.ts`
+- **Dashboard-compatible startup checks** - `/api/startup/status` returns `mcpAggregator`, `sessionSupervisor`, `extensionBridge`, `executionEnvironment` + `uptime`
 - Actions: checkout@v5, setup-go@v6, setup-node@v5, node 22, Go 1.25, `package-manager-cache: false` for npm-only jobs
 
 ## Next agent must
 
 - Watchdog `-MonitorOllama` still needs admin PowerShell
-- Consider model-pricing cost estimates for `totalCostUsd` (still 0)
-- Optional: wire more dashboard pages to kernel HTTP fallbacks
+- Wire more dashboard pages to kernel HTTP fallbacks (mcp/search, mcp/inspector, mcp/ai-tools still tRPC-only)
+- `integration-catalog.ts` is a stub - integrations page shows zeros regardless of data
 
 ---
 ## Session Date: 2026-10-01 (T53/T54)

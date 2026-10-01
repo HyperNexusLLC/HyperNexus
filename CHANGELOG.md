@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.9] - 2026-10-01
+
+### Added
+- **HTTP fallback for startupStatus** — health, system, and integrations pages survive tRPC outages via kernel HTTP. New `use-startup-status.ts` hook with tRPC primary + kernel fallback for startupStatus, browserStatus, mcpStatus.
+- **Dashboard-compatible startup checks** — `/api/startup/status` now returns `mcpAggregator`, `sessionSupervisor`, `extensionBridge`, `executionEnvironment`, `configSync` matching the `DashboardStartupStatus` shape. Includes `uptime` field.
+
 ## [1.0.8] - 2026-10-01
 
 ### Added
