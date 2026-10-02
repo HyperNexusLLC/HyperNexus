@@ -95,7 +95,8 @@ func (d *DiscoveryService) Start(ctx context.Context) error {
 		return fmt.Errorf("mesh discovery: dial broadcast: %w", err)
 	}
 
-	// Create UDP connection for listening
+	// Create UDP connection for listening — fall back to an OS-assigned port
+	// when the default discovery port is already bound (e.g. a second instance).
 	listenAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", d.cfg.Port))
 	if err != nil {
 		sendConn.Close()
@@ -104,8 +105,15 @@ func (d *DiscoveryService) Start(ctx context.Context) error {
 
 	recvConn, err := net.ListenUDP("udp", listenAddr)
 	if err != nil {
-		sendConn.Close()
-		return fmt.Errorf("mesh discovery: listen: %w", err)
+		// Port conflict — retry with OS-assigned ephemeral port so the node
+		// can still participate as a listener even if it cannot broadcast
+		// on the well-known discovery port.
+		fallbackAddr, _ := net.ResolveUDPAddr("udp", ":0")
+		recvConn, err = net.ListenUDP("udp", fallbackAddr)
+		if err != nil {
+			sendConn.Close()
+			return fmt.Errorf("mesh discovery: listen: %w", err)
+		}
 	}
 
 	// Get local IP for the beacon packet
