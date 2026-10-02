@@ -24,13 +24,14 @@ type Manager struct {
 	vs       *VectorStore
 	versions map[string][]MemoryVersion // memory ID → version history (oldest first)
 	verMu    sync.RWMutex
+	enc      *MemoryEncryption
 }
 
 func NewManager(path string) *Manager {
 	// The path here is for the JSON file, but we'll use a SQLite DB next to it
 	dbPath := filepath.Join(filepath.Dir(path), "memory.db")
 	vs, _ := NewVectorStore(dbPath)
-	m := &Manager{path: path, vs: vs, versions: map[string][]MemoryVersion{}}
+	m := &Manager{path: path, vs: vs, versions: map[string][]MemoryVersion{}, enc: NewMemoryEncryption()}
 	m.startSleepCycleEngine()
 	return m
 }
@@ -130,11 +131,17 @@ func (m *Manager) GetAll() ([]map[string]interface{}, error) {
 
 	var genericResults []map[string]interface{}
 	for _, r := range results {
+		content := r.Content
+		if m.enc != nil && IsEncrypted(content) {
+			if dec, err := m.enc.Decrypt(content); err == nil {
+				content = dec
+			}
+		}
 		genericResults = append(genericResults, map[string]interface{}{
 			"id":               r.ID,
 			"session_id":       r.SessionID,
 			"type":             string(r.Type),
-			"content":          r.Content,
+			"content":          content,
 			"importance":       r.Importance,
 			"heat_score":       r.HeatScore,
 			"last_accessed_at": r.LastAccessedAt,
@@ -160,11 +167,19 @@ func (m *Manager) AddMemory(mem string) {
 		return
 	}
 
+	// Encrypt content at rest if key is configured
+	content := mem
+	if m.enc != nil {
+		if enc, err := m.enc.Encrypt(mem); err == nil {
+			content = enc
+		}
+	}
+
 	entry := controlplane.L2VaultRecord{
 		ID:         fmt.Sprintf("mem-%d", SystemNowUnixNano()),
 		SessionID:  "manual",
 		Type:       controlplane.MemoryLongTerm,
-		Content:    mem,
+		Content:    content,
 		Importance: 0.5,
 		CreatedAt:  controlplane.Now(),
 	}
