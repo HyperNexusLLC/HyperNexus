@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -44,15 +45,21 @@ func (s *Server) buildMCPStatus(ctx context.Context) (map[string]any, error) {
 	if localErr != nil {
 		return nil, localErr
 	}
+	// Count live Aggregator connections (alwaysOn stdio servers)
+	aggCount := 0
+	if s.mcpAggregator != nil {
+		aggCount = s.mcpAggregator.ConnectedCount()
+	}
 	return map[string]any{
 		"success": true,
 		"data": map[string]any{
 			"initialized":              true,
-			"connected":                summary.SourceBackedHarnessCount > 0,
+			"connected":                summary.SourceBackedHarnessCount > 0 || aggCount > 0,
 			"toolCount":                summary.SourceBackedToolCount,
 			"serverCount":              summary.InstalledHarnessCount,
-			"connectedCount":           summary.SourceBackedHarnessCount,
+			"connectedCount":           summary.SourceBackedHarnessCount + aggCount,
 			"sourceBackedHarnessCount": summary.SourceBackedHarnessCount,
+			"aggregatorConnectedCount": aggCount,
 			"source":                   "source-backed-local-summary",
 			"lazySessionMode":          false,
 			"singleActiveServerMode":   false,
@@ -63,6 +70,55 @@ func (s *Server) buildMCPStatus(ctx context.Context) (map[string]any, error) {
 			"reason":    "upstream unavailable; using local MCP harness summary",
 		},
 	}, nil
+}
+
+// autoStartAlwaysOnMCPServers connects only servers marked alwaysOn:true in mcp_servers.json.
+// Runs in a goroutine so it never blocks server startup. Each server gets a 15s connect timeout.
+func (s *Server) autoStartAlwaysOnMCPServers(mainConfigDir string) {
+	type mcpServerEntry struct {
+		Command   string            `json:"command"`
+		Args      []string          `json:"args"`
+		Env       map[string]string `json:"env"`
+		Disabled  bool              `json:"disabled"`
+		AlwaysOn  bool              `json:"alwaysOn"`
+	}
+	// Check multiple config paths: MainConfigDir, workspace root config, and workspace go/config
+	candidates := []string{
+		filepath.Join(mainConfigDir, "mcp_servers.json"),
+		filepath.Join(s.cfg.WorkspaceRoot, "config", "mcp_servers.json"),
+		filepath.Join(s.cfg.WorkspaceRoot, "go", "config", "mcp_servers.json"),
+	}
+	var cfgPath string
+	var raw []byte
+	for _, p := range candidates {
+		if data, err := os.ReadFile(p); err == nil {
+			cfgPath = p
+			raw = data
+			break
+		}
+	}
+	if raw == nil {
+		fmt.Printf("[MCP AutoStart] No mcp_servers.json found in any of: %v\n", candidates)
+		return
+	}
+	var servers map[string]mcpServerEntry
+	if err := json.Unmarshal(raw, &servers); err != nil {
+		fmt.Printf("[MCP AutoStart] Failed to parse %s: %v\n", cfgPath, err)
+		return
+	}
+	connected := 0
+	for name, srv := range servers {
+		if srv.Disabled || !srv.AlwaysOn || srv.Command == "" {
+			continue
+		}
+		if err := s.mcpAggregator.AddServer(name, srv.Command, srv.Args, srv.Env); err != nil {
+			fmt.Printf("[MCP AutoStart] Failed to connect %s: %v\n", name, err)
+		} else {
+			fmt.Printf("[MCP AutoStart] Connected %s (%s)\n", name, srv.Command)
+			connected++
+		}
+	}
+	fmt.Printf("[MCP AutoStart] %d alwaysOn servers connected from %s\n", connected, cfgPath)
 }
 
 func (s *Server) handleMCPTools(w http.ResponseWriter, r *http.Request) {

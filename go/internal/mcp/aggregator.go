@@ -100,6 +100,13 @@ func (a *Aggregator) CallTool(ctx context.Context, serverName, toolName string, 
 	return client.Call(ctx, "tools/call", params)
 }
 
+// ConnectedCount returns the number of live stdio server connections.
+func (a *Aggregator) ConnectedCount() int {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return len(a.clients)
+}
+
 func (a *Aggregator) Shutdown() {
 	a.mu.Lock()
 	defer a.mu.Unlock()

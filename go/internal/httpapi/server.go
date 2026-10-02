@@ -643,6 +643,11 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 		}
 	}
 
+	// --- Auto-start alwaysOn MCP servers ---
+	// Only connect servers explicitly marked alwaysOn:true in mcp_servers.json.
+	// Other servers lazy-load on first tool use to avoid spawning 50+ processes at boot.
+	go server.autoStartAlwaysOnMCPServers(cfg.MainConfigDir)
+
 	// --- Initialize new Go-native services ---
 	server.eventBus = eventbus.New(1000)
 	if flag.Lookup("test.v") == nil {
