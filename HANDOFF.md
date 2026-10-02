@@ -1,5 +1,31 @@
 # HANDOFF.md — Session Handoff
 
+## Session Date: 2026-10-02 (T37: Script Cleanup + Rebuild + Verification)
+
+## Summary
+
+Script cleanup (archiving), version bump to 1.0.11, full rebuild of Go kernel + dashboard, service restart with health verification.
+
+## Completed (T37)
+
+### Script Cleanup (Nondestructive)
+- Archived 6 one-off deploy scripts to `scripts/archive/one-off-deploys/` (deploy-v105, deploy-t29, deploy-title-fix, deploy-catalog-index, deploy-mcp-warmup, deploy-search-fix)
+- Archived 10 legacy marketing bots to `scripts/archive/marketing-legacy/` (reddit agents, twitter bots, auto-marketing)
+- Active deploy path: `scripts/deploy-hetzner.sh` + `scripts/ci-deploy-hetzner.sh`
+
+### Build & Verification
+- Go kernel: `go build ./...` clean, `go test ./...` 3 pre-existing failures (TestToolResultSnapshots, TestVerifyLicense, TestResolveClientTargets — test expectations drifted)
+- Dashboard: `pnpm run build` clean after stopping PID 2280 that locked `.next-build`
+- Both services restarted and verified:
+  - Go kernel on 7778 (v1.0.10) — gossip P2P, catalog sync, repo graph 500 files / 13,695 functions
+  - Dashboard on 7779 (Next.js 16.2.6) — zero errors
+- VERSION bumped 1.0.10 → 1.0.11, synced across 35 packages
+
+### Known Pre-existing Test Failures (NOT from this session)
+- `TestToolResultSnapshots` (foundation/pi) — snapshot format drift
+- `TestVerifyLicense` (internal/license) — no license file (free mode)
+- `TestResolveClientTargets` (internal/mcp) — expects 3 targets, gets 37
+
 ## Session Date: 2026-10-01 (T35 EXECUTIVE PROTOCOL)
 
 ## Summary

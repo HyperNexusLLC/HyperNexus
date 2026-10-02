@@ -1,7 +1,7 @@
 {
   "name": "hypernexus",
   "displayName": "HyperNexus — AI Control Plane",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "publisher": "hypernexus",
   "description": "Universal AI control plane: persistent memory, MCP tool routing, session import, enterprise RBAC. Works with every AI coding agent.",
   "categories": [

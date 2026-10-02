@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.11] - 2026-10-01
+
+### Changed
+- **Script cleanup** — archived 16 obsolete one-off deploy scripts and legacy marketing bots to `scripts/archive/` (nondestructive). Active deploy scripts consolidated under `scripts/deploy-hetzner.sh`, `scripts/ci-deploy-hetzner.sh`.
+- **Dashboard single-page consolidation** — nav-config now uses anchor links (`#mission-control`, `#memory-graphrag`, `#mcp-registry`, `#research-workflows`, `#integrations`, `#governance-billing`) into the unified dashboard home. All 57 subdirectory pages remain accessible as deep links.
+
+### Verified
+- Go kernel builds clean (`go build ./...`)
+- Dashboard standalone build on Windows
+- Both GitHub and GitLab remotes in sync at `main`
+
 ## [1.0.10] - 2026-10-01
 
 ### Fixed
