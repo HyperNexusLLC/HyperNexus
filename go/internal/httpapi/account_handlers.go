@@ -254,6 +254,7 @@ func (s *Server) ensureAccountDB() *sql.DB {
 		created_at TEXT
 	)`)
 	s.accountDB = db
+	s.ensureTeamDB()
 	return db
 }
 

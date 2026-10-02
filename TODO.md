@@ -41,8 +41,8 @@
 ### Integration
 
 - [ ] **Full MCP catalog indexing** — 26k+ tools from Glama.ai (catalog-sync works but limited)
-- [ ] **Cloud Landing Page** — Build cloud.hypernexus.site frontend
-- [ ] **Pricing Page** — Stripe checkout for both tiers
+- [x] **Cloud Landing Page** — `cloud/landing` with hero, features, stats, CTA, footer
+- [x] **Pricing Page** — `/pricing` with Stripe checkout integration (3 tiers: Basic $29, Pro $99, Commercial $499)
 
 ---
 
