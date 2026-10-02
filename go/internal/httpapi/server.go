@@ -537,10 +537,20 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 				canonical_id TEXT UNIQUE NOT NULL,
 				display_name TEXT NOT NULL,
 				description TEXT,
-				tags TEXT,
-				categories TEXT,
-				transport TEXT,
-				status TEXT,
+				author TEXT,
+				repository_url TEXT,
+				homepage_url TEXT,
+				icon_url TEXT,
+				transport TEXT NOT NULL DEFAULT 'unknown',
+				install_method TEXT NOT NULL DEFAULT 'unknown',
+				auth_model TEXT NOT NULL DEFAULT 'unknown',
+				status TEXT NOT NULL DEFAULT 'discovered',
+				confidence INTEGER NOT NULL DEFAULT 0,
+				tags TEXT NOT NULL DEFAULT '[]',
+				categories TEXT NOT NULL DEFAULT '[]',
+				stars INTEGER,
+				last_seen_at INTEGER,
+				last_verified_at INTEGER,
 				created_at TEXT,
 				updated_at TEXT
 			)
@@ -12663,7 +12673,7 @@ func (s *Server) localOAuthSessionByServer(serverUUID string) (any, error) {
 }
 
 func (s *Server) localCatalogGet(uuid string) (any, error) {
-	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	db, err := s.localCatalogDB()
 	if err != nil {
 		return nil, err
 	}
@@ -12934,7 +12944,7 @@ func (s *Server) localCatalogRuns(serverUUID string, limit int) ([]map[string]an
 }
 
 func (s *Server) localCatalogStats() (any, error) {
-	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	db, err := s.localCatalogDB()
 	if err != nil {
 		return nil, err
 	}
@@ -13012,6 +13022,20 @@ func (s *Server) localCatalogLinkedServers(publishedServerUUID string) ([]map[st
 	return servers, nil
 }
 
+func (s *Server) localCatalogDB() (*sql.DB, error) {
+	// Try hypernexus.db first (tests + backward compat), then catalog.db (Glama sync target)
+	hyperPath := s.localHyperNexusDBPath()
+	if _, err := os.Stat(hyperPath); err == nil {
+		if db, err := database.Open("sqlite", hyperPath); err == nil {
+			if _, testErr := db.Exec(`SELECT count(*) FROM published_mcp_servers LIMIT 1`); testErr == nil {
+				return db, nil
+			}
+			db.Close()
+		}
+	}
+	return database.Open("sqlite", filepath.Join(s.cfg.WorkspaceRoot, "catalog.db"))
+}
+
 func (s *Server) localCatalogList(limit, offset int, search, status, transport, installMethod string) (any, error) {
 	if limit <= 0 {
 		limit = 50
@@ -13020,7 +13044,7 @@ func (s *Server) localCatalogList(limit, offset int, search, status, transport, 
 		offset = 0
 	}
 
-	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	db, err := s.localCatalogDB()
 	if err != nil {
 		return nil, err
 	}
