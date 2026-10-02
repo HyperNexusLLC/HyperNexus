@@ -19,7 +19,7 @@
 
 - [x] **Wire HTTP fallbacks for 3 tRPC-only pages** — `mcp/search`, `mcp/inspector`, `mcp/ai-tools` all wired via `use-mcp-http.ts`
 - [x] **MCP server connections** — 56/56 connected via `POST /api/mcp/connect-all`; 4 alwaysOn auto-start at boot
-- [ ] **Session import errors** — 38 errors during auto-import (old/corrupt session files)
+- [x] **Session import errors** — 38→0 errors fixed (scanner buffer, extractAllStrings fallback, config exclusion, silent skip for empty transcripts)
 
 ### Build & Tests
 
@@ -33,9 +33,9 @@
 
 ### Product
 
-- [ ] **MCP Client Examples** — Python, TypeScript, Go examples
+- [x] **MCP Client Examples** — Python, TypeScript, Go examples in `examples/mcp-clients/`
 - [ ] **API Documentation** — OpenAPI/Swagger spec
-- [ ] **Getting Started Tutorial** — 5-minute quickstart
+- [x] **Getting Started Tutorial** — 5-minute quickstart in `docs/QUICKSTART.md`
 - [ ] **Video Demo** — 2-minute product demo
 
 ### Integration
