@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-10-02
 > **Current Version:** 1.0.11
-> **Status:** Core infrastructure complete, dashboard consolidated, production deployed
+> **Status:** Core infrastructure complete, dashboard consolidated, production deployed, all MCP servers connected
 
 ---
 
@@ -12,20 +12,20 @@
 
 - [ ] **Rotate remaining API keys** — 20+ credentials pending (see `docs/API_KEY_ROTATION_CHECKLIST.md`)
 - [ ] **Reddit password** — `Temppass0!` is CRITICAL (dictionary-crackable), rotate immediately
-- [ ] **Stripe webhook delivery** — payments process but subscriptions don't activate if webhooks don't reach server
+- [x] **Stripe webhook delivery** — handler wired at `/api/billing/stripe/webhook`, 11 STRIPE_* env vars on Hetzner, returns 400 on unsigned POST (expected)
 - [ ] **License file** — kernel runs in free mode (`hypernexus.lic` not found)
 
 ### Dashboard Completeness
 
-- [ ] **Wire HTTP fallbacks for 3 tRPC-only pages** — `mcp/search`, `mcp/inspector`, `mcp/ai-tools` still use pure tRPC
-- [ ] **MCP server connections** — only 1 of 60+ servers connected at startup
+- [x] **Wire HTTP fallbacks for 3 tRPC-only pages** — `mcp/search`, `mcp/inspector`, `mcp/ai-tools` all wired via `use-mcp-http.ts`
+- [x] **MCP server connections** — 56/56 connected via `POST /api/mcp/connect-all`; 4 alwaysOn auto-start at boot
 - [ ] **Session import errors** — 38 errors during auto-import (old/corrupt session files)
 
 ### Build & Tests
 
-- [ ] **Fix pre-existing test failures** — `TestToolResultSnapshots`, `TestVerifyLicense`, `TestResolveClientTargets`
-- [ ] **Deploy v1.0.11 to Hetzner** — production still on v1.0.5
-- [ ] **Sync package versions on Hetzner** — `pnpm install` on server for standalone build
+- [x] **Fix pre-existing test failures** — `TestToolResultSnapshots`, `TestVerifyLicense`, `TestResolveClientTargets` all fixed
+- [x] **Deploy v1.0.11 to Hetzner** — production running v1.0.11
+- [x] **Sync package versions on Hetzner** — node_modules present, dashboard returns 200
 
 ---
 
@@ -89,8 +89,14 @@
 
 ## ✅ Completed (2026-10)
 
-### v1.0.11 — Script Cleanup & Rebuild
+### v1.0.11 — MCP Auto-Start, Connect All, HTTP Fallbacks
 
+- [x] MCP alwaysOn auto-start (4 servers at kernel boot)
+- [x] MCP Connect All endpoint (`POST /api/mcp/connect-all` — 56/56 servers)
+- [x] `mcp-yfinance-server` config fix (uvx)
+- [x] ai-tools page HTTP fallbacks
+- [x] All Go tests pass (3 pre-existing failures fixed)
+- [x] Hetzner deploy v1.0.11
 - [x] Archive 16 obsolete scripts (nondestructive)
 - [x] Full rebuild verification (Go kernel + dashboard)
 - [x] Service restart with health checks

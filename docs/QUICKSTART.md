@@ -45,7 +45,7 @@ Open [http://localhost:7779/dashboard](http://localhost:7779/dashboard)
 
 ## Configure MCP Servers
 
-Edit `mcp.jsonc` in the project root:
+Edit `go/config/mcp_servers.json` (56 servers pre-configured):
 
 ```jsonc
 {
@@ -53,13 +53,20 @@ Edit `mcp.jsonc` in the project root:
     "my-server": {
       "command": "npx",
       "args": ["-y", "my-mcp-server"],
-      "env": {}
+      "env": {},
+      "enabled": true,
+      "alwaysOn": false
     }
   }
 }
 ```
 
-Restart the kernel to pick up changes.
+Servers with `"alwaysOn": true` auto-connect at kernel boot. To connect all enabled servers at once:
+
+```bash
+curl -X POST http://localhost:7778/api/mcp/connect-all
+# Returns: {"connected": 56, "failed": 0, "errors": {}}
+```
 
 ## Connect an AI Client
 
@@ -113,6 +120,12 @@ curl "http://localhost:7778/api/memory/search?query=my+search"
 
 # List MCP tools
 curl http://localhost:7778/api/mcp/tools
+
+# Connect all MCP servers
+curl -X POST http://localhost:7778/api/mcp/connect-all
+
+# MCP status (includes Aggregator connection count)
+curl http://localhost:7778/api/mcp/status
 
 # Write endpoint (requires API key)
 curl -X POST http://localhost:7778/api/config/upsert \

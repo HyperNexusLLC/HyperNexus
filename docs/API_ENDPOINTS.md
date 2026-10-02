@@ -1,4 +1,4 @@
-﻿# HyperNexus API Endpoints
+# HyperNexus API Endpoints
 
 
 ## Authentication
@@ -42,15 +42,28 @@ This document provides a comprehensive list of the HTTP API endpoints available 
 
 ## MCP (Model Context Protocol)
 - `POST /api/mcp/client-sync`: IDE configuration synchronization (Claude/Cursor/VSCode).
-- `GET /api/mcp/status`: MCP runtime status and pool state.
+- `GET /api/mcp/status`: MCP runtime status, pool state, and Aggregator connection count.
 - `GET /api/mcp/servers`: Aggregated list of all MCP servers.
 - `GET /api/mcp/tools`: Aggregated list of all MCP tools.
 - `POST /api/mcp/tools/search`: Search tools with optional profile hinting.
 - `POST /api/mcp/tools/call`: Execute an MCP tool.
+- `POST /api/mcp/tools/schema`: Get tool schema by name.
 - `POST /api/mcp/tools/predict-conversational`: Predict relevant tools based on a conversational prompt context.
+- `POST /api/mcp/connect-all`: Connect all enabled MCP servers (not just alwaysOn). Returns `{connected, failed, errors}`.
 - `POST /api/mcp/sync`: Trigger MCP server synchronization.
 - `POST /api/mcp/decision/search`: Search tools using the MCP Decision System.
 - `POST /api/mcp/decision/call`: Call a tool via the Decision System.
+- `GET /api/mcp/preferences`: Read MCP tool preferences.
+- `POST /api/mcp/preferences`: Update MCP tool preferences.
+- `GET /api/mcp/tool-selection-telemetry`: Read tool selection telemetry.
+- `POST /api/mcp/tool-selection-telemetry/clear`: Clear telemetry.
+- `GET /api/mcp/working-set`: Read active working set.
+- `GET /api/mcp/working-set/evictions`: Read eviction history.
+- `POST /api/mcp/working-set/evictions/clear`: Clear eviction history.
+- `GET /api/mcp/config/jsonc`: Read MCP config as JSONC.
+- `POST /api/mcp/config/jsonc`: Save MCP config from JSONC.
+- `POST /api/mcp/native/load`: Load a native MCP module.
+- `POST /api/mcp/native/unload`: Unload a native MCP module.
 
 ## Skills
 - `GET /api/skills/list`: List all registered skills from the A2A skill registry.

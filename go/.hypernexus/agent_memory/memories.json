@@ -1,0 +1,25 @@
+{
+  "memories": [
+    {
+      "id": "7a930d1225060478",
+      "content": "v1.0.11 health check fact",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": [
+          "health",
+          "v1011"
+        ],
+        "title": "Health check"
+      },
+      "createdAt": "2026-10-02T14:42:32.3788406Z",
+      "accessedAt": "2026-10-02T14:42:32.3788406Z",
+      "accessCount": 0,
+      "ttl": null
+    }
+  ],
+  "savedAt": "2026-10-02T14:42:32.380911Z",
+  "version": 1
+}
