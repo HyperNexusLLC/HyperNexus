@@ -918,6 +918,14 @@ func (s *Server) PreWarmCaches() {
 		} else {
 			fmt.Printf("[SessionImport] Initial auto-import: discovered=%d, imported=%d, skipped=%d, errors=%d\n",
 				summary.DiscoveredCount, summary.ImportedCount, summary.SkippedCount, len(summary.Errors))
+			for i, e := range summary.Errors {
+				if i < 10 {
+					fmt.Printf("[SessionImport]   error[%d]: %s\n", i, e)
+				}
+			}
+			if len(summary.Errors) > 10 {
+				fmt.Printf("[SessionImport]   ... and %d more errors\n", len(summary.Errors)-10)
+			}
 		}
 
 		ticker := time.NewTicker(2 * time.Hour)

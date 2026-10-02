@@ -64,6 +64,7 @@ func ValidateCandidate(candidate Candidate) ValidationResult {
 
 func validateJSONL(content []byte) error {
 	scanner := bufio.NewScanner(bytes.NewReader(content))
+	scanner.Buffer(make([]byte, 0, 1024*1024), 1024*1024)
 	lineNumber := 0
 	validLineCount := 0
 	for scanner.Scan() {

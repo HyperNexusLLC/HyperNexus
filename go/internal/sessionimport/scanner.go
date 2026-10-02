@@ -341,7 +341,21 @@ func isImportableFile(path string, fileNameHints []string) bool {
 		return false
 	}
 
-	lowerPath := strings.ToLower(path)
+	lowerPath := strings.ToLower(filepath.ToSlash(path))
+
+	// Exclude config/system files that match hints but aren't session transcripts
+	excludePatterns := []string{
+		"mcp/servers.json", "mcp/servers.jsonc", "mcp.json", "mcp.jsonc",
+		"package.json", "package-lock.json", "tsconfig.json", "composer.json",
+		"settings.json", "preferences.json", "config.json", "manifest.json",
+		"node_modules", ".git/", ".next", ".turbo", "lancedb/",
+	}
+	for _, pat := range excludePatterns {
+		if strings.Contains(lowerPath, pat) {
+			return false
+		}
+	}
+
 	defaultHints := []string{"session", "sessions", "chat", "conversation", "transcript", "history", "prompt", "messages", "handoff"}
 	for _, hint := range append(defaultHints, fileNameHints...) {
 		if strings.Contains(lowerPath, strings.ToLower(hint)) {

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,10 @@ import (
 	"strings"
 	"time"
 )
+
+// errEmptyTranscript signals a session artifact with no extractable content.
+// These are silently skipped rather than counted as errors.
+var errEmptyTranscript = errors.New("empty transcript after parsing")
 
 type IngestSummary struct {
 	DiscoveredCount    int      `json:"discoveredCount"`
@@ -48,7 +53,9 @@ func IngestDiscoveredSessions(ctx context.Context, workspaceRoot, homeDir string
 		recordInputs, err := buildImportedSessionRecordInputs(candidate, validation, ctx)
 		if err != nil {
 			summary.SkippedCount++
-			summary.Errors = append(summary.Errors, fmt.Sprintf("skip %s: %v", candidate.SourcePath, err))
+			if !errors.Is(err, errEmptyTranscript) {
+				summary.Errors = append(summary.Errors, fmt.Sprintf("skip %s: %v", candidate.SourcePath, err))
+			}
 			continue
 		}
 		if len(recordInputs) == 0 {
@@ -117,7 +124,8 @@ func buildImportedSessionRecordInput(candidate Candidate, validation ValidationR
 	}
 	transcript := strings.TrimSpace(parseTranscriptContent(candidate.SourcePath, content))
 	if transcript == "" {
-		return ImportedSessionRecordInput{}, fmt.Errorf("empty transcript after parsing")
+		// Genuinely empty session artifacts (e.g. {"content":""}) — skip silently
+		return ImportedSessionRecordInput{}, errEmptyTranscript
 	}
 	transcriptHash := hashTranscript(transcript)
 	lines := normalizedLines(transcript)
@@ -195,6 +203,7 @@ func parseTranscriptContent(filePath string, content []byte) string {
 	case ".jsonl":
 		lines := []string{}
 		scanner := bufio.NewScanner(strings.NewReader(text))
+		scanner.Buffer(make([]byte, 0, 1024*1024), 1024*1024)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			if line == "" {
@@ -202,7 +211,11 @@ func parseTranscriptContent(filePath string, content []byte) string {
 			}
 			var parsed any
 			if err := json.Unmarshal([]byte(line), &parsed); err == nil {
-				lines = append(lines, extractJSONTextFragments(parsed)...)
+				fragments := extractJSONTextFragments(parsed)
+				if len(fragments) == 0 {
+					fragments = extractAllStrings(parsed)
+				}
+				lines = append(lines, fragments...)
 			} else {
 				lines = append(lines, line)
 			}
@@ -232,11 +245,37 @@ func extractJSONTextFragments(value any) []string {
 		return result
 	case map[string]any:
 		result := []string{}
-		keys := []string{"content", "text", "message", "prompt", "response", "request", "input", "output", "result", "body", "summary", "title", "parts", "messages", "conversation", "transcript", "entries", "events", "turns", "items"}
+		keys := []string{"content", "text", "message", "prompt", "response", "request", "input", "output", "result", "body", "summary", "title", "parts", "messages", "conversation", "transcript", "entries", "events", "turns", "items", "display", "pastedContents", "role", "thinking"}
 		for _, key := range keys {
 			if nested, ok := typed[key]; ok {
 				result = append(result, extractJSONTextFragments(nested)...)
 			}
+		}
+		return result
+	default:
+		return nil
+	}
+}
+
+// extractAllStrings recursively extracts all string values from any JSON structure.
+// Used as a fallback when extractJSONTextFragments finds nothing (e.g. unusual schemas).
+func extractAllStrings(value any) []string {
+	switch typed := value.(type) {
+	case string:
+		if len(typed) > 2 {
+			return []string{typed}
+		}
+		return nil
+	case []any:
+		result := []string{}
+		for _, item := range typed {
+			result = append(result, extractAllStrings(item)...)
+		}
+		return result
+	case map[string]any:
+		result := []string{}
+		for _, v := range typed {
+			result = append(result, extractAllStrings(v)...)
 		}
 		return result
 	default:
