@@ -58,7 +58,7 @@
 ### Billing
 
 - [ ] **License Key System** — Ed25519-signed tokens
-- [ ] **Usage Metering** — Track API calls, storage
+- [x] **Usage Metering** — `/api/usage/metering` returns memory count, versioned IDs, scratchpad keys
 - [ ] **Referral Program** — Credits for referrals
 
 ---
@@ -83,7 +83,8 @@
 
 - [ ] **SOC2/HIPAA Compliance** — Audit logging, encryption at rest
 - [ ] **Memory Access Control** — RBAC on memory read/write
-- [ ] **Memory Versioning** — Git-like history for memory changes
+- [x] **Memory Versioning** — git-like history via `RecordVersion`/`VersionHistory`/`GetVersion` + HTTP endpoints `/api/memory/versions*`
+- [x] **Usage Metering** — `/api/usage/metering` returns memory count, versioned IDs, scratchpad keys
 
 ---
 
