@@ -57,7 +57,7 @@
 
 ### Billing
 
-- [ ] **License Key System** — Ed25519-signed tokens
+- [x] **License Key System** — Ed25519-signed tokens via `go/cmd/licensegen` (keygen + signed `hypernexus.lic`)
 - [x] **Usage Metering** — `/api/usage/metering` returns memory count, versioned IDs, scratchpad keys
 - [ ] **Referral Program** — Credits for referrals
 
@@ -77,7 +77,7 @@
 ### Differentiation (1 month)
 
 - [ ] **Cross-Agent Memory Sharing** — Shared L2 vault with access control
-- [ ] **Mental Model Extraction** — Background reflection distilling patterns from L2
+- [x] **Mental Model Extraction** — `MentalModelReflection` in `vector_sqlite.go` (LLM synthesis via AutoRoute/Ollama, runs hourly in sleep cycle)
 
 ### Enterprise (2-3 months)
 
