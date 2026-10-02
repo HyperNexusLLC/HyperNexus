@@ -76,7 +76,7 @@
 
 ### Differentiation (1 month)
 
-- [ ] **Cross-Agent Memory Sharing** — Shared L2 vault with access control
+- [x] **Cross-Agent Memory Sharing** — real Memorix L2 vault with ACL/TTL in `mcpimpl/cross_agent_memory.go` (replaced stubs)
 - [x] **Mental Model Extraction** — `MentalModelReflection` in `vector_sqlite.go` (LLM synthesis via AutoRoute/Ollama, runs hourly in sleep cycle)
 
 ### Enterprise (2-3 months)
