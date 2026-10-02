@@ -255,6 +255,7 @@ func (s *Server) ensureAccountDB() *sql.DB {
 	)`)
 	s.accountDB = db
 	s.ensureTeamDB()
+	s.ensureSSODB()
 	return db
 }
 
