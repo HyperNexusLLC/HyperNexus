@@ -7,16 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.11] - 2026-10-01
+## [1.0.11] - 2026-10-02
+
+### Added
+- **MCP auto-start** — 4 `alwaysOn` servers (filesystem, hypernexus-supervisor, desktop-commander, ripgrep) connect at kernel boot via `autoStartAlwaysOnMCPServers`
+- **MCP Connect All** — `POST /api/mcp/connect-all` connects all 56 enabled servers (56/56 verified)
+- **`Aggregator.ConnectedCount()`** — live stdio connection count in `/api/mcp/status`
+- **HTTP fallback hooks** — `use-mcp-http.ts` with 7 read hooks + 8 mutation helpers (tRPC primary + kernel HTTP fallback)
+- **MCP client examples** — Python, TypeScript, Go in `examples/mcp-clients/`
+
+### Fixed
+- **`mcp-yfinance-server`** — config updated to use `uvx` (binary not on PATH)
+- **All Go tests pass** — 3 pre-existing failures fixed (`TestToolResultSnapshots`, `TestResolveClientTargets`, `TestVerifyLicense`)
+- **mcpimpl vet errors** — 7 files with `string(int)` conversions → `strconv.Itoa`
+- **ai-tools page** — wired to HTTP fallbacks (was pure tRPC)
 
 ### Changed
 - **Script cleanup** — archived 16 obsolete one-off deploy scripts and legacy marketing bots to `scripts/archive/` (nondestructive). Active deploy scripts consolidated under `scripts/deploy-hetzner.sh`, `scripts/ci-deploy-hetzner.sh`.
 - **Dashboard single-page consolidation** — nav-config now uses anchor links (`#mission-control`, `#memory-graphrag`, `#mcp-registry`, `#research-workflows`, `#integrations`, `#governance-billing`) into the unified dashboard home. All 57 subdirectory pages remain accessible as deep links.
+- **API docs** — `API_ENDPOINTS.md` MCP section expanded with 15 new endpoints; `QUICKSTART.md` updated with `mcp_servers.json` and connect-all usage
 
 ### Verified
 - Go kernel builds clean (`go build ./...`)
 - Dashboard standalone build on Windows
 - Both GitHub and GitLab remotes in sync at `main`
+- Hetzner production running v1.0.11
+- 56/56 MCP servers connect via `POST /api/mcp/connect-all`
 
 ## [1.0.10] - 2026-10-01
 
