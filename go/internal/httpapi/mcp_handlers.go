@@ -257,76 +257,76 @@ func (s *Server) handleMCPSearchTools(w http.ResponseWriter, r *http.Request) {
 	if profile := strings.TrimSpace(r.URL.Query().Get("profile")); profile != "" {
 		payload["profile"] = profile
 	}
-	var result any
-	upstreamBase, err := s.callUpstreamJSON(r.Context(), "mcp.searchTools", payload, &result)
-	if err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{
-			"success": true,
-			"data":    result,
-			"bridge": map[string]any{
-				"upstreamBase": upstreamBase,
-				"procedure":    "mcp.searchTools",
-			},
-		})
-		return
+	// Merge-on-read: always gather local results and merge with upstream (if available).
+	// Upstream can return success-with-empty; local fallback must still contribute.
+	var upstreamResults []map[string]any
+	upstreamBase, upstreamErr := s.callUpstreamJSON(r.Context(), "mcp.searchTools", payload, &upstreamResults)
+	if upstreamErr == nil {
+		upstreamResults = toSlice(upstreamResults)
 	}
 
+	// Always collect local inventory + accessory tool results
+	var localResults []map[string]any
 	view, invErr := s.localMCPInventoryView()
 	if invErr == nil && view != nil && len(view.Inventory.Tools) > 0 {
-		bridge := map[string]any{
-			"fallback":  "go-local-mcp",
-			"procedure": "mcp.searchTools",
-			"reason":    "upstream unavailable; using local MCP inventory cache",
-		}
-		for key, value := range inventoryBridgeMeta(view) {
-			bridge[key] = value
-		}
-		results := fallbackSearchMCPInventoryTools(query, view, 20)
-		// Also search built-in accessory tools (bash, read, write, search, etc.)
-		accessoryResults := s.searchAccessoryTools(query, 20-len(results))
-		results = append(results, accessoryResults...)
-		writeJSON(w, http.StatusOK, map[string]any{
-			"success": true,
-			"data":    results,
-			"bridge":  bridge,
-		})
-		return
+		localResults = fallbackSearchMCPInventoryTools(query, view, 20)
 	}
+	// Also search built-in accessory tools (bash, read, write, search, etc.)
+	accessoryResults := s.searchAccessoryTools(query, 20)
+	localResults = append(localResults, accessoryResults...)
 
-	_, _, localErr := s.localMCPSummary(r.Context())
-	if localErr != nil {
-		if invErr != nil {
-			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": localErr.Error()})
-			return
-		}
-		bridge := map[string]any{
-			"fallback": "go-local-mcp",
+	// Merge upstream + local, dedupe by name/id
+	merged := mergeToolResults(upstreamResults, localResults, 20)
 
-			"procedure": "mcp.searchTools",
-			"reason":    "upstream unavailable; local MCP inventory cache is empty",
+	bridge := map[string]any{
+		"procedure": "mcp.searchTools",
+	}
+	if upstreamErr == nil && len(upstreamResults) > 0 {
+		bridge["upstreamBase"] = upstreamBase
+		bridge["upstreamCount"] = len(upstreamResults)
+	}
+	if len(upstreamResults) == 0 {
+		bridge["fallback"] = "go-local-mcp"
+		if invErr == nil && view != nil && len(view.Inventory.Tools) > 0 {
+			bridge["reason"] = "upstream unavailable; using local MCP inventory cache"
+		} else {
+			bridge["reason"] = "upstream unavailable; searching built-in accessory tools"
 		}
+	}
+	if invErr == nil && view != nil {
 		for key, value := range inventoryBridgeMeta(view) {
 			bridge[key] = value
 		}
-		// Search built-in accessory tools even when inventory is empty
-		results := s.searchAccessoryTools(query, 20)
-		writeJSON(w, http.StatusOK, map[string]any{
-			"success": true,
-			"data":    results,
-			"bridge":  bridge,
-		})
-		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
-		"data":    s.searchAccessoryTools(query, 20),
-		"bridge": map[string]any{
-			"fallback":  "go-local-mcp",
-			"procedure": "mcp.searchTools",
-			"reason":    "upstream unavailable; searching built-in accessory tools",
-		},
+		"data":    merged,
+		"bridge":  bridge,
 	})
+}
+
+// mergeToolResults combines upstream and local tool results, dedupes by name (or id), caps at limit.
+func mergeToolResults(upstream, local []map[string]any, limit int) []map[string]any {
+	seen := map[string]struct{}{}
+	merged := make([]map[string]any, 0, len(upstream)+len(local))
+	for _, item := range append(append([]map[string]any{}, upstream...), local...) {
+		name := stringValue(item["name"])
+		if name == "" {
+			name = stringValue(item["id"])
+		}
+		if name != "" {
+			if _, dup := seen[name]; dup {
+				continue
+			}
+			seen[name] = struct{}{}
+		}
+		merged = append(merged, item)
+	}
+	if limit > 0 && len(merged) > limit {
+		merged = merged[:limit]
+	}
+	return merged
 }
 
 func (s *Server) handleMCPRuntimeServers(w http.ResponseWriter, r *http.Request) {
