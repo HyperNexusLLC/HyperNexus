@@ -50,8 +50,8 @@
 
 ### Cloud Features
 
-- [ ] **User Dashboard** — Account management, usage stats
-- [ ] **Team Accounts** — Shared memory pools
+- [x] **User Dashboard** — Account management (`/dashboard/account`), usage stats, billing summary
+- [x] **Team Accounts** — Shared memory pools + member mgmt via `/api/team/*` (create/invite/list/members/share/list)
 - [ ] **SSO Integration** — SAML/OIDC for enterprise
 - [ ] **Custom Domains** — white-label support
 
@@ -59,7 +59,7 @@
 
 - [x] **License Key System** — Ed25519-signed tokens via `go/cmd/licensegen` (keygen + signed `hypernexus.lic`)
 - [x] **Usage Metering** — `/api/usage/metering` returns memory count, versioned IDs, scratchpad keys
-- [ ] **Referral Program** — Credits for referrals
+- [x] **Referral Program** — Credits for referrals via `/api/referral/*` (generate/apply/status)
 
 ---
 
