@@ -82,7 +82,7 @@
 ### Enterprise (2-3 months)
 
 - [ ] **SOC2/HIPAA Compliance** — Audit logging, encryption at rest
-- [ ] **Memory Access Control** — RBAC on memory read/write
+- [x] **Memory Access Control** — RBAC via `MemoryAccessControl` (admin/writer/reader/guest) + `RoleForResource`/`SetUserRole`/`ListRoles` in `commercial/commercial.go`
 - [x] **Memory Versioning** — git-like history via `RecordVersion`/`VersionHistory`/`GetVersion` + HTTP endpoints `/api/memory/versions*`
 - [x] **Usage Metering** — `/api/usage/metering` returns memory count, versioned IDs, scratchpad keys
 

@@ -44,29 +44,7 @@ func HandleVestigeStore(ctx context.Context, args map[string]interface{}) (ToolR
 // 27. memorix  (498 ★) — Cross-agent memory layer
 // ═══════════════════════════════════════════════════════════════════
 
-// HandleMemorixRead reads from cross-agent memory.
-func HandleMemorixRead(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
-	key, _ := getString(args, "key")
-	agent, _ := getString(args, "agent")
-	if key == "" {
-		return err("key is required")
-	}
-	agt := agent
-	if agt == "" {
-		agt = "current"
-	}
-	return ok(fmt.Sprintf("📖 Memorix [agent=%s] key=\"%s\":\nValue: Persistent memory content shared across agents\nLast written: %s by agent-%d", agt, key, time.Now().Add(-1*time.Hour).Format("15:04:05"), 7))
-}
-
-// HandleMemorixWrite writes to cross-agent memory.
-func HandleMemorixWrite(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
-	key, _ := getString(args, "key")
-	value, _ := getString(args, "value")
-	if key == "" || value == "" {
-		return err("key and value are required")
-	}
-	return ok(fmt.Sprintf("📝 Memorix written: %s = %s\nShared across all connected agents\nTTL: 7 days", key, truncateStr(value, 80)))
-}
+// HandleMemorixRead/HandleMemorixWrite moved to cross_agent_memory.go (real shared L2 vault)
 
 // ═══════════════════════════════════════════════════════════════════
 // 28. storybloq  (588 ★) — Cross-session context for Claude Code
