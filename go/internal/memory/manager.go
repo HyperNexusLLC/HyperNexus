@@ -154,6 +154,14 @@ func (mm *MemoryManager) Store(memory Memory) (string, error) {
 		return existing.ID, nil
 	}
 
+	// Fact conflict resolution: if a new fact contradicts an existing one
+	// (same subject, different value), supersede the old fact.
+	if memory.Kind == KindFact || memory.Kind == KindPreference {
+		if superseded := mm.resolveConflictLocked(memory); superseded != "" {
+			memory.Metadata["supersedes"] = superseded
+		}
+	}
+
 	mm.memories[memory.ID] = &memory
 
 	// Update indices
@@ -167,6 +175,55 @@ func (mm *MemoryManager) Store(memory Memory) (string, error) {
 	}
 
 	return memory.ID, nil
+}
+
+// resolveConflictLocked finds an existing fact/preference with the same subject
+// but different value and marks it superseded. Caller must hold mm.mu.
+// Returns the ID of the superseded memory, or "" if no conflict found.
+func (mm *MemoryManager) resolveConflictLocked(newMem Memory) string {
+	newSubject := extractSubject(newMem.Content)
+	if newSubject == "" {
+		return ""
+	}
+
+	for id, existing := range mm.memories {
+		if id == newMem.ID {
+			continue
+		}
+		if existing.Kind != newMem.Kind {
+			continue
+		}
+		if existing.Project != newMem.Project {
+			continue
+		}
+		// Already superseded — skip
+		if _, ok := existing.Metadata["superseded_by"]; ok {
+			continue
+		}
+		existingSubject := extractSubject(existing.Content)
+		if existingSubject == "" || existingSubject != newSubject {
+			continue
+		}
+		// Same subject, different content → conflict
+		if existing.Content != newMem.Content {
+			existing.Metadata["superseded_by"] = newMem.ID
+			existing.Metadata["superseded_at"] = time.Now().UTC().Format(time.RFC3339)
+			return id
+		}
+	}
+	return ""
+}
+
+// extractSubject pulls the subject/key from a fact statement.
+// Handles patterns like "X is Y", "X = Y", "X: Y", "X was Y".
+func extractSubject(content string) string {
+	lower := strings.ToLower(strings.TrimSpace(content))
+	for _, sep := range []string{" is ", " was ", " = ", ": ", " are ", " were "} {
+		if idx := strings.Index(lower, sep); idx > 0 && idx < 120 {
+			return strings.TrimSpace(content[:idx])
+		}
+	}
+	return ""
 }
 
 // Retrieve finds memories matching the query.

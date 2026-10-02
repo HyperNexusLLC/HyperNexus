@@ -34,7 +34,7 @@
 ### Product
 
 - [x] **MCP Client Examples** — Python, TypeScript, Go examples in `examples/mcp-clients/`
-- [ ] **API Documentation** — OpenAPI/Swagger spec
+- [x] **API Documentation** — OpenAPI 3.0 spec generated from kernel API index (554 routes) at `docs/openapi.json`
 - [x] **Getting Started Tutorial** — 5-minute quickstart in `docs/QUICKSTART.md`
 - [ ] **Video Demo** — 2-minute product demo
 
@@ -70,9 +70,9 @@
 
 ### Quick Wins (1-2 weeks)
 
-- [ ] **Temporal Edges in Graph** — `valid_from`/`valid_to` on `graph_edges`
+- [x] **Temporal Edges in Graph** — `valid_from`/`valid_to` already in `go/internal/graph/schema.go` (DATETIME columns on graph_edges)
 - [ ] **Fact Conflict Resolution** — Smart ADD/UPDATE/DELETE for contradicting memories
-- [ ] **Memory Export/Import** — Portable JSON/JSONL bundles
+- [x] **Memory Export/Import** — `/api/memory/export`, `/api/memory/import`, `/api/memory/l2/export`, `/api/memory/l2/import` all working
 
 ### Differentiation (1 month)
 
