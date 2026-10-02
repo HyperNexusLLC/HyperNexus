@@ -64,6 +64,18 @@ type Memory struct {
 	AccessCount    int               `json:"accessCount"`
 	RelevanceScore float64           `json:"relevanceScore"`
 	Embedded       bool              `json:"embedded"` // True if vector embedding exists
+	Version        int               `json:"version"`
+	Versions       []MemoryVersion   `json:"versions,omitempty"`
+}
+
+// MemoryVersion is a single historical snapshot of a memory's content.
+type MemoryVersion struct {
+	Version   int       `json:"version"`
+	Content   string    `json:"content"`
+	Summary   string    `json:"summary,omitempty"`
+	Tags      []string  `json:"tags,omitempty"`
+	ChangedAt time.Time `json:"changedAt"`
+	Reason    string    `json:"reason,omitempty"` // "conflict-supersede", "manual-update", "import"
 }
 
 type MemoryQuery struct {
@@ -145,9 +157,27 @@ func (mm *MemoryManager) Store(memory Memory) (string, error) {
 	mm.mu.Lock()
 	defer mm.mu.Unlock()
 
-	// Check for duplicate
+	// Check for duplicate — if content changed, create a version snapshot
 	if existing, ok := mm.memories[memory.ID]; ok {
-		// Update existing
+		if existing.Content != memory.Content {
+			// Snapshot old version before updating
+			existing.Versions = append(existing.Versions, MemoryVersion{
+				Version:   existing.Version,
+				Content:   existing.Content,
+				Summary:   existing.Summary,
+				Tags:      existing.Tags,
+				ChangedAt: now,
+				Reason:    "manual-update",
+			})
+			existing.Content = memory.Content
+			if memory.Summary != "" {
+				existing.Summary = memory.Summary
+			}
+			if len(memory.Tags) > 0 {
+				existing.Tags = memory.Tags
+			}
+			existing.Version++
+		}
 		existing.AccessedAt = now
 		existing.AccessCount++
 		existing.RelevanceScore = max(existing.RelevanceScore, memory.RelevanceScore)
@@ -158,10 +188,14 @@ func (mm *MemoryManager) Store(memory Memory) (string, error) {
 	// (same subject, different value), supersede the old fact.
 	if memory.Kind == KindFact || memory.Kind == KindPreference {
 		if superseded := mm.resolveConflictLocked(memory); superseded != "" {
+			if memory.Metadata == nil {
+				memory.Metadata = map[string]string{}
+			}
 			memory.Metadata["supersedes"] = superseded
 		}
 	}
 
+	memory.Version = 1
 	mm.memories[memory.ID] = &memory
 
 	// Update indices
@@ -224,6 +258,68 @@ func extractSubject(content string) string {
 		}
 	}
 	return ""
+}
+
+// Update modifies an existing memory's content and records a version snapshot.
+func (mm *MemoryManager) Update(id, content, summary string, tags []string, reason string) error {
+	mm.mu.Lock()
+	defer mm.mu.Unlock()
+
+	existing, ok := mm.memories[id]
+	if !ok {
+		return fmt.Errorf("memory %s not found", id)
+	}
+
+	now := time.Now().UTC()
+	existing.Versions = append(existing.Versions, MemoryVersion{
+		Version:   existing.Version,
+		Content:   existing.Content,
+		Summary:   existing.Summary,
+		Tags:      existing.Tags,
+		ChangedAt: now,
+		Reason:    reason,
+	})
+	if content != "" {
+		existing.Content = content
+	}
+	if summary != "" {
+		existing.Summary = summary
+	}
+	if len(tags) > 0 {
+		existing.Tags = tags
+	}
+	existing.Version++
+	existing.AccessedAt = now
+	return nil
+}
+
+// VersionHistory returns the version snapshots for a memory (oldest first).
+func (mm *MemoryManager) VersionHistory(id string) ([]MemoryVersion, error) {
+	mm.mu.RLock()
+	defer mm.mu.RUnlock()
+
+	existing, ok := mm.memories[id]
+	if !ok {
+		return nil, fmt.Errorf("memory %s not found", id)
+	}
+	return existing.Versions, nil
+}
+
+// GetVersion returns a specific historical version of a memory.
+func (mm *MemoryManager) GetVersion(id string, version int) (*MemoryVersion, error) {
+	mm.mu.RLock()
+	defer mm.mu.RUnlock()
+
+	existing, ok := mm.memories[id]
+	if !ok {
+		return nil, fmt.Errorf("memory %s not found", id)
+	}
+	for i := range existing.Versions {
+		if existing.Versions[i].Version == version {
+			return &existing.Versions[i], nil
+		}
+	}
+	return nil, fmt.Errorf("version %d not found for memory %s", version, id)
 }
 
 // Retrieve finds memories matching the query.

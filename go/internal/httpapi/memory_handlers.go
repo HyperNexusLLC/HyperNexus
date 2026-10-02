@@ -240,4 +240,65 @@ func (s *Server) handleMemorySetScratchpad(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, map[string]any{"success": true})
 }
 
+// handleMemoryVersionHistory — GET /api/memory/versions?id=<memoryID>
+// Returns the version snapshots for a memory (git-like history).
+func (s *Server) handleMemoryVersionHistory(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "id is required"})
+		return
+	}
+	versions := s.memoryManager.VersionHistory(id)
+	writeJSON(w, http.StatusOK, map[string]any{"success": true, "id": id, "versions": versions, "count": len(versions)})
+}
+
+// handleMemoryVersionGet — GET /api/memory/versions/get?id=<memoryID>&version=<n>
+// Returns a specific historical version of a memory.
+func (s *Server) handleMemoryVersionGet(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	versionStr := r.URL.Query().Get("version")
+	if id == "" || versionStr == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "id and version are required"})
+		return
+	}
+	version, err := strconv.Atoi(versionStr)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "version must be an integer"})
+		return
+	}
+	v, ok := s.memoryManager.GetVersion(id, version)
+	if !ok {
+		writeJSON(w, http.StatusNotFound, map[string]any{"success": false, "error": "version not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"success": true, "version": v})
+}
+
+// handleMemoryVersionList — GET /api/memory/versions/list
+// Returns all memory IDs that have version history.
+func (s *Server) handleMemoryVersionList(w http.ResponseWriter, r *http.Request) {
+	ids := s.memoryManager.VersionedMemoryIDs()
+	writeJSON(w, http.StatusOK, map[string]any{"success": true, "ids": ids, "count": len(ids)})
+}
+
+// handleUsageMetering — GET /api/usage/metering
+// Returns API call counts and storage usage.
+func (s *Server) handleUsageMetering(w http.ResponseWriter, r *http.Request) {
+	stats := map[string]any{
+		"memoryCount":   0,
+		"versionedIds":  0,
+		"scratchpadKeys": 0,
+		"uptimeSec":     0,
+	}
+	if s.memoryManager != nil {
+		all, _ := s.memoryManager.GetAll()
+		stats["memoryCount"] = len(all)
+		stats["versionedIds"] = len(s.memoryManager.VersionedMemoryIDs())
+		if sp, err := s.memoryManager.GetScratchpad(r.Context()); err == nil {
+			stats["scratchpadKeys"] = len(sp)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"success": true, "usage": stats})
+}
+
 

@@ -4,21 +4,33 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"sort"
+	"sync"
 	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
 )
 
+// MemoryVersion is a single historical snapshot of a memory's content.
+type MemoryVersion struct {
+	Version   int       `json:"version"`
+	Content   string    `json:"content"`
+	ChangedAt time.Time `json:"changedAt"`
+	Reason    string    `json:"reason,omitempty"` // "manual-update", "conflict-supersede", "import"
+}
+
 type Manager struct {
-	path string
-	vs   *VectorStore
+	path     string
+	vs       *VectorStore
+	versions map[string][]MemoryVersion // memory ID → version history (oldest first)
+	verMu    sync.RWMutex
 }
 
 func NewManager(path string) *Manager {
 	// The path here is for the JSON file, but we'll use a SQLite DB next to it
 	dbPath := filepath.Join(filepath.Dir(path), "memory.db")
 	vs, _ := NewVectorStore(dbPath)
-	m := &Manager{path: path, vs: vs}
+	m := &Manager{path: path, vs: vs, versions: map[string][]MemoryVersion{}}
 	m.startSleepCycleEngine()
 	return m
 }
@@ -162,4 +174,52 @@ func (m *Manager) AddMemory(mem string) {
 // SystemNowUnixNano is a helper to get unique IDs
 func SystemNowUnixNano() int64 {
 	return controlplane.Now().UnixNano()
+}
+
+// RecordVersion stores a version snapshot for a memory before it is updated.
+func (m *Manager) RecordVersion(id, content, reason string) {
+	m.verMu.Lock()
+	defer m.verMu.Unlock()
+	ver := len(m.versions[id]) + 1
+	m.versions[id] = append(m.versions[id], MemoryVersion{
+		Version:   ver,
+		Content:   content,
+		ChangedAt: time.Now().UTC(),
+		Reason:    reason,
+	})
+}
+
+// VersionHistory returns the version snapshots for a memory (oldest first).
+func (m *Manager) VersionHistory(id string) []MemoryVersion {
+	m.verMu.RLock()
+	defer m.verMu.RUnlock()
+	h := m.versions[id]
+	out := make([]MemoryVersion, len(h))
+	copy(out, h)
+	sort.Slice(out, func(i, j int) bool { return out[i].Version < out[j].Version })
+	return out
+}
+
+// GetVersion returns a specific historical version of a memory.
+func (m *Manager) GetVersion(id string, version int) (*MemoryVersion, bool) {
+	m.verMu.RLock()
+	defer m.verMu.RUnlock()
+	for i := range m.versions[id] {
+		if m.versions[id][i].Version == version {
+			return &m.versions[id][i], true
+		}
+	}
+	return nil, false
+}
+
+// VersionedMemoryIDs returns IDs that have version history.
+func (m *Manager) VersionedMemoryIDs() []string {
+	m.verMu.RLock()
+	defer m.verMu.RUnlock()
+	ids := make([]string, 0, len(m.versions))
+	for id := range m.versions {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
 }

@@ -71,7 +71,7 @@
 ### Quick Wins (1-2 weeks)
 
 - [x] **Temporal Edges in Graph** — `valid_from`/`valid_to` already in `go/internal/graph/schema.go` (DATETIME columns on graph_edges)
-- [ ] **Fact Conflict Resolution** — Smart ADD/UPDATE/DELETE for contradicting memories
+- [x] **Fact Conflict Resolution** — `resolveConflictLocked` + `extractSubject` in `go/internal/memory/manager.go` — supersede contradicting facts/preferences on Store
 - [x] **Memory Export/Import** — `/api/memory/export`, `/api/memory/import`, `/api/memory/l2/export`, `/api/memory/l2/import` all working
 
 ### Differentiation (1 month)
