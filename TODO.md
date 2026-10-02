@@ -52,8 +52,8 @@
 
 - [x] **User Dashboard** — Account management (`/dashboard/account`), usage stats, billing summary
 - [x] **Team Accounts** — Shared memory pools + member mgmt via `/api/team/*` (create/invite/list/members/share/list)
-- [ ] **SSO Integration** — SAML/OIDC for enterprise
-- [ ] **Custom Domains** — white-label support
+- [x] **SSO Integration** — SAML/OIDC/Okta/Azure AD/Google via `/api/sso/*` (config/status)
+- [x] **Custom Domains** — white-label via `/api/custom-domain/*` (add/list/verify with DNS TXT)
 
 ### Billing
 
