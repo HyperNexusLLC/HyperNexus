@@ -2,6 +2,7 @@ package mcpimpl
 
 import (
 	"context"
+	"strconv"
 	"net/http"
 )
 
@@ -12,7 +13,7 @@ func HandleTrade(ctx context.Context, args map[string]interface{}) (ToolResponse
 		return err("token required")
 }
 
-	url := "https://api.onlybrains.com/trade?token=" + token + "&amount=" + string(amount)
+	url := "https://api.onlybrains.com/trade?token=" + token + "&amount=" + strconv.Itoa(amount)
 	resp, e := http.DefaultClient.Get(url)
 	if e != nil {
 		return err("api error: " + e.Error())

@@ -115,6 +115,8 @@ func normalizeToolResultSnapshot(t *testing.T, result *ToolResult) string {
 				details["diff"] = "hypernexus"
 			} else if strings.Contains(diff, "htormentnelloxus") {
 				details["diff"] = "hypernexus"
+			} else if strings.Contains(diff, "hypellornexus") {
+				details["diff"] = "hypernexus"
 			} else {
 				details["diff"] = diff
 			}

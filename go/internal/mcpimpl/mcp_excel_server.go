@@ -2,6 +2,7 @@ package mcpimpl
 
 import (
 	"context"
+	"strconv"
 )
 
 func HandleReadExcel_mcp_excel_server(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
@@ -12,5 +13,5 @@ func HandleReadExcel_mcp_excel_server(ctx context.Context, args map[string]inter
 func HandleWriteExcel_mcp_excel_server(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	path, _ :=getString(args, "path")
 	data, _ :=getString(args, "data")
-	return success("Write Excel file: " + path + " with data length " + string(len(data)))
+	return success("Write Excel file: " + path + " with data length " + strconv.Itoa(len(data)))
 }

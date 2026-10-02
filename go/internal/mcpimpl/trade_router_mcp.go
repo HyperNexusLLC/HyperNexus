@@ -2,6 +2,7 @@ package mcpimpl
 
 import (
 	"context"
+	"strconv"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -30,7 +31,7 @@ func HandleExecuteTrade_trade_router_mcp(ctx context.Context, args map[string]in
 	from, _ :=getString(args, "from")
 	to, _ :=getString(args, "to")
 	amount, _ :=getInt(args, "amount")
-	body := strings.NewReader(`{"from":"` + from + `","to":"` + to + `","amount":` + string(amount) + `}`)
+	body := strings.NewReader(`{"from":"` + from + `","to":"` + to + `","amount":` + strconv.Itoa(amount) + `}`)
 	resp, e := http.DefaultClient.Post("https://api.example.com/trade", "application/json", body)
 	if e != nil {
 		return err("failed to execute trade: " + e.Error())

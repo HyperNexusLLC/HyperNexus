@@ -7,6 +7,7 @@ import { Button } from "@hypernexus/ui";
 import { Loader2, Play, Wrench, Search, ChevronRight, Layers, Database, ExternalLink, Link2, Activity, ArrowDownToLine, Sparkles, Trash2 } from "lucide-react";
 import { TrafficInspector } from '@/components/TrafficInspector';
 import { trpc } from '@/utils/trpc';
+import { useMcpListTools, useMcpWorkingSet, useMcpTelemetry, useMcpPreferences } from '@/hooks/use-mcp-http';
 import { toast } from 'sonner';
 
 type InspectorTool = {
@@ -77,10 +78,13 @@ function InspectorDashboardContent() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const utils = trpc.useUtils();
-    const { data: tools, isLoading: isLoadingTools } = trpc.mcp.listTools.useQuery();
-    const workingSetQuery = trpc.mcp.getWorkingSet.useQuery(undefined, { refetchInterval: 4000 });
-    const telemetryQuery = trpc.mcp.getToolSelectionTelemetry.useQuery(undefined, { refetchInterval: 4000 });
-    const preferencesQuery = trpc.mcp.getToolPreferences.useQuery();
+    // HTTP-fallback hooks: tRPC primary, kernel HTTP secondary
+    const toolsQuery = useMcpListTools();
+    const tools = toolsQuery.data;
+    const isLoadingTools = toolsQuery.isLoading;
+    const workingSetQuery = useMcpWorkingSet(4000);
+    const telemetryQuery = useMcpTelemetry(4000);
+    const preferencesQuery = useMcpPreferences();
     const dbToolsQuery = trpc.tools.list.useQuery();
 
     const [toolFilter, setToolFilter] = useState('');

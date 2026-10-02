@@ -2,6 +2,7 @@ package mcpimpl
 
 import (
 	"context"
+	"strconv"
 	"net/http"
 )
 
@@ -25,7 +26,7 @@ func HandleY_onec_client_mcp_devkit(ctx context.Context, args map[string]interfa
 	key, _ :=getString(args, "key")
 	value, _ :=getInt(args, "value")
 	if value > 0 {
-		return success("key: " + key + " value: " + string(value))
+		return success("key: " + key + " value: " + strconv.Itoa(value))
 }
 
 	return err("invalid value")

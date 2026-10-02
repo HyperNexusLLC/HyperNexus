@@ -2,6 +2,7 @@ package mcpimpl
 
 import (
 	"context"
+	"strconv"
 	"net/http"
 )
 
@@ -28,5 +29,5 @@ func HandleY_typescript_mcp_client(ctx context.Context, args map[string]interfac
 		return err("invalid age")
 }
 
-	return success("Hello " + name + ", age: " + string(age))
+	return success("Hello " + name + ", age: " + strconv.Itoa(age))
 }

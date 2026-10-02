@@ -2,6 +2,7 @@ package mcpimpl
 
 import (
 	"context"
+	"strconv"
 	"io"
 	"net/http"
 )
@@ -28,5 +29,5 @@ func HandleRender_bulkrender_mcp(ctx context.Context, args map[string]interface{
 		return err("failed to read body: " + e.Error())
 }
 
-	return success("rendered " + url + " (" + string(len(body)) + " bytes)")
+	return success("rendered " + url + " (" + strconv.Itoa(len(body)) + " bytes)")
 }

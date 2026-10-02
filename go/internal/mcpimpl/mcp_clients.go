@@ -2,6 +2,7 @@ package mcpimpl
 
 import (
 	"context"
+	"strconv"
 	"net/http"
 	"encoding/json"
 )
@@ -28,7 +29,7 @@ func HandleY_mcp_clients(ctx context.Context, args map[string]interface{}) (Tool
 	key, _ :=getString(args, "key")
 	value, _ :=getInt(args, "value")
 	if value > 0 {
-		return success("key: " + key + " value: " + string(value))
+		return success("key: " + key + " value: " + strconv.Itoa(value))
 }
 
 	return err("invalid value")

@@ -14,7 +14,7 @@ func HandleGetEdgarFilings(ctx context.Context, args map[string]interface{}) (To
 		return err("ticker is required")
 }
 
-	url := fmt.Sprintf("https://data.sec.gov/submissions/CIK000%010d.json", tickerToCIK(ticker))
+	url := fmt.Sprintf("https://data.sec.gov/submissions/CIK%s.json", tickerToCIK(ticker))
 	req, e := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if e != nil {
 		return err("failed to create request: " + e.Error())
