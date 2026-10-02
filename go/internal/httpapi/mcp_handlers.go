@@ -121,6 +121,58 @@ func (s *Server) autoStartAlwaysOnMCPServers(mainConfigDir string) {
 	fmt.Printf("[MCP AutoStart] %d alwaysOn servers connected from %s\n", connected, cfgPath)
 }
 
+// handleMCPConnectAll connects all enabled MCP servers (not just alwaysOn).
+// POST /api/mcp/servers/connect-all — returns per-server connection results.
+func (s *Server) handleMCPConnectAll(w http.ResponseWriter, r *http.Request) {
+	type mcpServerEntry struct {
+		Command  string            `json:"command"`
+		Args     []string          `json:"args"`
+		Env      map[string]string `json:"env"`
+		Disabled bool              `json:"disabled"`
+	}
+	candidates := []string{
+		filepath.Join(s.cfg.MainConfigDir, "mcp_servers.json"),
+		filepath.Join(s.cfg.WorkspaceRoot, "config", "mcp_servers.json"),
+		filepath.Join(s.cfg.WorkspaceRoot, "go", "config", "mcp_servers.json"),
+	}
+	var raw []byte
+	for _, p := range candidates {
+		if data, err := os.ReadFile(p); err == nil {
+			raw = data
+			break
+		}
+	}
+	if raw == nil {
+		writeJSON(w, http.StatusNotFound, map[string]any{"success": false, "error": "mcp_servers.json not found"})
+		return
+	}
+	var servers map[string]mcpServerEntry
+	if err := json.Unmarshal(raw, &servers); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	results := []map[string]any{}
+	connected := 0
+	for name, srv := range servers {
+		if srv.Disabled || srv.Command == "" {
+			results = append(results, map[string]any{"name": name, "status": "skipped", "reason": "disabled or no command"})
+			continue
+		}
+		if err := s.mcpAggregator.AddServer(name, srv.Command, srv.Args, srv.Env); err != nil {
+			results = append(results, map[string]any{"name": name, "status": "failed", "error": err.Error()})
+		} else {
+			results = append(results, map[string]any{"name": name, "status": "connected"})
+			connected++
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success":   true,
+		"connected": connected,
+		"total":     len(servers),
+		"results":   results,
+	})
+}
+
 func (s *Server) handleMCPTools(w http.ResponseWriter, r *http.Request) {
 	var result any
 	upstreamBase, err := s.callUpstreamJSON(r.Context(), "mcp.listTools", nil, &result)

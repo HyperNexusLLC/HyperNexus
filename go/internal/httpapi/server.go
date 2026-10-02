@@ -1234,6 +1234,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/mcp/conversation/append", s.handleMCPConversationAppend)
 	s.mux.HandleFunc("/api/mcp/conversation/window", s.handleMCPConversationWindow)
 	s.mux.HandleFunc("/api/mcp/tools/call", s.handleMCPCallTool)
+	s.mux.HandleFunc("/api/mcp/servers/connect-all", s.handleMCPConnectAll)
 	s.mux.HandleFunc("/api/mcp/tools/auto-call", s.handleMCPAutoCallTool)
 	s.mux.HandleFunc("/api/mcp/tool-ads", s.handleMCPToolAdvertisements)
 	s.mux.HandleFunc("/api/mcp/sync", s.handleMCPSync)

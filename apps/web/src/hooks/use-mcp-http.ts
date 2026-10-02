@@ -280,3 +280,140 @@ export async function clearMcpEvictionHistory() {
 export async function saveMcpJsonc(content: string) {
   return postKernelJSON<any>('/api/mcp/config/jsonc', { content });
 }
+
+// ─── AI-Tools page hooks (tRPC primary, HTTP fallback) ──────────────────
+
+/** Agent memory stats. */
+export function useAgentMemoryStats() {
+  const query = trpc.agentMemory.stats.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/agent-memory/stats').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** API keys list. */
+export function useApiKeysList() {
+  const query = trpc.apiKeys.list.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/api-keys').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Billing provider quotas. */
+export function useProviderQuotas() {
+  const query = trpc.billing.getProviderQuotas.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/billing/provider-quotas').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Expert status. */
+export function useExpertStatus() {
+  const query = trpc.expert.getStatus.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/expert/status').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** MCP servers list (for ai-tools page). */
+export function useMcpServersList() {
+  const query = trpc.mcpServers.list.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/mcp/servers').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Server health check. */
+export function useServerHealth() {
+  const query = trpc.serverHealth.check.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/server-health/check').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Session list. */
+export function useSessionList() {
+  const query = trpc.session.list.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/native/session/list').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Session state. */
+export function useSessionState() {
+  const query = trpc.session.getState.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/native/session/get').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Shell system history. */
+export function useShellHistory(limit = 8) {
+  const query = trpc.shell.getSystemHistory.useQuery({ limit }, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>(`/api/shell/history/system?limit=${limit}`).then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data, limit]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Tools list (for ai-tools page). */
+export function useToolsList() {
+  const query = trpc.tools.list.useQuery(undefined, { retry: false });
+  const [fallback, setFallback] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (query.data) return;
+    let cancelled = false;
+    fetchKernelJSON<any>('/api/native/tools/list').then(d => { if (!cancelled) setFallback(d); });
+    return () => { cancelled = true; };
+  }, [query.data]);
+  return { data: query.data ?? fallback, isLoading: query.isLoading && !fallback, refetch: query.refetch, source: query.data ? 'trpc' : fallback ? 'kernel-http' : null };
+}
+
+/** Connect all MCP servers (mutation). */
+export async function connectAllMcpServers() {
+  return postKernelJSON<any>('/api/mcp/servers/connect-all', {});
+}

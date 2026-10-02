@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@hypernexus/ui';
 import { Bot, CheckCircle2, Database, ExternalLink, KeyRound, Loader2, RefreshCw, Search, Server, TerminalSquare, Wrench, XCircle } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
+import { useToolsList, useMcpServersList, useApiKeysList, useProviderQuotas, useSessionList, useExpertStatus, useSessionState, useAgentMemoryStats, useShellHistory, useServerHealth } from '@/hooks/use-mcp-http';
 import { toast } from 'sonner';
 
 import { getCliHarnessCards, getProviderDirectoryCards, getStatusBadgeClasses } from './ai-tool-directory';
@@ -18,9 +19,9 @@ export default function AIToolsDashboard() {
     const hasCliDetectionQuery = typeof toolsClient?.detectCliHarnesses?.useQuery === 'function';
     const hasExecutionEnvironmentQuery = typeof toolsClient?.detectExecutionEnvironment?.useQuery === 'function';
 
-    const toolsQuery = trpc.tools.list.useQuery();
-    const serversQuery = trpc.mcpServers.list.useQuery();
-    const apiKeysQuery = trpc.apiKeys.list.useQuery();
+    const toolsQuery = useToolsList();
+    const serversQuery = useMcpServersList();
+    const apiKeysQuery = useApiKeysList();
     const cliDetectionsQuery = hasCliDetectionQuery
         ? toolsClient.detectCliHarnesses.useQuery()
         : {
@@ -35,22 +36,19 @@ export default function AIToolsDashboard() {
             isLoading: false,
             refetch: async () => undefined,
         };
-    const providerQuotasQuery = trpc.billing.getProviderQuotas.useQuery();
-    const sessionsQuery = trpc.session.list.useQuery();
+    const providerQuotasQuery = useProviderQuotas();
+    const sessionsQuery = useSessionList();
     const { data: tools, isLoading: loadingTools } = toolsQuery;
     const { data: servers, isLoading: loadingServers } = serversQuery;
     const { data: apiKeys, isLoading: loadingKeys } = apiKeysQuery;
     const { data: cliDetections, isLoading: loadingCliDetections } = cliDetectionsQuery;
     const { data: providerQuotas } = providerQuotasQuery;
     const { data: sessions } = sessionsQuery;
-    const { data: expertStatus } = trpc.expert.getStatus.useQuery();
-    const { data: sessionState } = trpc.session.getState.useQuery();
-    const { data: memoryStats } = trpc.agentMemory.stats.useQuery();
-    const { data: shellHistory } = trpc.shell.getSystemHistory.useQuery({ limit: 8 });
-    const { data: serverHealth } = trpc.serverHealth.check.useQuery(
-        { serverUuid: healthServerUuid },
-        { enabled: healthServerUuid.trim().length > 0 }
-    );
+    const { data: expertStatus } = useExpertStatus();
+    const { data: sessionState } = useSessionState();
+    const { data: memoryStats } = useAgentMemoryStats();
+    const { data: shellHistory } = useShellHistory(8);
+    const { data: serverHealth } = useServerHealth();
     const reloadMetadataMutation = mcpServersClient.reloadMetadata.useMutation({
         onSuccess: async (result: any) => {
             toast.success(`Reloaded metadata for ${result.server.name} from ${result.metadata.metadataSource ?? 'metadata cache'}.`);
