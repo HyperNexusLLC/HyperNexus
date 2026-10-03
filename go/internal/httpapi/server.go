@@ -18419,7 +18419,7 @@ func (s *Server) localSaveSkill(payload map[string]any) (map[string]any, error) 
 		return nil, err
 	}
 	for _, skill := range skills {
-		if skill.ID != id {
+		if skill.ID != id && skill.Name != id && filepath.Base(filepath.Dir(skill.Path)) != id {
 			continue
 		}
 		if err := os.WriteFile(skill.Path, []byte(content), 0o644); err != nil {
