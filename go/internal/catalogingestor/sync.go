@@ -26,7 +26,7 @@ func SyncRegisteredToolsToCatalog(workspaceRoot string, toolNames []string) erro
 	}
 	defer tx.Rollback()
 
-	now := time.Now().UTC().Format(time.RFC3339)
+	now := time.Now().UTC().Unix()
 	stmt, err := tx.Prepare(`
 		INSERT INTO published_mcp_servers (
 			uuid, canonical_id, display_name, description, tags, categories, transport, status, created_at, updated_at

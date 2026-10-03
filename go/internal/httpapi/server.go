@@ -551,8 +551,8 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 				stars INTEGER,
 				last_seen_at INTEGER,
 				last_verified_at INTEGER,
-				created_at TEXT,
-				updated_at TEXT
+				created_at INTEGER NOT NULL DEFAULT 0,
+				updated_at INTEGER NOT NULL DEFAULT 0
 			)
 		`); err != nil {
 			fmt.Printf("[Server] Failed to create published_mcp_servers table: %v\n", err)
