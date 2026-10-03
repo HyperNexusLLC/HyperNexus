@@ -12,8 +12,24 @@ import (
 
 func (s *Server) handleMemoryList(w http.ResponseWriter, r *http.Request) {
 	memories := s.memoryManager.GetMemories()
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(memories)
+	if memories == nil {
+		memories = []string{}
+	}
+	limit := 50
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			limit = n
+		}
+	}
+	total := len(memories)
+	if len(memories) > limit {
+		memories = memories[:limit]
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"memories": memories,
+		"count":    len(memories),
+		"total":    total,
+	})
 }
 
 func (s *Server) handleMemoryAdd(w http.ResponseWriter, r *http.Request) {

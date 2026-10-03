@@ -6614,6 +6614,11 @@ func (s *Server) localObservabilityLogs(filter localLogsFilter) ([]map[string]an
 		session_id TEXT,
 		parent_call_uuid TEXT
 	)`)
+	db.Exec(`CREATE TABLE IF NOT EXISTS mcp_servers (
+		uuid TEXT PRIMARY KEY,
+		name TEXT,
+		created_at INTEGER
+	)`)
 
 	if filter.limit <= 0 {
 		filter.limit = 100
