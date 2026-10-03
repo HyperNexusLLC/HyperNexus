@@ -12246,6 +12246,15 @@ func (s *Server) localPolicy(uuid string) (any, error) {
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS policies (
+		uuid TEXT PRIMARY KEY,
+		name TEXT,
+		description TEXT,
+		rules TEXT,
+		created_at INTEGER DEFAULT 0,
+		updated_at INTEGER DEFAULT 0
+	)`)
+
 	var (
 		policyUUID   string
 		name         string
@@ -12289,6 +12298,15 @@ func (s *Server) localPolicies() ([]map[string]any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS policies (
+		uuid TEXT PRIMARY KEY,
+		name TEXT,
+		description TEXT,
+		rules TEXT,
+		created_at INTEGER DEFAULT 0,
+		updated_at INTEGER DEFAULT 0
+	)`)
 
 	rows, err := db.Query(`
 		SELECT uuid, name, description, rules, created_at, updated_at
@@ -12478,6 +12496,31 @@ func (s *Server) localLinksBacklogItem(uuid string) (any, error) {
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS links_backlog (
+		uuid TEXT PRIMARY KEY,
+		url TEXT NOT NULL,
+		normalized_url TEXT NOT NULL UNIQUE,
+		title TEXT,
+		description TEXT,
+		tags TEXT NOT NULL DEFAULT '[]',
+		source TEXT NOT NULL DEFAULT 'manual',
+		is_duplicate INTEGER NOT NULL DEFAULT 0,
+		duplicate_of TEXT,
+		research_status TEXT NOT NULL DEFAULT 'pending',
+		http_status INTEGER,
+		page_title TEXT,
+		page_description TEXT,
+		favicon_url TEXT,
+		researched_at INTEGER,
+		cluster_id TEXT,
+		bobbybookmarks_bookmark_id INTEGER,
+		import_session_id INTEGER,
+		raw_payload TEXT,
+		synced_at INTEGER,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)`)
+
 	row := db.QueryRow(`
 		SELECT uuid, url, normalized_url, title, description, tags, source, is_duplicate, duplicate_of,
 		       research_status, http_status, page_title, page_description, favicon_url, researched_at,
@@ -12502,6 +12545,31 @@ func (s *Server) localLinksBacklogStats() (any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS links_backlog (
+		uuid TEXT PRIMARY KEY,
+		url TEXT NOT NULL,
+		normalized_url TEXT NOT NULL UNIQUE,
+		title TEXT,
+		description TEXT,
+		tags TEXT NOT NULL DEFAULT '[]',
+		source TEXT NOT NULL DEFAULT 'manual',
+		is_duplicate INTEGER NOT NULL DEFAULT 0,
+		duplicate_of TEXT,
+		research_status TEXT NOT NULL DEFAULT 'pending',
+		http_status INTEGER,
+		page_title TEXT,
+		page_description TEXT,
+		favicon_url TEXT,
+		researched_at INTEGER,
+		cluster_id TEXT,
+		bobbybookmarks_bookmark_id INTEGER,
+		import_session_id INTEGER,
+		raw_payload TEXT,
+		synced_at INTEGER,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)`)
 
 	var (
 		total      int64
@@ -12555,6 +12623,31 @@ func (s *Server) localLinksBacklogList(limit, offset int, search, source, resear
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS links_backlog (
+		uuid TEXT PRIMARY KEY,
+		url TEXT NOT NULL,
+		normalized_url TEXT NOT NULL UNIQUE,
+		title TEXT,
+		description TEXT,
+		tags TEXT NOT NULL DEFAULT '[]',
+		source TEXT NOT NULL DEFAULT 'manual',
+		is_duplicate INTEGER NOT NULL DEFAULT 0,
+		duplicate_of TEXT,
+		research_status TEXT NOT NULL DEFAULT 'pending',
+		http_status INTEGER,
+		page_title TEXT,
+		page_description TEXT,
+		favicon_url TEXT,
+		researched_at INTEGER,
+		cluster_id TEXT,
+		bobbybookmarks_bookmark_id INTEGER,
+		import_session_id INTEGER,
+		raw_payload TEXT,
+		synced_at INTEGER,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)`)
 
 	items, err := listLinksBacklogRows(db, limit, offset, search, source, researchStatus, clusterID, showDuplicates)
 	if err != nil {
@@ -13253,6 +13346,15 @@ func (s *Server) localBrowserHistoryQuery(query string, limit int, since int64, 
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS browser_history (
+		id TEXT PRIMARY KEY,
+		url TEXT NOT NULL,
+		title TEXT NOT NULL,
+		domain TEXT NOT NULL,
+		visited_at INTEGER NOT NULL,
+		visit_count INTEGER NOT NULL DEFAULT 1
+	)`)
+
 	rows, err := db.Query(`
 		SELECT id, url, title, domain, visited_at, visit_count
 		FROM browser_history
@@ -13321,6 +13423,16 @@ func (s *Server) localBrowserConsoleLogsQuery(level, search string, limit int) (
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS browser_console_logs (
+		id TEXT PRIMARY KEY,
+		level TEXT NOT NULL,
+		message TEXT NOT NULL,
+		source TEXT NOT NULL,
+		url TEXT,
+		line_number INTEGER,
+		timestamp INTEGER NOT NULL
+	)`)
+
 	args := []any{}
 	query := `
 		SELECT id, level, message, source, url, line_number, timestamp
@@ -13386,6 +13498,24 @@ func (s *Server) localBrowserControlsStats() (any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS browser_history (
+		id TEXT PRIMARY KEY,
+		url TEXT NOT NULL,
+		title TEXT NOT NULL,
+		domain TEXT NOT NULL,
+		visited_at INTEGER NOT NULL,
+		visit_count INTEGER NOT NULL DEFAULT 1
+	)`)
+	db.Exec(`CREATE TABLE IF NOT EXISTS browser_console_logs (
+		id TEXT PRIMARY KEY,
+		level TEXT NOT NULL,
+		message TEXT NOT NULL,
+		source TEXT NOT NULL,
+		url TEXT,
+		line_number INTEGER,
+		timestamp INTEGER NOT NULL
+	)`)
 
 	historyRows, err := db.Query(`SELECT domain FROM browser_history`)
 	if err != nil {
