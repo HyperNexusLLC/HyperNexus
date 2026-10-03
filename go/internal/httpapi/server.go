@@ -527,7 +527,6 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.pairOrchestrator = orchestration.NewPairOrchestrator(server.consensusEngine)
 	server.pairOrchestrator.SetupFrontierSquad()
 	server.directorNotes = orchestration.NewDirectorNotesManager()
-	server.expertManager = hsync.NewExpertManager(server.goDirector, server.mcpPredictor)
 
 	// Initialize catalog.db tables if they are missing
 	if catalogDB, err := database.Open("sqlite", filepath.Join(cfg.WorkspaceRoot, "catalog.db")); err == nil {
@@ -614,9 +613,12 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 		}
 	}
 
+	server.swarmController = orchestration.NewSwarmController(server.a2aBroker)
 	server.coderAgent = orchestration.NewCoderAgent(server.a2aBroker, cfg.WorkspaceRoot)
 	server.coderAgent.Start(context.Background())
+	server.mcpPredictor = mcp.NewToolPredictor(server.mcpAggregator)
 	server.goDirector = orchestration.NewDirector(server.swarmController, server.coderAgent, server.a2aBroker)
+	server.expertManager = hsync.NewExpertManager(server.goDirector, server.mcpPredictor)
 	server.mcpConfig = mcp.NewConfigManager(cfg.MainConfigDir)
 	server.waterfallClient = ai.NewWaterfallClient(nil,
 		&ai.OpenAIProvider{APIKey: os.Getenv("OPENAI_API_KEY")},
@@ -627,8 +629,6 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 		&ai.LMStudioProvider{BaseURL: "http://127.0.0.1:1234"},
 	)
 	server.highValueIngestor = hsync.NewHighValueIngestor(filepath.Join(cfg.MainConfigDir, "hypernexus.db"), server.skillStore, server.mcpConfig)
-	server.swarmController = orchestration.NewSwarmController(server.a2aBroker)
-	server.mcpPredictor = mcp.NewToolPredictor(server.mcpAggregator)
 	server.supervisorManager.SetPredictor(server.mcpPredictor)
 
 	// Phase 113 — Go-native conversational tool predictor

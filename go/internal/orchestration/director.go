@@ -71,7 +71,7 @@ func (d *Director) StartAutonomousTask(ctx context.Context, goal string) error {
 
 	// 3. Delegate implementation to the selected agent (or default Go Coder)
 	recipient := d.coder.ID
-	if resp.Sender != "" {
+	if err == nil && resp.Sender != "" {
 		recipient = resp.Sender
 	}
 
