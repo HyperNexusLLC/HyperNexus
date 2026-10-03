@@ -18,8 +18,23 @@
       "accessedAt": "2026-10-02T14:42:32.3788406Z",
       "accessCount": 0,
       "ttl": null
+    },
+    {
+      "id": "00770ef9d8eb34bd",
+      "content": "HyperNexus test fact: system is operational",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "memory_fact",
+        "tags": []
+      },
+      "createdAt": "2026-10-03T14:47:43.5851641Z",
+      "accessedAt": "2026-10-03T14:47:43.5851641Z",
+      "accessCount": 0,
+      "ttl": null
     }
   ],
-  "savedAt": "2026-10-02T14:42:32.380911Z",
+  "savedAt": "2026-10-03T14:47:43.5851641Z",
   "version": 1
 }
