@@ -12342,6 +12342,13 @@ func (s *Server) localSecrets() ([]map[string]any, error) {
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS workspace_secrets (
+		key TEXT PRIMARY KEY,
+		value TEXT,
+		created_at INTEGER DEFAULT 0,
+		updated_at INTEGER DEFAULT 0
+	)`)
+
 	rows, err := db.Query(`
 		SELECT key, created_at, updated_at
 		FROM workspace_secrets

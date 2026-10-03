@@ -360,6 +360,8 @@ func (s *Server) localConfigList() ([]map[string]any, error) {
 	db.Exec("PRAGMA busy_timeout=5000")
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS config (id TEXT PRIMARY KEY, value TEXT)`)
+
 	rows, err := db.Query(`SELECT id, value FROM config ORDER BY id`)
 	if err != nil {
 		return nil, err
@@ -389,6 +391,7 @@ func (s *Server) localConfigValue(key string) (any, error) {
 	db.Exec("PRAGMA busy_timeout=5000")
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS config (id TEXT PRIMARY KEY, value TEXT)`)
 	row := db.QueryRow(`SELECT value FROM config WHERE id = ? LIMIT 1`, key)
 	var value string
 	if err := row.Scan(&value); err != nil {
