@@ -6617,8 +6617,32 @@ func (s *Server) localObservabilityLogs(filter localLogsFilter) ([]map[string]an
 	db.Exec(`CREATE TABLE IF NOT EXISTS mcp_servers (
 		uuid TEXT PRIMARY KEY,
 		name TEXT,
-		created_at INTEGER
+		description TEXT,
+		type TEXT NOT NULL DEFAULT 'STDIO',
+		command TEXT,
+		args TEXT NOT NULL DEFAULT '[]',
+		env TEXT NOT NULL DEFAULT '{}',
+		url TEXT,
+		error_status TEXT NOT NULL DEFAULT 'NONE',
+		created_at INTEGER,
+		bearer_token TEXT,
+		headers TEXT NOT NULL DEFAULT '{}',
+		always_on INTEGER NOT NULL DEFAULT 0,
+		user_id TEXT NOT NULL DEFAULT '',
+		source_published_server_uuid TEXT
 	)`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN description TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN type TEXT NOT NULL DEFAULT 'STDIO'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN command TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN args TEXT NOT NULL DEFAULT '[]'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN env TEXT NOT NULL DEFAULT '{}'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN url TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN error_status TEXT NOT NULL DEFAULT 'NONE'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN bearer_token TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN headers TEXT NOT NULL DEFAULT '{}'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN always_on INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN source_published_server_uuid TEXT`)
 
 	if filter.limit <= 0 {
 		filter.limit = 100
@@ -13081,6 +13105,20 @@ func (s *Server) localCatalogRuns(serverUUID string, limit int) ([]map[string]an
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS published_mcp_validation_runs (
+		uuid TEXT PRIMARY KEY,
+		server_uuid TEXT NOT NULL,
+		run_mode TEXT NOT NULL,
+		started_at INTEGER NOT NULL,
+		finished_at INTEGER,
+		outcome TEXT NOT NULL DEFAULT 'pending',
+		failure_class TEXT,
+		tool_count INTEGER,
+		findings_summary TEXT,
+		performed_by TEXT NOT NULL DEFAULT 'Verifier',
+		created_at INTEGER NOT NULL
+	)`)
+
 	rows, err := db.Query(`
 		SELECT uuid, server_uuid, run_mode, started_at, finished_at, outcome, failure_class, tool_count,
 		       findings_summary, performed_by, created_at
@@ -13161,6 +13199,36 @@ func (s *Server) localCatalogLinkedServers(publishedServerUUID string) ([]map[st
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS mcp_servers (
+		uuid TEXT PRIMARY KEY,
+		name TEXT,
+		description TEXT,
+		type TEXT NOT NULL DEFAULT 'STDIO',
+		command TEXT,
+		args TEXT NOT NULL DEFAULT '[]',
+		env TEXT NOT NULL DEFAULT '{}',
+		url TEXT,
+		error_status TEXT NOT NULL DEFAULT 'NONE',
+		created_at INTEGER,
+		bearer_token TEXT,
+		headers TEXT NOT NULL DEFAULT '{}',
+		always_on INTEGER NOT NULL DEFAULT 0,
+		user_id TEXT NOT NULL DEFAULT '',
+		source_published_server_uuid TEXT
+	)`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN description TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN type TEXT NOT NULL DEFAULT 'STDIO'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN command TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN args TEXT NOT NULL DEFAULT '[]'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN env TEXT NOT NULL DEFAULT '{}'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN url TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN error_status TEXT NOT NULL DEFAULT 'NONE'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN bearer_token TEXT`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN headers TEXT NOT NULL DEFAULT '{}'`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN always_on INTEGER NOT NULL DEFAULT 0`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`)
+	db.Exec(`ALTER TABLE mcp_servers ADD COLUMN source_published_server_uuid TEXT`)
 
 	rows, err := db.Query(`
 		SELECT uuid, name, description, type, command, args, env, url, error_status, created_at,
@@ -14133,6 +14201,19 @@ func localPublishedCatalogServer(db *sql.DB, uuid string) (any, error) {
 }
 
 func localPublishedCatalogLatestRun(db *sql.DB, serverUUID string) (any, error) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS published_mcp_validation_runs (
+		uuid TEXT PRIMARY KEY,
+		server_uuid TEXT NOT NULL,
+		run_mode TEXT NOT NULL,
+		started_at INTEGER NOT NULL,
+		finished_at INTEGER,
+		outcome TEXT NOT NULL DEFAULT 'pending',
+		failure_class TEXT,
+		tool_count INTEGER,
+		findings_summary TEXT,
+		performed_by TEXT NOT NULL DEFAULT 'Verifier',
+		created_at INTEGER NOT NULL
+	)`)
 	row := db.QueryRow(`
 		SELECT uuid, server_uuid, run_mode, started_at, finished_at, outcome, failure_class, tool_count,
 		       findings_summary, performed_by, created_at
@@ -14152,6 +14233,20 @@ func localPublishedCatalogLatestRun(db *sql.DB, serverUUID string) (any, error) 
 }
 
 func localPublishedCatalogActiveRecipe(db *sql.DB, serverUUID string) (any, error) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS published_mcp_config_recipes (
+		uuid TEXT PRIMARY KEY,
+		server_uuid TEXT NOT NULL,
+		recipe_version INTEGER NOT NULL DEFAULT 1,
+		template TEXT NOT NULL,
+		required_secrets TEXT NOT NULL DEFAULT '[]',
+		required_env TEXT NOT NULL DEFAULT '{}',
+		confidence INTEGER NOT NULL DEFAULT 0,
+		explanation TEXT,
+		is_active INTEGER NOT NULL DEFAULT 1,
+		generated_by TEXT NOT NULL DEFAULT 'Configurator',
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)`)
 	var (
 		uuid             string
 		recipeServerUUID string
@@ -14202,6 +14297,15 @@ func localPublishedCatalogActiveRecipe(db *sql.DB, serverUUID string) (any, erro
 }
 
 func localPublishedCatalogSources(db *sql.DB, serverUUID string) ([]map[string]any, error) {
+	db.Exec(`CREATE TABLE IF NOT EXISTS published_mcp_server_sources (
+		uuid TEXT PRIMARY KEY,
+		server_uuid TEXT NOT NULL,
+		source_name TEXT NOT NULL,
+		source_url TEXT,
+		raw_payload TEXT,
+		first_seen_at INTEGER NOT NULL,
+		last_seen_at INTEGER NOT NULL
+	)`)
 	rows, err := db.Query(`
 		SELECT uuid, source_name, source_url, first_seen_at, last_seen_at
 		FROM published_mcp_server_sources
