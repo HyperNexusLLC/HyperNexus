@@ -13737,6 +13737,17 @@ func (s *Server) localWorkflowCanvases() ([]map[string]any, error) {
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS workflows (
+		id TEXT PRIMARY KEY,
+		name TEXT,
+		description TEXT,
+		nodes_json TEXT,
+		edges_json TEXT,
+		user_id TEXT,
+		created_at INTEGER DEFAULT 0,
+		updated_at INTEGER DEFAULT 0
+	)`)
+
 	rows, err := db.Query(`
 		SELECT id, name, description, nodes_json, edges_json, user_id, created_at, updated_at
 		FROM workflows
@@ -13767,6 +13778,17 @@ func (s *Server) localWorkflowCanvas(id string) (any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS workflows (
+		id TEXT PRIMARY KEY,
+		name TEXT,
+		description TEXT,
+		nodes_json TEXT,
+		edges_json TEXT,
+		user_id TEXT,
+		created_at INTEGER DEFAULT 0,
+		updated_at INTEGER DEFAULT 0
+	)`)
 
 	row := db.QueryRow(`
 		SELECT id, name, description, nodes_json, edges_json, user_id, created_at, updated_at

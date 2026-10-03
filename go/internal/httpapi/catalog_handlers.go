@@ -233,6 +233,7 @@ func (s *Server) handleBacklogStats(w http.ResponseWriter, r *http.Request) {
 	var skillsCount int
 	skillDB, err := sql.Open("sqlite", filepath.Join(s.cfg.ConfigDir, "catalog.db"))
 	if err == nil {
+		skillDB.Exec("CREATE TABLE IF NOT EXISTS published_skills (id TEXT PRIMARY KEY, name TEXT, description TEXT, category TEXT, created_at INTEGER DEFAULT 0)")
 		skillDB.QueryRow("SELECT count(*) FROM published_skills").Scan(&skillsCount)
 		skillDB.Close()
 	}

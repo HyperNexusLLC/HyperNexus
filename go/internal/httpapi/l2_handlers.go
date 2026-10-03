@@ -125,6 +125,7 @@ func (s *Server) handleMemoryGraph(w http.ResponseWriter, r *http.Request) {
 	// Resolve readable labels: entity slugs + memory content previews
 	memLabels := map[string]string{}
 	if db := tools.GlobalVectorStore.DB(); db != nil {
+		db.ExecContext(r.Context(), `CREATE TABLE IF NOT EXISTS l2_vault (id TEXT PRIMARY KEY, content TEXT, embedding BLOB, metadata TEXT, created_at INTEGER DEFAULT 0)`)
 		rows, _ := db.QueryContext(r.Context(), `SELECT id, content FROM l2_vault LIMIT 500`)
 		if rows != nil {
 			defer rows.Close()
