@@ -12671,6 +12671,26 @@ func (s *Server) localOAuthClient(clientID string) (any, error) {
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS oauth_clients (
+		client_id TEXT PRIMARY KEY,
+		client_secret TEXT,
+		client_name TEXT NOT NULL,
+		redirect_uris TEXT NOT NULL DEFAULT '[]',
+		grant_types TEXT NOT NULL DEFAULT '["authorization_code","refresh_token"]',
+		response_types TEXT NOT NULL DEFAULT '["code"]',
+		token_endpoint_auth_method TEXT NOT NULL DEFAULT 'none',
+		scope TEXT DEFAULT 'admin',
+		client_uri TEXT,
+		logo_uri TEXT,
+		contacts TEXT,
+		tos_uri TEXT,
+		policy_uri TEXT,
+		software_id TEXT,
+		software_version TEXT,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)`)
+
 	var (
 		foundClientID           string
 		clientSecret            sql.NullString
@@ -12746,6 +12766,16 @@ func (s *Server) localOAuthSessionByServer(serverUUID string) (any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS oauth_sessions (
+		uuid TEXT PRIMARY KEY,
+		mcp_server_uuid TEXT NOT NULL,
+		client_information TEXT NOT NULL DEFAULT '{}',
+		tokens TEXT,
+		code_verifier TEXT,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)`)
 
 	var (
 		uuid              string
