@@ -12406,6 +12406,15 @@ func (s *Server) localAPIKeys() ([]map[string]any, error) {
 	}
 	defer db.Close()
 
+	db.Exec(`CREATE TABLE IF NOT EXISTS api_keys (
+		uuid TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		key TEXT NOT NULL UNIQUE,
+		user_id TEXT,
+		created_at INTEGER NOT NULL,
+		is_active INTEGER NOT NULL DEFAULT 1
+	)`)
+
 	rows, err := db.Query(`
 		SELECT uuid, name, key, created_at, is_active, user_id
 		FROM api_keys
@@ -12456,6 +12465,15 @@ func (s *Server) localAPIKey(uuid string) (any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS api_keys (
+		uuid TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		key TEXT NOT NULL UNIQUE,
+		user_id TEXT,
+		created_at INTEGER NOT NULL,
+		is_active INTEGER NOT NULL DEFAULT 1
+	)`)
 
 	var (
 		keyUUID      string
