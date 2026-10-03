@@ -40,7 +40,7 @@
 
 ### Integration
 
-- [ ] **Full MCP catalog indexing** — 26k+ tools from Glama.ai (catalog-sync works but limited)
+- [x] **Full MCP catalog indexing** — multi-source sync (Glama + Smithery + 45 builtin presets) → 82 tools in `published_mcp_servers`
 - [x] **Cloud Landing Page** — `cloud/landing` with hero, features, stats, CTA, footer
 - [x] **Pricing Page** — `/pricing` with Stripe checkout integration (3 tiers: Basic $29, Pro $99, Commercial $499)
 
