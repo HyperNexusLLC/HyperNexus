@@ -1,12 +1,12 @@
 # HANDOFF.md — Session Handoff
 
-## Session Date: 2026-10-02 (T38–T42: MCP Auto-Start, Connect All, HTTP Fallbacks, Docs)
+## Session Date: 2026-10-02 (T43–T45 + Bug Fixes: Versioning, RBAC, Teams, SSO, Catalog DB)
 
 ## Summary
 
-MCP server auto-start at kernel boot (4 alwaysOn), Connect All endpoint (56/56 servers), HTTP fallbacks for all tRPC-only dashboard pages, Go test fixes (all green), Hetzner deploy v1.0.11, MCP client examples, API docs refresh.
+Memory versioning (git-like history), usage metering, Ed25519 license generator, fact conflict resolution, memory RBAC (admin/writer/reader/guest), cross-agent memory sharing (Memorix L2 vault), encryption at rest (AES-256-GCM), SOC2 audit logging, team accounts (shared memory pools), referral program (credits), SSO integration (SAML/OIDC/Okta/Azure AD/Google), custom domains (DNS verify), pricing page (Stripe checkout), cloud landing page, user dashboard/account page. Bug fixes: mcp.searchTools merge-on-read, catalog DB path mismatch, catalog timestamp schema.
 
-## Completed (T38–T42)
+## Completed (T43–T45 + Bug Fixes)
 
 ### MCP Auto-Start (T39)
 - `autoStartAlwaysOnMCPServers` in `go/internal/httpapi/mcp_handlers.go` — reads `go/config/mcp_servers.json`, connects servers with `alwaysOn: true` via `Aggregator.AddServer()`
