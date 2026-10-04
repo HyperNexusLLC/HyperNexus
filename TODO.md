@@ -1,7 +1,7 @@
 # TODO — HyperNexus
 
 > **Last Updated:** 2026-10-02
-> **Current Version:** 1.0.11
+> **Current Version:** 1.0.12
 > **Status:** Core infrastructure complete, dashboard consolidated, production deployed, all MCP servers connected
 
 ---
@@ -23,6 +23,8 @@
 
 ### Build & Tests
 
+- [x] **Fix batch script paths** — `build.bat`, `build-editions.bat` use correct entrypoint (`./cmd/tormentnexus`) and module path (`HyperNexusLLC`); push scripts use `github`/`gitlab` remotes on `clean-main`
+- [x] **Feature branch audit** — `gitlab/feature/cloud-dashboard-mcp-sse-*` fully redundant (all 4 features already in clean-main); realestatecrm submodules (3 on feature branches) all 0 unique commits
 - [x] **Fix pre-existing test failures** — `TestToolResultSnapshots`, `TestVerifyLicense`, `TestResolveClientTargets` all fixed
 - [x] **Deploy v1.0.11 to Hetzner** — production running v1.0.11
 - [x] **Sync package versions on Hetzner** — node_modules present, dashboard returns 200

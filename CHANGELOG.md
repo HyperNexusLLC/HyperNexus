@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.12] - 2026-10-02
+
+### Fixed
+- **Batch scripts** — `build.bat` and `build-editions.bat` now use correct Go entrypoint (`./cmd/tormentnexus`) and module path (`gitlab.com/HyperNexusLLC/HyperNexus`); `push-to-gitlab.bat` and `commit-and-push.bat` now push to `github`/`gitlab` remotes on `clean-main` branch
+- **build-editions.bat** — fixed duplicate `:build_hypernexus` label (second section now `:build_corporate`); `:build_both` correctly calls both editions
+
+### Changed
+- **Feature branch audit** — `gitlab/feature/cloud-dashboard-mcp-sse-389806464713532918` fully analyzed: all 4 unique features (L3 Cold Archive, P2P gossip mesh with AES-GCM encryption, Skill Evolution Engine, MCP SSE remote connectivity) already present in clean-main in equal or superior form. Branch is fully redundant — old TormentNexus/AIOS lineage with independently-merged features.
+
 ## [1.0.11] - 2026-10-02
 
 ### Added

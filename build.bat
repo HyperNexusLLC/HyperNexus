@@ -13,7 +13,7 @@ if errorlevel 1 (
 echo Building Go sidecar...
 for /f "tokens=*" %%v in ('type VERSION') do set VER=%%v
 cd go
-go build -ldflags "-s -w -X gitlab.com/robertpelloni/HyperNexus/internal/buildinfo.Version=%VER%" -buildvcs=false -o ..\bin\hypernexus.exe ./cmd/hypernexus
+go build -ldflags "-s -w -X gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo.Version=%VER%" -buildvcs=false -o ..\bin\hypernexus.exe ./cmd/tormentnexus
 if errorlevel 1 (
     echo [FAIL] Go build failed
     cd ..

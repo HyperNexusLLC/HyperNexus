@@ -1,5 +1,43 @@
 # HANDOFF.md — Session Handoff
 
+## Session Date: 2026-10-02 (Repo Sync + Intelligent Merge Protocol)
+
+## Summary
+Full repository synchronization & intelligent merge protocol executed. Feature branch audit across HyperNexus and realestatecrm. Batch script path fixes. Version bump to 1.0.12.
+
+## Completed (Repo Sync Protocol)
+
+### STEP 1: Upstream Tracking & Submodule Sanitization
+- `git fetch --all --tags` on root HyperNexus and all submodules (lumbros.me, vendor/deepseek-harness, vendor/grok-build)
+- Submodule `deepseek-harness` advanced: `639ed015` → `5badb150`
+- All submodules clean, no nested submodules with uncommitted changes
+- No upstream parent fork — HyperNexusLLC/HyperNexus is the canonical origin
+
+### STEP 2: Dual-Direction Intelligent Merge Engine
+- **HyperNexus feature branch** `gitlab/feature/cloud-dashboard-mcp-sse-389806464713532918` — 2,687 commits of old TormentNexus/AIOS/borg lineage analyzed. Top unique features:
+  1. L3 Cold Archive (`go/internal/memory/l3_archive.go`) — **already in clean-main** (HyperNexus rename applied)
+  2. P2P Gossip Mesh (`go/internal/mesh/gossip.go`) — **already in clean-main, SUPERIOR** (clean-main has AES-GCM encryption + `AddPeer` method)
+  3. Skill Evolution Engine (`go/internal/skillregistry/evolution.go`) — **already in clean-main**
+  4. MCP SSE Remote Connectivity — **already in clean-main** (integrated into `config_manager.go`/`sync.go`/`aggregator.go` rather than separate SSEClient file)
+  - **Verdict: FULLY REDUNDANT** — no unique code to merge. Branch is the old project lineage.
+- **realestatecrm submodules** (3 on feature branches): contentplanner (`foundation-build-*`), foreclosureworkflow (`feat/foreclosure-crm-mvp-*`), legacyleads (`jules-initial-setup-*`) — all **0 unique commits** vs origin/main. Fully redundant.
+- No other workspace repos with unmerged feature branches.
+
+### STEP 3: Workspace Cleanup & Documentation
+- **Batch script fixes** (4 files):
+  - `build.bat` — entrypoint `./cmd/hypernexus` → `./cmd/tormentnexus`, module path `robertpelloni` → `HyperNexusLLC`
+  - `build-editions.bat` — same entrypoint/module fix + duplicate `:build_hypernexus` label → `:build_corporate` + `:build_both` calls correct targets
+  - `push-to-gitlab.bat` — stale hardcoded commit message removed, pushes to `gitlab clean-main`
+  - `commit-and-push.bat` — pushes to both `github` and `gitlab` on `clean-main`, stale default message replaced
+- **VERSION** bumped to 1.0.12
+- **CHANGELOG.md** — 1.0.12 entry added
+
+### Prior sessions context
+- T55-T60: provider breakdown, metrics persistence, Actions CI, token tracking, cost estimation, startup status HTTP fallbacks (v1.0.8-v1.0.9)
+- T39-T42: MCP auto-start, connect-all, HTTP fallbacks, Go test fixes, docs (v1.0.11)
+- Session export: `docs/sessions/2026-10-01-t55-t60.md` (committed `ffa0573`)
+
+---
 ## Session Date: 2026-10-02 (T43–T45 + Bug Fixes: Versioning, RBAC, Teams, SSO, Catalog DB)
 
 ## Summary

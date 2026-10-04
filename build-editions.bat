@@ -35,7 +35,7 @@ echo Version: %VER%
 REM Build Go binary
 echo Building Go kernel...
 cd go
-go build -ldflags "-s -w -X gitlab.com/robertpelloni/HyperNexus/internal/buildinfo.Version=%VER% -X gitlab.com/robertpelloni/HyperNexus/internal/config.DefaultEdition=hypernexus" -buildvcs=false -o ..\bin\hypernexus.exe ./cmd/hypernexus
+go build -ldflags "-s -w -X gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo.Version=%VER% -X gitlab.com/HyperNexusLLC/HyperNexus/internal/config.DefaultEdition=hypernexus" -buildvcs=false -o ..\bin\hypernexus.exe ./cmd/tormentnexus
 if errorlevel 1 (
     echo [FAIL] Go build failed
     cd ..
@@ -62,7 +62,7 @@ echo   HyperNexus build complete!
 echo ========================================
 goto end
 
-:build_hypernexus
+:build_corporate
 echo.
 echo Building HyperNexus (Corporate Edition)...
 echo.
@@ -74,7 +74,7 @@ echo Version: %VER%
 REM Build Go binary
 echo Building Go kernel...
 cd go
-go build -ldflags "-s -w -X gitlab.com/robertpelloni/HyperNexus/internal/buildinfo.Version=%VER% -X gitlab.com/robertpelloni/HyperNexus/internal/config.DefaultEdition=hypernexus" -buildvcs=false -o ..\bin\hypernexus.exe ./cmd/hypernexus
+go build -ldflags "-s -w -X gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo.Version=%VER% -X gitlab.com/HyperNexusLLC/HyperNexus/internal/config.DefaultEdition=hypernexus" -buildvcs=false -o ..\bin\hypernexus.exe ./cmd/tormentnexus
 if errorlevel 1 (
     echo [FAIL] Go build failed
     cd ..
@@ -103,7 +103,7 @@ goto end
 
 :build_both
 call :build_hypernexus
-call :build_hypernexus
+call :build_corporate
 goto end
 
 :end
