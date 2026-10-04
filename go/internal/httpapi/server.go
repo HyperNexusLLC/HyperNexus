@@ -15207,6 +15207,20 @@ func (s *Server) localToolSets() ([]map[string]any, error) {
 	}
 	defer db.Close()
 
+	// Lazy table creation — tool_sets and tool_set_items may not exist on first query
+	db.Exec(`CREATE TABLE IF NOT EXISTS tool_sets (
+		uuid TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		description TEXT DEFAULT '',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+	db.Exec(`CREATE TABLE IF NOT EXISTS tool_set_items (
+		uuid TEXT PRIMARY KEY,
+		tool_set_uuid TEXT NOT NULL,
+		tool_uuid TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+
 	rows, err := db.Query(`
 		SELECT uuid, name, description
 		FROM tool_sets
