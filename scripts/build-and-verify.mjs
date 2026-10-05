@@ -63,6 +63,12 @@ async function main() {
 		} catch {}
 		await new Promise(r => setTimeout(r, 2000));
 		run("cd apps/web && npm run build");
+
+		// Critical: copy static assets into standalone dir (distDir nesting bug)
+		// When distDir is customized with output:"standalone", the standalone server.js
+		// expects static at .next-build/static/ relative to CWD — not auto-copied.
+		log("Copying static assets to standalone...");
+		run("robocopy \"apps/web/.next-build/static\" \"apps/web/.next-build/standalone/apps/web/.next-build/static\" /E /NFL /NDL /NJH /NJS", { continueOnError: true });
 	}
 
 	// 3. Restart services
@@ -73,12 +79,12 @@ async function main() {
 		await new Promise(r => setTimeout(r, 1000));
 		spawn("go/tormentnexus.exe", [], { detached: true, stdio: "ignore", cwd: repoRoot }).unref();
 		
-		// Start Dashboard
-		spawn("node", [".next-build/standalone/apps/web/server.js"], {
+		// Start Dashboard (cmd /c sets PORT env reliably on Windows)
+		spawn("cmd", ["/c", "set PORT=7779&& set NODE_ENV=production&& node .next-build/standalone/apps/web/server.js"], {
 			detached: true,
 			stdio: "ignore",
 			cwd: path.join(repoRoot, "apps/web"),
-			env: { ...process.env, PORT: "7779" },
+			shell: true,
 		}).unref();
 		
 		log("Waiting for services...");
