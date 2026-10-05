@@ -7,7 +7,7 @@ const { execSync, spawnSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const VERSION = "1.0.1";
+const VERSION = "1.0.11";
 const PLATFORMS = [
 	{ goos: "windows", goarch: "amd64", ext: ".exe" },
 	{ goos: "darwin", goarch: "amd64", ext: "" },
