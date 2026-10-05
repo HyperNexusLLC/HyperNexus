@@ -152,3 +152,55 @@ Standard response format: `{"success": true, "data": { ... }}`
 - **Description**: Generate MCP configuration for IDE clients.
 - **Status**: VERIFIED
 
+---
+
+## Parameter Reference (Discovered 2026-10-05)
+
+> **Critical**: Many endpoints use non-obvious parameter names. Always check this table before calling.
+
+### Query Parameter Names
+| Endpoint | Correct Param | Wrong Param (common mistake) |
+|---|---|---|
+| `/api/skills/read` | `?name=` | `?id=` |
+| `/api/tools/get` | `?uuid=` | `?name=` |
+| `/api/tools/search` | `?query=` | `?q=` |
+| `/api/tools/context` | `?toolName=` | `?tool=` |
+| `/api/workflows/graph` | `?workflowId=` | `?id=` |
+| `/api/catalog/linked-servers` | `?published_server_uuid=` | `?serverUuid=` |
+| `/api/catalog/runs` | `?server_uuid=` | `?serverUuid=` |
+| `/api/tools/by-server` | `?mcpServerUuid=` | `?serverId=` |
+| `/api/council/history/supervisor` | `?name=` | `?supervisor=` |
+| `/api/council/history/get` | `?id=` | `?uuid=` |
+| `/api/mcp/servers/export-client-config` | `?client=` | `?target=` |
+| `/api/submodules/capabilities` | `?path=` | `?name=` |
+| `/api/sessions/supervisor/health` | `?id=` | `?uuid=` |
+| `/api/memory/context/get` | `?id=` | `?uuid=` |
+
+### POST Body Parameter Names
+| Endpoint | Correct Field | Wrong Field |
+|---|---|---|
+| `/api/scripts/create` | `code` | `content` |
+| `/api/session-export/import` | `data` | `package` |
+| `/api/skills/create` | `id` | `name` |
+| `/api/mcp/tools/call` | `name` | `tool` |
+| `/api/mcp/tools/predict-conversational` | `prompt` | `message` |
+| `/api/mcp/conversation/append` | `text` | `content` |
+| `/api/user-prompts/capture` | `content` | `text` |
+
+### Route Path Naming (Non-Obvious)
+| Feature | Correct Path | Wrong Path |
+|---|---|---|
+| API index | `/api/index` | `/api` |
+| Sessions list | `/api/sessions` | `/api/sessions/list` |
+| Scripts list | `/api/scripts` | `/api/scripts/list` |
+| Settings providers | `/api/settings/providers` | `/api/config/providers` |
+| Shell history | `/api/shell/history/system` | `/api/shell/history` |
+| Pulse | `/api/pulse/*` | `/api/observability/pulse/*` |
+| Graph | `/api/graph/symbols` | `/api/graph/nodes` |
+| Knowledge | `/api/knowledge/stats` | `/api/knowledge/search` |
+| Context list | `/api/context/list` | `/api/context/status` |
+
+### Catalog Routes Use Snake_Case
+- `server_uuid`, `published_server_uuid` (not camelCase)
+- Inconsistent with all other routes
+
