@@ -1,29 +1,34 @@
 # HANDOFF.md — Session Handoff
 
-## Session Date: 2026-10-03 (T46–T48: Comprehensive Feature Testing — COMPLETE)
+## Session Date: 2026-10-05 (T48 Cycles 73–78: Remaining Feature Testing + Docs)
 
 ## Summary
 
-All 26 API categories tested (~650+ endpoints). **20 bugs found & fixed.** Zero remaining issues. Comprehensive QA session covering every API endpoint, security tests, concurrency, edge cases, E2E CRUD flows, dashboard UI, Hetzner write verification.
+Continued comprehensive API testing (~1100+ endpoints total). **21 bugs found & fixed** (added tool_sets table). Documented ~40 param mismatches in `docs/API_ENDPOINTS.md`. Updated TODO.md. Tested all remaining sub-routes across memory, agent-memory, browser-controls, metrics, workflows, MCP, settings, directory, CLI.
 
-## Bugs Found & Fixed (20 total)
-Missing lazy CREATE TABLE bugs (1-18) + skills save lookup (19) + expert init-order (20):
-1. `tool_call_logs` (2680b6aef) → 2. `config` (ef88e0240) → 3. `workspace_secrets` (ef88e0240) → 4. `workflows` (ac24ac783) → 5. `l2_vault` (ac24ac783) → 6. `published_skills` (ac24ac783) → 7. `policies` (d21181a6e) → 8. `browser_history` (d21181a6e) → 9. `browser_console_logs` (d21181a6e) → 10. `links_backlog` (d21181a6e) → 11. `oauth_clients` (d9f35cca3) → 12. `oauth_sessions` (d9f35cca3) → 13. `api_keys` (03e49a740) → 14-16. `published_mcp_*` tables (94d7f6c35) → 17-18. Memory list null fix + mcp_servers schema → 19. Skills save 3-way match (930515f71) → 20. Expert init-order nil-pointer (6d9354fc2).
+## Bugs Found & Fixed (21 total)
+Missing lazy CREATE TABLE bugs (1-18) + skills save lookup (19) + expert init-order (20) + tool_sets table (21):
+1. `tool_call_logs` (2680b6aef) → 2. `config` (ef88e0240) → 3. `workspace_secrets` (ef88e0240) → 4. `workflows` (ac24ac783) → 5. `l2_vault` (ac24ac783) → 6. `published_skills` (ac24ac783) → 7. `policies` (d21181a6e) → 8. `browser_history` (d21181a6e) → 9. `browser_console_logs` (d21181a6e) → 10. `links_backlog` (d21181a6e) → 11. `oauth_clients` (d9f35cca3) → 12. `oauth_sessions` (d9f35cca3) → 13. `api_keys` (03e49a740) → 14-16. `published_mcp_*` tables (94d7f6c35) → 17-18. Memory list null fix + mcp_servers schema → 19. Skills save 3-way match (930515f71) → 20. Expert init-order nil-pointer (6d9354fc2) → 21. `tool_sets` + `tool_set_items` (08b49da65).
 
 **False positive:** `savedScripts` — NOT a SQL table; uses `localSettingsConfig()` JSON at `.hypernexus/config.json`.
 
-## Testing Results
+## Testing Results (Updated 2026-10-05)
 | Category | Endpoints | Status |
 |---|---|---|
-| Memory | 39 | ✅ All tested |
-| MCP | 37 | ✅ All tested (56/56 connect-all) |
-| Governance | 120 | ~50 tested (council = tRPC-only) |
-| Code | 40 | ~20 tested |
+| Memory | 28 | ✅ All tested (deep sub-routes) |
+| MCP | 37 | ✅ All tested (tool-call, config, working-set) |
+| Governance | 120 | ✅ council/history + policies/secrets/api-keys/audit |
+| Code | 40 | ✅ code-mode + expert |
 | Providers | 22 | ✅ 8 providers, 5 authed |
 | Config | 25 | ✅ All tested |
-| Sessions | 30 | ✅ 50 sessions discovered |
-| Control/UI | 60 | ✅ All tested |
-| Operator | 34 | ✅ ~20 tested |
+| Sessions | 30 | ✅ 50 sessions + supervisor + imported |
+| Control/UI | 60 | ✅ All tested (plan, suggestions, submodules, browser) |
+| Operator | 34 | ✅ scripts, links-backlog, infrastructure, healer |
+| Tools | 12 | ✅ All tested (context, detect, search, get) |
+| Workflows | 13 | ✅ canvases, executions, history |
+| Metrics | 7 | ✅ All tested (snapshot, providers, routing) |
+| Directory | 2 | ✅ Unified directory |
+| CLI | 3 | ✅ Summary (51 tools, 49 harnesses) |
 | All others | ~180 | ✅ Tested |
 
 ## Security Tests
