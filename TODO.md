@@ -1,8 +1,8 @@
 # TODO — HyperNexus
 
-> **Last Updated:** 2026-10-02
+> **Last Updated:** 2026-10-05
 > **Current Version:** 1.0.11
-> **Status:** Core infrastructure complete, dashboard consolidated, production deployed, all MCP servers connected
+> **Status:** Core infrastructure complete, dashboard consolidated, production deployed, ~1070+ endpoints tested, 21 bugs fixed, ~40 param mismatches documented
 
 ---
 
@@ -26,6 +26,22 @@
 - [x] **Fix pre-existing test failures** — `TestToolResultSnapshots`, `TestVerifyLicense`, `TestResolveClientTargets` all fixed
 - [x] **Deploy v1.0.11 to Hetzner** — production running v1.0.11
 - [x] **Sync package versions on Hetzner** — node_modules present, dashboard returns 200
+
+---
+
+## ✅ Completed (2026-10-05 Testing Sprint)
+
+- [x] **Comprehensive API testing** — ~1070+ endpoints across 26 categories (cycles 42-76)
+- [x] **21 bugs fixed** — 18 lazy CREATE TABLE + localSaveSkill + init order + tool_sets table
+- [x] **~40 param mismatches documented** — in `docs/API_ENDPOINTS.md` parameter reference
+- [x] **Dashboard consolidation** — 85+ pages → single page with 10 tab sections
+- [x] **Script cleanup** — 102 scripts organized, 4 stale archived, `SCRIPTS_INDEX.md` created
+- [x] **Build system** — `build-and-verify.mjs` master script created
+- [x] **MCP registry fix** — `HYPERNEXUS_MASTER_INDEX.jsonc` created (local + Hetzner)
+- [x] **Performance baseline** — Health 42ms avg, memory 55ms avg, mixed 53ms avg
+- [x] **Concurrency verified** — 10 parallel health: 253ms, 10 parallel mixed: 1935ms
+- [x] **Edge cases verified** — Unicode, large payloads (50KB), pagination, SQL injection, empty bodies
+- [x] **E2E flows verified** — Scripts CRUD, Skills CRUD, Agent-memory handoff, Observation, Session import/export
 
 ---
 
