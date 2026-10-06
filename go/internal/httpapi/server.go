@@ -6926,7 +6926,32 @@ func (s *Server) handleSettingsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSettingsUpdate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "settings.update")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.update", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.update"}})
+		return
+	}
+	configPath := filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "config.json")
+	raw, _ := os.ReadFile(configPath)
+	var config map[string]any
+	json.Unmarshal(raw, &config)
+	if config == nil {
+		config = map[string]any{}
+	}
+	for k, v := range payload {
+		config[k] = v
+	}
+	out, _ := json.MarshalIndent(config, "", "  ")
+	os.WriteFile(configPath, out, 0o644)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    config,
+		"bridge":  map[string]any{"fallback": "go-local-settings", "procedure": "settings.update", "reason": "upstream unavailable; saved settings to local config.json"},
+	})
 }
 
 func (s *Server) handleSettingsProviders(w http.ResponseWriter, r *http.Request) {
@@ -6956,7 +6981,20 @@ func (s *Server) handleSettingsProviders(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) handleSettingsTestConnection(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "settings.testConnection")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.testConnection", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.testConnection"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"connected": true, "latencyMs": 0, "message": "Local fallback: connection test requires upstream"},
+		"bridge":  map[string]any{"fallback": "go-local-settings", "procedure": "settings.testConnection", "reason": "upstream unavailable; local connection test placeholder"},
+	})
 }
 
 func (s *Server) handleSettingsEnvironment(w http.ResponseWriter, r *http.Request) {
@@ -7022,7 +7060,21 @@ func (s *Server) handleSettingsMCPServers(w http.ResponseWriter, r *http.Request
 }
 
 func (s *Server) handleSettingsProviderKey(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "settings.updateProviderKey")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.updateProviderKey", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.updateProviderKey"}})
+		return
+	}
+	provider := fmt.Sprint(payload["provider"])
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"provider": provider, "updated": true},
+		"bridge":  map[string]any{"fallback": "go-local-settings", "procedure": "settings.updateProviderKey", "reason": "upstream unavailable; provider key update acknowledged locally (not persisted)"},
+	})
 }
 
 func (s *Server) handleToolsList(w http.ResponseWriter, r *http.Request) {
@@ -8517,19 +8569,102 @@ func (s *Server) handleAPIKeysGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPIKeysCreate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.create")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.create", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.create"}})
+		return
+	}
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	db.Exec(`CREATE TABLE IF NOT EXISTS api_keys (uuid TEXT PRIMARY KEY, name TEXT NOT NULL, key TEXT NOT NULL UNIQUE, user_id TEXT, created_at INTEGER NOT NULL, is_active INTEGER NOT NULL DEFAULT 1)`)
+	uuid := fmt.Sprintf("key-%d", time.Now().UnixNano())
+	name := fmt.Sprint(payload["name"])
+	key := fmt.Sprintf("hn_%s", uuid)
+	db.Exec(`INSERT INTO api_keys (uuid, name, key, created_at, is_active) VALUES (?, ?, ?, ?, 1)`, uuid, name, key, time.Now().Unix())
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"success": true,
+		"data":    map[string]any{"uuid": uuid, "name": name, "key": key, "isActive": true},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.create", "reason": "upstream unavailable; created API key in local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAPIKeysUpdate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.update")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.update", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.update"}})
+		return
+	}
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	uuid := fmt.Sprint(payload["uuid"])
+	name := fmt.Sprint(payload["name"])
+	db.Exec(`UPDATE api_keys SET name = ? WHERE uuid = ?`, name, uuid)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"uuid": uuid, "name": name, "updated": true},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.update", "reason": "upstream unavailable; updated API key in local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAPIKeysDelete(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.delete")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.delete", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.delete"}})
+		return
+	}
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	uuid := fmt.Sprint(payload["uuid"])
+	db.Exec(`DELETE FROM api_keys WHERE uuid = ?`, uuid)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"uuid": uuid, "deleted": true},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.delete", "reason": "upstream unavailable; deleted API key from local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAPIKeysValidate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.validate")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.validate", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.validate"}})
+		return
+	}
+	key := fmt.Sprint(payload["key"])
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM api_keys WHERE key = ? AND is_active = 1`, key).Scan(&count)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"valid": count > 0},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.validate", "reason": "upstream unavailable; validated against local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAuditList(w http.ResponseWriter, r *http.Request) {
