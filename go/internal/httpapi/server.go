@@ -10630,7 +10630,7 @@ func (s *Server) handleCodeModeStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{
-			"enabled":   false,
+			"enabled":   s.localCodeModeGet(),
 			"toolCount": 0,
 			"tools":     []map[string]any{},
 			"reduction": map[string]any{
@@ -10642,21 +10642,79 @@ func (s *Server) handleCodeModeStatus(w http.ResponseWriter, r *http.Request) {
 		"bridge": map[string]any{
 			"fallback":  "go-local-status",
 			"procedure": "codeMode.getStatus",
-			"reason":    "upstream unavailable; using local zero-state Code Mode status",
+			"reason":    "upstream unavailable; using local Code Mode status",
 		},
 	})
 }
 
+func (s *Server) localCodeModePath() string {
+	return filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "codemode.json")
+}
+
+func (s *Server) localCodeModeGet() bool {
+	raw, err := os.ReadFile(s.localCodeModePath())
+	if err != nil {
+		return false
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return false
+	}
+	enabled, _ := parsed["enabled"].(bool)
+	return enabled
+}
+
+func (s *Server) localCodeModeSet(enabled bool) {
+	os.MkdirAll(filepath.Dir(s.localCodeModePath()), 0o755)
+	out, _ := json.MarshalIndent(map[string]any{"enabled": enabled}, "", "  ")
+	os.WriteFile(s.localCodeModePath(), out, 0o644)
+}
+
 func (s *Server) handleCodeModeEnable(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "codeMode.enable")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.enable", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.enable"}})
+		return
+	}
+	s.localCodeModeSet(true)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"enabled": true},
+		"bridge":  map[string]any{"fallback": "go-local-codemode", "procedure": "codeMode.enable", "reason": "upstream unavailable; enabled code mode locally"},
+	})
 }
 
 func (s *Server) handleCodeModeDisable(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "codeMode.disable")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.disable", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.disable"}})
+		return
+	}
+	s.localCodeModeSet(false)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"enabled": false},
+		"bridge":  map[string]any{"fallback": "go-local-codemode", "procedure": "codeMode.disable", "reason": "upstream unavailable; disabled code mode locally"},
+	})
 }
 
 func (s *Server) handleCodeModeExecute(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "codeMode.execute")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.execute", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.execute"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"output": "", "tokens": 0, "message": "Code mode execution requires upstream engine"},
+		"bridge":  map[string]any{"fallback": "go-local-codemode", "procedure": "codeMode.execute", "reason": "upstream unavailable; code execution not available locally"},
+	})
 }
 
 func (s *Server) handleSubmoduleList(w http.ResponseWriter, r *http.Request) {
