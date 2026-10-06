@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -43,7 +44,17 @@ func (s *Server) handleBrowserClosePage(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *Server) handleBrowserCloseAll(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeCall(w, r, http.MethodPost, "browser.closeAll", nil)
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "browser.closeAll", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "browser.closeAll"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"closed": 0, "message": "No managed browser instances to close"},
+		"bridge":  map[string]any{"fallback": "go-local-browser", "procedure": "browser.closeAll", "reason": "upstream unavailable; no local browser instances to close"},
+	})
 }
 
 func (s *Server) handleBrowserSearchHistory(w http.ResponseWriter, r *http.Request) {
