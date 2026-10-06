@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.13] - 2026-10-06
+
+### Changed
+- **Dual-remote sync** — `clean-main` fast-forwarded to `github/main`/`gitlab/main`; both remotes verified in sync
+- **Submodules updated** — `lumbros.me` → 16261e00 (origin/main), `vendor/deepseek-harness` → 5badb150 (dsh-v0.2.1-alpha.1), `vendor/grok-build` → 2bdd1d6a (main)
+- **Feature branch audit (HyperNexus)** — `gitlab/feature/cloud-dashboard-mcp-sse-389806464713532918` confirmed fully redundant: orphaned history (2687 commits, alpha.159, no merge base), all unique features already in main under `archive/go_enterprise_sales_bot/borg/` and live SSEPlugin.ts
+- **realestatecrm feature branch reconciliation** — reverse-merged `main` into 4 stale AI branches and pushed; leadg `main` fast-forwarded to 2e9feb0
+- **Workspace branch scan** — only legacy develop/canary branches remain (element-web, hyper, FFmpeg, topaz-ffmpeg, timidity, ArrowVortex); no unmerged AI feature branches under robertpelloni
+
+### Verified
+- **Dashboard single-page consolidation** — all features on `/dashboard` with 6 anchored sections (mission-control, memory-graphrag, mcp-registry, research-workflows, governance-billing, integrations); nav-config maps every former subpage with tooltips
+- **System tray** — `go/internal/systray/systray_windows.go` has activity notification, last-10-log menu, `TriggerFullShutdown()` quit path wired from `httpapi/server.go`
+
 ## [1.0.12] - 2026-10-02
 
 ### Fixed
