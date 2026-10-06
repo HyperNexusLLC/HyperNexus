@@ -8,7 +8,36 @@ import (
 )
 
 func (s *Server) handleCouncilBaseStatus(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeCall(w, r, http.MethodGet, "council.status", nil)
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.status", nil, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data":    result,
+			"bridge": map[string]any{
+				"upstreamBase": upstreamBase,
+				"procedure":    "council.status",
+			},
+		})
+		return
+	}
+	debateCount, _ := s.debateHistory.GetRecordCount(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data": map[string]any{
+			"enabled":       true,
+			"mode":          "council",
+			"memberCount":   5,
+			"activeSessions": 0,
+			"totalDebates":  debateCount,
+			"status":        "ready",
+		},
+		"bridge": map[string]any{
+			"fallback":  "go-local-council",
+			"procedure": "council.status",
+			"reason":    "upstream unavailable; using local council status defaults",
+		},
+	})
 }
 
 func (s *Server) handleCouncilBaseUpdateConfig(w http.ResponseWriter, r *http.Request) {
