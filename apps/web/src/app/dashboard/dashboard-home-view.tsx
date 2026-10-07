@@ -8,6 +8,16 @@ import CommandDashboard from "./command/view";
 import ManualPage from "./manual/view";
 import CloudOrchestratorDashboardPage from "./cloud-orchestrator/view";
 import SettingsDashboard from "./settings/view";
+// High-value views consolidated into single-page dashboard
+import HealthDashboard from "./health/view";
+import MetricsPage from "./metrics/view";
+import SkillsPage from "./skills/view";
+import WorkflowsPage from "./workflows/view";
+import HealerDashboard from "./healer/view";
+import AuditDashboard from "./audit/view";
+import SecurityPage from "./security/view";
+import CognitiveBrainDashboard from "./brain/view";
+import PulsePage from "./pulse/view";
 
 export interface DashboardStatusSummary {
 	initialized: boolean;
@@ -1766,6 +1776,10 @@ export function DashboardHomeView({
 								{ href: "#memory-graphrag", label: "🧠 Memory" },
 								{ href: "#mcp-registry", label: "🔌 MCP & Tools" },
 								{ href: "#research-workflows", label: "🔬 Workflows" },
+								{ href: "#health-metrics", label: "📊 Health" },
+								{ href: "#skills-workflows", label: "⚡ Skills" },
+								{ href: "#security-audit", label: "🔒 Security" },
+								{ href: "#healer-cognition", label: "🧬 Cognition" },
 								{ href: "#integrations", label: "☁️ Integrations" },
 								{ href: "#governance-billing", label: "💼 Settings" },
 							].map((item) => (
@@ -4499,6 +4513,70 @@ export function DashboardHomeView({
 							{children}
 						</div>
 					)}
+
+					{/* ── Consolidated high-value views ── */}
+					<section id="health-metrics" className="scroll-mt-6 space-y-4">
+						<h2 className="text-lg font-bold text-white tracking-wide">
+							📊 Health &amp; Metrics
+						</h2>
+						<p className="text-xs text-slate-400">
+							System health monitoring, performance metrics, and pulse observability.
+						</p>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<HealthDashboard />
+						</div>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<MetricsPage />
+						</div>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<PulsePage />
+						</div>
+					</section>
+
+					<section id="skills-workflows" className="scroll-mt-6 space-y-4">
+						<h2 className="text-lg font-bold text-white tracking-wide">
+							⚡ Skills &amp; Workflows
+						</h2>
+						<p className="text-xs text-slate-400">
+							Agent skills registry, workflow engine, and autonomous orchestration.
+						</p>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<SkillsPage />
+						</div>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<WorkflowsPage />
+						</div>
+					</section>
+
+					<section id="security-audit" className="scroll-mt-6 space-y-4">
+						<h2 className="text-lg font-bold text-white tracking-wide">
+							🔒 Security &amp; Audit
+						</h2>
+						<p className="text-xs text-slate-400">
+							Security policies, audit logging, and compliance tracking.
+						</p>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<SecurityPage />
+						</div>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<AuditDashboard />
+						</div>
+					</section>
+
+					<section id="healer-cognition" className="scroll-mt-6 space-y-4">
+						<h2 className="text-lg font-bold text-white tracking-wide">
+							🧠 Cognition &amp; Self-Healing
+						</h2>
+						<p className="text-xs text-slate-400">
+							Cognitive brain dashboard and autonomous self-healing system.
+						</p>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<CognitiveBrainDashboard />
+						</div>
+						<div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+							<HealerDashboard />
+						</div>
+					</section>
 				</div>
 			</div>
 		</div>

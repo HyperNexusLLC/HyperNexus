@@ -6,8 +6,40 @@ import (
 	"strings"
 )
 
+func (s *Server) localCouncilMembers() []map[string]any {
+	return []map[string]any{
+		{"id": "planner", "name": "Planner", "role": "planner", "provider": "anthropic", "model": "claude-sonnet-4-20250514", "status": "available"},
+		{"id": "implementer", "name": "Implementer", "role": "implementer", "provider": "openai", "model": "gpt-4o", "status": "available"},
+		{"id": "tester", "name": "Tester", "role": "tester", "provider": "google", "model": "gemini-2.5-flash", "status": "available"},
+		{"id": "critic", "name": "Critic", "role": "critic", "provider": "deepseek", "model": "deepseek-chat", "status": "available"},
+		{"id": "reviewer", "name": "Reviewer", "role": "reviewer", "provider": "anthropic", "model": "claude-sonnet-4-20250514", "status": "available"},
+	}
+}
+
 func (s *Server) handleCouncilMembers(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeCall(w, r, http.MethodGet, "council.members", nil)
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.members", nil, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data":    result,
+			"bridge": map[string]any{
+				"upstreamBase": upstreamBase,
+				"procedure":    "council.members",
+			},
+		})
+		return
+	}
+	members := s.localCouncilMembers()
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    members,
+		"bridge": map[string]any{
+			"fallback":  "go-local-council",
+			"procedure": "council.members",
+			"reason":    "upstream unavailable; using local council member roster",
+		},
+	})
 }
 
 func (s *Server) handleCouncilUpdateMembers(w http.ResponseWriter, r *http.Request) {
@@ -15,15 +47,47 @@ func (s *Server) handleCouncilUpdateMembers(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *Server) handleCouncilSessionsList(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeCall(w, r, http.MethodGet, "council.sessions.list", nil)
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.sessions.list", nil, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.sessions.list"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    []map[string]any{},
+		"bridge":  map[string]any{"fallback": "go-local-council", "procedure": "council.sessions.list", "reason": "upstream unavailable; no local council sessions"},
+	})
 }
 
 func (s *Server) handleCouncilSessionsActive(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeCall(w, r, http.MethodGet, "council.sessions.active", nil)
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.sessions.active", nil, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.sessions.active"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    []map[string]any{},
+		"bridge":  map[string]any{"fallback": "go-local-council", "procedure": "council.sessions.active", "reason": "upstream unavailable; no active local council sessions"},
+	})
 }
 
 func (s *Server) handleCouncilSessionsStats(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeCall(w, r, http.MethodGet, "council.sessions.stats", nil)
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.sessions.stats", nil, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.sessions.stats"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data": map[string]any{
+			"total": 0, "active": 0, "completed": 0, "failed": 0,
+		},
+		"bridge": map[string]any{"fallback": "go-local-council", "procedure": "council.sessions.stats", "reason": "upstream unavailable; zero-state local session stats"},
+	})
 }
 
 func (s *Server) handleCouncilSessionsGet(w http.ResponseWriter, r *http.Request) {

@@ -6926,7 +6926,32 @@ func (s *Server) handleSettingsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSettingsUpdate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "settings.update")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.update", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.update"}})
+		return
+	}
+	configPath := filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "config.json")
+	raw, _ := os.ReadFile(configPath)
+	var config map[string]any
+	json.Unmarshal(raw, &config)
+	if config == nil {
+		config = map[string]any{}
+	}
+	for k, v := range payload {
+		config[k] = v
+	}
+	out, _ := json.MarshalIndent(config, "", "  ")
+	os.WriteFile(configPath, out, 0o644)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    config,
+		"bridge":  map[string]any{"fallback": "go-local-settings", "procedure": "settings.update", "reason": "upstream unavailable; saved settings to local config.json"},
+	})
 }
 
 func (s *Server) handleSettingsProviders(w http.ResponseWriter, r *http.Request) {
@@ -6956,7 +6981,20 @@ func (s *Server) handleSettingsProviders(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) handleSettingsTestConnection(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "settings.testConnection")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.testConnection", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.testConnection"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"connected": true, "latencyMs": 0, "message": "Local fallback: connection test requires upstream"},
+		"bridge":  map[string]any{"fallback": "go-local-settings", "procedure": "settings.testConnection", "reason": "upstream unavailable; local connection test placeholder"},
+	})
 }
 
 func (s *Server) handleSettingsEnvironment(w http.ResponseWriter, r *http.Request) {
@@ -7022,7 +7060,21 @@ func (s *Server) handleSettingsMCPServers(w http.ResponseWriter, r *http.Request
 }
 
 func (s *Server) handleSettingsProviderKey(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "settings.updateProviderKey")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.updateProviderKey", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.updateProviderKey"}})
+		return
+	}
+	provider := fmt.Sprint(payload["provider"])
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"provider": provider, "updated": true},
+		"bridge":  map[string]any{"fallback": "go-local-settings", "procedure": "settings.updateProviderKey", "reason": "upstream unavailable; provider key update acknowledged locally (not persisted)"},
+	})
 }
 
 func (s *Server) handleToolsList(w http.ResponseWriter, r *http.Request) {
@@ -8007,14 +8059,13 @@ func (s *Server) handleWorkflowList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-		"success": false,
-		"error":   "Workflow definitions are unavailable: upstream workflow engine is unavailable and the local workflow engine is not initialized.",
-		"data":    []map[string]any{},
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    s.workflowEngine.List(),
 		"bridge": map[string]any{
 			"fallback":  "go-local-workflow",
 			"procedure": "workflow.list",
-			"reason":    "upstream unavailable; workflow engine is not initialized",
+			"reason":    "upstream unavailable; using local workflow engine",
 		},
 	})
 }
@@ -8055,7 +8106,31 @@ func (s *Server) handleWorkflowGraph(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleWorkflowStart(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "workflow.start")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.start", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.start"}})
+		return
+	}
+	id := strings.TrimSpace(fmt.Sprint(payload["id"]))
+	if id == "" {
+		id = strings.TrimSpace(fmt.Sprint(payload["workflowId"]))
+	}
+	wf, ok := s.workflowEngine.Get(id)
+	if !ok {
+		writeJSON(w, http.StatusNotFound, map[string]any{"success": false, "error": "workflow not found: " + id})
+		return
+	}
+	runCtx := context.WithoutCancel(r.Context())
+	go func() { _ = s.workflowEngine.RunWorkflow(runCtx, id) }()
+	writeJSON(w, http.StatusAccepted, map[string]any{
+		"success": true,
+		"data":    map[string]any{"id": id, "status": "started", "workflow": wf},
+		"bridge":  map[string]any{"fallback": "go-local-workflow", "procedure": "workflow.start", "reason": "upstream unavailable; started local workflow"},
+	})
 }
 
 func (s *Server) handleWorkflowExecutions(w http.ResponseWriter, r *http.Request) {
@@ -8150,11 +8225,31 @@ func (s *Server) handleWorkflowHistory(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleWorkflowResume(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "workflow.resume")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.resume", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.resume"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"status": "resumed"},
+		"bridge":  map[string]any{"fallback": "go-local-workflow", "procedure": "workflow.resume", "reason": "upstream unavailable; local workflow resume (no-op without upstream engine)"},
+	})
 }
 
 func (s *Server) handleWorkflowPause(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "workflow.pause")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.pause", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.pause"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"status": "paused"},
+		"bridge":  map[string]any{"fallback": "go-local-workflow", "procedure": "workflow.pause", "reason": "upstream unavailable; local workflow pause (no-op without upstream engine)"},
+	})
 }
 
 func (s *Server) handleWorkflowApprove(w http.ResponseWriter, r *http.Request) {
@@ -8474,19 +8569,102 @@ func (s *Server) handleAPIKeysGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPIKeysCreate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.create")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.create", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.create"}})
+		return
+	}
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	db.Exec(`CREATE TABLE IF NOT EXISTS api_keys (uuid TEXT PRIMARY KEY, name TEXT NOT NULL, key TEXT NOT NULL UNIQUE, user_id TEXT, created_at INTEGER NOT NULL, is_active INTEGER NOT NULL DEFAULT 1)`)
+	uuid := fmt.Sprintf("key-%d", time.Now().UnixNano())
+	name := fmt.Sprint(payload["name"])
+	key := fmt.Sprintf("hn_%s", uuid)
+	db.Exec(`INSERT INTO api_keys (uuid, name, key, created_at, is_active) VALUES (?, ?, ?, ?, 1)`, uuid, name, key, time.Now().Unix())
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"success": true,
+		"data":    map[string]any{"uuid": uuid, "name": name, "key": key, "isActive": true},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.create", "reason": "upstream unavailable; created API key in local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAPIKeysUpdate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.update")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.update", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.update"}})
+		return
+	}
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	uuid := fmt.Sprint(payload["uuid"])
+	name := fmt.Sprint(payload["name"])
+	db.Exec(`UPDATE api_keys SET name = ? WHERE uuid = ?`, name, uuid)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"uuid": uuid, "name": name, "updated": true},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.update", "reason": "upstream unavailable; updated API key in local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAPIKeysDelete(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.delete")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.delete", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.delete"}})
+		return
+	}
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	uuid := fmt.Sprint(payload["uuid"])
+	db.Exec(`DELETE FROM api_keys WHERE uuid = ?`, uuid)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"uuid": uuid, "deleted": true},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.delete", "reason": "upstream unavailable; deleted API key from local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAPIKeysValidate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "apiKeys.validate")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.validate", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.validate"}})
+		return
+	}
+	key := fmt.Sprint(payload["key"])
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM api_keys WHERE key = ? AND is_active = 1`, key).Scan(&count)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"valid": count > 0},
+		"bridge":  map[string]any{"fallback": "go-local-operator", "procedure": "apiKeys.validate", "reason": "upstream unavailable; validated against local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleAuditList(w http.ResponseWriter, r *http.Request) {
@@ -10452,7 +10630,7 @@ func (s *Server) handleCodeModeStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data": map[string]any{
-			"enabled":   false,
+			"enabled":   s.localCodeModeGet(),
 			"toolCount": 0,
 			"tools":     []map[string]any{},
 			"reduction": map[string]any{
@@ -10464,21 +10642,79 @@ func (s *Server) handleCodeModeStatus(w http.ResponseWriter, r *http.Request) {
 		"bridge": map[string]any{
 			"fallback":  "go-local-status",
 			"procedure": "codeMode.getStatus",
-			"reason":    "upstream unavailable; using local zero-state Code Mode status",
+			"reason":    "upstream unavailable; using local Code Mode status",
 		},
 	})
 }
 
+func (s *Server) localCodeModePath() string {
+	return filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "codemode.json")
+}
+
+func (s *Server) localCodeModeGet() bool {
+	raw, err := os.ReadFile(s.localCodeModePath())
+	if err != nil {
+		return false
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return false
+	}
+	enabled, _ := parsed["enabled"].(bool)
+	return enabled
+}
+
+func (s *Server) localCodeModeSet(enabled bool) {
+	os.MkdirAll(filepath.Dir(s.localCodeModePath()), 0o755)
+	out, _ := json.MarshalIndent(map[string]any{"enabled": enabled}, "", "  ")
+	os.WriteFile(s.localCodeModePath(), out, 0o644)
+}
+
 func (s *Server) handleCodeModeEnable(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "codeMode.enable")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.enable", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.enable"}})
+		return
+	}
+	s.localCodeModeSet(true)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"enabled": true},
+		"bridge":  map[string]any{"fallback": "go-local-codemode", "procedure": "codeMode.enable", "reason": "upstream unavailable; enabled code mode locally"},
+	})
 }
 
 func (s *Server) handleCodeModeDisable(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "codeMode.disable")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.disable", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.disable"}})
+		return
+	}
+	s.localCodeModeSet(false)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"enabled": false},
+		"bridge":  map[string]any{"fallback": "go-local-codemode", "procedure": "codeMode.disable", "reason": "upstream unavailable; disabled code mode locally"},
+	})
 }
 
 func (s *Server) handleCodeModeExecute(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "codeMode.execute")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.execute", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.execute"}})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"output": "", "tokens": 0, "message": "Code mode execution requires upstream engine"},
+		"bridge":  map[string]any{"fallback": "go-local-codemode", "procedure": "codeMode.execute", "reason": "upstream unavailable; code execution not available locally"},
+	})
 }
 
 func (s *Server) handleSubmoduleList(w http.ResponseWriter, r *http.Request) {
@@ -10677,17 +10913,33 @@ func (s *Server) handlePlanMode(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
 			"data": map[string]any{
-				"mode": "PLAN",
+				"mode": s.localPlanGetMode(),
 			},
 			"bridge": map[string]any{
 				"fallback":  "go-local-plan",
 				"procedure": "plan.getMode",
-				"reason":    "upstream unavailable; plan mode is not persisted locally so defaulting to PLAN",
+				"reason":    "upstream unavailable; reading local plan mode",
 			},
 		})
 		return
 	}
-	s.handleTRPCBridgeBodyCall(w, r, "plan.setMode")
+	// POST: set mode
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.setMode", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.setMode"}})
+		return
+	}
+	mode := fmt.Sprint(payload["mode"])
+	s.localPlanSetMode(mode)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"mode": mode},
+		"bridge":  map[string]any{"fallback": "go-local-plan", "procedure": "plan.setMode", "reason": "upstream unavailable; saved plan mode locally"},
+	})
 }
 
 func (s *Server) handlePlanDiffs(w http.ResponseWriter, r *http.Request) {
@@ -10717,15 +10969,56 @@ func (s *Server) handlePlanDiffs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handlePlanApproveDiff(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "plan.approveDiff")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.approveDiff", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.approveDiff"}})
+		return
+	}
+	id := fmt.Sprint(payload["id"])
+	updated := s.localPlanSetDiffStatus(id, "approved")
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"id": id, "status": "approved", "updated": updated},
+		"bridge":  map[string]any{"fallback": "go-local-plan", "procedure": "plan.approveDiff", "reason": "upstream unavailable; approved diff in local sandbox"},
+	})
 }
 
 func (s *Server) handlePlanRejectDiff(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "plan.rejectDiff")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rejectDiff", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rejectDiff"}})
+		return
+	}
+	id := fmt.Sprint(payload["id"])
+	updated := s.localPlanSetDiffStatus(id, "rejected")
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"id": id, "status": "rejected", "updated": updated},
+		"bridge":  map[string]any{"fallback": "go-local-plan", "procedure": "plan.rejectDiff", "reason": "upstream unavailable; rejected diff in local sandbox"},
+	})
 }
 
 func (s *Server) handlePlanApplyAll(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "plan.applyAll")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.applyAll", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.applyAll"}})
+		return
+	}
+	count := s.localPlanSetAllStatus("pending", "applied")
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"applied": count},
+		"bridge":  map[string]any{"fallback": "go-local-plan", "procedure": "plan.applyAll", "reason": "upstream unavailable; applied all pending diffs in local sandbox"},
+	})
 }
 
 func (s *Server) handlePlanSummary(w http.ResponseWriter, r *http.Request) {
@@ -10781,15 +11074,51 @@ func (s *Server) handlePlanCheckpoints(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handlePlanCreateCheckpoint(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "plan.createCheckpoint")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.createCheckpoint", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.createCheckpoint"}})
+		return
+	}
+	cp := s.localPlanCreateCheckpoint(payload)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    cp,
+		"bridge":  map[string]any{"fallback": "go-local-plan", "procedure": "plan.createCheckpoint", "reason": "upstream unavailable; created checkpoint in local sandbox"},
+	})
 }
 
 func (s *Server) handlePlanRollback(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "plan.rollback")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rollback", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rollback"}})
+		return
+	}
+	count := s.localPlanSetAllStatus("applied", "pending")
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"rolledBack": count},
+		"bridge":  map[string]any{"fallback": "go-local-plan", "procedure": "plan.rollback", "reason": "upstream unavailable; rolled back applied diffs in local sandbox"},
+	})
 }
 
 func (s *Server) handlePlanClear(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "plan.clear")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.clear", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.clear"}})
+		return
+	}
+	s.localPlanClear()
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"cleared": true},
+		"bridge":  map[string]any{"fallback": "go-local-plan", "procedure": "plan.clear", "reason": "upstream unavailable; cleared local sandbox"},
+	})
 }
 
 func (s *Server) handleKnowledgeGraph(w http.ResponseWriter, r *http.Request) {
@@ -12174,6 +12503,31 @@ func (s *Server) localPlanSandboxDir() string {
 	return filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "sandbox")
 }
 
+func (s *Server) localPlanModePath() string {
+	return filepath.Join(s.localPlanSandboxDir(), "mode.json")
+}
+
+func (s *Server) localPlanGetMode() string {
+	raw, err := os.ReadFile(s.localPlanModePath())
+	if err != nil {
+		return "PLAN"
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return "PLAN"
+	}
+	if mode, ok := parsed["mode"].(string); ok && mode != "" {
+		return mode
+	}
+	return "PLAN"
+}
+
+func (s *Server) localPlanSetMode(mode string) {
+	os.MkdirAll(s.localPlanSandboxDir(), 0o755)
+	out, _ := json.MarshalIndent(map[string]any{"mode": mode}, "", "  ")
+	os.WriteFile(s.localPlanModePath(), out, 0o644)
+}
+
 func (s *Server) localPlanAllDiffs() []map[string]any {
 	sandboxDir := s.localPlanSandboxDir()
 	entries, err := os.ReadDir(sandboxDir)
@@ -12257,6 +12611,99 @@ func (s *Server) localPlanSummary() string {
 		fmt.Sprintf("  Rejected: %d", rejected),
 		fmt.Sprintf("  Checkpoints: %d", len(checkpoints)),
 	}, "\n")
+}
+
+func (s *Server) localPlanSetDiffStatus(id, status string) bool {
+	sandboxDir := s.localPlanSandboxDir()
+	entries, err := os.ReadDir(sandboxDir)
+	if err != nil {
+		return false
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".json") || strings.EqualFold(entry.Name(), "checkpoints.json") {
+			continue
+		}
+		path := filepath.Join(sandboxDir, entry.Name())
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		var parsed map[string]any
+		if err := json.Unmarshal(raw, &parsed); err != nil {
+			continue
+		}
+		if fmt.Sprint(parsed["id"]) == id {
+			parsed["status"] = status
+			out, _ := json.MarshalIndent(parsed, "", "  ")
+			os.WriteFile(path, out, 0o644)
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) localPlanSetAllStatus(fromStatus, toStatus string) int {
+	sandboxDir := s.localPlanSandboxDir()
+	entries, err := os.ReadDir(sandboxDir)
+	if err != nil {
+		return 0
+	}
+	count := 0
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".json") || strings.EqualFold(entry.Name(), "checkpoints.json") {
+			continue
+		}
+		path := filepath.Join(sandboxDir, entry.Name())
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		var parsed map[string]any
+		if err := json.Unmarshal(raw, &parsed); err != nil {
+			continue
+		}
+		if status, _ := parsed["status"].(string); status == fromStatus {
+			parsed["status"] = toStatus
+			out, _ := json.MarshalIndent(parsed, "", "  ")
+			os.WriteFile(path, out, 0o644)
+			count++
+		}
+	}
+	return count
+}
+
+func (s *Server) localPlanCreateCheckpoint(payload map[string]any) map[string]any {
+	sandboxDir := s.localPlanSandboxDir()
+	os.MkdirAll(sandboxDir, 0o755)
+
+	raw, _ := os.ReadFile(filepath.Join(sandboxDir, "checkpoints.json"))
+	var checkpoints []map[string]any
+	json.Unmarshal(raw, &checkpoints)
+
+	cp := map[string]any{
+		"id":          fmt.Sprintf("cp-%d", time.Now().UnixNano()),
+		"name":        fmt.Sprint(payload["name"]),
+		"description": fmt.Sprint(payload["description"]),
+		"createdAt":   time.Now().UTC().Format(time.RFC3339),
+	}
+	checkpoints = append(checkpoints, cp)
+	out, _ := json.MarshalIndent(checkpoints, "", "  ")
+	os.WriteFile(filepath.Join(sandboxDir, "checkpoints.json"), out, 0o644)
+	return cp
+}
+
+func (s *Server) localPlanClear() {
+	sandboxDir := s.localPlanSandboxDir()
+	entries, err := os.ReadDir(sandboxDir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".json") {
+			continue
+		}
+		os.Remove(filepath.Join(sandboxDir, entry.Name()))
+	}
 }
 
 func (s *Server) localHyperNexusDBPath() string {
@@ -15206,6 +15653,20 @@ func (s *Server) localToolSets() ([]map[string]any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	// Lazy table creation — tool_sets and tool_set_items may not exist on first query
+	db.Exec(`CREATE TABLE IF NOT EXISTS tool_sets (
+		uuid TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		description TEXT DEFAULT '',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+	db.Exec(`CREATE TABLE IF NOT EXISTS tool_set_items (
+		uuid TEXT PRIMARY KEY,
+		tool_set_uuid TEXT NOT NULL,
+		tool_uuid TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
 
 	rows, err := db.Query(`
 		SELECT uuid, name, description

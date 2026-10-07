@@ -62,6 +62,54 @@ Full repository synchronization & intelligent merge protocol executed. Feature b
 - T55-T60: provider breakdown, metrics persistence, Actions CI, token tracking, cost estimation, startup status HTTP fallbacks (v1.0.8-v1.0.9)
 - T39-T42: MCP auto-start, connect-all, HTTP fallbacks, Go test fixes, docs (v1.0.11)
 - Session export: `docs/sessions/2026-10-01-t55-t60.md` (committed `ffa0573`)
+---
+## Session Date: 2026-10-05 (T48 Cycles 73–78: Remaining Feature Testing + Docs)
+
+## Summary
+
+Continued comprehensive API testing (~1100+ endpoints total). **21 bugs found & fixed** (added tool_sets table). Documented ~40 param mismatches in `docs/API_ENDPOINTS.md`. Updated TODO.md. Tested all remaining sub-routes across memory, agent-memory, browser-controls, metrics, workflows, MCP, settings, directory, CLI.
+
+## Bugs Found & Fixed (21 total)
+Missing lazy CREATE TABLE bugs (1-18) + skills save lookup (19) + expert init-order (20) + tool_sets table (21):
+1. `tool_call_logs` (2680b6aef) → 2. `config` (ef88e0240) → 3. `workspace_secrets` (ef88e0240) → 4. `workflows` (ac24ac783) → 5. `l2_vault` (ac24ac783) → 6. `published_skills` (ac24ac783) → 7. `policies` (d21181a6e) → 8. `browser_history` (d21181a6e) → 9. `browser_console_logs` (d21181a6e) → 10. `links_backlog` (d21181a6e) → 11. `oauth_clients` (d9f35cca3) → 12. `oauth_sessions` (d9f35cca3) → 13. `api_keys` (03e49a740) → 14-16. `published_mcp_*` tables (94d7f6c35) → 17-18. Memory list null fix + mcp_servers schema → 19. Skills save 3-way match (930515f71) → 20. Expert init-order nil-pointer (6d9354fc2) → 21. `tool_sets` + `tool_set_items` (08b49da65).
+
+**False positive:** `savedScripts` — NOT a SQL table; uses `localSettingsConfig()` JSON at `.hypernexus/config.json`.
+
+## Testing Results (Updated 2026-10-05)
+| Category | Endpoints | Status |
+|---|---|---|
+| Memory | 28 | ✅ All tested (deep sub-routes) |
+| MCP | 37 | ✅ All tested (tool-call, config, working-set) |
+| Governance | 120 | ✅ council/history + policies/secrets/api-keys/audit |
+| Code | 40 | ✅ code-mode + expert |
+| Providers | 22 | ✅ 8 providers, 5 authed |
+| Config | 25 | ✅ All tested |
+| Sessions | 30 | ✅ 50 sessions + supervisor + imported |
+| Control/UI | 60 | ✅ All tested (plan, suggestions, submodules, browser) |
+| Operator | 34 | ✅ scripts, links-backlog, infrastructure, healer |
+| Tools | 12 | ✅ All tested (context, detect, search, get) |
+| Workflows | 13 | ✅ canvases, executions, history |
+| Metrics | 7 | ✅ All tested (snapshot, providers, routing) |
+| Directory | 2 | ✅ Unified directory |
+| CLI | 3 | ✅ Summary (51 tools, 49 harnesses) |
+| All others | ~180 | ✅ Tested |
+
+## Security Tests
+- XSS in memory content → escaped ✅
+- SQL injection → safe ✅
+- 10KB content → stored ✅
+- Unicode (emoji/CJK) → stored ✅
+- Concurrent writes → 5/5 ✅
+- Malformed JSON → `{"error":"invalid JSON body"}` ✅
+
+## Key Learnings
+- Memory versioning is READ-ONLY (history/get/list only; auto on update)
+- Write ops vs reads: reads have local fallbacks, writes often tRPC-only
+- Hetzner POST requires `X-API-Key` header
+- Scripts engine = Node.js eval (not shell)
+- `savedScripts` = JSON config, not SQL
+- API keys table uses graceful degradation (returns "not found" not SQL error)
+- Stripe billing: ACTIVE Commercial Cloud SaaS $499/mo, customer `cus_R8vB42tX910a`
 
 ---
 ## Session Date: 2026-10-02 (T43–T45 + Bug Fixes: Versioning, RBAC, Teams, SSO, Catalog DB)

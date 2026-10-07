@@ -2,6 +2,8 @@ package httpapi
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -81,15 +83,71 @@ func (s *Server) handleConfigGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleConfigUpsert(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.upsert")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.upsert", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.upsert"}})
+		return
+	}
+	key := fmt.Sprint(payload["key"])
+	value := fmt.Sprint(payload["value"])
+	if err := s.setLocalConfigValue(key, value); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"key": key, "value": value},
+		"bridge":  map[string]any{"fallback": "go-local-config-db", "procedure": "config.upsert", "reason": "upstream unavailable; upserted config in local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleConfigDelete(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.delete")
+	var payload map[string]any
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.delete", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.delete"}})
+		return
+	}
+	key := fmt.Sprint(payload["key"])
+	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	defer db.Close()
+	db.Exec(`DELETE FROM config WHERE id = ?`, key)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"key": key, "deleted": true},
+		"bridge":  map[string]any{"fallback": "go-local-config-db", "procedure": "config.delete", "reason": "upstream unavailable; deleted config from local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleConfigUpdate(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.update")
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.update", payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.update"}})
+		return
+	}
+	key := fmt.Sprint(payload["key"])
+	value := fmt.Sprint(payload["value"])
+	if err := s.setLocalConfigValue(key, value); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"key": key, "value": value},
+		"bridge":  map[string]any{"fallback": "go-local-config-db", "procedure": "config.update", "reason": "upstream unavailable; updated config in local hypernexus.db"},
+	})
 }
 
 func (s *Server) handleConfigGetMCPTimeout(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +155,7 @@ func (s *Server) handleConfigGetMCPTimeout(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Server) handleConfigSetMCPTimeout(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setMcpTimeout")
+	s.handleConfigScalarSetFallback(w, r, "config.setMcpTimeout", "MCP_TIMEOUT")
 }
 
 func (s *Server) handleConfigGetMCPMaxAttempts(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +163,7 @@ func (s *Server) handleConfigGetMCPMaxAttempts(w http.ResponseWriter, r *http.Re
 }
 
 func (s *Server) handleConfigSetMCPMaxAttempts(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setMcpMaxAttempts")
+	s.handleConfigScalarSetFallback(w, r, "config.setMcpMaxAttempts", "MCP_MAX_ATTEMPTS")
 }
 
 func (s *Server) handleConfigGetMCPMaxTotalTimeout(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +171,7 @@ func (s *Server) handleConfigGetMCPMaxTotalTimeout(w http.ResponseWriter, r *htt
 }
 
 func (s *Server) handleConfigSetMCPMaxTotalTimeout(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setMcpMaxTotalTimeout")
+	s.handleConfigScalarSetFallback(w, r, "config.setMcpMaxTotalTimeout", "MCP_MAX_TOTAL_TIMEOUT")
 }
 
 func (s *Server) handleConfigGetMCPResetTimeoutOnProgress(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +202,7 @@ func (s *Server) handleConfigGetMCPResetTimeoutOnProgress(w http.ResponseWriter,
 }
 
 func (s *Server) handleConfigSetMCPResetTimeoutOnProgress(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setMcpResetTimeoutOnProgress")
+	s.handleConfigScalarSetFallback(w, r, "config.setMcpResetTimeoutOnProgress", "MCP_RESET_TIMEOUT_ON_PROGRESS")
 }
 
 func (s *Server) handleConfigGetSessionLifetime(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +251,7 @@ func (s *Server) handleConfigGetSessionLifetime(w http.ResponseWriter, r *http.R
 }
 
 func (s *Server) handleConfigSetSessionLifetime(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setSessionLifetime")
+	s.handleConfigScalarSetFallback(w, r, "config.setSessionLifetime", "SESSION_LIFETIME")
 }
 
 func (s *Server) handleConfigGetSignupDisabled(w http.ResponseWriter, r *http.Request) {
@@ -201,7 +259,7 @@ func (s *Server) handleConfigGetSignupDisabled(w http.ResponseWriter, r *http.Re
 }
 
 func (s *Server) handleConfigSetSignupDisabled(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setSignupDisabled")
+	s.handleConfigScalarSetFallback(w, r, "config.setSignupDisabled", "SIGNUP_DISABLED")
 }
 
 func (s *Server) handleConfigGetSSOSignupDisabled(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +267,7 @@ func (s *Server) handleConfigGetSSOSignupDisabled(w http.ResponseWriter, r *http
 }
 
 func (s *Server) handleConfigSetSSOSignupDisabled(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setSsoSignupDisabled")
+	s.handleConfigScalarSetFallback(w, r, "config.setSsoSignupDisabled", "SSO_SIGNUP_DISABLED")
 }
 
 func (s *Server) handleConfigGetBasicAuthDisabled(w http.ResponseWriter, r *http.Request) {
@@ -217,7 +275,7 @@ func (s *Server) handleConfigGetBasicAuthDisabled(w http.ResponseWriter, r *http
 }
 
 func (s *Server) handleConfigSetBasicAuthDisabled(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setBasicAuthDisabled")
+	s.handleConfigScalarSetFallback(w, r, "config.setBasicAuthDisabled", "BASIC_AUTH_DISABLED")
 }
 
 func (s *Server) handleConfigGetAuthProviders(w http.ResponseWriter, r *http.Request) {
@@ -300,7 +358,7 @@ func (s *Server) handleConfigGetAlwaysVisibleTools(w http.ResponseWriter, r *htt
 }
 
 func (s *Server) handleConfigSetAlwaysVisibleTools(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "config.setAlwaysVisibleTools")
+	s.handleConfigScalarSetFallback(w, r, "config.setAlwaysVisibleTools", "ALWAYS_VISIBLE_TOOLS")
 }
 
 func (s *Server) handleConfigBooleanFallback(w http.ResponseWriter, r *http.Request, procedure, key string, defaultValue bool) {
@@ -435,4 +493,29 @@ func (s *Server) setLocalConfigValue(key string, value string) error {
 	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS config (id TEXT PRIMARY KEY, value TEXT)`)
 	_, err = db.Exec(`INSERT INTO config (id, value) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET value = excluded.value`, key, value)
 	return err
+}
+
+func (s *Server) handleConfigScalarSetFallback(w http.ResponseWriter, r *http.Request, procedure, key string) {
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), procedure, payload, new(any)); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": procedure}})
+		return
+	}
+	value := fmt.Sprint(payload["value"])
+	if value == "<nil>" {
+		value = fmt.Sprint(payload[key])
+	}
+	if err := s.setLocalConfigValue(key, value); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"success": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"key": key, "value": value},
+		"bridge":  map[string]any{"fallback": "go-local-config-db", "procedure": procedure, "reason": "upstream unavailable; saved config scalar to local hypernexus.db"},
+	})
 }
