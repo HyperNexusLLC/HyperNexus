@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	_ "github.com/glebarez/go-sqlite"
@@ -28,6 +29,31 @@ const (
 	ollamaDim     = 768
 	fallbackDim   = 384
 )
+
+// Search-path embeds are latency-critical: SemanticSearch holds the store mutex
+// across the embed call, so a hung Ollama would serialize every memory search.
+// Bound the embed and short-circuit while Ollama is known-down so queries fall
+// back to hash embeddings immediately instead of queueing behind dead sockets.
+const (
+	searchEmbedTimeout = 2 * time.Second
+	ollamaDownCooldown = 30 * time.Second
+)
+
+var (
+	ollamaDownUntil atomic.Int64 // unix nanos; zero means "not marked down"
+)
+
+// ollamaMarkDown records an embed failure so subsequent calls skip the HTTP
+// attempt until the cooldown elapses. Single failure trips it — a hung Ollama
+// is worse than a temporarily degraded embedding quality.
+func ollamaMarkDown() {
+	ollamaDownUntil.Store(time.Now().Add(ollamaDownCooldown).UnixNano())
+}
+
+func ollamaKnownDown() bool {
+	until := ollamaDownUntil.Load()
+	return until != 0 && time.Now().UnixNano() < until
+}
 
 type l1Entry struct {
 	value      controlplane.L2VaultRecord
@@ -523,9 +549,15 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 
 	isVectorSearch := len(queryVec) > 0
 
-	// If we have text but no vector, try to get a real embedding from Ollama
+	// If we have text but no vector, try to get a real embedding from Ollama.
+	// Bound the embed: this runs under the store mutex, so a hung Ollama would
+	// stall every concurrent search behind it. 2s is enough for a local embed
+	// and small enough that hash-fallback keeps search responsive.
 	if !isVectorSearch && queryText != "" {
-		if vec := ollamaEmbed(ctx, queryText); vec != nil {
+		embedCtx, cancel := context.WithTimeout(ctx, searchEmbedTimeout)
+		vec := ollamaEmbed(embedCtx, queryText)
+		cancel()
+		if vec != nil {
 			queryVec = vec
 			isVectorSearch = true
 		}
@@ -1342,6 +1374,12 @@ func ollamaEmbed(ctx context.Context, text string) []float32 {
 		ctx = context.Background()
 	}
 
+	// Circuit breaker: while Ollama is marked down, skip the HTTP attempt so
+	// callers fall back to simpleEmbed instantly instead of stacking timeouts.
+	if ollamaKnownDown() {
+		return nil
+	}
+
 	payload := struct {
 		Model string `json:"model"`
 		Input string `json:"input"`
@@ -1358,14 +1396,19 @@ func ollamaEmbed(ctx context.Context, text string) []float32 {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	// Deadline wins whichever is tighter: caller's ctx or the 10s client cap.
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
+		ollamaMarkDown()
 		return nil // Ollama not running — silent fallback
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
+		if resp.StatusCode >= 500 {
+			ollamaMarkDown()
+		}
 		return nil
 	}
 
@@ -1379,6 +1422,8 @@ func ollamaEmbed(ctx context.Context, text string) []float32 {
 		return nil
 	}
 
+	// Success clears any prior down-mark so a recovered Ollama resumes service.
+	ollamaDownUntil.Store(0)
 	return result.Embeddings[0]
 }
 
