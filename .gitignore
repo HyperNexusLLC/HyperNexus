@@ -113,8 +113,7 @@ batch_generate.py
 **/.turbo/
 
 # === TormentNexus runtime state ===
-.tormentnexus/
-**/.tormentnexus/
+# Protocol: memory, sessions, databases MUST stay tracked (not ignored)
 .tormentnexus-session.json
 .tormentnexus_startup_marker
 **/.tormentnexus_startup_marker
@@ -122,27 +121,18 @@ batch_generate.py
 **/.cli_startup_marker
 .tormentnexus_boot_check
 **/.tormentnexus_boot_check
-.tormentnexus/agent_memory/
-.tormentnexus/handoffs/
-.tormentnexus/memory/
 .tormentnexus/worktrees/
 .tormentnexus/workflows_test_*/
 .tormentnexus/shell_history.json
 .tormentnexus/policy.json
-.tormentnexus/imported_sessions/
 
 # === Database runtime ===
-*.db
+# Protocol: databases must be tracked
 *.db-shm
 *.db-wal
-!data/*.db
 
 # === LanceDB / Vector data ===
-data/
-!data/*.db
-!data/init_state.py
 data/lancedb/
-data/memory/
 data/vectordb/
 
 # === Session state ===
@@ -168,9 +158,6 @@ apps/web/.tsc-current.txt
 **/test-results/
 test_logs/
 logs/
-docs/sessions/*.json
-docs/sessions/*.sqlite
-docs/sessions/*.db
 
 # === Archive (dead code, kept on disk only) ===
 # archive/ is now tracked for preserving removed files
