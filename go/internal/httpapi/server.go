@@ -16059,13 +16059,115 @@ func (s *Server) localDBToolSearch(query string, limit int) ([]map[string]any, e
 	}
 	queryLower := strings.ToLower(strings.TrimSpace(query))
 	results := make([]map[string]any, 0)
+	seen := map[string]struct{}{}
 	for _, tool := range tools {
 		name := strings.ToLower(stringValue(tool["name"]))
 		description := strings.ToLower(stringValue(tool["description"]))
 		server := strings.ToLower(stringValue(tool["server"]))
 		if strings.Contains(name, queryLower) || strings.Contains(description, queryLower) || strings.Contains(server, queryLower) {
 			results = append(results, tool)
+			seen[stringValue(tool["uuid"])] = struct{}{}
 			if limit > 0 && len(results) >= limit {
+				return results, nil
+			}
+		}
+	}
+	// The hypernexus.db tools table is often empty (schema is created lazily),
+	// while catalog.db holds the full published MCP server/skill library the
+	// suggestion monitor is meant to draw from. Merge catalog hits so tool
+	// search never returns empty when the catalog has matches.
+	catalogHits, catErr := s.localCatalogSearch(query, limit)
+	if catErr != nil {
+		return results, nil
+	}
+	for _, hit := range catalogHits {
+		id := stringValue(hit["uuid"])
+		if id != "" {
+			if _, dup := seen[id]; dup {
+				continue
+			}
+			seen[id] = struct{}{}
+		}
+		results = append(results, hit)
+		if limit > 0 && len(results) >= limit {
+			break
+		}
+	}
+	return results, nil
+}
+
+// localCatalogSearch searches catalog.db published_mcp_servers and
+// published_skills — the "massive library" backing the local-LLM tool
+// suggestion monitor. Results are normalized to the tool shape used by
+// /api/tools/search so the dashboard can render them uniformly.
+func (s *Server) localCatalogSearch(query string, limit int) ([]map[string]any, error) {
+	dbPath := filepath.Join(s.cfg.WorkspaceRoot, "catalog.db")
+	db, err := database.Open("sqlite", dbPath)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	queryLower := strings.ToLower(strings.TrimSpace(query))
+	like := "%" + queryLower + "%"
+	results := make([]map[string]any, 0)
+	if limit <= 0 {
+		limit = 30
+	}
+
+	rows, err := db.Query(`
+		SELECT uuid, canonical_id, display_name, description, transport, install_method, status
+		FROM published_mcp_servers
+		WHERE lower(display_name) LIKE ? OR lower(description) LIKE ? OR lower(canonical_id) LIKE ?
+		ORDER BY display_name
+		LIMIT ?
+	`, like, like, like, limit)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var uuid, canonicalID, displayName, description, transport, installMethod, status string
+			if err := rows.Scan(&uuid, &canonicalID, &displayName, &description, &transport, &installMethod, &status); err != nil {
+				continue
+			}
+			results = append(results, map[string]any{
+				"uuid":        uuid,
+				"name":        displayName,
+				"description": description,
+				"server":      canonicalID,
+				"kind":        "mcp_server",
+				"transport":   transport,
+				"install":     installMethod,
+				"status":      status,
+				"source":      "catalog.db",
+			})
+			if len(results) >= limit {
+				return results, nil
+			}
+		}
+	}
+
+	skillRows, err := db.Query(`
+		SELECT id, name, description
+		FROM published_skills
+		WHERE is_retired = 0 AND (lower(name) LIKE ? OR lower(description) LIKE ?)
+		ORDER BY use_count DESC, name
+		LIMIT ?
+	`, like, like, limit)
+	if err == nil {
+		defer skillRows.Close()
+		for skillRows.Next() {
+			var id, name, description string
+			if err := skillRows.Scan(&id, &name, &description); err != nil {
+				continue
+			}
+			results = append(results, map[string]any{
+				"uuid":        id,
+				"name":        name,
+				"description": description,
+				"kind":        "skill",
+				"source":      "catalog.db",
+			})
+			if len(results) >= limit {
 				break
 			}
 		}
