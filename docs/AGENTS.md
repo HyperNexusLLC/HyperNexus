@@ -108,8 +108,8 @@ npm publish         # requires npm login as package owner
 ```
 
 ### Pi Coding Agent Extension
-- Source: `.pi/extensions/hypernexus.ts`
-- Installed to `~/.pi/agent/extensions/hypernexus.ts`
+- Source: `addons/pi/hypernexus.ts` (git-tracked; NOT auto-discovered by pi)
+- Installed to `~/.pi/agent/extensions/hypernexus.ts` (the single active copy — do not keep a copy in `.pi/extensions/`, it conflicts with the global one)
 - Must be kept in sync with the CodeWhale extension feature set
 
 ### .codewhale Skill & Plugin
