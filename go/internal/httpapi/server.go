@@ -1658,6 +1658,8 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/skills/create", s.handleSkillsCreate)
 	s.mux.HandleFunc("/api/skills/save", s.handleSkillsSave)
 	s.mux.HandleFunc("/api/skills/assimilate", s.handleSkillsAssimilate)
+	s.mux.HandleFunc("/api/enterprise/authorize", s.handleEnterpriseAuthorize)
+	s.mux.HandleFunc("/api/enterprise/audit/log", s.handleEnterpriseAuditLog)
 	s.mux.HandleFunc("/api/workflows", s.handleWorkflowList)
 	s.mux.HandleFunc("/api/workflows/graph", s.handleWorkflowGraph)
 	s.mux.HandleFunc("/api/workflows/start", s.handleWorkflowStart)
@@ -18942,22 +18944,34 @@ func (s *Server) localCreateSkill(payload map[string]any) (map[string]any, error
 	id, _ := payload["id"].(string)
 	name, _ := payload["name"].(string)
 	description, _ := payload["description"].(string)
+	rawContent, _ := payload["content"].(string)
+	// Accept 'name' as a fallback for 'id' so callers that only send {name, content}
+	// (like the pi extension) can still create skills.
+	if strings.TrimSpace(id) == "" {
+		id = name
+	}
 	if strings.TrimSpace(id) == "" {
 		return nil, errors.New("missing skill id")
 	}
 	if strings.TrimSpace(name) == "" {
 		name = id
 	}
+	if strings.TrimSpace(description) == "" && strings.TrimSpace(rawContent) == "" {
+		description = name
+	}
 	skillDir := filepath.Join(s.localSkillRoots()[1], id)
 	if err := os.MkdirAll(skillDir, 0o755); err != nil {
 		return nil, err
 	}
 	skillFile := filepath.Join(skillDir, "SKILL.md")
-	body := strings.TrimSpace(description)
-	if body == "" {
-		body = name
+	content := strings.TrimSpace(rawContent)
+	if content == "" {
+		body := strings.TrimSpace(description)
+		if body == "" {
+			body = name
+		}
+		content = "---\nname: " + name + "\ndescription: " + description + "\n---\n\n# " + name + "\n\n" + body + "\n\n## Instructions\n1. ...\n"
 	}
-	content := "---\nname: " + name + "\ndescription: " + description + "\n---\n\n# " + name + "\n\n" + body + "\n\n## Instructions\n1. ...\n"
 	if err := os.WriteFile(skillFile, []byte(content), 0o644); err != nil {
 		return nil, err
 	}
@@ -19008,10 +19022,20 @@ func (s *Server) localSaveSkill(payload map[string]any) (map[string]any, error) 
 }
 
 func (s *Server) localSkillRoots() []string {
-	return []string{
+	roots := []string{
 		filepath.Join(s.cfg.WorkspaceRoot, "packages", "core", "src", "skills"),
 		filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "skills"),
 	}
+	// Also scan the pi agent skill directory so the HyperNexus skill registry
+	// surfaces skills installed alongside the coding agent (e.g. hypernexus,
+	// hypernexus-ops, hypernexus-workflows).
+	if home, err := os.UserHomeDir(); err == nil {
+		piSkills := filepath.Join(home, ".pi", "agent", "skills")
+		if info, statErr := os.Stat(piSkills); statErr == nil && info.IsDir() {
+			roots = append(roots, piSkills)
+		}
+	}
+	return roots
 }
 
 type localSkillRecord struct {

@@ -617,17 +617,15 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params, signal) {
       const limit = params.limit ?? 20;
-      if (params.action === "list") {
-        const body = await tnJson("/api/skills/list", {}, signal);
-        const skills = body.skills ?? body.data?.skills ?? [];
-        const total = body.count ?? skills.length;
-        return { content: [{ type: "text", text: `📚 ${total} skills:\n${skills.slice(0, limit).map((s: any, i: number) => `  ${i + 1}. ${s.id}`).join("\n")}` }] };
-      }
-      if (params.action === "search") {
-        if (!params.query) return { content: [{ type: "text", text: "Provide 'query'." }] };
-        const body = await tnJson(`/api/skills/search?q=${encodeURIComponent(params.query)}`, {}, signal);
-        const skills = body.skills ?? body.data?.skills ?? [];
-        return { content: [{ type: "text", text: `🔍 ${skills.length} skills:\n${skills.slice(0, limit).map((s: any, i: number) => `  ${i + 1}. ${s.id}`).join("\n")}` }] };
+      if (params.action === "list" || params.action === "search") {
+        const body = await tnJson("/api/skills", {}, signal);
+        const skills = (body.data ?? body.skills ?? []) as any[];
+        const q = (params.query ?? "").toLowerCase();
+        const filtered = q
+          ? skills.filter((s: any) => `${s.id ?? ""} ${s.name ?? ""} ${s.description ?? ""}`.toLowerCase().includes(q))
+          : skills;
+        const icon = params.action === "search" ? "🔍" : "📚";
+        return { content: [{ type: "text", text: `${icon} ${filtered.length} skills:\n${filtered.slice(0, limit).map((s: any, i: number) => `  ${i + 1}. ${s.id ?? s.name}`).join("\n")}` }] };
       }
       if (params.action === "read") {
         if (!params.id) return { content: [{ type: "text", text: "Provide 'id'." }] };
@@ -637,7 +635,7 @@ export default function (pi: ExtensionAPI) {
       }
       if (params.action === "create") {
         if (!params.id || !params.content) return { content: [{ type: "text", text: "Provide 'id' and 'content'." }] };
-        const ok = await tnOk("/api/skills/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: params.id, content: params.content }) }, signal);
+        const ok = await tnOk("/api/skills/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: params.id, name: params.id, content: params.content }) }, signal);
         return ok
           ? { content: [{ type: "text", text: `✅ Skill '${params.id}' created.` }] }
           : { content: [{ type: "text", text: "Failed to create skill." }], isError: true };
