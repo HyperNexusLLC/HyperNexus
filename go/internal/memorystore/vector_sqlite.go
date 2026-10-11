@@ -24,10 +24,10 @@ import (
 )
 
 const (
-	ollamaURL     = "http://localhost:11434/api/embed"
-	ollamaModel   = "nomic-embed-text"
-	ollamaDim     = 768
-	fallbackDim   = 384
+	ollamaURL   = "http://localhost:11434/api/embed"
+	ollamaModel = "nomic-embed-text"
+	ollamaDim   = 768
+	fallbackDim = 384
 )
 
 // Search-path embeds are latency-critical: SemanticSearch holds the store mutex
@@ -406,19 +406,29 @@ func extractNumbers(s string) []string {
 func sharedKeywords(a, b string) int {
 	wordsA := make(map[string]bool)
 	for _, w := range strings.Fields(a) {
-		if len(w) > 3 { wordsA[w] = true }
+		if len(w) > 3 {
+			wordsA[w] = true
+		}
 	}
 	count := 0
 	for _, w := range strings.Fields(b) {
-		if len(w) > 3 && wordsA[w] { count++ }
+		if len(w) > 3 && wordsA[w] {
+			count++
+		}
 	}
 	return count
 }
 
 func slicesOverlap(a, b []string) bool {
 	set := make(map[string]bool)
-	for _, v := range a { set[v] = true }
-	for _, v := range b { if set[v] { return true } }
+	for _, v := range a {
+		set[v] = true
+	}
+	for _, v := range b {
+		if set[v] {
+			return true
+		}
+	}
 	return false
 }
 
@@ -432,6 +442,40 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.semanticSearchLocked(ctx, query, limit)
+}
+
+// ListVault returns L2 vault records directly from SQLite without touching the
+// embed mutex or Ollama. Used by GetMemories/GetAll so that memory listing stays
+// responsive even when an embedding request has wedged the vector-search lock.
+func (s *VectorStore) ListVault(ctx context.Context, limit int) ([]controlplane.L2VaultRecord, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("vector store db uninitialized")
+	}
+	if limit <= 0 {
+		limit = 1000
+	}
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at
+		FROM l2_vault
+		WHERE memory_type != 'archive'
+		ORDER BY created_at DESC
+		LIMIT ?`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("memorystore list vault: %w", err)
+	}
+	defer rows.Close()
+
+	var out []controlplane.L2VaultRecord
+	for rows.Next() {
+		var r controlplane.L2VaultRecord
+		var mType string
+		if err := rows.Scan(&r.ID, &r.SessionID, &mType, &r.Kind, &r.Category, &r.Tags, &r.SourceURL, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		r.Type = controlplane.MemoryType(mType)
+		out = append(out, r)
+	}
+	return out, rows.Err()
 }
 
 // boostWithRelationsLocked expands top candidates with GraphRAG neighbors.
@@ -1479,8 +1523,10 @@ func simpleEmbed(text string, dim int) []float32 {
 			h ^= uint32(c)
 			h *= 16777619
 		}
-		idx := int(h%uint32(dim))
-		if idx < 0 { idx = -idx }
+		idx := int(h % uint32(dim))
+		if idx < 0 {
+			idx = -idx
+		}
 		// Alternate +/- based on second hash bit
 		if h&2 == 0 {
 			vec[idx] += 1.0
@@ -1490,10 +1536,14 @@ func simpleEmbed(text string, dim int) []float32 {
 	}
 	// L2 normalize
 	var norm float64
-	for _, v := range vec { norm += float64(v) * float64(v) }
+	for _, v := range vec {
+		norm += float64(v) * float64(v)
+	}
 	if norm > 0 {
 		norm = math.Sqrt(norm)
-		for i := range vec { vec[i] = float32(float64(vec[i]) / norm) }
+		for i := range vec {
+			vec[i] = float32(float64(vec[i]) / norm)
+		}
 	}
 	return vec
 }

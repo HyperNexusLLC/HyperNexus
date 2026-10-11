@@ -123,8 +123,10 @@ func (m *Manager) GetAll() ([]map[string]interface{}, error) {
 		return []map[string]interface{}{}, nil
 	}
 
-	// We'll return the L2 vault entries as a generic map for compatibility
-	results, err := m.vs.SemanticSearch(context.Background(), "", 1000)
+	// We'll return the L2 vault entries as a generic map for compatibility.
+	// Use a direct (lock-free) listing instead of SemanticSearch so a wedged
+	// embed lock (hung Ollama) can never block memory listing.
+	results, err := m.vs.ListVault(context.Background(), 1000)
 	if err != nil {
 		return nil, err
 	}

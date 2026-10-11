@@ -50,6 +50,8 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/tools"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/workflow"
 
+	_ "github.com/glebarez/go-sqlite"
+	"github.com/google/uuid"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/cache"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/ctxharvester"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/eventbus"
@@ -64,8 +66,6 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/systray"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/toolregistry"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/workspaces"
-	_ "github.com/glebarez/go-sqlite"
-	"github.com/google/uuid"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/database"
 )
@@ -311,11 +311,11 @@ type LockRuntimeSummary struct {
 }
 
 type ConfigRuntimeSummary struct {
-	WorkspaceRootAvailable         bool `json:"workspaceRootAvailable"`
-	ConfigDirAvailable             bool `json:"configDirAvailable"`
-	MainConfigDirAvailable         bool `json:"mainConfigDirAvailable"`
-	RepoConfigAvailable            bool `json:"repoConfigAvailable"`
-	MCPConfigAvailable             bool `json:"mcpConfigAvailable"`
+	WorkspaceRootAvailable       bool `json:"workspaceRootAvailable"`
+	ConfigDirAvailable           bool `json:"configDirAvailable"`
+	MainConfigDirAvailable       bool `json:"mainConfigDirAvailable"`
+	RepoConfigAvailable          bool `json:"repoConfigAvailable"`
+	MCPConfigAvailable           bool `json:"mcpConfigAvailable"`
 	HyperNexusSubmoduleAvailable bool `json:"hypernexusSubmoduleAvailable"`
 }
 
@@ -12213,11 +12213,11 @@ func (s *Server) handleRuntimeStatus(w http.ResponseWriter, r *http.Request) {
 				RunningCount: runningLocks,
 			},
 			Config: ConfigRuntimeSummary{
-				WorkspaceRootAvailable:         configStatus.WorkspaceRoot.Exists,
-				ConfigDirAvailable:             configStatus.ConfigDir.Exists,
-				MainConfigDirAvailable:         configStatus.MainConfigDir.Exists,
-				RepoConfigAvailable:            configStatus.HyperNexusConfigFile.Exists,
-				MCPConfigAvailable:             configStatus.MCPConfigFile.Exists,
+				WorkspaceRootAvailable:       configStatus.WorkspaceRoot.Exists,
+				ConfigDirAvailable:           configStatus.ConfigDir.Exists,
+				MainConfigDirAvailable:       configStatus.MainConfigDir.Exists,
+				RepoConfigAvailable:          configStatus.HyperNexusConfigFile.Exists,
+				MCPConfigAvailable:           configStatus.MCPConfigFile.Exists,
 				HyperNexusSubmoduleAvailable: configStatus.HyperNexusSubmodule.Exists,
 			},
 			CLI: CLIRuntimeSummary{
@@ -20057,9 +20057,17 @@ func (s *Server) loadArchivedImportedSessionRecords() ([]ImportedSessionRecord, 
 	}
 
 	records := make([]ImportedSessionRecord, 0, 32)
+	// Bound the cold-cache archive walk so this endpoint can never block for
+	// minutes on thousands of gzipped meta files. Once the budget elapses we
+	// return whatever was collected (and cache it for the next 5 minutes).
+	walkCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	err := filepath.WalkDir(archiveRoot, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
+		}
+		if walkCtx.Err() != nil {
+			return filepath.SkipAll
 		}
 		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(path), ".meta.json.gz") {
 			return nil
