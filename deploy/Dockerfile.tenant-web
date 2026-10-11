@@ -1,0 +1,11 @@
+# Tenant web (Next.js dashboard) image — wraps an existing standalone build.
+# Requires: `pnpm build` to have produced apps/web/.next-build/standalone first.
+# Build: docker build -f deploy/Dockerfile.tenant-web -t hypernexus-web:latest .
+FROM node:20-slim
+WORKDIR /app
+COPY apps/web/.next-build/standalone ./
+# Do not bake the parent .env (contains Stripe keys); tenant billing is upstream.
+RUN rm -f apps/web/.env
+ENV NODE_ENV=production PORT=7779 HOSTNAME=0.0.0.0
+EXPOSE 7779
+CMD ["node", "apps/web/server.js"]

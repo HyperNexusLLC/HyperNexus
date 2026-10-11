@@ -48,6 +48,7 @@ services:
   sidecar-${TENANT_ID}:
     image: hypernexus-sidecar:latest
     container_name: tn-sidecar-${TENANT_ID}
+    command: ["serve", "-host", "0.0.0.0", "-port", "7778", "-config-dir", "/root/.hypernexus"]
     deploy:
       resources:
         limits:

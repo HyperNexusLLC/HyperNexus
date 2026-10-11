@@ -55,3 +55,8 @@
 **/.chunkhound
 *.swp
 *.tmp
+# Tenant web image: keep the standalone's self-contained node_modules + .next
+!apps/web/.next-build/standalone/node_modules/
+!apps/web/.next-build/standalone/node_modules/**
+!apps/web/.next-build/standalone/apps/web/.next/
+!apps/web/.next-build/standalone/apps/web/.next/**

@@ -21,14 +21,9 @@ echo "   Email:   $TENANT_EMAIL"
 echo "   Org:     $TENANT_ORG"
 echo "   Plan:    $PLAN_TYPE"
 
-# Find next available port
-LAST_PORT=$(ls -1 "${DATA_ROOT}/" 2>/dev/null | grep -v '_deprovisioned' | while read dir; do
-	grep -l "${dir}" /etc/nginx/sites-enabled/*.conf 2>/dev/null || true
-done | grep -oP '(?<=proxy_pass http://127.0.0.1:)[0-9]+' | sort -n | tail -1)
-NEXT_PORT=${LAST_PORT:-$PORT_START}
-if [ "$NEXT_PORT" -eq "$LAST_PORT" ] 2>/dev/null; then
-	NEXT_PORT=$((LAST_PORT + 1))
-fi
+# Find next available tenant port (3000s range), avoiding ports already in nginx
+LAST_PORT=$(grep -rhoP '127\.0\.0\.1:3[0-9]{3}' /etc/nginx/sites-enabled/ 2>/dev/null | grep -oP '3[0-9]{3}' | sort -n | tail -1 || true)
+NEXT_PORT=$(( ${LAST_PORT:-3000} + 1 ))
 
 # Allocate resource limits based on plan
 case "$PLAN_TYPE" in
