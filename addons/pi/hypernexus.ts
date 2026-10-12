@@ -990,12 +990,12 @@ export default function (pi: ExtensionAPI) {
 
   async function refreshWidget(ctx: any) {
     try {
-      const [fts, cold, mesh] = await Promise.all([
-        tnJson("/api/memory/fts-search?q=the&limit=1"),
+      const [mem, cold, mesh] = await Promise.all([
+        tnJson("/api/memory/list?limit=1"),
         tnJson("/api/memory/cold-archive/count"),
         tnJson("/api/mesh/status"),
       ]);
-      const vaultCount = fts.total ?? "?";
+      const vaultCount = (mem as any).total ?? (mem as any).count ?? "?";
       const coldCount = cold.count ?? "?";
       const peers = (mesh as any).data?.peersCount ?? mesh.peersCount ?? 0;
 
@@ -1053,13 +1053,13 @@ export default function (pi: ExtensionAPI) {
   pi.registerShortcut("ctrl+shift+p", {
     description: "Show TN system status",
     handler: async (ctx) => {
-      const [fts, cold, mesh] = await Promise.all([
-        tnJson("/api/memory/fts-search?q=the&limit=1"),
+      const [mem, cold, mesh] = await Promise.all([
+        tnJson("/api/memory/list?limit=1"),
         tnJson("/api/memory/cold-archive/count"),
         tnJson("/api/mesh/status"),
       ]);
       ctx.ui.notify(
-        `TN Status:\n🧠 L2: ${fts.total ?? "?"}\n❄️ L3: ${cold.count ?? "?"}\n🌐 Peers: ${(mesh as any).data?.peersCount ?? mesh.peersCount ?? 0}`,
+        `TN Status:\n🧠 L2: ${(mem as any).total ?? (mem as any).count ?? "?"}\n❄️ L3: ${cold.count ?? "?"}\n🌐 Peers: ${(mesh as any).data?.peersCount ?? mesh.peersCount ?? 0}`,
         "info",
       );
     },
