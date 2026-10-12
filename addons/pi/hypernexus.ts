@@ -28,7 +28,7 @@ const TN_BASE = "http://127.0.0.1:7778";
 // Every kernel call is bounded so a hung/embedding kernel (Ollama) can never
 // stall a pi turn. Callers may pass their own signal; it is combined with the
 // per-request timeout.
-const TN_TIMEOUT_MS = 8000;
+const TN_TIMEOUT_MS = 2500;
 function tnFetch(path: string, init?: RequestInit, signal?: AbortSignal) {
   let s: AbortSignal | undefined;
   try {
@@ -101,7 +101,7 @@ export default function (pi: ExtensionAPI) {
     const reason = event.reason;
 
     // Store session start
-    await tnOk("/api/memory/add", {
+    tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: JSON.stringify({
@@ -233,7 +233,7 @@ export default function (pi: ExtensionAPI) {
     }
 
     // Log tool execution to TN audit
-    await tnOk("/api/enterprise/audit/log", {
+    tnOk("/api/enterprise/audit/log", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tool: event.toolName, args: event.input, timestamp: now(), userId: "pi-agent",
@@ -253,7 +253,7 @@ export default function (pi: ExtensionAPI) {
     const text = event.content?.map((c: any) => c.text).filter(Boolean).join(" ") ?? "";
     if (!text || text.length < 100) return; // Only store substantial results
 
-    await tnOk("/api/memory/add", {
+    tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: JSON.stringify({
@@ -270,7 +270,7 @@ export default function (pi: ExtensionAPI) {
   // ══════════════════════════════════════════════
 
   pi.on("user_bash", async (event, ctx) => {
-    await tnOk("/api/enterprise/audit/log", {
+    tnOk("/api/enterprise/audit/log", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tool: "user_bash", command: event.command, timestamp: now() }),
     });
@@ -281,7 +281,7 @@ export default function (pi: ExtensionAPI) {
   // ══════════════════════════════════════════════
 
   pi.on("model_select", async (event, ctx) => {
-    await tnOk("/api/memory/add", {
+    tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: JSON.stringify({
@@ -341,7 +341,7 @@ export default function (pi: ExtensionAPI) {
 
     if (!summary || summary.length < 50) return;
 
-    await tnOk("/api/memory/add", {
+    tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: JSON.stringify({
@@ -398,7 +398,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_compact", async (event, ctx) => {
     if (!event.compactionEntry?.summary) return;
-    await tnOk("/api/memory/add", {
+    tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: JSON.stringify({
@@ -426,7 +426,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.events.on("tn:request_store", async (data: any) => {
-    await tnOk("/api/memory/add", {
+    tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: JSON.stringify({ content: data.content, tags: data.tags ?? [], category: data.category ?? "general", timestamp: now() }),
