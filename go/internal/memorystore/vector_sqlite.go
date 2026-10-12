@@ -1,19 +1,16 @@
 package memorystore
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math"
-	"net/http"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	_ "github.com/glebarez/go-sqlite"
@@ -24,36 +21,15 @@ import (
 )
 
 const (
-	ollamaURL   = "http://localhost:11434/api/embed"
-	ollamaModel = "nomic-embed-text"
-	ollamaDim   = 768
 	fallbackDim = 384
 )
 
 // Search-path embeds are latency-critical: SemanticSearch holds the store mutex
-// across the embed call, so a hung Ollama would serialize every memory search.
-// Bound the embed and short-circuit while Ollama is known-down so queries fall
-// back to hash embeddings immediately instead of queueing behind dead sockets.
+// across the embed call. Bound the local-embed timeout so a slow model load or
+// inference falls back to hash embeddings instead of serializing every search.
 const (
 	searchEmbedTimeout = 2 * time.Second
-	ollamaDownCooldown = 30 * time.Second
 )
-
-var (
-	ollamaDownUntil atomic.Int64 // unix nanos; zero means "not marked down"
-)
-
-// ollamaMarkDown records an embed failure so subsequent calls skip the HTTP
-// attempt until the cooldown elapses. Single failure trips it — a hung Ollama
-// is worse than a temporarily degraded embedding quality.
-func ollamaMarkDown() {
-	ollamaDownUntil.Store(time.Now().Add(ollamaDownCooldown).UnixNano())
-}
-
-func ollamaKnownDown() bool {
-	until := ollamaDownUntil.Load()
-	return until != 0 && time.Now().UnixNano() < until
-}
 
 type l1Entry struct {
 	value      controlplane.L2VaultRecord
@@ -229,8 +205,8 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 			return fmt.Errorf("memorystore commit embedding: %w", err)
 		}
 	} else if entry.Content != "" {
-		// Try Ollama for real semantic embeddings, fall back to hash-based
-		vec := ollamaEmbed(ctx, entry.Content)
+		// Try the bundled semantic model, fall back to hash-based
+		vec := localEmbed(ctx, entry.Content)
 		if vec == nil {
 			vec = simpleEmbed(entry.Content, fallbackDim)
 		}
@@ -599,7 +575,7 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 	// and small enough that hash-fallback keeps search responsive.
 	if !isVectorSearch && queryText != "" {
 		embedCtx, cancel := context.WithTimeout(ctx, searchEmbedTimeout)
-		vec := ollamaEmbed(embedCtx, queryText)
+		vec := localEmbed(embedCtx, queryText)
 		cancel()
 		if vec != nil {
 			queryVec = vec
@@ -1274,12 +1250,7 @@ func (s *VectorStore) MentalModelReflection(ctx context.Context) error {
 	}
 	resp, err := ai.AutoRoute(ctx, messages)
 	if err != nil {
-		// Fallback to Ollama for reflection
-		ollamaResp, ollamaErr := ollamaGenerate(ctx, prompt)
-		if ollamaErr != nil {
-			return fmt.Errorf("MentalModelReflection: both AutoRoute (%v) and Ollama (%v) failed", err, ollamaErr)
-		}
-		resp = &ai.LLMResponse{Content: ollamaResp}
+		return fmt.Errorf("MentalModelReflection: AutoRoute failed: %w", err)
 	}
 
 	lines := strings.Split(resp.Content, "\n")
@@ -1346,8 +1317,8 @@ func (s *VectorStore) MigrateScratchpadToL2(ctx context.Context) (int, error) {
 	return migrated, nil
 }
 
-// ReEmbedAll re-embeds all L2 vault records using Ollama.
-// Intended for one-time migration from hash-based to real embeddings.
+// ReEmbedAll re-embeds all L2 vault records using the bundled local embedder.
+// Intended for one-time migration from hash-based to semantic embeddings.
 // Returns (updated, skipped, errors) counts.
 func (s *VectorStore) ReEmbedAll(ctx context.Context) (int, int, int) {
 	s.mu.Lock()
@@ -1379,15 +1350,15 @@ func (s *VectorStore) ReEmbedAll(ctx context.Context) (int, int, int) {
 
 	updated, skipped, errs := 0, 0, 0
 	for _, t := range targets {
-		// Skip if already has a 768-dim (Ollama) embedding
-		if t.EmbLen == ollamaDim*4 {
+		// 384-dim means already embedded with the local model (post-migration).
+		if t.EmbLen == localEmbedDim*4 {
 			skipped++
 			continue
 		}
 
-		vec := ollamaEmbed(ctx, t.Content)
+		vec := localEmbed(ctx, t.Content)
 		if vec == nil {
-			skipped++ // Ollama unavailable for this one
+			skipped++ // local model unavailable for this one
 			continue
 		}
 
@@ -1403,111 +1374,9 @@ func (s *VectorStore) ReEmbedAll(ctx context.Context) (int, int, int) {
 		} else {
 			updated++
 		}
-
-		// Rate limit: don't hammer Ollama
-		time.Sleep(50 * time.Millisecond)
 	}
 
 	return updated, skipped, errs
-}
-
-// ollamaEmbed calls the local Ollama server to generate a real embedding vector.
-// Returns nil if Ollama is unreachable or returns an error — caller should fall back to simpleEmbed.
-func ollamaEmbed(ctx context.Context, text string) []float32 {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	// Circuit breaker: while Ollama is marked down, skip the HTTP attempt so
-	// callers fall back to simpleEmbed instantly instead of stacking timeouts.
-	if ollamaKnownDown() {
-		return nil
-	}
-
-	payload := struct {
-		Model string `json:"model"`
-		Input string `json:"input"`
-	}{Model: ollamaModel, Input: text}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return nil
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", ollamaURL, bytes.NewReader(body))
-	if err != nil {
-		return nil
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	// Deadline wins whichever is tighter: caller's ctx or the 10s client cap.
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		ollamaMarkDown()
-		return nil // Ollama not running — silent fallback
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		if resp.StatusCode >= 500 {
-			ollamaMarkDown()
-		}
-		return nil
-	}
-
-	var result struct {
-		Embeddings [][]float32 `json:"embeddings"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil
-	}
-	if len(result.Embeddings) == 0 || len(result.Embeddings[0]) == 0 {
-		return nil
-	}
-
-	// Success clears any prior down-mark so a recovered Ollama resumes service.
-	ollamaDownUntil.Store(0)
-	return result.Embeddings[0]
-}
-
-// ollamaGenerate calls Ollama's /api/generate for text generation (used by MentalModelReflection).
-func ollamaGenerate(ctx context.Context, prompt string) (string, error) {
-	payload := struct {
-		Model  string `json:"model"`
-		Prompt string `json:"prompt"`
-		Stream bool   `json:"stream"`
-	}{Model: ollamaModel, Prompt: prompt, Stream: false}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", "http://localhost:11434/api/generate", bytes.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("ollama generate: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("ollama generate: status %d", resp.StatusCode)
-	}
-
-	var result struct {
-		Response string `json:"response"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
-	}
-	return result.Response, nil
 }
 
 // simpleEmbed generates a deterministic hash-based embedding vector from text.
