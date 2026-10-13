@@ -29,15 +29,30 @@ const TN_BASE = "http://127.0.0.1:7778";
 // stall a pi turn. Callers may pass their own signal; it is combined with the
 // per-request timeout.
 const TN_TIMEOUT_MS = 2500;
-function tnFetch(path: string, init?: RequestInit, signal?: AbortSignal) {
+// Hot-path hooks (before_agent_start / context / input) must never stall a turn.
+// /api/memory/search can take 6s+ when Ollama is slow, so these use a much
+// tighter budget and simply return no context rather than block.
+const TN_FAST_TIMEOUT_MS = 400;
+function tnFetchWithTimeout(path: string, timeoutMs: number, init?: RequestInit, signal?: AbortSignal) {
   let s: AbortSignal | undefined;
   try {
-    const t = AbortSignal.timeout(TN_TIMEOUT_MS);
+    const t = AbortSignal.timeout(timeoutMs);
     s = signal ? AbortSignal.any([signal, t]) : t;
   } catch {
     s = signal;
   }
   return fetch(`${TN_BASE}${path}`, { ...init, signal: s });
+}
+function tnFetch(path: string, init?: RequestInit, signal?: AbortSignal) {
+  return tnFetchWithTimeout(path, TN_TIMEOUT_MS, init, signal);
+}
+// Non-blocking lookup: resolves to null on any failure/timeout instead of throwing.
+async function tnFetchFastJson(path: string, signal?: AbortSignal): Promise<any | null> {
+  try {
+    const r = await tnFetchWithTimeout(path, TN_FAST_TIMEOUT_MS, {}, signal);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
 }
 
 async function tnOk(path: string, init?: RequestInit, signal?: AbortSignal) {
@@ -122,19 +137,15 @@ export default function (pi: ExtensionAPI) {
     const isFirstTurn = event.systemPrompt.includes("HyperNexus");
     if (!isFirstTurn) {
       // Inject L2 context on subsequent turns
-      try {
-        const res = await tnFetch(`/api/memory/search?q=${encodeURIComponent(event.prompt.slice(0, 100))}`, {}, ctx.signal);
-        if (res.ok) {
-          const body = await res.json();
-          const memories = body.data ?? [];
-          if (Array.isArray(memories) && memories.length > 0) {
-            const contextBlock = memories.slice(0, 3)
-              .map((m: any) => `  • ${(m.content ?? m.text ?? JSON.stringify(m)).slice(0, 200)}`)
-              .join("\n");
-            return { systemPrompt: `${event.systemPrompt}\n\n## Relevant Context from HyperNexus L2\n${contextBlock}` };
-          }
-        }
-      } catch { /* skip */ }
+      // Fast path: never stall the turn waiting on the kernel.
+      const body = await tnFetchFastJson(`/api/memory/search?q=${encodeURIComponent(event.prompt.slice(0, 100))}`, ctx.signal);
+      const memories = body?.data ?? [];
+      if (Array.isArray(memories) && memories.length > 0) {
+        const contextBlock = memories.slice(0, 3)
+          .map((m: any) => `  - ${(m.content ?? m.text ?? JSON.stringify(m)).slice(0, 200)}`)
+          .join("\n");
+        return { systemPrompt: `${event.systemPrompt}\n\n## Relevant Context from HyperNexus L2\n${contextBlock}` };
+      }
       return;
     }
 
@@ -195,19 +206,16 @@ export default function (pi: ExtensionAPI) {
 
     if (!userText || userText.length < 10) return;
 
-    try {
-      const res = await tnFetch(`/api/memory/search?q=${encodeURIComponent(userText.slice(0, 100))}`, {}, ctx.signal);
-      if (!res.ok) return;
-      const body = await res.json();
-      const memories = body.data ?? [];
-      if (!Array.isArray(memories) || memories.length === 0) return;
+    // Non-blocking: a slow kernel must not delay the model call.
+    const body = await tnFetchFastJson(`/api/memory/search?q=${encodeURIComponent(userText.slice(0, 100))}`, ctx.signal);
+    const memories = body?.data ?? [];
+    if (!Array.isArray(memories) || memories.length === 0) return;
 
-      const top = memories.slice(0, 2);
-      const contextBlock = top.map((m: any) => (m.content ?? m.text ?? JSON.stringify(m)).slice(0, 150)).filter(Boolean).join("\n");
-      if (!contextBlock) return;
+    const top = memories.slice(0, 2);
+    const contextBlock = top.map((m: any) => (m.content ?? m.text ?? JSON.stringify(m)).slice(0, 150)).filter(Boolean).join("\n");
+    if (!contextBlock) return;
 
-      event.messages.push({ role: "system", content: `[TN Context]: ${contextBlock}` });
-    } catch { /* skip */ }
+    event.messages.push({ role: "system", content: `[TN Context]: ${contextBlock}` });
   });
 
   // ══════════════════════════════════════════════
@@ -308,17 +316,14 @@ export default function (pi: ExtensionAPI) {
     let expanded = text;
     for (const match of matches) {
       const key = match.replace("@memory:", "");
-      try {
-        const res = await tnFetch(`/api/memory/search?q=${encodeURIComponent(key)}&limit=3`, {}, ctx.signal);
-        if (res.ok) {
-          const body = await res.json();
-          const memories = body.data ?? [];
-          if (Array.isArray(memories) && memories.length > 0) {
-            const context = memories.map((m: any) => (m.content ?? m.text ?? "").slice(0, 150)).filter(Boolean).join("\n");
-            expanded = expanded.replace(match, `[TN:${key}]\n${context}\n[/TN:${key}]`);
-          }
-        }
-      } catch { /* skip */ }
+      // Non-blocking: @memory expansion must not stall input handling.
+      const body = await tnFetchFastJson(`/api/memory/search?q=${encodeURIComponent(key)}&limit=3`, ctx.signal);
+      const memories = body?.data ?? [];
+      const context = (Array.isArray(memories) ? memories : []).map((m: any) => (m.content ?? m.text ?? "").slice(0, 150)).filter(Boolean).join("\n");
+      if (context) {
+        // Inline the recalled memory in place of the @memory:key token.
+        expanded = expanded.replace(match, `\n[TN Memory ${key}]: ${context}\n`);
+      }
     }
 
     if (expanded !== text) {
@@ -450,6 +455,9 @@ export default function (pi: ExtensionAPI) {
       "Set 'project' to the project directory name to also write to the project's .memdb file (git-tracked, portable).",
       "Good candidates: architectural decisions, bug fixes, build procedures, tool quirks.",
     ],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "direct",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     parameters: Type.Object({
       content: Type.String({ description: "The memory content to store" }),
       tags: Type.Optional(Type.Array(Type.String(), { description: "Tags like ['project:bg', 'pattern:build']" })),
@@ -491,6 +499,9 @@ export default function (pi: ExtensionAPI) {
     description: "Search L2 vault by keyword, tag filter, or category.",
     promptSnippet: "Search persistent L2 memory",
     promptGuidelines: ["Use hypernexus_memory_search before tasks to recall past context.", "Filter by tag prefix like 'project:' or 'failure:'."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "direct",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     parameters: Type.Object({
       query: Type.Optional(Type.String({ description: "Keyword to search for" })),
       tag: Type.Optional(Type.String({ description: "Filter by tag prefix, e.g. 'project:'" })),
@@ -526,6 +537,9 @@ export default function (pi: ExtensionAPI) {
     description: "Semantic search L2 memory using sqlite-vec embeddings. Finds conceptually related memories.",
     promptSnippet: "Semantic vector search L2 memory",
     promptGuidelines: ["Use hypernexus_memory_vector_search for fuzzy/conceptual recall."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "direct",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     parameters: Type.Object({ query: Type.String({ description: "Natural language query" }), limit: Type.Optional(Type.Number({ description: "Max results (default 10)" })) }),
     async execute(_toolCallId, params, signal) {
       const limit = params.limit ?? 10;
@@ -549,6 +563,9 @@ export default function (pi: ExtensionAPI) {
     description: "Semantically search MCP tools across 20+ servers. Describe what you need — finds the best tool by meaning.",
     promptSnippet: "Discover tools via semantic search",
     promptGuidelines: ["Use hypernexus_tool_search when unsure what's available.", "Describe the task naturally, not keywords."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "direct",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     parameters: Type.Object({ query: Type.String({ description: "Natural language description of what you need" }), limit: Type.Optional(Type.Number({ description: "Max results (default 5)" })) }),
     async execute(_toolCallId, params, signal) {
       const res = await tnFetch(`/api/mcp/native/search?query=${encodeURIComponent(params.query)}`, {}, signal);
@@ -572,6 +589,9 @@ export default function (pi: ExtensionAPI) {
     description: "Search 542+ imported sessions from Claude Code, Aider, etc.",
     promptSnippet: "Search past AI coding sessions",
     promptGuidelines: ["Use to find/review past sessions.", "action='list' to browse, 'get' for transcript, 'stats' for summary."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     parameters: Type.Object({
       action: Type.String({ description: "'list' | 'get' | 'stats'" }),
       sourceTool: Type.Optional(Type.String({ description: "Filter by source tool" })),
@@ -608,6 +628,9 @@ export default function (pi: ExtensionAPI) {
     description: "Manage 5,776+ HyperNexus skills: list, search, read, create.",
     promptSnippet: "Manage skills (list, search, read, create)",
     promptGuidelines: ["Use to discover/create reusable skill modules.", "Skills are SKILL.md format."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
     parameters: Type.Object({
       action: Type.String({ description: "'list' | 'search' | 'read' | 'create'" }),
       id: Type.Optional(Type.String({ description: "Skill ID for read/create" })),
@@ -651,6 +674,9 @@ export default function (pi: ExtensionAPI) {
     description: "Search code by AST structure, semantic meaning, or file pattern.",
     promptSnippet: "Search code via AST, semantic, or pattern matching",
     promptGuidelines: ["mode='ast' for structural patterns.", "mode='semantic' for natural language.", "mode='pattern' for file globs."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     parameters: Type.Object({
       query: Type.String({ description: "Search query" }),
       mode: Type.Optional(Type.String({ description: "'ast' | 'semantic' | 'pattern'" })),
@@ -680,6 +706,9 @@ export default function (pi: ExtensionAPI) {
     description: "Harvest relevant context from L2 memory + skills + sessions for current task.",
     promptSnippet: "Harvest context from L2 memory",
     promptGuidelines: ["Use at start of complex tasks.", "Searches L2 memory + skills + sessions."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     parameters: Type.Object({
       query: Type.String({ description: "What you're working on" }),
       harvestMemory: Type.Optional(Type.Boolean({ description: "Search L2 memory (default true)" })),
@@ -709,6 +738,9 @@ export default function (pi: ExtensionAPI) {
     name: "hypernexus_scratchpad",
     label: "TN Scratchpad",
     description: "Read/write L1 session scratchpad — ephemeral working memory.",
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     parameters: Type.Object({
       action: Type.String({ description: "'get' or 'set'" }),
       content: Type.Optional(Type.String({ description: "Content for 'set'" })),
@@ -947,6 +979,9 @@ export default function (pi: ExtensionAPI) {
       "TN subagents run in isolated sessions with their own context window. Results are stored back to L2.",
       "Good for: code reviews, file analysis, batch refactoring, parallel research.",
     ],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     parameters: Type.Object({
       task: Type.String({ description: "The task description for the sub-agent" }),
       mode: Type.Optional(Type.String({ description: "'sync' (wait for result) or 'async' (fire and forget, default 'sync')" })),
@@ -1008,7 +1043,20 @@ export default function (pi: ExtensionAPI) {
   // Periodic widget refresh
   let widgetInterval: ReturnType<typeof setInterval> | null = null;
 
-  pi.on("session_start", (_event, ctx) => {
+  pi.on("session_start", async (_event, ctx) => {
+    // Surface kernel reachability in the status bar so users see it immediately.
+    try {
+      const health = await tnFetchWithTimeout("/health", 600);
+      if (health.ok) {
+        const h: any = await health.json().catch(() => ({}));
+        ctx.ui.setStatus("tn", `HyperNexus v${h.version ?? "?"}`);
+        ctx.ui.setWorkingMessage("HyperNexus ready");
+      } else {
+        ctx.ui.setStatus("tn", "HyperNexus degraded");
+      }
+    } catch {
+      ctx.ui.setStatus("tn", "HyperNexus offline");
+    }
     refreshWidget(ctx);
     if (!widgetInterval) {
       widgetInterval = setInterval(() => refreshWidget(ctx), 60000); // Every 60s
