@@ -50,17 +50,45 @@ func (s *Server) buildMCPStatus(ctx context.Context) (map[string]any, error) {
 	if s.mcpAggregator != nil {
 		aggCount = s.mcpAggregator.ConnectedCount()
 	}
+	// Use live tool count matching /api/mcp/tools (built-in registry + native tools + inventory)
+	toolCount := 0
+	seen := make(map[string]bool)
+	registry := roottools.NewRegistry()
+	if registry != nil {
+		for _, t := range registry.Tools {
+			if !seen[t.Name] {
+				seen[t.Name] = true
+				toolCount++
+			}
+		}
+	}
+	if s.toolsRegistry != nil {
+		for _, name := range s.toolsRegistry.List() {
+			if !seen[name] {
+				seen[name] = true
+				toolCount++
+			}
+		}
+	}
+	if view, invErr := s.localMCPInventoryView(); invErr == nil && view != nil && view.Inventory != nil {
+		for _, t := range view.Inventory.Tools {
+			if t.Name != "" && !seen[t.Name] {
+				seen[t.Name] = true
+				toolCount++
+			}
+		}
+	}
 	return map[string]any{
 		"success": true,
 		"data": map[string]any{
 			"initialized":              true,
-			"connected":                summary.SourceBackedHarnessCount > 0 || aggCount > 0,
-			"toolCount":                summary.SourceBackedToolCount,
+			"connected":                summary.SourceBackedHarnessCount > 0 || aggCount > 0 || toolCount > 0,
+			"toolCount":                toolCount,
 			"serverCount":              summary.InstalledHarnessCount,
 			"connectedCount":           summary.SourceBackedHarnessCount + aggCount,
 			"sourceBackedHarnessCount": summary.SourceBackedHarnessCount,
 			"aggregatorConnectedCount": aggCount,
-			"source":                   "source-backed-local-summary",
+			"source":                   "inventory-aware-local-summary",
 			"lazySessionMode":          false,
 			"singleActiveServerMode":   false,
 		},
