@@ -115,6 +115,12 @@ export default function (pi: ExtensionAPI) {
     const sessionFile = ctx.sessionManager.getSessionFile();
     const reason = event.reason;
 
+    // Set session display name from TN metadata
+    try {
+      const shortId = (sessionFile ?? "session").split(/[\\/]/).pop() ?? "session";
+      pi.setSessionName(`TN • ${shortId}`);
+    } catch { /* skip */ }
+
     // Store session start
     tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -131,6 +137,34 @@ export default function (pi: ExtensionAPI) {
 
     // Refresh stats widget
     refreshWidget(ctx);
+  });
+
+  // Register HyperNexus kernel as an MCP server so Pi can discover its tools natively
+  try {
+    pi.registerMcpServer("hypernexus-kernel", {
+      url: "http://127.0.0.1:7778/mcp",
+    } as any);
+  } catch { /* already registered or MCP extension not active */ }
+
+  // Advertise HyperNexus skill paths so Pi discovers them on session start
+  pi.on("resources_discover", async (_event, _ctx) => {
+    return {
+      skillPaths: [
+        ".codex/plugins/hypernexus/skills",
+        ".codewhale/plugins/hypernexus/skills",
+        "engine-config/skills",
+      ],
+      promptPaths: [".codex/prompts"],
+    };
+  });
+
+  // Auto-trust the HyperNexus workspace for project-scoped operations
+  pi.on("project_trust", async (event, _ctx) => {
+    const cwd = event.cwd ?? "";
+    if (cwd.includes("HyperNexus") || cwd.includes("hypernexus") || cwd.includes("marketing_agent")) {
+      return { trust: "trusted" as const };
+    }
+    return { trust: "unknown" as const };
   });
 
   pi.on("before_agent_start", async (event, ctx) => {
@@ -458,6 +492,7 @@ export default function (pi: ExtensionAPI) {
     namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
     exposure: "direct",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    outputSchema: Type.Object({ stored: Type.Boolean(), projectNote: Type.Optional(Type.String()) }),
     parameters: Type.Object({
       content: Type.String({ description: "The memory content to store" }),
       tags: Type.Optional(Type.Array(Type.String(), { description: "Tags like ['project:bg', 'pattern:build']" })),
@@ -488,7 +523,7 @@ export default function (pi: ExtensionAPI) {
       }
       pi.events.emit("tn:memory_stored", { content: params.content, tags });
       const projectNote = params.project ? ` and project .memdb (${params.project})` : "";
-      return { content: [{ type: "text", text: `✅ Memory stored in L2 vault${projectNote}.` }], details: { tags } };
+      return { content: [{ type: "text", text: `✅ Memory stored in L2 vault${projectNote}.` }], details: { tags }, structuredContent: { stored: true, projectNote } };
     },
   });
 
@@ -502,6 +537,14 @@ export default function (pi: ExtensionAPI) {
     namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
     exposure: "direct",
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({
+      count: Type.Number(),
+      memories: Type.Array(Type.Object({
+        content: Type.String(),
+        tags: Type.Array(Type.String()),
+        category: Type.String(),
+      })),
+    }),
     parameters: Type.Object({
       query: Type.Optional(Type.String({ description: "Keyword to search for" })),
       tag: Type.Optional(Type.String({ description: "Filter by tag prefix, e.g. 'project:'" })),
@@ -524,9 +567,9 @@ export default function (pi: ExtensionAPI) {
         return true;
       }).slice(0, limit);
 
-      if (parsed.length === 0) return { content: [{ type: "text", text: "No matching memories." }] };
+      if (parsed.length === 0) return { content: [{ type: "text", text: "No matching memories." }], structuredContent: { count: 0, memories: [] } };
       const formatted = parsed.map((m, i) => `${i + 1}.${m.category !== "general" ? ` (${m.category})` : ""}${m.tags.length ? ` [${m.tags.join(", ")}]` : ""}\n   ${m.content.slice(0, 200)}`).join("\n\n");
-      return { content: [{ type: "text", text: `📚 ${parsed.length} memories:\n\n${formatted}` }] };
+      return { content: [{ type: "text", text: `📚 ${parsed.length} memories:\n\n${formatted}` }], structuredContent: { count: parsed.length, memories: parsed } };
     },
   });
 
@@ -560,6 +603,12 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "hypernexus_tool_search",
     label: "TN Tool Search",
+    prepareLoadout(loadout) {
+      const callable = loadout.callable.map((t: any) => t.name).filter((n: string) => n.startsWith("hypernexus_"));
+      return {
+        description: `Describe what you need — TN finds the best tool across 20+ MCP servers and 80+ catalog entries. Callable HyperNexus tools: ${callable.join(", ")}`,
+      };
+    },
     description: "Semantically search MCP tools across 20+ servers. Describe what you need — finds the best tool by meaning.",
     promptSnippet: "Discover tools via semantic search",
     promptGuidelines: ["Use hypernexus_tool_search when unsure what's available.", "Describe the task naturally, not keywords."],
@@ -1010,14 +1059,32 @@ export default function (pi: ExtensionAPI) {
         };
       }
 
-      // Sync mode: wait for result by polling L2 + supervisor API
-      // In practice, this would use TN's SupervisorManager to create a session
-      return {
-        content: [{ type: "text", text: `🔧 Sub-agent task dispatched (ID: ${taskId}). Task stored in L2 memory. Check results with hypernexus_memory_search.` }],
-        details: { taskId, mode: "sync" },
-      };
+      // Sync mode: use ctx.executeTool to call context_harvest as a nested tool
+      try {
+        const harvestResult = await ctx.executeTool("hypernexus_context_harvest", { query: params.task });
+        const harvestText = harvestResult?.content?.map((c: any) => c.text ?? "").join("\n") ?? "";
+        return {
+          content: [{ type: "text", text: `🔧 Sub-agent task dispatched (ID: ${taskId}).\n\nHarvested context:\n${harvestText || "(none)"}\n\nTask stored in L2 memory. Check results with hypernexus_memory_search.` }],
+          details: { taskId, mode: "sync", nestedTool: "hypernexus_context_harvest" },
+        };
+      } catch {
+        return {
+          content: [{ type: "text", text: `🔧 Sub-agent task dispatched (ID: ${taskId}). Task stored in L2 memory. Check results with hypernexus_memory_search.` }],
+          details: { taskId, mode: "sync" },
+        };
+      }
     },
   });
+
+  // ─── CLI Flags ──────────────────────────────────────────────────
+  pi.registerFlag("tn-base", { description: "HyperNexus kernel base URL", type: "string", default: "http://127.0.0.1:7778" });
+  pi.registerFlag("tn-verbose", { description: "Enable verbose TN logging", type: "boolean", default: false });
+
+  // ─── UI Enhancements ───────────────────────────────────────────
+  try {
+    ctx.ui.setFooter?.("tn-footer", "🧠 HyperNexus L2 • Tool catalog • Skills");
+    ctx.ui.setTitle?.("MiMoCode × HyperNexus");
+  } catch { /* optional UI hooks */ }
 
   // ══════════════════════════════════════════════
   // LIVE STATS WIDGET
@@ -1061,6 +1128,16 @@ export default function (pi: ExtensionAPI) {
     if (!widgetInterval) {
       widgetInterval = setInterval(() => refreshWidget(ctx), 60000); // Every 60s
     }
+  });
+
+  // Persist TN state to session entries for cross-reload continuity
+  pi.on("turn_end", async (event, _ctx) => {
+    try {
+      pi.appendEntry("tn:turn_stats", {
+        turnId: event.turnId ?? Date.now(),
+        timestamp: now(),
+      });
+    } catch { /* skip */ }
   });
 
   pi.on("session_shutdown", () => {
