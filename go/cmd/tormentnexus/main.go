@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -213,9 +214,35 @@ func runServe(args []string) int {
 		log.Printf("No hypernexus.lic license file found. Running under free limitations.")
 	}
 
+	// Single-instance guard: refuse to start if the port is already serving.
+	// Use a direct TCP dial (no proxy) — Go's http.Client routes localhost through
+	// system proxies on Windows, which would false-negative the health probe.
+	checkAlive := func(host string, port int) bool {
+		addr := fmt.Sprintf("%s:%d", host, port)
+		conn, err := net.DialTimeout("tcp", addr, 1500*time.Millisecond)
+		if err != nil {
+			return false
+		}
+		_ = conn.Close()
+		return true
+	}
+	if existing, err := lockfile.Read(cfg.LockPath()); err == nil {
+		if checkAlive(existing.Host, existing.Port) {
+			log.Printf("Another HyperNexus instance is already running on %s:%d (pid %d, started %s). Refusing to start a second instance. Use /api/shutdown to stop it first.", existing.Host, existing.Port, existing.PID, existing.StartedAt)
+			return 0
+		}
+		log.Printf("Stale lock file found (previous instance on %s:%d is gone). Proceeding with startup.", existing.Host, existing.Port)
+		_ = os.Remove(cfg.LockPath())
+	} else if checkAlive(cfg.Host, cfg.Port) {
+		// No lock file but the port is live — still refuse.
+		log.Printf("Port %s:%d is already in use by a running HyperNexus instance (no lock file). Refusing to start.", cfg.Host, cfg.Port)
+		return 0
+	}
+
 	record := lockfile.Record{
 		Host:      cfg.Host,
 		Port:      cfg.Port,
+		PID:       os.Getpid(),
 		Version:   buildinfo.Version,
 		StartedAt: time.Now().UTC().Format(time.RFC3339),
 	}
