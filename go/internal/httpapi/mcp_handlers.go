@@ -695,6 +695,52 @@ func (s *Server) handleMCPConversationWindow(w http.ResponseWriter, r *http.Requ
 	})
 }
 
+// handleToolSuggestions returns preemptive tool suggestions based on
+// conversation topics fed via the message endpoint. Backed by the
+// PreemptiveAdvertiser which ranks catalog tools against extracted topics.
+func (s *Server) handleToolSuggestions(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{
+				"success": false,
+				"error":   fmt.Sprintf("tool suggestions panic: %v", rec),
+			})
+		}
+	}()
+	if s.preemptiveAdvertiser == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": "preemptive advertiser not initialized"})
+		return
+	}
+	if r.Method == http.MethodPost {
+		// Feed a conversation message to the advertiser
+		var msg struct {
+			Role    string `json:"role"`
+			Content string `json:"content"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+			return
+		}
+		s.preemptiveAdvertiser.OnMessage(mcp.ConversationMessage{
+			Role:      msg.Role,
+			Content:   msg.Content,
+			Timestamp: time.Now(),
+		})
+		writeJSON(w, http.StatusOK, map[string]any{"success": true})
+		return
+	}
+
+	// GET — return current suggestions
+	ads := s.preemptiveAdvertiser.GetAdvertisements(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    ads,
+		"bridge": map[string]any{
+			"source": "preemptive-advertiser",
+		},
+	})
+}
+
 type AlwaysOnConfig struct {
 	Tools map[string]bool `json:"tools"`
 }

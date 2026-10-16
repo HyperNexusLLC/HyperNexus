@@ -1,6 +1,8 @@
 package main
 
 import (
+	"syscall"
+	"unsafe"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -189,6 +191,32 @@ func runDeepLink(deepLink string) int {
 	return 0
 }
 
+// setConsoleTitle sets the Windows console window title via kernel32.
+// Falls back silently on non-Windows or when no console is attached.
+func setConsoleTitle(title string) {
+	k32 := syscall.NewLazyDLL("kernel32.dll")
+	u32 := syscall.NewLazyDLL("user32.dll")
+
+	// Set the console's internal title buffer
+	if proc := k32.NewProc("SetConsoleTitleW"); proc != nil {
+		ptr, _ := syscall.UTF16PtrFromString(title)
+		proc.Call(uintptr(unsafe.Pointer(ptr)))
+	}
+
+	// Also set the window text directly — on modern Windows, conhost and
+	// Windows Terminal manage the visible title separately from the console
+	// title buffer, so Get-Process.MainWindowTitle may still show the old label.
+	if getHwnd := k32.NewProc("GetConsoleWindow"); getHwnd != nil {
+		hwnd, _, _ := getHwnd.Call()
+		if hwnd != 0 {
+			if setText := u32.NewProc("SetWindowTextW"); setText != nil {
+				ptr, _ := syscall.UTF16PtrFromString(title)
+				setText.Call(hwnd, uintptr(unsafe.Pointer(ptr)))
+			}
+		}
+	}
+}
+
 func runServe(args []string) int {
 	cfg := config.Default()
 
@@ -253,6 +281,10 @@ func runServe(args []string) int {
 	defer func() {
 		_ = os.Remove(cfg.LockPath())
 	}()
+
+	// Set console window title so it doesn't inherit a stale label
+	// (e.g. "pi" from a prior Pi CLI session in the same terminal).
+	setConsoleTitle("HyperNexus — " + buildinfo.Version)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

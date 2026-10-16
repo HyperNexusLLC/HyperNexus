@@ -186,6 +186,7 @@ type Server struct {
 
 	// Phase 113 — conversational tool injection
 	conversationalPredictor *mcp.ConversationalPredictor
+	preemptiveAdvertiser    *mcp.PreemptiveAdvertiser
 	udpGossip               *mesh.GossipProtocol
 
 	// --- Commercial Security (alpha.129+) ---
@@ -633,6 +634,10 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 
 	// Phase 113 — Go-native conversational tool predictor
 	server.conversationalPredictor = mcp.NewConversationalPredictor()
+
+	// Preemptive tool advertiser — watches conversation topics and suggests
+	// relevant tools from the decision system catalog before the model searches.
+	server.preemptiveAdvertiser = mcp.NewPreemptiveAdvertiser(server.mcpDecision, mcp.DefaultAdvertiseConfig())
 
 	// --- Initialize MCP Decision System ---
 	decisionCfg := mcp.DefaultDecisionConfig()
@@ -1779,6 +1784,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/submodules/enable", s.handleSubmoduleEnable)
 	s.mux.HandleFunc("/api/submodules/capabilities", s.handleSubmoduleCapabilities)
 	s.mux.HandleFunc("/api/suggestions", s.handleSuggestionsList)
+	s.mux.HandleFunc("/api/mcp/tool-suggestions", s.handleToolSuggestions)
 	s.mux.HandleFunc("/api/suggestions/resolve", s.handleSuggestionsResolve)
 	s.mux.HandleFunc("/api/suggestions/clear", s.handleSuggestionsClear)
 	s.mux.HandleFunc("/api/plan/mode", s.handlePlanMode)

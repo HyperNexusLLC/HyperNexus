@@ -104,6 +104,11 @@ func (pa *PreemptiveAdvertiser) OnMessage(msg ConversationMessage) {
 
 // GetAdvertisements analyzes recent conversation and returns tool suggestions.
 func (pa *PreemptiveAdvertiser) GetAdvertisements(ctx context.Context) []ToolAdvertisement {
+	defer func() {
+		if rec := recover(); rec != nil {
+			// swallow panics from topic extraction / ranking
+		}
+	}()
 	pa.mu.Lock()
 	topics := pa.extractTopics()
 	history := pa.history
@@ -143,31 +148,31 @@ func (pa *PreemptiveAdvertiser) GetAdvertisements(ctx context.Context) []ToolAdv
 
 	// Filter out recently injected tools
 	now := time.Now()
-	var ads []ToolAdvertisement
+	var result []ToolAdvertisement
 	for _, ad := range candidateMap {
 		if lastInjected, ok := pa.injected[ad.ToolName]; ok {
 			if now.Sub(lastInjected) < pa.cfg.Cooldown {
 				continue
 			}
 		}
-		ads = append(ads, *ad)
+		result = append(result, *ad)
 	}
 
 	// Sort by score descending and limit
-	sortAdvertisements(ads)
+	sortAdvertisements(result)
 
-	if len(ads) > pa.cfg.MaxAds {
-		ads = ads[:pa.cfg.MaxAds]
+	if len(result) > pa.cfg.MaxAds {
+		result = result[:pa.cfg.MaxAds]
 	}
 
 	// Mark as injected
 	pa.mu.Lock()
-	for _, ad := range ads {
+	for _, ad := range result {
 		pa.injected[ad.ToolName] = now
 	}
 	pa.mu.Unlock()
 
-	return ads
+	return result
 }
 
 // extractTopics extracts key topics from the recent conversation history.
