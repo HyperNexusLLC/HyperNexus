@@ -58,7 +58,10 @@ type AdvertiseConfig struct {
 
 func DefaultAdvertiseConfig() AdvertiseConfig {
 	return AdvertiseConfig{
-		MinScore:      15.0,
+		// 5.0 lets a single name match (weight=10) through, while still
+		// filtering out pure noise. Was 15.0 which required 2+ name matches
+		// and made the advertiser return empty for most conversations.
+		MinScore:      5.0,
 		MaxAds:        5,
 		Cooldown:      30 * time.Second,
 		HistoryWindow: 5 * time.Minute,

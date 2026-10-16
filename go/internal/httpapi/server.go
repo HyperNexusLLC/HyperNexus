@@ -635,10 +635,6 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	// Phase 113 — Go-native conversational tool predictor
 	server.conversationalPredictor = mcp.NewConversationalPredictor()
 
-	// Preemptive tool advertiser — watches conversation topics and suggests
-	// relevant tools from the decision system catalog before the model searches.
-	server.preemptiveAdvertiser = mcp.NewPreemptiveAdvertiser(server.mcpDecision, mcp.DefaultAdvertiseConfig())
-
 	// --- Initialize MCP Decision System ---
 	decisionCfg := mcp.DefaultDecisionConfig()
 	decisionCfg.CatalogDBPath = filepath.Join(cfg.ConfigDir, "mcp-catalog.json")
@@ -657,6 +653,11 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 			server.nativeRouter.RefreshCatalog(inv)
 		}
 	}
+
+	// Preemptive tool advertiser — watches conversation topics and suggests
+	// relevant tools from the decision system catalog before the model searches.
+	// Must be created AFTER mcpDecision so it captures the live pointer.
+	server.preemptiveAdvertiser = mcp.NewPreemptiveAdvertiser(server.mcpDecision, mcp.DefaultAdvertiseConfig())
 
 	// --- Auto-start alwaysOn MCP servers ---
 	// Only connect servers explicitly marked alwaysOn:true in mcp_servers.json.
