@@ -25,7 +25,7 @@ function Send-Alert {
 
 function Test-KernelHealth {
     try {
-        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/health" -UseBasicParsing -TimeoutSec 5
+        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/health" -UseBasicParsing -TimeoutSec 12
         $json = $response.Content | ConvertFrom-Json
         return $json.ok -eq $true
     } catch {
@@ -33,12 +33,25 @@ function Test-KernelHealth {
     }
 }
 
+function Test-KernelAlive {
+    # Liveness independent of HTTP latency: a kernel under memory pressure can
+    # stall its request handlers (GC/scheduling) for several seconds while still
+    # being alive and holding the port. That is NOT death and must not trigger a
+    # restart (restarting a live kernel only adds memory churn). A real death is
+    # the process being gone OR the port no longer bound.
+    $portBound = [bool](netstat -ano | Select-String ":$Port .*LISTENING")
+    if (-not $portBound) { return $false }
+    $proc = Get-Process -Name "hypernexus" -ErrorAction SilentlyContinue
+    return [bool]$proc
+}
+
 function Test-MCPHealth {
     # NOTE: Do NOT probe /api/agent/tool — it hangs on the 'echo' tool and
     # caused a false-failure restart loop (2026-10-16). Use /api/mcp/status,
-    # a fast liveness endpoint, instead.
+    # a fast liveness endpoint, instead. Timeout is generous to tolerate
+    # memory-pressure GC stalls rather than misread them as failure.
     try {
-        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/mcp/status" -UseBasicParsing -TimeoutSec 5
+        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/mcp/status" -UseBasicParsing -TimeoutSec 12
         return $response.StatusCode -eq 200
     } catch {
         return $false
@@ -116,9 +129,15 @@ function Stop-Kernel {
             return
         }
     }
-    # Last resort: force kill only the 'serve' instance holding the port
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Clean shutdown timed out, force-killing..."
-    Get-Process -Name "hypernexus" -ErrorAction SilentlyContinue | Stop-Process -Force
+    # Last resort: force kill only the 'serve' instance holding the port.
+    # Do NOT Stop-Process every hypernexus — the 'mcp' stdio children are
+    # legitimate and belong to live client sessions.
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Clean shutdown timed out, force-killing port holder..."
+    $portLine = netstat -ano | Select-String ":$Port .*LISTENING" | Select-Object -First 1
+    if ($portLine) {
+        $holderPid = [int](($portLine -split '\s+')[-1])
+        Stop-Process -Id $holderPid -Force -ErrorAction SilentlyContinue
+    }
     Start-Sleep -Seconds 2
 }
 
@@ -150,10 +169,15 @@ while ($true) {
                 $mcpFailures++
                 Write-Host "[$(Get-Date -Format 'HH:mm:ss')] MCP health check FAILED ($mcpFailures)"
                 if ($mcpFailures -ge 3) {
-                    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] MCP unhealthy, restarting kernel..."
-                    Send-Alert "MCP tools unresponsive. Restarting kernel..."
-                    Stop-Kernel
-                    if (Start-Kernel) { $mcpFailures = 0; $consecutiveFailures = 0 }
+                    if (Test-KernelAlive) {
+                        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] MCP slow but kernel alive - likely memory pressure. Not restarting."
+                        $mcpFailures = 0
+                    } else {
+                        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] MCP unhealthy and kernel not alive, restarting kernel..."
+                        Send-Alert "MCP tools unresponsive. Restarting kernel..."
+                        Stop-Kernel
+                        if (Start-Kernel) { $mcpFailures = 0; $consecutiveFailures = 0 }
+                    }
                 }
             }
         }
@@ -165,18 +189,24 @@ while ($true) {
             Start-Ollama | Out-Null
         }
     } else {
-        $consecutiveFailures++
-        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Kernel health check FAILED (attempt $consecutiveFailures/$MaxRestartAttempts)"
-
-        if ($consecutiveFailures -ge $MaxRestartAttempts) {
-            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Max failures reached. Restarting kernel..."
-            Send-Alert "Kernel DOWN after $MaxRestartAttempts failures. Restarting..."
-            Stop-Kernel
-            if (Start-Kernel) {
-                $consecutiveFailures = 0
-                Send-Alert "Kernel restarted successfully."
-            } else {
-                Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Restart failed. Will retry in ${CheckIntervalSec}s"
+        # HTTP probe failed. Distinguish a live-but-stalled kernel (memory
+        # pressure) from a real death before deciding to restart.
+        if (Test-KernelAlive) {
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Kernel alive (port bound) but HTTP slow - likely memory pressure. Not restarting."
+            $consecutiveFailures = 0
+        } else {
+            $consecutiveFailures++
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Kernel health check FAILED (attempt $consecutiveFailures/$MaxRestartAttempts)"
+            if ($consecutiveFailures -ge $MaxRestartAttempts) {
+                Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Max failures reached. Restarting kernel..."
+                Send-Alert "Kernel DOWN after $MaxRestartAttempts failures. Restarting..."
+                Stop-Kernel
+                if (Start-Kernel) {
+                    $consecutiveFailures = 0
+                    Send-Alert "Kernel restarted successfully."
+                } else {
+                    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Restart failed. Will retry in ${CheckIntervalSec}s"
+                }
             }
         }
     }
