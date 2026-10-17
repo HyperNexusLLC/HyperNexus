@@ -129,14 +129,23 @@ function Stop-Kernel {
             return
         }
     }
-    # Last resort: force kill only the 'serve' instance holding the port.
-    # Do NOT Stop-Process every hypernexus — the 'mcp' stdio children are
-    # legitimate and belong to live client sessions.
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Clean shutdown timed out, force-killing port holder..."
+    # Last resort: force kill only the 'serve' instance. Prefer the lock-file
+    # PID (the serve process), else the port holder. Do NOT Stop-Process every
+    # hypernexus — the 'mcp' stdio children are legitimate live client sessions.
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Clean shutdown timed out, force-killing serve instance..."
+    $lockPid = $null
+    $lockFile = "C:\Users\hyper\.hypernexus\lock"
+    if (Test-Path $lockFile) {
+        try { $lockPid = (Get-Content $lockFile -Raw | ConvertFrom-Json).pid } catch {}
+    }
+    $holderPid = $null
     $portLine = netstat -ano | Select-String ":$Port .*LISTENING" | Select-Object -First 1
-    if ($portLine) {
-        $holderPid = [int](($portLine -split '\s+')[-1])
-        Stop-Process -Id $holderPid -Force -ErrorAction SilentlyContinue
+    if ($portLine) { $holderPid = [int](($portLine -split '\s+')[-1]) }
+    $targets = @()
+    if ($lockPid) { $targets += $lockPid }
+    if ($holderPid -and $holderPid -ne $lockPid) { $targets += $holderPid }
+    foreach ($t in $targets) {
+        Stop-Process -Id $t -Force -ErrorAction SilentlyContinue
     }
     Start-Sleep -Seconds 2
 }
