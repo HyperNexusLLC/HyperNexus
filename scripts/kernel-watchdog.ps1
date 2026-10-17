@@ -34,11 +34,12 @@ function Test-KernelHealth {
 }
 
 function Test-MCPHealth {
+    # NOTE: Do NOT probe /api/agent/tool — it hangs on the 'echo' tool and
+    # caused a false-failure restart loop (2026-10-16). Use /api/mcp/status,
+    # a fast liveness endpoint, instead.
     try {
-        $body = '{"name":"echo","arguments":{"message":"ping"}}'
-        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/agent/tool" -Method POST -Body $body -ContentType "application/json" -UseBasicParsing -TimeoutSec 5
-        $json = $response.Content | ConvertFrom-Json
-        return $json.success -eq $true
+        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/mcp/status" -UseBasicParsing -TimeoutSec 5
+        return $response.StatusCode -eq 200
     } catch {
         return $false
     }
@@ -74,6 +75,15 @@ function Start-Ollama {
 }
 
 function Start-Kernel {
+    # Wait for the port to be free first — the kernel has a single-instance
+    # guard that refuses to bind if the port is still live, which would make
+    # this restart silently fail and loop.
+    for ($i = 1; $i -le 8; $i++) {
+        $portCheck = netstat -ano | Select-String ":$Port .*LISTENING"
+        if (-not $portCheck) { break }
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Port $Port still bound, waiting for release (${i}/8)..."
+        Start-Sleep -Seconds 2
+    }
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting HyperNexus kernel..."
     Start-Process -FilePath $KernelPath -ArgumentList "serve" -WindowStyle Hidden
 
@@ -90,15 +100,26 @@ function Start-Kernel {
 }
 
 function Stop-Kernel {
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Stopping existing kernel processes..."
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Stopping kernel (clean shutdown first)..."
+    # Clean shutdown via API so the systray icon is removed properly.
+    # Force-kill leaves ghost tray icons.
+    try {
+        Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/shutdown" -Method POST -UseBasicParsing -TimeoutSec 5 | Out-Null
+    } catch {}
+    # Wait for the process to exit on its own (up to 10s)
+    for ($i = 1; $i -le 10; $i++) {
+        Start-Sleep -Seconds 1
+        $proc = Get-Process -Name "hypernexus" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -ne '' -or $true }
+        $portCheck = netstat -ano | Select-String ":$Port .*LISTENING"
+        if (-not $portCheck) {
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Kernel exited cleanly after ${i}s"
+            return
+        }
+    }
+    # Last resort: force kill only the 'serve' instance holding the port
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Clean shutdown timed out, force-killing..."
     Get-Process -Name "hypernexus" -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 2
-    # Verify port is freed
-    $portCheck = netstat -ano | Select-String ":$Port "
-    if ($portCheck) {
-        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Port $Port still in use, waiting..."
-        Start-Sleep -Seconds 3
-    }
 }
 
 # Main watchdog loop
