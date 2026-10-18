@@ -13,8 +13,9 @@ surface, not just MCP + markdown:
 | **Typed tools** | `@mimo-ai/plugin` `tool({description, args, execute})` (zod args) | **Server plugin — verified** |
 | **Conversation monitor** | `chat.message` hook → non-blocking `/api/mcp/tool-suggestions` | **Server plugin** |
 | **System context injection** | `experimental.chat.system.transform` | **Server plugin** |
-| **Tool observation** | `tool.execute.after` hook (signal for the monitor) | **Server plugin** |
-| **Session lifecycle** | `session.post` hook (context harvest) | **Server plugin** |
+| **Retrieval-augmented L2 memory** | `chat.message`/`session.pre` warm cache → `system.transform` injects cross-session context | **Server plugin** |
+| **Tool observation** | `tool.execute.before` + `tool.execute.after` hooks (signal for the monitor) | **Server plugin** |
+| **Session lifecycle** | `session.pre` (warm) + `session.post` (context harvest) hooks | **Server plugin** |
 | **Actor/subagent lifecycle** | `actor.postStop` hook | **Server plugin** |
 | **Permission hints** | `permission.ask` hook (auto-allow read-only tools) | **Server plugin** |
 | **Progressive catalog routing** | `hypernexus_search_tools` over 50K+ MCP tools (`/api/tools/search`) | **Server plugin** |

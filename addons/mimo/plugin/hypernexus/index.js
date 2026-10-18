@@ -47,6 +47,27 @@ function summarize(r, fallback) {
 
 // Cache for the conversation monitor's latest suggestions (non-blocking writes).
 let lastSuggestions = { query: null, tools: [], at: 0 };
+// Cache for retrieval-augmented L2 memory (filled in the background by chat.message /
+// session.pre, injected by experimental.chat.system.transform). Never blocks a turn.
+let lastMemories = { query: null, items: [], at: 0 };
+const MEM_TTL = 30_000; // don't re-search more than every 30s
+
+// Warm the L2 memory cache in the background. Fire-and-forget: the fetch runs up to
+// SLOW_BUDGET off the hot path and the result is picked up by a later system.transform
+// (eventual consistency across turns — acceptable per the hot-path-never-blocks rule).
+function warmMemories(query) {
+  const now = Date.now();
+  if (now - lastMemories.at < MEM_TTL) return; // throttled
+  if (!query || query.trim().length < 4) return;
+  hnFetch(`/api/memory/search?query=${encodeURIComponent(query.slice(0, 200))}&limit=3`, { budget: SLOW_BUDGET })
+    .then((r) => {
+      const data = r.ok && r.data && r.data.data ? r.data.data : null;
+      if (Array.isArray(data) && data.length) {
+        lastMemories = { query, items: data.slice(0, 3), at: Date.now() };
+      }
+    })
+    .catch(() => {});
+}
 
 // ── Tool factory helpers ──────────────────────────────────────────────────────
 const z = tool.schema;
@@ -225,6 +246,8 @@ export const server = async (input, options = {}) => {
             body: { query: String(text).slice(0, 500) },
             budget: HOOK_BUDGET,
           }).catch(() => {});
+          // Also warm retrieval-augmented L2 memory (background, throttled).
+          warmMemories(String(text));
         }
       } catch {
         /* monitor must never break the turn */
@@ -245,6 +268,45 @@ export const server = async (input, options = {}) => {
               ? "Typed tools available: hypernexus_search_tools (progressive catalog routing over 50K+ MCP tools), hypernexus_suggest_tools (LLM tool suggestions), hypernexus_memory_search/store, hypernexus_mcp_* . Prefer hypernexus_search_tools to discover integrations rather than guessing."
               : "Memory/catalog tools will degrade gracefully.")
         );
+        // Retrieval-augmented L2 memory: inject cached cross-session context (if fresh).
+        try {
+          if (lastMemories.items.length && Date.now() - lastMemories.at < 120_000) {
+            const lines = lastMemories.items
+              .map((m) => {
+                const title = (m && (m.title || m.name)) || "memory";
+                const content = String((m && (m.content || m.text || m.snippet || "")) || "").slice(0, 220);
+                return `- ${title}: ${content}`;
+              })
+              .join("\n");
+            if (lines) {
+              output.system.push(
+                `Relevant HyperNexus L2 memory (cross-session, use if helpful):\n${lines}\n` +
+                  `For more, call hypernexus_memory_search. Store new durable facts with hypernexus_memory_store.`
+              );
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        /* ignore */
+      }
+    },
+
+    // 4a. TOOL INTENT — observe tool calls before they run (fire-and-forget, never
+    //     mutates args or cancels). Completes the tool lifecycle alongside _after.
+    "tool.execute.before": async (input) => {
+      try {
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: `tool-intent:${input.tool}`,
+            content: `session=${input.sessionID} call=${input.callID} tool=${input.tool} (pre)`,
+            tags: ["tool-obs", input.tool],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
       } catch {
         /* ignore */
       }
@@ -275,6 +337,26 @@ export const server = async (input, options = {}) => {
         if (/^hypernexus_(status|search_tools|suggest_tools|mcp_status|mcp_servers|mcp_tools|memory_search|context_harvest)$/.test(name)) {
           output.status = "allow";
         }
+      } catch {
+        /* ignore */
+      }
+    },
+
+    // 6a. SESSION START — warm the L2 memory cache and note the session boundary so the
+    //     first turn has cross-session context available (fire-and-forget).
+    "session.pre": async (input) => {
+      try {
+        warmMemories(input && (input.task_id || input.agentID || "session"));
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: "session-start",
+            content: `agent=${input.agentID} session=${input.sessionID}${input.task_id ? ` task=${input.task_id}` : ""}`,
+            tags: ["session"],
+            namespace: "project",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
       } catch {
         /* ignore */
       }
