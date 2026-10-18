@@ -130,7 +130,9 @@
         display: none;
       }
     </style>
-  </head>
+      <script defer data-domain="hypernexus.site" src="https://plausible.io/js/script.js"></script>
+    <script defer src="/analytics.js"></script>
+</head>
   <body>
     <div class="container">
       <div class="logo">
@@ -245,6 +247,7 @@
             const data = await res.json();
 
             if (res.ok) {
+              if (typeof hnTrack === "function") hnTrack("funnel_signup_complete", { method: "email" });
               localStorage.setItem("token", data.token);
               window.location.href = "/dashboard";
             } else {
