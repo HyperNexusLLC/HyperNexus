@@ -12,6 +12,7 @@ import { cpSync, mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir, platform, arch } from "node:os";
+import { execSync } from "node:child_process";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DRY = process.argv.includes("--dry-run");
@@ -65,6 +66,65 @@ function mergeJsoncMcp(path, entry) {
   obj.mcp.hypernexus = entry;
   // Write back as plain JSON (readable, valid JSONC superset)
   writeJson(path, obj);
+}
+
+// Merge an absolute plugin directory path into the config `plugin` array (idempotent).
+function mergeJsoncPlugin(path, pluginDir) {
+  let raw = existsSync(path) ? readFileSync(path, "utf8") : "{}";
+  const stripped = raw
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/,\s*([}\]])/g, "$1");
+  let obj = {};
+  try {
+    obj = JSON.parse(stripped);
+  } catch {
+    obj = {};
+  }
+  obj.plugin = Array.isArray(obj.plugin) ? obj.plugin : [];
+  const normalized = pluginDir.replace(/\\/g, "/");
+  const already = obj.plugin.some((p) => {
+    const spec = Array.isArray(p) ? p[0] : p;
+    return typeof spec === "string" && spec.replace(/\\/g, "/") === normalized;
+  });
+  if (!already) obj.plugin.push(pluginDir);
+  writeJson(path, obj);
+}
+
+// Ensure plugin `node_modules` resolves the MiMoCode SDK via a junction/symlink to
+// the live MiMoCode node_modules. Without this, `import "@mimo-ai/plugin"` fails at
+// boot (Cannot find module) because the plugin lives outside the MiMoCode install.
+function ensurePluginNodeModules(pluginDir, sdkNodeModules) {
+  const target = join(pluginDir, "node_modules");
+  try {
+    if (existsSync(target)) return; // already linked or installed
+  } catch {
+    /* fall through */
+  }
+  if (!existsSync(sdkNodeModules)) {
+    log(`WARN: MiMoCode node_modules not found at ${sdkNodeModules} — plugin import may fail`);
+    return;
+  }
+  try {
+    if (WIN) {
+      execSync(`cmd /c mklink /J "${target}" "${sdkNodeModules}"`, { stdio: "ignore" });
+    } else {
+      execSync(`ln -s "${sdkNodeModules}" "${target}"`, { stdio: "ignore" });
+    }
+    log(`linked ${basename(pluginDir)}/node_modules -> ${sdkNodeModules}`);
+  } catch (e) {
+    log(`WARN: could not link node_modules for ${basename(pluginDir)}: ${e.message}`);
+  }
+}
+
+// Strip a UTF-8 BOM that would break MiMoCode's strict JSON config parser.
+function stripBom(file) {
+  if (!existsSync(file)) return;
+  const buf = readFileSync(file);
+  if (buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) {
+    writeFileSync(file, buf.slice(3));
+    log(`stripped BOM from ${basename(file)}`);
+  }
 }
 
 // ─── Paths ────────────────────────────────────────────────────────────────
@@ -138,6 +198,26 @@ if (existsSync(SRC_AGENTS)) {
 }
 mergeJsoncMcp(join(MIMOCODE_HOME, "mimocode.jsonc"), MCP_ENTRY);
 count++;
+
+// 1b. MiMoCode plugins (server hooks/tools + TUI commands) — the @mimo-ai/plugin API.
+console.log("[1b/5] MiMoCode plugins (server + TUI)");
+const SDK_NODE_MODULES = join(HOME, ".mimocode", "node_modules");
+const PLUGIN_SERVER = join(ROOT, "plugin", "hypernexus");
+const PLUGIN_TUI = join(ROOT, "plugin", "hypernexus-tui");
+const CONFIG_PATH = join(MIMOCODE_HOME, "mimocode.jsonc");
+stripBom(CONFIG_PATH);
+for (const pdir of [PLUGIN_SERVER, PLUGIN_TUI]) {
+  if (!existsSync(pdir)) {
+    log(`WARN: plugin dir missing: ${pdir}`);
+    continue;
+  }
+  ensurePluginNodeModules(pdir, SDK_NODE_MODULES);
+  mergeJsoncPlugin(CONFIG_PATH, pdir);
+  log(`registered plugin: ${basename(pdir)}`);
+  count++;
+}
+// Ensure the config we just wrote has no BOM (MiMoCode's parser is strict).
+stripBom(CONFIG_PATH);
 
 // 2. MiMo Desktop skill + tools
 console.log("[2/5] MiMo Desktop");
