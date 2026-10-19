@@ -47,6 +47,10 @@ function summarize(r, fallback) {
 
 // Cache for the conversation monitor's latest suggestions (non-blocking writes).
 let lastSuggestions = { query: null, tools: [], at: 0 };
+// Cached system-context note. Refreshed at most every SYS_TTL ms so every turn gets
+// the note deterministically (never random-skipped); only the health probe is throttled.
+let sysCache = { note: "", at: 0 };
+const SYS_TTL = 15_000;
 // Cache for retrieval-augmented L2 memory (filled in the background by chat.message /
 // session.pre, injected by experimental.chat.system.transform). Never blocks a turn.
 let lastMemories = { query: null, items: [], at: 0 };
@@ -88,13 +92,46 @@ export const server = async (input, options = {}) => {
     console.error(`[hypernexus] server plugin active. kernel=${BASE}`);
   } catch { /* ignore */ }
 
+  // 24. WORKSPACE ADAPTOR — HyperNexus-managed local worktrees (degrades silently
+  //     when the experimental workspace API is absent in older runtimes).
+  try {
+    if (input && input.experimental_workspace && typeof input.experimental_workspace.register === "function") {
+      input.experimental_workspace.register("hypernexus", {
+        name: "HyperNexus Worktree",
+        description: "Local directory worktree managed with HyperNexus session/memory linkage",
+        configure(config) {
+          return { ...config, extra: { ...(config.extra || {}), managedBy: "hypernexus" } };
+        },
+        async create(config) {
+          try {
+            const { mkdirSync, writeFileSync } = await import("node:fs");
+            const dir = config.directory || config.name || "hypernexus-worktree";
+            mkdirSync(dir, { recursive: true });
+            writeFileSync(`${dir}/.hypernexus-worktree.json`, JSON.stringify({ id: config.id, projectID: config.projectID, created: Date.now() }), "utf8");
+          } catch { /* ignore */ }
+        },
+        async remove(config) {
+          try {
+            const { rmSync } = await import("node:fs");
+            const dir = config.directory;
+            if (dir && dir.includes("hypernexus")) rmSync(`${dir}/.hypernexus-worktree.json`, { force: true });
+          } catch { /* ignore */ }
+        },
+        target(config) {
+          return { type: "local", directory: config.directory || "." };
+        },
+      });
+    }
+  } catch { /* ignore */ }
+
   return {
     // 1. TYPED TOOLS — first-class MiMoCode tools calling the HyperNexus kernel.
     tool: {
       hypernexus_status: tool({
         description: "HyperNexus kernel health, version, uptime, and MCP bridge status. Use to confirm the kernel is reachable before memory or catalog calls.",
         args: {},
-        async execute() {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "HyperNexus status" }); } catch { /* ignore */ }
           const [h, m] = await Promise.all([
             hnFetch("/health", { budget: FAST_BUDGET }),
             hnFetch("/api/mcp/status", { budget: FAST_BUDGET }),
@@ -113,7 +150,8 @@ export const server = async (input, options = {}) => {
           query: z.string().describe("What you are trying to do (e.g. 'search memory', 'read a PDF', 'deploy to server')"),
           limit: z.number().int().min(1).max(25).optional().describe("Max tools to return (default 8)"),
         },
-        async execute(args) {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Search tools: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
           const limit = args.limit || 8;
           const r = await hnFetch(`/api/tools/search?query=${encodeURIComponent(args.query)}`, { budget: FAST_BUDGET });
           const data = r.ok && r.data && r.data.data ? r.data.data : [];
@@ -132,7 +170,8 @@ export const server = async (input, options = {}) => {
         args: {
           query: z.string().describe("The task or question in natural language"),
         },
-        async execute(args) {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Suggest tools: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
           // Trigger the predictor (POST) then read suggestions (GET), both budgeted.
           await hnFetch("/api/mcp/tool-suggestions", { method: "POST", body: { query: args.query }, budget: HOOK_BUDGET });
           const g = await hnFetch(`/api/mcp/tool-suggestions?query=${encodeURIComponent(args.query)}`, { budget: FAST_BUDGET });
@@ -148,7 +187,8 @@ export const server = async (input, options = {}) => {
       hypernexus_mcp_status: tool({
         description: "HyperNexus MCP bridge status: which upstream is active, fallback reason, and connected servers.",
         args: {},
-        async execute() {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "HyperNexus MCP status" }); } catch { /* ignore */ }
           const r = await hnFetch("/api/mcp/status", { budget: FAST_BUDGET });
           return { output: JSON.stringify(summarize(r, "mcp status"), null, 2) };
         },
@@ -157,7 +197,8 @@ export const server = async (input, options = {}) => {
       hypernexus_mcp_servers: tool({
         description: "List MCP servers registered with the HyperNexus kernel and their connection state.",
         args: {},
-        async execute() {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "HyperNexus MCP servers" }); } catch { /* ignore */ }
           const r = await hnFetch("/api/mcp/servers", { budget: FAST_BUDGET });
           return { output: JSON.stringify(summarize(r, "mcp servers"), null, 2) };
         },
@@ -168,7 +209,8 @@ export const server = async (input, options = {}) => {
         args: {
           limit: z.number().int().min(1).max(50).optional().describe("Cap the returned tools (default 20)"),
         },
-        async execute(args) {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "HyperNexus MCP tools" }); } catch { /* ignore */ }
           const r = await hnFetch("/api/mcp/tools", { budget: FAST_BUDGET });
           const data = r.ok && r.data && r.data.data ? r.data.data : [];
           const top = Array.isArray(data) ? data.slice(0, args.limit || 20) : data;
@@ -185,7 +227,8 @@ export const server = async (input, options = {}) => {
           query: z.string().describe("What to look for in memory"),
           limit: z.number().int().min(1).max(20).optional().describe("Max results (default 5)"),
         },
-        async execute(args) {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Memory search: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
           const r = await hnFetch(`/api/memory/search?query=${encodeURIComponent(args.query)}&limit=${args.limit || 5}`, { budget: SLOW_BUDGET });
           return { output: JSON.stringify(summarize(r, "memory search"), null, 2) };
         },
@@ -199,7 +242,8 @@ export const server = async (input, options = {}) => {
           tags: z.array(z.string()).optional().describe("Topic tags"),
           namespace: z.string().optional().describe("project | global | user (default project)"),
         },
-        async execute(args) {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Store memory: ${String(args.title).slice(0, 40)}` }); } catch { /* ignore */ }
           const r = await hnFetch("/api/memory/facts/add", {
             method: "POST",
             body: {
@@ -220,7 +264,8 @@ export const server = async (input, options = {}) => {
           summary: z.string().describe("What was accomplished / current state"),
           keyFiles: z.array(z.string()).optional().describe("Important file paths touched"),
         },
-        async execute(args) {
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "Context harvest" }); } catch { /* ignore */ }
           const content = `${args.summary}${args.keyFiles && args.keyFiles.length ? `\nKey files: ${args.keyFiles.join(", ")}` : ""}`;
           const r = await hnFetch("/api/memory/facts/add", {
             method: "POST",
@@ -255,19 +300,23 @@ export const server = async (input, options = {}) => {
     },
 
     // 3. SYSTEM CONTEXT — inject a short, cached HyperNexus status note so the model
-    //    knows the catalog/memory tools exist. Cheap and cached; never blocks long.
+    //    knows the catalog/memory tools exist. Served from cache every turn
+    //    (deterministic); the health probe refreshes at most per SYS_TTL.
     "experimental.chat.system.transform": async (input, output) => {
       try {
-        if (Date.now() - boot > 6000 && Math.random() > 0.25) return; // throttle after boot
-        const r = await hnFetch("/health", { budget: HOOK_BUDGET });
-        const ok = !!(r && r.ok);
-        const ver = r && r.data && r.data.version ? r.data.version : "unknown";
-        output.system.push(
-          `HyperNexus kernel: ${ok ? `online (v${ver})` : "unavailable"}. ` +
+        const now = Date.now();
+        if (now - sysCache.at > SYS_TTL) {
+          const r = await hnFetch("/health", { budget: HOOK_BUDGET });
+          const ok = !!(r && r.ok);
+          const ver = r && r.data && r.data.version ? r.data.version : "unknown";
+          sysCache.note =
+            `HyperNexus kernel: ${ok ? `online (v${ver})` : "unavailable"}. ` +
             (ok
               ? "Typed tools available: hypernexus_search_tools (progressive catalog routing over 50K+ MCP tools), hypernexus_suggest_tools (LLM tool suggestions), hypernexus_memory_search/store, hypernexus_mcp_* . Prefer hypernexus_search_tools to discover integrations rather than guessing."
-              : "Memory/catalog tools will degrade gracefully.")
-        );
+              : "Memory/catalog tools will degrade gracefully.");
+          sysCache.at = now;
+        }
+        if (sysCache.note) output.system.push(sysCache.note);
         // Retrieval-augmented L2 memory: inject cached cross-session context (if fresh).
         try {
           if (lastMemories.items.length && Date.now() - lastMemories.at < 120_000) {
@@ -290,6 +339,41 @@ export const server = async (input, options = {}) => {
         }
       } catch {
         /* ignore */
+      }
+    },
+
+    // 3b. MESSAGE OBSERVER — observe the message stream without mutating it.
+    //     Safe by design: only reads, never writes to output.messages / output.parts.
+    //     Feeds the per-step trajectory advertiser and logs a lightweight breadcrumb.
+    "experimental.chat.messages.transform": async (input, output) => {
+      try {
+        const msgs = (output && output.messages) || [];
+        const parts = (output && output.parts) || [];
+        // Feed the last user text to the tool-suggestion monitor (PRIMARY design: LLM
+        // conversation monitor). Non-blocking, budgeted, degrades silently.
+        const lastUser = [...msgs].reverse().find((m) => m && m.role === "user");
+        const userText = lastUser
+          ? typeof lastUser.content === "string"
+            ? lastUser.content
+            : JSON.stringify(lastUser.content || "").slice(0, 500)
+          : "";
+        if (userText.length > 10) {
+          hnFetch("/api/mcp/tool-suggestions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: userText.slice(0, 400) }),
+            budget: HOOK_BUDGET,
+          }).catch(() => {});
+        }
+        // Breadcrumb to kv (if available via context) — count only, no mutation.
+        if (msgs.length || parts.length) {
+          // Fire-and-forget observability log (never throws).
+          console.error(
+            `[hypernexus] messages.transform observed: ${msgs.length} msgs, ${parts.length} parts`
+          );
+        }
+      } catch {
+        /* never throw from a transform hook */
       }
     },
 
@@ -398,6 +482,270 @@ export const server = async (input, options = {}) => {
       } catch {
         /* ignore */
       }
+    },
+
+    // 9. PER-STEP QUERY FEED — the PRIMARY conversation-monitor input. Each LLM step's
+    //    query feeds the tool-suggestions advertiser + warms L2 memory (fire-and-forget).
+    "session.userQuery.pre": async (input) => {
+      try {
+        const q = input && input.query ? String(input.query) : "";
+        if (q.length > 4) {
+          hnFetch("/api/mcp/tool-suggestions", {
+            method: "POST",
+            body: { query: q.slice(0, 500) },
+            budget: HOOK_BUDGET,
+          }).catch(() => {});
+          warmMemories(q);
+        }
+      } catch { /* ignore */ }
+    },
+
+    // 10. PER-STEP OBSERVABILITY — after each LLM step, record a compact signal to the
+    //     kernel (never blocks; feed is the trajectory summary).
+    "session.userQuery.post": async (input) => {
+      try {
+        const q = input && input.query ? String(input.query).slice(0, 200) : "";
+        const fin = input && input.finish ? input.finish : "";
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: "llm-step",
+            content: `session=${input.sessionID} step=${input.step} finish=${fin} q=${q}`,
+            tags: ["llm-step", fin || "step"],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    },
+
+    // 11. LLM REQUEST OBSERVABILITY — record provider/model usage per request.
+    "session.llm.request": async (input) => {
+      try {
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: "llm-request",
+            content: `session=${input.sessionID} model=${input.providerID}/${input.modelID} trajectory=${(input.trajectory || []).length} msgs`,
+            tags: ["llm-request", input.providerID || "provider"],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    },
+
+    // 12. TOOL DEFINITION ENRICHMENT — append a short progressive-routing hint so the
+    //     model knows the HyperNexus catalog exists when it sees a tool it might extend.
+    "tool.definition": async (input, output) => {
+      try {
+        if (!output || !output.description) return;
+        // Only enrich non-HyperNexus tools (ours already advertise the catalog).
+        if (String(input.toolID || "").startsWith("hypernexus_")) return;
+        if (output.description.includes("hypernexus_search_tools")) return;
+        output.description = String(output.description).slice(0, 4000) +
+          "\n\n(Relevant integrations/MCP tools may exist beyond this list — use hypernexus_search_tools to discover them from the 50K+ HyperNexus catalog.)";
+      } catch { /* ignore */ }
+    },
+
+    // 13. SHELL ENVIRONMENT — inject HyperNexus connection hints into every shell call.
+    "shell.env": async (input, output) => {
+      try {
+        if (output && output.env) {
+          output.env.HYPERNEXUS_URL = BASE;
+          if (input && input.sessionID) output.env.HYPERNEXUS_SESSION = input.sessionID;
+        }
+      } catch { /* ignore */ }
+    },
+
+    // 14. CHAT PARAMS — observe (never override model params; telemetry only).
+    "chat.params": async (input, output) => {
+      try {
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: "chat-params",
+            content: `session=${input.sessionID} model=${input.model && input.model.id} temp=${output && output.temperature}`,
+            tags: ["chat-params"],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    },
+
+    // 15. CHAT HEADERS — attach HyperNexus correlation headers (harmless if unused).
+    "chat.headers": async (input, output) => {
+      try {
+        if (output && output.headers) {
+          output.headers["X-HyperNexus-Session"] = String(input.sessionID || "");
+          output.headers["X-HyperNexus-Kernel"] = BASE;
+        }
+      } catch { /* ignore */ }
+    },
+
+    // 16. COMMAND TELEMETRY — record slash-command usage (fire-and-forget).
+    "command.execute.before": async (input) => {
+      try {
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: "command",
+            content: `session=${input.sessionID} cmd=${input.command} args=${String(input.arguments || "").slice(0, 120)}`,
+            tags: ["command", input.command],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    },
+
+    // 17. EVENT BUS — throttled event telemetry (sampled to avoid flooding).
+    event: async (input) => {
+      try {
+        const e = input && input.event;
+        if (!e || !e.type) return;
+        if (Math.random() > 0.1) return; // sample 10% of events (cold path, not context injection)
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: "event",
+            content: `type=${e.type}`,
+            tags: ["event", e.type],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    },
+
+    // 18. ACTOR PRE-DELIVERY — observe before finalText is delivered (never set
+    //     continue=true; that would loop). Complements actor.postStop.
+    "actor.preStop": async (input) => {
+      try {
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: `actor-pre:${input.agentType}`,
+            content: `actor ${input.actorID} (${input.agentType}/${input.mode}) iter=${input.iteration}${input.task ? ` task=${String(input.task).slice(0, 160)}` : ""}`,
+            tags: ["actor", "pre"],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    },
+
+    // 19. COMPACTION CONTEXT — inject HyperNexus memory availability into the
+    //     compaction prompt so condensed summaries retain cross-session pointers.
+    "experimental.session.compacting": async (input, output) => {
+      try {
+        if (output && Array.isArray(output.context)) {
+          output.context.push(
+            "HyperNexus L2 memory vault holds cross-session project knowledge. " +
+              "Preserve any hypernexus_memory_store facts, key file paths, and decisions in the summary. " +
+              "Call hypernexus_memory_search to recover dropped details later."
+          );
+        }
+      } catch { /* ignore */ }
+    },
+
+    // 20. AUTO-CONTINUE POLICY — leave the synthetic continue turn enabled (observe).
+    "experimental.compaction.autocontinue": async (input, output) => {
+      try {
+        if (output && typeof output.enabled === "boolean") {
+          // keep default true; only disable when kernel is explicitly in maintenance
+          if (Date.now() - sysCache.at < SYS_TTL && sysCache.note && sysCache.note.includes("unavailable")) {
+            output.enabled = true; // still allow continue; memory degrades gracefully
+          }
+        }
+      } catch { /* ignore */ }
+    },
+
+    // 21. TEXT COMPLETE OBSERVABILITY — fire-and-forget signal after completions.
+    "experimental.text.complete": async (input) => {
+      try {
+        hnFetch("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            title: "text-complete",
+            content: `session=${input.sessionID} message=${input.messageID}`,
+            tags: ["text-complete"],
+            namespace: "global",
+          },
+          budget: HOOK_BUDGET,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    },
+
+    // 22. AUTH — HyperNexus API-key auth provider (validates against kernel api-keys).
+    auth: {
+      provider: "hypernexus",
+      methods: [
+        {
+          type: "api",
+          label: "HyperNexus API Key",
+          prompts: [
+            {
+              type: "text",
+              key: "apiKey",
+              message: "HyperNexus API key (from the dashboard or /api/api-keys/create)",
+              placeholder: "hn_...",
+            },
+          ],
+          async authorize(inputs) {
+            try {
+              const key = (inputs && inputs.apiKey) || "";
+              if (!key) return { type: "failed" };
+              const r = await hnFetch("/api/api-keys/validate", {
+                method: "POST",
+                body: { key },
+                budget: FAST_BUDGET,
+              });
+              if (r && r.ok && r.data && r.data.success !== false) {
+                return { type: "success", key, provider: "hypernexus" };
+              }
+              return { type: "failed" };
+            } catch {
+              return { type: "failed" };
+            }
+          },
+        },
+      ],
+    },
+
+    // 23. PROVIDER — expose HyperNexus-routed models as a selectable provider.
+    //     Degrades to zero models when the kernel is unavailable (never breaks the picker).
+    provider: {
+      id: "hypernexus",
+      models: async () => {
+        try {
+          const r = await hnFetch("/api/providers/catalog", { budget: FAST_BUDGET });
+          const entries = (r && r.ok && r.data && r.data.data) || [];
+          const out = {};
+          if (Array.isArray(entries)) {
+            for (const e of entries.slice(0, 32)) {
+              const id = String((e && (e.id || e.model || e.name)) || "").trim();
+              if (!id) continue;
+              out[id] = {
+                id,
+                name: String((e && (e.name || e.label)) || id),
+                attachment: !!(e && e.attachment),
+                reasoning: !!(e && e.reasoning),
+                temperature: e && e.temperature !== undefined ? e.temperature : true,
+                tool_call: !!(e && (e.tool_call || e.tools)),
+                limit: {
+                  context: Number((e && (e.context || e.context_length)) || 128000),
+                  output: Number((e && (e.output || e.max_output)) || 8192),
+                },
+              };
+            }
+          }
+          return out;
+        } catch {
+          return {};
+        }
+      },
     },
 
     // 8. CONFIG — surface the plugin's effective settings on load (visible in --print-logs).

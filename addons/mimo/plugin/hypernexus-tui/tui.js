@@ -23,7 +23,7 @@ function toast(api, variant, title, message) {
   try { api.ui.toast({ variant, title, message: String(message).slice(0, 500) }); } catch { /* noop */ }
 }
 
-export const tui = async (api, options = {}) => {
+export const tui = async (api, options = {}, meta = {}) => {
   // TUI plugins receive the TuiPluginApi only in interactive TUI mode. In headless
   // runs (`mimo run`) `api` is absent / lacks command registration — return empty
   // server hooks so the loader's server-plugin path is satisfied without a warning.
@@ -55,6 +55,8 @@ export const tui = async (api, options = {}) => {
       description: "Health, version, uptime, and MCP bridge status of the HyperNexus kernel",
       category: "HyperNexus",
       slash: { name: "hn-status", aliases: ["hns"] },
+      suggested: true,
+      keybind: "ctrl+alt+s",
       onSelect: async () => {
         toast(api, "info", "HyperNexus", "Checking kernel status…");
         const h = await get("/health", 3000);
@@ -200,8 +202,54 @@ export const tui = async (api, options = {}) => {
     },
   ]);
 
+  // === Deep-wiring: remaining TuiPluginApi surfaces (keybind, kv, route, event) ===
+
+  // KEYBIND — HyperNexus palette keybind so the panel is reachable without typing /hn.
+  try {
+    if (api.keybind && typeof api.keybind.create === "function") {
+      api.keybind.create({ "hypernexus.open": "ctrl+alt+h" });
+    }
+  } catch { /* keybind is optional */ }
+
+  // KV — persist a status snapshot so the panel can render offline.
+  try {
+    if (api.kv && typeof api.kv.set === "function") {
+      api.kv.set("hn.loadedAt", new Date().toISOString());
+      if (meta && meta.id) api.kv.set("hn.pluginId", meta.id);
+    }
+  } catch { /* kv is optional */ }
+
+  // ROUTE — register a HyperNexus route (navigable via api.route.navigate).
+  try {
+    if (api.route && typeof api.route.register === "function") {
+      api.route.register([
+        {
+          name: "hypernexus",
+          render: () => {
+            try {
+              return api.ui && typeof api.ui.Slot === "function" ? api.ui.Slot({ name: "hn-panel" }) : null;
+            } catch { return null; }
+          },
+        },
+      ]);
+    }
+  } catch { /* route is optional */ }
+
+  // EVENT — subscribe to session lifecycle and mirror a lightweight breadcrumb to kv.
+  try {
+    if (api.event && typeof api.event.on === "function") {
+      api.event.on("session_start", () => {
+        try { if (api.kv && api.kv.set) api.kv.set("hn.lastSessionStart", new Date().toISOString()); } catch { /* noop */ }
+      });
+      api.event.on("session_end", () => {
+        try { if (api.kv && api.kv.set) api.kv.set("hn.lastSessionEnd", new Date().toISOString()); } catch { /* noop */ }
+      });
+    }
+  } catch { /* event is optional */ }
+
   // A quick-access toast on activation so users know HyperNexus is wired in.
-  toast(api, "success", "HyperNexus", "Commands ready: /hn-status /hn-search /hn-suggest /hn-memory /hn-harvest");
+  const pluginLabel = meta && meta.id ? `${meta.id}${meta.version ? "@" + meta.version : ""}` : "HyperNexus";
+  toast(api, "success", pluginLabel, "Commands ready: /hn-status /hn-search /hn-suggest /hn-memory /hn-harvest");
   return {};
 };
 
