@@ -8,8 +8,10 @@ const TN_BASE = "http://127.0.0.1:7778";
  *
  * Full bridge: pi ↔ HyperNexus
  * ───────────────────────────────────────────
- * - 9 custom tools (memory, tools, sessions, skills, code, context, scratchpad)
+ * - 11 custom tools (memory, tools, tool suggestions, sessions, skills, code, context, scratchpad)
  * - Session priming + per-turn context harvesting + compaction hooks
+ * - Fast FTS context injection (hot-path hooks never stall a turn)
+ * - Preemptive tool-suggestion monitor (non-blocking) + hypernexus_suggest_tools
  * - tool_call RBAC enforcement via enterprise API
  * - tool_result auto-storage to L2 memory
  * - user_bash audit logging through TN
@@ -53,6 +55,41 @@ async function tnFetchFastJson(path: string, signal?: AbortSignal): Promise<any 
     if (!r.ok) return null;
     return await r.json();
   } catch { return null; }
+}
+
+/**
+ * Fast keyword search for hot-path hooks (before_agent_start / context / input).
+ *
+ * Uses /api/memory/fts-search (~15ms) instead of /api/memory/search (~800ms,
+ * which runs a full vector+embed scan). The hot-path budget is tight, so a slow
+ * search would always time out and silently inject nothing. FTS returns results
+ * in well under the budget, so context injection actually works.
+ *
+ * Normalizes the FTS shape (`data[].record`) into the common `{content, tags,
+ * category}` shape so callers don't care which backend served the results.
+ * Never throws — returns [] on any failure.
+ */
+async function tnFastSearch(query: string, limit = 3, signal?: AbortSignal): Promise<any[]> {
+  const q = (query || "").trim();
+  if (!q) return [];
+  // FTS MATCH throws on unbalanced quotes/operators — keep only word chars + spaces.
+  const safe = q.replace(/[^a-zA-Z0-9\s_-]/g, " ").trim().slice(0, 80);
+  if (!safe) return [];
+  const body = await tnFetchFastJson(
+    `/api/memory/fts-search?q=${encodeURIComponent(safe)}&limit=${Math.max(1, Math.min(10, limit))}`,
+    signal,
+  );
+  const data = body?.data ?? body ?? [];
+  if (!Array.isArray(data)) return [];
+  return data.map((d: any) => {
+    const rec = d?.record ?? d;
+    return {
+      content: rec?.content ?? rec?.text ?? "",
+      tags: rec?.tags ?? [],
+      category: rec?.category ?? "",
+      score: d?.score,
+    };
+  }).filter((m: any) => m.content && typeof m.content === "string");
 }
 
 async function tnOk(path: string, init?: RequestInit, signal?: AbortSignal) {
@@ -175,8 +212,7 @@ export default function (pi: ExtensionAPI) {
     if (!isFirstTurn) {
       // Inject L2 context on subsequent turns
       // Fast path: never stall the turn waiting on the kernel.
-      const body = await tnFetchFastJson(`/api/memory/search?q=${encodeURIComponent(event.prompt.slice(0, 100))}`, ctx.signal);
-      const memories = body?.data ?? [];
+      const memories = await tnFastSearch(event.prompt.slice(0, 100), 3, ctx.signal);
       if (Array.isArray(memories) && memories.length > 0) {
         const contextBlock = memories.slice(0, 3)
           .map((m: any) => `  - ${(m.content ?? m.text ?? JSON.stringify(m)).slice(0, 200)}`)
@@ -189,10 +225,9 @@ export default function (pi: ExtensionAPI) {
     // First turn: full guidance + context
     let memoryContext = "";
     try {
-      const res = await tnFetch(`/api/memory/search?q=${encodeURIComponent(event.prompt.slice(0, 100))}`, {}, ctx.signal);
+      const res = { ok: true };
       if (res.ok) {
-        const body = await res.json();
-        const memories = body.data ?? [];
+        const memories = await tnFastSearch(event.prompt.slice(0, 100), 5, ctx.signal);
         if (Array.isArray(memories) && memories.length > 0) {
           memoryContext = "\n\n## Relevant Past Context\n" + memories.slice(0, 5)
             .map((m: any) => `  • ${(m.content ?? m.text ?? JSON.stringify(m)).slice(0, 200)}`)
@@ -243,9 +278,16 @@ export default function (pi: ExtensionAPI) {
 
     if (!userText || userText.length < 10) return;
 
+    // Fire-and-forget: feed the preemptive tool-suggestion monitor. Never awaited,
+    // so it can never delay the model call. Suggestions are surfaced on demand via
+    // hypernexus_suggest_tools / hypernexus_tool_search.
+    tnFetch("/api/mcp/tool-suggestions", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: "user", content: userText.slice(0, 2000) }),
+    }).catch(() => {});
+
     // Non-blocking: a slow kernel must not delay the model call.
-    const body = await tnFetchFastJson(`/api/memory/search?q=${encodeURIComponent(userText.slice(0, 100))}`, ctx.signal);
-    const memories = body?.data ?? [];
+    const memories = await tnFastSearch(userText.slice(0, 100), 2, ctx.signal);
     if (!Array.isArray(memories) || memories.length === 0) return;
 
     const top = memories.slice(0, 2);
@@ -354,9 +396,8 @@ export default function (pi: ExtensionAPI) {
     for (const match of matches) {
       const key = match.replace("@memory:", "");
       // Non-blocking: @memory expansion must not stall input handling.
-      const body = await tnFetchFastJson(`/api/memory/search?q=${encodeURIComponent(key)}&limit=3`, ctx.signal);
-      const memories = body?.data ?? [];
-      const context = (Array.isArray(memories) ? memories : []).map((m: any) => (m.content ?? m.text ?? "").slice(0, 150)).filter(Boolean).join("\n");
+      const memories = await tnFastSearch(key, 3, ctx.signal);
+      const context = memories.map((m: any) => String(m.content ?? "").slice(0, 150)).filter(Boolean).join("\n");
       if (context) {
         // Inline the recalled memory in place of the @memory:key token.
         expanded = expanded.replace(match, `\n[TN Memory ${key}]: ${context}\n`);
@@ -644,6 +685,42 @@ export default function (pi: ExtensionAPI) {
         `  [${t.score ?? "?"}] ${t.name} (${t.server ?? "?"})\n         ${(t.description ?? "").slice(0, 150).replace(/\n/g, " ")}`
       ).join("\n\n");
       return { content: [{ type: "text", text: `🔧 Top tools:\n\n${formatted}` }], structuredContent: { count: tools.length, tools } };
+    },
+  });
+
+  // 4b. hypernexus_suggest_tools
+  pi.registerTool({
+    name: "hypernexus_suggest_tools",
+    label: "TN Suggest Tools",
+    description: "Surface tools the HyperNexus preemptive monitor recommends for the current conversation (fed automatically by the context hook).",
+    promptSnippet: "See tools TN suggests for this conversation",
+    promptGuidelines: ["Call when you want TN's proactive tool recommendations for what the user is doing."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ count: Type.Number(), tools: Type.Array(Type.Object({
+      name: Type.String(), score: Type.Optional(Type.Number()), description: Type.Optional(Type.String()), reason: Type.Optional(Type.String()),
+    })) }),
+    parameters: Type.Object({ limit: Type.Optional(Type.Number({ description: "Max results (default 8)" })) }),
+    async execute(_toolCallId, params, signal) {
+      const res = await tnFetch("/api/mcp/tool-suggestions", {}, signal);
+      if (!res.ok) return { content: [{ type: "text", text: `Failed: ${res.status}` }], isError: true };
+      const body = await res.json();
+      const ads = (body.data ?? body ?? []) as any[];
+      if (!Array.isArray(ads) || ads.length === 0) {
+        return { content: [{ type: "text", text: "No suggestions yet. Keep working — TN watches the conversation and suggests relevant tools." }], structuredContent: { count: 0, tools: [] } };
+      }
+      const limit = params.limit ?? 8;
+      const tools = ads.slice(0, limit).map((a: any) => ({
+        name: a.toolName ?? a.name ?? "?",
+        score: typeof a.score === "number" ? a.score : undefined,
+        description: a.description,
+        reason: a.reason,
+      }));
+      const formatted = tools.map((t: any) =>
+        `  [${t.score ?? "?"}] ${t.name}\n         ${(t.description ?? "").slice(0, 120).replace(/\n/g, " ")}${t.reason ? `\n         (${t.reason})` : ""}`
+      ).join("\n\n");
+      return { content: [{ type: "text", text: `💡 Suggested tools:\n\n${formatted}` }], structuredContent: { count: tools.length, tools } };
     },
   });
 

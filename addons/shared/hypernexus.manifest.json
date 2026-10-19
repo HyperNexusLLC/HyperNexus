@@ -1,0 +1,238 @@
+{
+  "$schema": "https://hypernexus.site/schemas/extension-manifest.v1.json",
+  "name": "hypernexus",
+  "displayName": "HyperNexus",
+  "version": "1.0.13",
+  "description": "Universal AI control plane integration: persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery across 26k+ tools, knowledge graph, session import, skill registry, code search, and agent orchestration.",
+  "kind": "harness-extension",
+  "generatedFor": "multi-harness + autonomous-orchestration",
+
+  "kernel": {
+    "baseUrl": "http://127.0.0.1:7778",
+    "health": "/health",
+    "overrideEnv": ["HYPERNEXUS_URL", "HYPERNEXUS_TRPC_UPSTREAM"],
+    "mcp": {
+      "command": "hypernexus.exe",
+      "args": ["mcp"],
+      "transport": "stdio",
+      "toolNamespace": "mcp__hypernexus"
+    }
+  },
+
+  "harnesses": {
+    "pi": {
+      "status": "active",
+      "api": "@earendil-works/pi-coding-agent (ExtensionAPI)",
+      "adapter": "addons/pi/hypernexus.ts",
+      "install": "~/.pi/agent/extensions/hypernexus.ts",
+      "surfaces": ["tools", "commands", "shortcuts", "hooks", "widget", "event-bus"]
+    },
+    "mimo": {
+      "status": "active",
+      "api": "@mimo-ai/plugin (Plugin SDK)",
+      "adapter": "addons/mimo/plugin/hypernexus/index.js",
+      "install": "~/.config/mimocode/",
+      "surfaces": ["tools", "hooks", "commands", "agents", "tui"]
+    },
+    "_template": {
+      "status": "template",
+      "api": "<harness plugin/extension API>",
+      "adapter": "addons/<harness>/",
+      "install": "<harness install dir>",
+      "note": "Copy this entry to add a new harness. Bind each capability below to your harness's tool-registration primitive. Keep budgets + never-throw contract identical."
+    }
+  },
+
+  "contract": {
+    "hotPathBudgetMs": 400,
+    "defaultBudgetMs": 2500,
+    "rules": [
+      "Every kernel call is budgeted (AbortSignal.timeout) and never throws — a hung kernel degrades to a short note, never stalls a turn.",
+      "Hot-path hooks (before_agent_start / context / input) use FTS-only search (/api/memory/fts-search, ~15ms) within hotPathBudgetMs. Never call the full /api/memory/search (~800ms vector+embed) on a hot path.",
+      "Side-effect writes on per-event hooks (audit log, memory store) are fire-and-forget — do not await them in the turn path.",
+      "Explicit user-invoked tools may use the full semantic search and defaultBudgetMs.",
+      "Normalize kernel response shapes at the adapter boundary so harness code never reads `data[].record` vs `data[]` differences."
+    ]
+  },
+
+  "capabilities": [
+    {
+      "id": "memory_store",
+      "name": "Store memory",
+      "category": "memory",
+      "description": "Persist a fact / observation / decision to L2 vector memory.",
+      "kernel": { "method": "POST", "path": "/api/memory/add", "body": { "content": "<string|json>", "tags": [], "category": "general" } },
+      "readOnly": false,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_memory_store", "mimo": "hypernexus_memory_store" }
+    },
+    {
+      "id": "memory_search",
+      "name": "Search memory",
+      "category": "memory",
+      "description": "Keyword + semantic search across L2 memory.",
+      "kernel": { "method": "GET", "path": "/api/memory/search?q=<query>&limit=<n>", "fastAlt": { "path": "/api/memory/fts-search?q=<query>&limit=<n>", "budgetMs": 400, "note": "hot-path variant" } },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_memory_search", "mimo": "hypernexus_memory_search" }
+    },
+    {
+      "id": "memory_vector_search",
+      "name": "Semantic vector search",
+      "category": "memory",
+      "description": "Conceptual recall via bundled all-MiniLM-L6-v2 embeddings (384-dim, local, no Ollama).",
+      "kernel": { "method": "GET", "path": "/api/memory/search?q=<query>&limit=<n>" },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_memory_vector_search", "mimo": "hypernexus_memory_vector_search" }
+    },
+    {
+      "id": "memory_list",
+      "name": "List / review recent memories",
+      "category": "memory",
+      "description": "Browse recent L2 memories and stats.",
+      "kernel": { "method": "GET", "path": "/api/memory/list?limit=<n>" },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_memory_search", "mimo": "hypernexus_memory_list" }
+    },
+    {
+      "id": "context_harvest",
+      "name": "Context harvest",
+      "category": "memory",
+      "description": "Pull prior decisions/gotchas and relevant L2 context for a task topic.",
+      "kernel": { "method": "GET", "path": "/api/memory/search?q=<query>&limit=<n>" },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_context_harvest", "mimo": "hypernexus_context_harvest" }
+    },
+    {
+      "id": "scratchpad",
+      "name": "Scratchpad (L1 working memory)",
+      "category": "memory",
+      "description": "Read/write the L1 scratchpad for short-lived working state.",
+      "kernel": { "method": "GET|POST", "path": "/api/memory/scratchpad/get | /api/memory/scratchpad/set" },
+      "readOnly": false,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_scratchpad" }
+    },
+    {
+      "id": "tool_search",
+      "name": "Tool discovery (semantic)",
+      "category": "discovery",
+      "description": "Describe what you need — find the best tool across 26k+ MCP tools by meaning.",
+      "kernel": { "method": "GET", "path": "/api/mcp/native/search?query=<query>" },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_tool_search", "mimo": "hypernexus_search_tools" }
+    },
+    {
+      "id": "tool_suggest",
+      "name": "Proactive tool suggestions",
+      "category": "discovery",
+      "description": "Preemptive monitor recommends tools for the current conversation (fed automatically by the context hook).",
+      "kernel": { "method": "GET", "path": "/api/mcp/tool-suggestions", "feed": { "method": "POST", "path": "/api/mcp/tool-suggestions", "body": { "role": "user", "content": "<recent message>" }, "fireAndForget": true } },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_suggest_tools", "mimo": "hypernexus_suggest_tools" }
+    },
+    {
+      "id": "mcp_call",
+      "name": "Route MCP tool call",
+      "category": "discovery",
+      "description": "Invoke a discovered MCP tool through the kernel router.",
+      "kernel": { "method": "POST", "path": "/api/agent/tool", "body": { "tool": "<server/tool>", "args": {} } },
+      "readOnly": false,
+      "budgetMs": 8000,
+      "harness": { "mimo": "hypernexus_mcp_call" }
+    },
+    {
+      "id": "session_search",
+      "name": "Session search",
+      "category": "sessions",
+      "description": "Search/list/get imported coding sessions (Claude Code, Aider, etc.).",
+      "kernel": { "method": "GET", "path": "/api/sessions/imported/list | /api/sessions/imported/get?id=<id>" },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_session_search" }
+    },
+    {
+      "id": "skill_manage",
+      "name": "Skill registry",
+      "category": "skills",
+      "description": "List/search/read/create reusable skill modules (SKILL.md).",
+      "kernel": { "method": "GET|POST", "path": "/api/skills | /api/skills/read?name=<id> | /api/skills/create" },
+      "readOnly": false,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_skill_manage" }
+    },
+    {
+      "id": "code_search",
+      "name": "Code search",
+      "category": "code",
+      "description": "Search code via AST-grep rules, semantic deepcontext, or file patterns. Modes: symbols|definitions|references.",
+      "kernel": { "method": "GET", "path": "/api/mcp/native/search?query=<mode query>" },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_code_search" }
+    },
+    {
+      "id": "subagent",
+      "name": "Subagent dispatch",
+      "category": "orchestration",
+      "description": "Dispatch an independent sub-task; results are stored back to L2.",
+      "kernel": { "method": "POST", "path": "/api/memory/add", "body": { "content": "[SUBAGENT TASK] ...", "category": "subagent" } },
+      "readOnly": false,
+      "budgetMs": 2500,
+      "harness": { "pi": "hypernexus_subagent" }
+    },
+    {
+      "id": "system_status",
+      "name": "System + billing status",
+      "category": "ops",
+      "description": "Kernel health, memory tiers, mesh peers, billing/quotas.",
+      "kernel": { "method": "GET", "path": "/health | /api/mesh/status | /api/memory/cold-archive/count" },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": { "pi": "tn-status", "mimo": "hypernexus_status" }
+    }
+  ],
+
+  "hooks": {
+    "session_start": "Prime session: set name, status, inject TN system prompt + fast context.",
+    "before_agent_start": "Inject fast FTS context into system prompt (hot-path, 400ms budget).",
+    "context": "Per-turn: feed tool-suggestion monitor (fire-and-forget) + inject fast FTS context (hot-path).",
+    "tool_call": "Enterprise RBAC enforcement (dangerous-pattern authorize) + fire-and-forget audit log.",
+    "tool_result": "Auto-store substantial tool results to L2 (fire-and-forget).",
+    "input": "Expand @memory:key tokens via fast search (hot-path).",
+    "turn_end": "Store turn summary to L2 (fire-and-forget).",
+    "session_before_compact": "Enrich compaction summary with related L2 context.",
+    "session_compact": "Store compaction summary to L2 (fire-and-forget).",
+    "session_shutdown": "Clear widget/status, stop timers."
+  },
+
+  "orchestration": {
+    "loop": "RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY",
+    "compositionRules": [
+      "Always start with RECALL (context_harvest / memory_search) before multi-step work.",
+      "Use DISCOVER (tool_search / tool_suggest) when hitting a capability gap.",
+      "Always end with PERSIST (memory_store) for non-obvious decisions/gotchas.",
+      "VERIFY (system_status) before and after production changes."
+    ],
+    "workflows": [
+      { "id": "MEM-FIRST", "when": "any multi-step task", "steps": ["context_harvest", "memory_search", "memory_vector_search", "<execute>", "memory_store"] },
+      { "id": "DISCOVER", "when": "capability gap", "steps": ["tool_suggest", "tool_search", "mcp_call", "memory_store"] },
+      { "id": "HARVEST", "when": "resuming after a break", "steps": ["context_harvest", "memory_list", "session_search", "memory_vector_search"] },
+      { "id": "HANDOFF", "when": "end of session / context switch", "steps": ["memory_store(session summary)", "scratchpad(set goal)"] },
+      { "id": "OPS", "when": "deployments / incidents", "steps": ["system_status", "<act>", "system_status", "memory_store"] }
+    ]
+  },
+
+  "autonomousOrchestration": {
+    "discovery": "Read this manifest to enumerate capabilities across all bound harnesses.",
+    "dispatch": "Each capability declares a uniform kernel binding; call the kernel directly regardless of harness, or call the harness-native tool name in `harness.<harness>`.",
+    "idempotence": "memory_store writes are append-only; reads are side-effect-free. Safe to retry reads; batch writes.",
+    "budgets": "Respect `budgetMs` per capability. Never exceed hotPathBudgetMs on turn-critical paths.",
+    "escalation": "If a harness adapter is unavailable, fall back to the kernel binding (the kernel is the single source of truth)."
+  }
+}
