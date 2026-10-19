@@ -202,6 +202,7 @@ export const tui = async (api, options = {}) => {
 
   // A quick-access toast on activation so users know HyperNexus is wired in.
   toast(api, "success", "HyperNexus", "Commands ready: /hn-status /hn-search /hn-suggest /hn-memory /hn-harvest");
+  return {};
 };
 
 export default tui;
