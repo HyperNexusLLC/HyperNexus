@@ -61,7 +61,7 @@ const hookNames = Object.keys(hooks).filter((k) => k !== "tool");
 // SDK surface: 23 function hooks + auth (AuthHook object) + provider (ProviderHook object).
 const fnHooks = hookNames.filter((k) => typeof hooks[k] === "function");
 const objHooks = hookNames.filter((k) => typeof hooks[k] === "object" && hooks[k] !== null);
-check("tool inventory = 13", toolNames.length === 13, toolNames.join(","));
+check("tool inventory = 20", toolNames.length === 20, toolNames.join(","));
 check("hook inventory = 25 (23 fn + auth + provider)", hookNames.length === 25 && typeof hooks.tool === "object", hookNames.join(","));
 check("total Hooks keys = 26", Object.keys(hooks).length === 26, Object.keys(hooks).join(","));
 check("auth is AuthHook object", objHooks.includes("auth") && typeof hooks.auth.provider === "string" && Array.isArray(hooks.auth.methods), `auth.provider=${hooks.auth && hooks.auth.provider}`);

@@ -368,6 +368,116 @@ export const server = async (input, options = {}) => {
           };
         },
       }),
+
+      hypernexus_memory_vector_search: tool({
+        description: "Semantic vector search across L2 memory using local embeddings (384-dim). Finds conceptually related memories even without keyword overlap. Use for deep recall.",
+        args: {
+          query: z.string().describe("Concept or question to find related memories for"),
+          limit: z.number().int().min(1).max(20).optional().describe("Max results (default 8)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Vector search: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
+          const limit = args.limit || 8;
+          const r = await hnFetch(`/api/memory/search?q=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "vector search"), null, 2) };
+        },
+      }),
+
+      hypernexus_memory_list: tool({
+        description: "Browse recent L2 memories and stats. Use to review what's been stored or find a memory you can't recall the exact query for.",
+        args: {
+          limit: z.number().int().min(1).max(50).optional().describe("Max results (default 15)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "Recent memories" }); } catch { /* ignore */ }
+          const limit = args.limit || 15;
+          const r = await hnFetch(`/api/memory/list?limit=${limit}`, { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "memories"), null, 2) };
+        },
+      }),
+
+      hypernexus_scratchpad: tool({
+        description: "Read or write the L1 scratchpad — short-lived working memory for the current session. Use to remember goals, constraints, or intermediate state across turns.",
+        args: {
+          action: z.enum(["get", "set"]).describe("get = read scratchpad, set = write scratchpad"),
+          key: z.string().describe("Scratchpad key (e.g. 'goal', 'current_task', 'constraints')"),
+          value: z.string().optional().describe("Value to set (required when action=set)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Scratchpad ${args.action}: ${String(args.key).slice(0, 30)}` }); } catch { /* ignore */ }
+          if (args.action === "set") {
+            const r = await hnFetch("/api/memory/scratchpad/set", {
+              method: "POST", body: { key: args.key, value: args.value || "" }, budget: FAST_BUDGET,
+            });
+            return { output: JSON.stringify(summarize(r, "scratchpad set"), null, 2) };
+          }
+          const r = await hnFetch(`/api/memory/scratchpad/get?key=${encodeURIComponent(args.key)}`, { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "scratchpad get"), null, 2) };
+        },
+      }),
+
+      hypernexus_session_search: tool({
+        description: "Search imported coding sessions (Claude Code, Aider, MiMoCode, etc.). Use to find how a problem was solved previously or recover context from past work.",
+        args: {
+          query: z.string().describe("Search query for session content"),
+          limit: z.number().int().min(1).max(20).optional().describe("Max results (default 8)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Sessions: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
+          const limit = args.limit || 8;
+          const r = await hnFetch(`/api/sessions/imported/search?query=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "session search"), null, 2) };
+        },
+      }),
+
+      hypernexus_code_search: tool({
+        description: "Search code via AST-grep symbols, definitions, or references. Modes: symbols | definitions | references. Use for codebase navigation and impact analysis.",
+        args: {
+          query: z.string().describe("Symbol name or code pattern to search for"),
+          mode: z.enum(["symbols", "definitions", "references"]).optional().describe("Search mode (default: symbols)"),
+          limit: z.number().int().min(1).max(20).optional().describe("Max results (default 10)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Code ${args.mode || "symbols"}: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
+          const mode = args.mode || "symbols";
+          const limit = args.limit || 10;
+          const r = await hnFetch(`/api/mcp/native/search?query=${encodeURIComponent(`${mode} ${args.query}`)}&limit=${limit}`, { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "code search"), null, 2) };
+        },
+      }),
+
+      hypernexus_mcp_call: tool({
+        description: "Invoke a discovered MCP tool through the HyperNexus kernel router. Use after hypernexus_search_tools or hypernexus_mcp_tools to execute a tool by name.",
+        args: {
+          tool: z.string().describe("Tool name (e.g. 'tormentnexus__hello_world' or 'server__tool')"),
+          args: z.record(z.any()).optional().describe("Arguments to pass to the tool"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `MCP call: ${String(args.tool).slice(0, 40)}` }); } catch { /* ignore */ }
+          const r = await hnFetch("/api/agent/tool", {
+            method: "POST", body: { name: args.tool, args: args.args || {} }, budget: 8000,
+          });
+          return { output: JSON.stringify(summarize(r, "mcp call"), null, 2) };
+        },
+      }),
+
+      hypernexus_subagent: tool({
+        description: "Dispatch an independent sub-task to the HyperNexus orchestration layer. The task is recorded and results are stored back to L2 memory. Use for parallelizable or isolated work.",
+        args: {
+          task: z.string().describe("What the subagent should accomplish"),
+          context: z.string().optional().describe("Additional context or constraints for the subagent"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Subagent: ${String(args.task).slice(0, 40)}` }); } catch { /* ignore */ }
+          const content = `[SUBAGENT TASK] ${args.task}` + (args.context ? `\n\nContext: ${args.context}` : "");
+          const r = await hnFetch("/api/memory/add", {
+            method: "POST", body: { content, category: "subagent", tags: ["subagent", "dispatch"] }, budget: FAST_BUDGET,
+          });
+          return {
+            output: JSON.stringify({ ...summarize(r, "subagent dispatch"), note: "Task recorded to L2. Use hypernexus_memory_search to find results." }, null, 2),
+          };
+        },
+      }),
     },
 
     // 2. CONVERSATION MONITOR — non-blocking tool suggestions on each message.
