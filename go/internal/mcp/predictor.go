@@ -28,22 +28,43 @@ func NewToolPredictor(agg *Aggregator) *ToolPredictor {
 }
 
 func (p *ToolPredictor) PredictAndPreload(ctx context.Context, chatHistory string, activeGoal string) ([]string, error) {
-	topics, err := p.identifyTopics(ctx, chatHistory, activeGoal)
-	if err != nil {
-		return nil, err
+	// Bound the entire prediction: identifyTopics has its own LLM timeout, but
+	// aggregator.ListTools can also hang trying to reach MCP servers.
+	type predResult struct {
+		tools []string
+		err   error
 	}
-
-	var predictedTools []string
-	for _, topic := range topics {
-		// Use native ranking logic
-		tools, _ := p.aggregator.ListTools(ctx)
-		ranked := RankTools(topic, tools, 2)
-		for _, r := range ranked {
-			predictedTools = append(predictedTools, r.Name)
+	ch := make(chan predResult, 1)
+	go func() {
+		defer func() {
+			if rec := recover(); rec != nil {
+				ch <- predResult{nil, fmt.Errorf("prediction panic: %v", rec)}
+			}
+		}()
+		topics, err := p.identifyTopics(ctx, chatHistory, activeGoal)
+		if err != nil {
+			ch <- predResult{nil, err}
+			return
 		}
-	}
+		var predictedTools []string
+		for _, topic := range topics {
+			tools, _ := p.aggregator.ListTools(ctx)
+			ranked := RankTools(topic, tools, 2)
+			for _, r := range ranked {
+				predictedTools = append(predictedTools, r.Name)
+			}
+		}
+		ch <- predResult{uniqueStrings(predictedTools), nil}
+	}()
 
-	return uniqueStrings(predictedTools), nil
+	select {
+	case r := <-ch:
+		return r.tools, r.err
+	case <-time.After(6 * time.Second):
+		return nil, fmt.Errorf("prediction timed out after 6s")
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }
 
 func (p *ToolPredictor) identifyTopics(ctx context.Context, chatHistory string, activeGoal string) ([]string, error) {

@@ -45,12 +45,27 @@ function summarize(r, fallback) {
   return { note: `${fallback} (${why})`, ok: false };
 }
 
+// POST with one retry on timeout. Memory writes matter more than the latency cap
+// (the kernel memory endpoints stall under load / ONNX warmup).
+async function hnPostRetry(path, body, budget = SLOW_BUDGET) {
+  let r = await hnFetch(path, { method: "POST", body, budget });
+  if (!r.ok && r.error === "timeout") {
+    r = await hnFetch(path, { method: "POST", body, budget });
+  }
+  return r;
+}
+
 // Cache for the conversation monitor's latest suggestions (non-blocking writes).
 let lastSuggestions = { query: null, tools: [], at: 0 };
 // Cache for retrieval-augmented L2 memory (filled in the background by chat.message /
 // session.pre, injected by experimental.chat.system.transform). Never blocks a turn.
 let lastMemories = { query: null, items: [], at: 0 };
 const MEM_TTL = 30_000; // don't re-search more than every 30s
+
+// Cached system-context note. Refreshed at most every SYS_TTL ms so every turn gets
+// context (deterministic) while the kernel health probe is throttled (hot-path safety).
+let sysCache = { note: "", at: 0 };
+const SYS_TTL = 15_000;
 
 // Warm the L2 memory cache in the background. Fire-and-forget: the fetch runs up to
 // SLOW_BUDGET off the hot path and the result is picked up by a later system.transform
@@ -133,10 +148,17 @@ export const server = async (input, options = {}) => {
           query: z.string().describe("The task or question in natural language"),
         },
         async execute(args) {
-          // Trigger the predictor (POST) then read suggestions (GET), both budgeted.
+          // Trigger the predictor (POST), then poll for suggestions (GET). The local-LLM
+          // advertiser is async — the first GET often returns null while it warms up.
           await hnFetch("/api/mcp/tool-suggestions", { method: "POST", body: { query: args.query }, budget: HOOK_BUDGET });
-          const g = await hnFetch(`/api/mcp/tool-suggestions?query=${encodeURIComponent(args.query)}`, { budget: FAST_BUDGET });
-          const data = g.ok && g.data ? g.data.data : null;
+          let g = null;
+          let data = null;
+          for (let i = 0; i < 3; i++) {
+            g = await hnFetch(`/api/mcp/tool-suggestions?query=${encodeURIComponent(args.query)}`, { budget: FAST_BUDGET });
+            data = g.ok && g.data ? g.data.data : null;
+            if (Array.isArray(data) && data.length) break;
+            if (i < 2) await new Promise((res) => setTimeout(res, 350));
+          }
           if (Array.isArray(data) && data.length) lastSuggestions = { query: args.query, tools: data, at: Date.now() };
           return {
             output: JSON.stringify(summarize(g, "suggestions"), null, 2),
@@ -200,15 +222,11 @@ export const server = async (input, options = {}) => {
           namespace: z.string().optional().describe("project | global | user (default project)"),
         },
         async execute(args) {
-          const r = await hnFetch("/api/memory/facts/add", {
-            method: "POST",
-            body: {
-              title: args.title,
-              content: args.content,
-              tags: args.tags || [],
-              namespace: args.namespace || "project",
-            },
-            budget: SLOW_BUDGET,
+          const r = await hnPostRetry("/api/memory/facts/add", {
+            title: args.title,
+            content: args.content,
+            tags: args.tags || [],
+            namespace: args.namespace || "project",
           });
           return { output: JSON.stringify(summarize(r, "memory store"), null, 2) };
         },
@@ -222,10 +240,11 @@ export const server = async (input, options = {}) => {
         },
         async execute(args) {
           const content = `${args.summary}${args.keyFiles && args.keyFiles.length ? `\nKey files: ${args.keyFiles.join(", ")}` : ""}`;
-          const r = await hnFetch("/api/memory/facts/add", {
-            method: "POST",
-            body: { title: "context-harvest", content, tags: ["context-harvest"], namespace: "project" },
-            budget: SLOW_BUDGET,
+          const r = await hnPostRetry("/api/memory/facts/add", {
+            title: "context-harvest",
+            content,
+            tags: ["context-harvest"],
+            namespace: "project",
           });
           return { output: JSON.stringify(summarize(r, "context harvest"), null, 2) };
         },
@@ -254,20 +273,24 @@ export const server = async (input, options = {}) => {
       }
     },
 
-    // 3. SYSTEM CONTEXT — inject a short, cached HyperNexus status note so the model
-    //    knows the catalog/memory tools exist. Cheap and cached; never blocks long.
+    // 3. SYSTEM CONTEXT — always inject a HyperNexus status note (cached) so the model
+    //    knows the catalog/memory tools exist. The kernel probe is throttled to once
+    //    per SYS_TTL; the note itself is served from cache every turn (cheap, deterministic).
     "experimental.chat.system.transform": async (input, output) => {
       try {
-        if (Date.now() - boot > 6000 && Math.random() > 0.25) return; // throttle after boot
-        const r = await hnFetch("/health", { budget: HOOK_BUDGET });
-        const ok = !!(r && r.ok);
-        const ver = r && r.data && r.data.version ? r.data.version : "unknown";
-        output.system.push(
-          `HyperNexus kernel: ${ok ? `online (v${ver})` : "unavailable"}. ` +
+        const now = Date.now();
+        if (now - sysCache.at > SYS_TTL) {
+          const r = await hnFetch("/health", { budget: HOOK_BUDGET });
+          const ok = !!(r && r.ok);
+          const ver = r && r.data && r.data.version ? r.data.version : "unknown";
+          sysCache.note =
+            `HyperNexus kernel: ${ok ? `online (v${ver})` : "unavailable"}. ` +
             (ok
               ? "Typed tools available: hypernexus_search_tools (progressive catalog routing over 50K+ MCP tools), hypernexus_suggest_tools (LLM tool suggestions), hypernexus_memory_search/store, hypernexus_mcp_* . Prefer hypernexus_search_tools to discover integrations rather than guessing."
-              : "Memory/catalog tools will degrade gracefully.")
-        );
+              : "Memory/catalog tools will degrade gracefully.");
+          sysCache.at = now;
+        }
+        if (sysCache.note) output.system.push(sysCache.note);
         // Retrieval-augmented L2 memory: inject cached cross-session context (if fresh).
         try {
           if (lastMemories.items.length && Date.now() - lastMemories.at < 120_000) {
