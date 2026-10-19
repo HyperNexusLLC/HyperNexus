@@ -275,6 +275,72 @@ export const server = async (input, options = {}) => {
           return { output: JSON.stringify(summarize(r, "context harvest"), null, 2) };
         },
       }),
+
+      hypernexus_memory_stats: tool({
+        description: "Get HyperNexus L2 memory statistics: entry count, section breakdown, store health. Use to gauge memory capacity before bulk writes.",
+        args: {},
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "Memory stats" }); } catch { /* ignore */ }
+          const r = await hnFetch("/api/agent-memory/stats", { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "memory stats"), null, 2) };
+        },
+      }),
+
+      hypernexus_memory_handoff: tool({
+        description: "Write or read cross-session handoff notes. Call with summary to write a handoff at session end; call with pickup=true to resume from the last handoff.",
+        args: {
+          summary: z.string().optional().describe("Handoff summary to write (omit for pickup)"),
+          pickup: z.boolean().optional().describe("Set true to read the last handoff"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: args.pickup ? "Memory pickup" : "Memory handoff" }); } catch { /* ignore */ }
+          if (args.pickup) {
+            const r = await hnFetch("/api/agent-memory/pickup", { budget: FAST_BUDGET });
+            return { output: JSON.stringify(summarize(r, "memory pickup"), null, 2) };
+          }
+          const r = await hnFetch("/api/agent-memory/handoff", {
+            method: "POST",
+            body: { summary: args.summary || "handoff", tags: ["handoff"], namespace: "project" },
+            budget: SLOW_BUDGET,
+          });
+          return { output: JSON.stringify(summarize(r, "memory handoff"), null, 2) };
+        },
+      }),
+
+      hypernexus_skills_search: tool({
+        description: "Search the HyperNexus skill catalog. Returns matching skills with names and descriptions. Use to discover reusable skill modules.",
+        args: {
+          query: z.string().describe("What to search for (e.g. 'deploy', 'PDF generation', 'data analysis')"),
+          limit: z.number().int().min(1).max(20).optional().describe("Max results (default 8)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Skills: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
+          const limit = args.limit || 8;
+          const r = await hnFetch(`/api/skills/search?query=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "skills search"), null, 2) };
+        },
+      }),
+
+      hypernexus_system_overview: tool({
+        description: "Get a unified HyperNexus system overview: kernel health, MCP bridge, memory, sessions, providers, and runtime status in one call.",
+        args: {},
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "System overview" }); } catch { /* ignore */ }
+          const [h, m, rt] = await Promise.all([
+            hnFetch("/health", { budget: FAST_BUDGET }),
+            hnFetch("/api/mcp/status", { budget: FAST_BUDGET }),
+            hnFetch("/api/runtime/status", { budget: FAST_BUDGET }),
+          ]);
+          return {
+            output: JSON.stringify({
+              health: summarize(h, "health"),
+              mcp: summarize(m, "mcp"),
+              runtime: summarize(rt, "runtime"),
+            }, null, 2),
+            metadata: { kernelOk: !!h.ok },
+          };
+        },
+      }),
     },
 
     // 2. CONVERSATION MONITOR — non-blocking tool suggestions on each message.
