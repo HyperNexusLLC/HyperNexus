@@ -42,18 +42,18 @@ func TestSimpleEmbedDifferent(t *testing.T) {
 	}
 }
 
-func TestOllamaEmbed(t *testing.T) {
+func TestLocalEmbed(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping Ollama integration test in short mode")
+		t.Skip("skipping local embed integration test in short mode")
 	}
 
 	ctx := context.Background()
-	vec := ollamaEmbed(ctx, "Hello world test embedding")
+	vec := localEmbed(ctx, "Hello world test embedding")
 	if vec == nil {
-		t.Skip("Ollama not running — skipping (this is expected in CI)")
+		t.Skip("bundled embedder unavailable — skipping (this is expected in CI)")
 	}
-	if len(vec) != 768 {
-		t.Errorf("Ollama embedding dim = %d, want 768", len(vec))
+	if len(vec) != localEmbedDim {
+		t.Errorf("localEmbed dim = %d, want %d", len(vec), localEmbedDim)
 	}
 
 	// Verify it's L2-normalized
@@ -62,14 +62,14 @@ func TestOllamaEmbed(t *testing.T) {
 		norm += float64(v) * float64(v)
 	}
 	if norm < 0.9 || norm > 1.1 {
-		t.Errorf("Ollama embedding norm = %f, want ≈ 1.0", norm)
+		t.Errorf("localEmbed norm = %f, want ≈ 1.0", norm)
 	}
 
 	// Verify semantically similar texts are closer than dissimilar ones
-	vecSimilar := ollamaEmbed(ctx, "Hello world test text")
-	vecDifferent := ollamaEmbed(ctx, "The capital of France is Paris")
+	vecSimilar := localEmbed(ctx, "Hello world test text")
+	vecDifferent := localEmbed(ctx, "The capital of France is Paris")
 	if vecSimilar == nil || vecDifferent == nil {
-		t.Fatal("Ollama returned nil for second/third call")
+		t.Fatal("localEmbed returned nil for second/third call")
 	}
 
 	simNear := cosineSim(vec, vecSimilar)
