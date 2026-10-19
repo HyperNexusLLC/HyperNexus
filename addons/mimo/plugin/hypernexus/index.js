@@ -55,20 +55,47 @@ const SYS_TTL = 15_000;
 // session.pre, injected by experimental.chat.system.transform). Never blocks a turn.
 let lastMemories = { query: null, items: [], at: 0 };
 const MEM_TTL = 30_000; // don't re-search more than every 30s
+const SUG_TTL = 60_000;
 
-// Warm the L2 memory cache in the background. Fire-and-forget: the fetch runs up to
-// SLOW_BUDGET off the hot path and the result is picked up by a later system.transform
-// (eventual consistency across turns — acceptable per the hot-path-never-blocks rule).
+// Warm the L2 memory cache in the background. Uses FTS search (~15ms) instead of
+// vector /api/memory/search (~800ms ONNX embed) so the result lands in time for the
+// SAME turn's system.transform — the slow search always blew the 400ms hot-path
+// budget and silently injected nothing. Falls back to vector search only when FTS
+// is unavailable. Fire-and-forget: never blocks a turn.
 function warmMemories(query) {
   const now = Date.now();
   if (now - lastMemories.at < MEM_TTL) return; // throttled
   if (!query || query.trim().length < 4) return;
-  hnFetch(`/api/memory/search?query=${encodeURIComponent(query.slice(0, 200))}&limit=3`, { budget: SLOW_BUDGET })
+  // FTS MATCH throws on unbalanced quotes/operators — keep only word chars + spaces.
+  const safe = query.replace(/[^a-zA-Z0-9\s_-]/g, " ").trim().slice(0, 80);
+  if (!safe) return;
+  hnFetch(`/api/memory/fts-search?q=${encodeURIComponent(safe)}&limit=3`, { budget: FAST_BUDGET })
     .then((r) => {
-      const data = r.ok && r.data && r.data.data ? r.data.data : null;
-      if (Array.isArray(data) && data.length) {
-        lastMemories = { query, items: data.slice(0, 3), at: Date.now() };
+      // FTS shape: {data: [{record: {content, tags, ...}}]} — normalize to {title, content}
+      const raw = r.ok && r.data && r.data.data ? r.data.data : null;
+      let items = [];
+      if (Array.isArray(raw) && raw.length) {
+        items = raw.slice(0, 3).map((x) => {
+          const rec = x && x.record ? x.record : x;
+          return {
+            title: (rec && (rec.title || rec.tags || rec.name)) || "memory",
+            content: String((rec && (rec.content || rec.text || rec.snippet || "")) || ""),
+          };
+        });
       }
+      if (items.length) {
+        lastMemories = { query, items, at: Date.now() };
+        return;
+      }
+      // Fallback: slow vector search (only if FTS returned nothing, off hot path).
+      hnFetch(`/api/memory/search?query=${encodeURIComponent(query.slice(0, 200))}&limit=3`, { budget: SLOW_BUDGET })
+        .then((r2) => {
+          const data = r2.ok && r2.data && r2.data.data ? r2.data.data : null;
+          if (Array.isArray(data) && data.length) {
+            lastMemories = { query, items: data.slice(0, 3), at: Date.now() };
+          }
+        })
+        .catch(() => {});
     })
     .catch(() => {});
 }
@@ -356,6 +383,16 @@ export const server = async (input, options = {}) => {
             method: "POST",
             body: { query: String(text).slice(0, 500) },
             budget: HOOK_BUDGET,
+          }).then((res) => {
+            // Cache suggestions for system.transform injection (proactive tool hints).
+            if (res && res.ok && res.data) {
+              const items = Array.isArray(res.data) ? res.data
+                : Array.isArray(res.data.suggestions) ? res.data.suggestions
+                : Array.isArray(res.data.tools) ? res.data.tools : [];
+              if (items.length > 0) {
+                lastSuggestions = { query: String(text).slice(0, 500), tools: items.slice(0, 8), at: Date.now() };
+              }
+            }
           }).catch(() => {});
           // Also warm retrieval-augmented L2 memory (background, throttled).
           warmMemories(String(text));
@@ -383,6 +420,26 @@ export const server = async (input, options = {}) => {
           sysCache.at = now;
         }
         if (sysCache.note) output.system.push(sysCache.note);
+        // Proactive tool suggestions from the conversation monitor (feed the model up front).
+        try {
+          if (lastSuggestions.tools.length && Date.now() - lastSuggestions.at < SUG_TTL) {
+            const sLines = lastSuggestions.tools
+              .map((s) => {
+                const name = (s && (s.name || s.tool || s.id)) || "tool";
+                const why = String((s && (s.reason || s.description || s.summary || s.why)) || "").slice(0, 120);
+                return why ? `- ${name}: ${why}` : `- ${name}`;
+              })
+              .join("\n");
+            if (sLines) {
+              output.system.push(
+                `Relevant tools for this conversation (prefer these over guessing):\n${sLines}\n` +
+                  `Use hypernexus_search_tools for more options or hypernexus_suggest_tools for fresh suggestions.`
+              );
+            }
+          }
+        } catch {
+          /* ignore */
+        }
         // Retrieval-augmented L2 memory: inject cached cross-session context (if fresh).
         try {
           if (lastMemories.items.length && Date.now() - lastMemories.at < 120_000) {
