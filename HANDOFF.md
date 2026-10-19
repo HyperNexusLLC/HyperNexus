@@ -1,512 +1,68 @@
-# HANDOFF.md — Session Handoff
+﻿# HANDOFF — T11 pi Extension Perf + Multi-Harness Contract
 
-## Session Date: 2026-10-06 (Continuous Autonomous Loop — Repo Sync + UI Verification)
+## Status: COMPLETE (2026-10-19)
 
-## Summary
-Autonomous loop session. Dual-remote sync, submodule refresh, feature-branch audit across HyperNexus + realestatecrm + workspace. Dashboard single-page consolidation verified complete. System tray quit path verified. Version bump 1.0.13.
+Branch: feat/mimo-plugin-max-surface @ d9b3f9329 (pushed github)
 
-## Completed (2026-10-06)
+## What was done
+- **Fixed pi extension hot-path perf** (the "pi is slow" complaint): `before_agent_start`,
+  `context`, and `input` hooks were calling `/api/memory/search` (~800ms vector+embed)
+  under a 400ms budget → always timed out → **context injection silently injected nothing**.
+  New `tnFastSearch()` uses `/api/memory/fts-search` (~15ms). Now context injection works
+  AND is fast.
+- **Non-blocking tool-suggestion feed**: context hook fire-and-forget POSTs to
+  `/api/mcp/tool-suggestions` (PreemptiveAdvertiser). Never awaited.
+- **New tool `hypernexus_suggest_tools`** (pi now has 11 tools): surfaces the monitor's
+  proactive tool recommendations on demand.
+- **Multi-harness + autonomous orchestration layer**: `addons/shared/hypernexus.manifest.json`
+  (harness-agnostic capability manifest — uniform kernel bindings, budgets, never-throw
+  contract, harness adapters pi/mimo/_template, orchestration workflows + autonomous
+  dispatch hints) + `addons/shared/README.md` (contract rules for binding new harnesses).
 
-### Repo Sync
-- `clean-main` fast-forwarded to `github/main` == `gitlab/main` (6d9354fc2 → v1.0.12 lineage)
-- Submodules: `lumbros.me` 16261e00, `vendor/deepseek-harness` 5badb150 (dsh-v0.2.1-alpha.1), `vendor/grok-build` 2bdd1d6a
-- Feature branch `gitlab/feature/cloud-dashboard-mcp-sse-*`: orphaned history, no merge base, 2687 commits at alpha.159 — fully redundant (content in `archive/go_enterprise_sales_bot/borg/`). NOT merged (would destroy history).
-- realestatecrm: reverse-merged main into leadg `main-14181498285415879315` + 3 media-workflow branches (pushed); leadg main ff to 2e9feb0 (pushed); all submodules checked out main
-- Workspace scan: 7 repos with non-main branches, all legacy (develop/canary). No AI feature branches with unique progress remain.
+## Key facts
+- pi extension: `addons/pi/hypernexus.ts` (active copy `~/.pi/agent/extensions/hypernexus.ts`,
+  kept IDENTICAL). 11 tools + 6 commands + 3 shortcuts + ~17 hooks.
+- MCP in pi: `~/.pi/agent/mcp.json` already `exposure: direct` + hides
+  `simulate_input`/`download_llamafile`. Verified valid + MCP stdio serves 58 tools.
+- Hot-path budget 400ms (FTS), default 2500ms, fire-and-forget for side effects.
+- Semantic memory embeddings: bundled all-MiniLM-L6-v2 (384-dim, local, no Ollama).
 
-### UI Verification
-- Dashboard already consolidated: `/dashboard` has 6 sections (mission-control, memory-graphrag, mcp-registry, research-workflows, governance-billing, integrations). `nav-config.ts` maps all former subpages → anchors with tooltips.
-- System tray: `go/internal/systray/systray_windows.go` — activity icon, last-10-log popup menu, `TriggerFullShutdown()` quit, wired at `httpapi/server.go:664,1889`.
-
-## Next agent must
-- Build + run kernel (`go build -buildvcs=false -o ..\bin\hypernexus.exe ./cmd/tormentnexus`) and dashboard (`apps/web`), watch logs
-- Wire remaining dashboard pages to kernel HTTP fallbacks (mcp/search, mcp/inspector, mcp/ai-tools still tRPC-only)
-- `integration-catalog.ts` is a stub — integrations section shows zeros
-- Watchdog `-MonitorOllama` still needs admin PowerShell
-- Rebuild/restart Hetzner deploy if kernel binary changed
-
----
-## Session Date: 2026-10-02 (Repo Sync + Intelligent Merge Protocol)
-
-## Summary
-Full repository synchronization & intelligent merge protocol executed. Feature branch audit across HyperNexus and realestatecrm. Batch script path fixes. Version bump to 1.0.12.
-
-## Completed (Repo Sync Protocol)
-
-### STEP 1: Upstream Tracking & Submodule Sanitization
-- `git fetch --all --tags` on root HyperNexus and all submodules (lumbros.me, vendor/deepseek-harness, vendor/grok-build)
-- Submodule `deepseek-harness` advanced: `639ed015` → `5badb150`
-- All submodules clean, no nested submodules with uncommitted changes
-- No upstream parent fork — HyperNexusLLC/HyperNexus is the canonical origin
-
-### STEP 2: Dual-Direction Intelligent Merge Engine
-- **HyperNexus feature branch** `gitlab/feature/cloud-dashboard-mcp-sse-389806464713532918` — 2,687 commits of old TormentNexus/AIOS/borg lineage analyzed. Top unique features:
-  1. L3 Cold Archive (`go/internal/memory/l3_archive.go`) — **already in clean-main** (HyperNexus rename applied)
-  2. P2P Gossip Mesh (`go/internal/mesh/gossip.go`) — **already in clean-main, SUPERIOR** (clean-main has AES-GCM encryption + `AddPeer` method)
-  3. Skill Evolution Engine (`go/internal/skillregistry/evolution.go`) — **already in clean-main**
-  4. MCP SSE Remote Connectivity — **already in clean-main** (integrated into `config_manager.go`/`sync.go`/`aggregator.go` rather than separate SSEClient file)
-  - **Verdict: FULLY REDUNDANT** — no unique code to merge. Branch is the old project lineage.
-- **realestatecrm submodules** (3 on feature branches): contentplanner (`foundation-build-*`), foreclosureworkflow (`feat/foreclosure-crm-mvp-*`), legacyleads (`jules-initial-setup-*`) — all **0 unique commits** vs origin/main. Fully redundant.
-- No other workspace repos with unmerged feature branches.
-
-### STEP 3: Workspace Cleanup & Documentation
-- **Batch script fixes** (4 files):
-  - `build.bat` — entrypoint `./cmd/hypernexus` → `./cmd/tormentnexus`, module path `robertpelloni` → `HyperNexusLLC`
-  - `build-editions.bat` — same entrypoint/module fix + duplicate `:build_hypernexus` label → `:build_corporate` + `:build_both` calls correct targets
-  - `push-to-gitlab.bat` — stale hardcoded commit message removed, pushes to `gitlab clean-main`
-  - `commit-and-push.bat` — pushes to both `github` and `gitlab` on `clean-main`, stale default message replaced
-- **VERSION** bumped to 1.0.12
-- **CHANGELOG.md** — 1.0.12 entry added
-
-### Prior sessions context
-- T55-T60: provider breakdown, metrics persistence, Actions CI, token tracking, cost estimation, startup status HTTP fallbacks (v1.0.8-v1.0.9)
-- T39-T42: MCP auto-start, connect-all, HTTP fallbacks, Go test fixes, docs (v1.0.11)
-- Session export: `docs/sessions/2026-10-01-t55-t60.md` (committed `ffa0573`)
----
-## Session Date: 2026-10-05 (T48 Cycles 73–78: Remaining Feature Testing + Docs)
-
-## Summary
-
-Continued comprehensive API testing (~1100+ endpoints total). **21 bugs found & fixed** (added tool_sets table). Documented ~40 param mismatches in `docs/API_ENDPOINTS.md`. Updated TODO.md. Tested all remaining sub-routes across memory, agent-memory, browser-controls, metrics, workflows, MCP, settings, directory, CLI.
-
-## Bugs Found & Fixed (21 total)
-Missing lazy CREATE TABLE bugs (1-18) + skills save lookup (19) + expert init-order (20) + tool_sets table (21):
-1. `tool_call_logs` (2680b6aef) → 2. `config` (ef88e0240) → 3. `workspace_secrets` (ef88e0240) → 4. `workflows` (ac24ac783) → 5. `l2_vault` (ac24ac783) → 6. `published_skills` (ac24ac783) → 7. `policies` (d21181a6e) → 8. `browser_history` (d21181a6e) → 9. `browser_console_logs` (d21181a6e) → 10. `links_backlog` (d21181a6e) → 11. `oauth_clients` (d9f35cca3) → 12. `oauth_sessions` (d9f35cca3) → 13. `api_keys` (03e49a740) → 14-16. `published_mcp_*` tables (94d7f6c35) → 17-18. Memory list null fix + mcp_servers schema → 19. Skills save 3-way match (930515f71) → 20. Expert init-order nil-pointer (6d9354fc2) → 21. `tool_sets` + `tool_set_items` (08b49da65).
-
-**False positive:** `savedScripts` — NOT a SQL table; uses `localSettingsConfig()` JSON at `.hypernexus/config.json`.
-
-## Testing Results (Updated 2026-10-05)
-| Category | Endpoints | Status |
-|---|---|---|
-| Memory | 28 | ✅ All tested (deep sub-routes) |
-| MCP | 37 | ✅ All tested (tool-call, config, working-set) |
-| Governance | 120 | ✅ council/history + policies/secrets/api-keys/audit |
-| Code | 40 | ✅ code-mode + expert |
-| Providers | 22 | ✅ 8 providers, 5 authed |
-| Config | 25 | ✅ All tested |
-| Sessions | 30 | ✅ 50 sessions + supervisor + imported |
-| Control/UI | 60 | ✅ All tested (plan, suggestions, submodules, browser) |
-| Operator | 34 | ✅ scripts, links-backlog, infrastructure, healer |
-| Tools | 12 | ✅ All tested (context, detect, search, get) |
-| Workflows | 13 | ✅ canvases, executions, history |
-| Metrics | 7 | ✅ All tested (snapshot, providers, routing) |
-| Directory | 2 | ✅ Unified directory |
-| CLI | 3 | ✅ Summary (51 tools, 49 harnesses) |
-| All others | ~180 | ✅ Tested |
-
-## Security Tests
-- XSS in memory content → escaped ✅
-- SQL injection → safe ✅
-- 10KB content → stored ✅
-- Unicode (emoji/CJK) → stored ✅
-- Concurrent writes → 5/5 ✅
-- Malformed JSON → `{"error":"invalid JSON body"}` ✅
-
-## Key Learnings
-- Memory versioning is READ-ONLY (history/get/list only; auto on update)
-- Write ops vs reads: reads have local fallbacks, writes often tRPC-only
-- Hetzner POST requires `X-API-Key` header
-- Scripts engine = Node.js eval (not shell)
-- `savedScripts` = JSON config, not SQL
-- API keys table uses graceful degradation (returns "not found" not SQL error)
-- Stripe billing: ACTIVE Commercial Cloud SaaS $499/mo, customer `cus_R8vB42tX910a`
-
----
-## Session Date: 2026-10-02 (T43–T45 + Bug Fixes: Versioning, RBAC, Teams, SSO, Catalog DB)
-
-## Summary
-
-Memory versioning (git-like history), usage metering, Ed25519 license generator, fact conflict resolution, memory RBAC (admin/writer/reader/guest), cross-agent memory sharing (Memorix L2 vault), encryption at rest (AES-256-GCM), SOC2 audit logging, team accounts (shared memory pools), referral program (credits), SSO integration (SAML/OIDC/Okta/Azure AD/Google), custom domains (DNS verify), pricing page (Stripe checkout), cloud landing page, user dashboard/account page. Bug fixes: mcp.searchTools merge-on-read, catalog DB path mismatch, catalog timestamp schema.
-
-## Completed (T43–T45 + Bug Fixes)
-
-### MCP Auto-Start (T39)
-- `autoStartAlwaysOnMCPServers` in `go/internal/httpapi/mcp_handlers.go` — reads `go/config/mcp_servers.json`, connects servers with `alwaysOn: true` via `Aggregator.AddServer()`
-- 4 alwaysOn servers: filesystem, hypernexus-supervisor, desktop-commander, ripgrep
-- `Aggregator.ConnectedCount()` added to report live stdio connections in `/api/mcp/status`
-- Goroutine call in `server.go` after MCP Decision System init
-
-### MCP Connect All (T40)
-- `POST /api/mcp/connect-all` — connects all 56 enabled servers
-- 56/56 connected after fixing `mcp-yfinance-server` config to use `uvx` (T41)
-- Status: `connectedCount: 57` (56 MCP + 1 CLI harness)
-
-### HTTP Fallbacks (T38, T40)
-- `apps/web/src/hooks/use-mcp-http.ts` — 7 read hooks + 8 mutation helpers (tRPC primary + kernel HTTP fallback)
-- `mcp/search/view.tsx` — 6 tRPC queries replaced
-- `mcp/inspector/view.tsx` — 4 tRPC queries replaced
-- `mcp/ai-tools/view.tsx` — broader tRPC surface wired with fallback hooks
-
-### Go Test Fixes (T38)
-- `TestToolResultSnapshots` — added `"hypellornexus"` to diff normalization
-- `TestResolveClientTargets` — assertion fixed for 37+ clients
-- `TestVerifyLicense` — `t.Skipf` for key mismatch
-- 7 mcpimpl vet errors fixed (`string(int)` → `strconv.Itoa`)
-- **All Go tests pass**
-
-### Docs & Examples (T42)
-- `docs/API_ENDPOINTS.md` — MCP section expanded with 15 new endpoints
-- `docs/QUICKSTART.md` — updated with `mcp_servers.json`, connect-all usage
-- `examples/mcp-clients/` — Python, TypeScript, Go client examples
-- `TODO.md` — completed items marked
-
-### Deploy
-- Hetzner v1.0.11 deployed and verified (`{"ok":true,"version":"1.0.11"}`)
-- Dual-remote push (GitHub + GitLab) at `5c2d87240`
-
-## Session Date: 2026-10-02 (T37: Script Cleanup + Rebuild + Verification)
-
-## Summary
-
-Script cleanup (archiving), version bump to 1.0.11, full rebuild of Go kernel + dashboard, service restart with health verification.
-
-## Completed (T37)
-
-### Script Cleanup (Nondestructive)
-- Archived 6 one-off deploy scripts to `scripts/archive/one-off-deploys/` (deploy-v105, deploy-t29, deploy-title-fix, deploy-catalog-index, deploy-mcp-warmup, deploy-search-fix)
-- Archived 10 legacy marketing bots to `scripts/archive/marketing-legacy/` (reddit agents, twitter bots, auto-marketing)
-- Active deploy path: `scripts/deploy-hetzner.sh` + `scripts/ci-deploy-hetzner.sh`
-
-### Build & Verification
-- Go kernel: `go build ./...` clean, `go test ./...` 3 pre-existing failures (TestToolResultSnapshots, TestVerifyLicense, TestResolveClientTargets — test expectations drifted)
-- Dashboard: `pnpm run build` clean after stopping PID 2280 that locked `.next-build`
-- Both services restarted and verified:
-  - Go kernel on 7778 (v1.0.10) — gossip P2P, catalog sync, repo graph 500 files / 13,695 functions
-  - Dashboard on 7779 (Next.js 16.2.6) — zero errors
-- VERSION bumped 1.0.10 → 1.0.11, synced across 35 packages
-
-### Known Pre-existing Test Failures (NOT from this session)
-- `TestToolResultSnapshots` (foundation/pi) — snapshot format drift
-- `TestVerifyLicense` (internal/license) — no license file (free mode)
-- `TestResolveClientTargets` (internal/mcp) — expects 3 targets, gets 37
-
-## Session Date: 2026-10-01 (T35 EXECUTIVE PROTOCOL)
-
-## Summary
-
-Full repository synchronization, intelligent merge engine, dashboard navigation redesign, kernel rebuild, catalog.db repair, and production verification.
-
-## Completed (T35)
-
-### Step 1: Repo Sync & Submodule Sanitization
-- Fetched all remotes (GitHub + GitLab) and all tags
-- Merged `clean-main` twice (12 new commits T55-T60 + earlier batch)
-- 3 submodules checked recursively (lumbros.me, vendor/deepseek-harness, vendor/grok-build) — all up-to-date, no nested submodules
-- VERSION: 1.0.5 → 1.0.8 (merged from clean-main)
-
-### Step 2: Dual-Direction Intelligent Merge
-- Cherry-picked 79 `go/internal/` files from `feature/cloud-dashboard-mcp-sse` (L3 archive, gossip, skill evolution, catalog indexer, enterprise audit, mcpimpl tools)
-- Cherry-picked 5 analysis docs (ANALYSIS_MISSING_FEATURES, future_memory_spec, PORTING_MAP, FEATURE_ASSESSMENT, MCP_ASSIMILATION_REPORT)
-- Resolved all mcpimpl redeclaration conflicts: kept richer `mcp_servers_batch.go` / `stubs_completed*.go` implementations over individual stubs
-- Renamed `HandleAddMemory` → `HandleAddCodebaseMemory` to preserve both VectorStore and file-based memory implementations
-- Full `go build ./...` passes
-
-### Step 3: Dashboard Navigation Redesign
-- **Critical bug fixed**: sidebar hrefs pointed to `?tab=page-a/b/c/d` but dashboard uses anchor sections (`#mission-control`, `#memory-graphrag`, etc.)
-- All sidebar clicks fell through to wrong tab — now link to correct section anchors
-- Reorganized 7 sections by high-value: Overview > Agents > Tools > Memory > Infra > Integrations > Admin
-- All items have descriptive tooltips
-- Dashboard builds clean
-
-### Step 3b: Kernel Rebuild & catalog.db Repair
-- **Found**: running kernel binary was from Aug 9 (v1.0.0-b1) — massively outdated vs source (v1.0.8)
-- **Found**: `catalog.db` and `tormentnexus.db` were Git LFS pointer files, not SQLite databases
-- Rebuilt kernel from source, backed up corrupted DBs as `.lfs-pointer.bak`
-- Fresh kernel started: all 8 API endpoints return 200
-- catalog.db now rebuilds successfully ("Successfully synced Go-native registered tools")
-
-### Step 3c: Production Verification
-- Kernel (port 7778): 200 on /health, /api/startup/status, /api/metrics/stats, /api/mcp/status, /api/memory/search, /api/index, /api/runtime/status, /api/metrics/provider-breakdown
-- Dashboard (port 7779): 200
-- tRPC: 200
-- Startup checks: "All Go startup checks passed"
-
-## Known Issues
-- No `hypernexus.lic` license file — running under free limitations
-- SessionImport: 38 errors out of 100 discovered (sessions already imported, 162 skipped)
-- `mcpConfigAvailable: false`, `repoConfigAvailable: false` in startup checks (non-critical)
-- Gossip P2P mesh discovery fails on port 4301 conflict (only one instance can bind)
-- Git LFS objects for catalog.db/tormentnexus.db unavailable on remote — DBs rebuild from scratch
-
-## Next agent must
-- Wire more dashboard pages to kernel HTTP fallbacks (mcp/search, mcp/inspector, mcp/ai-tools still tRPC-only)
-- `integration-catalog.ts` is a stub — integrations page shows zeros regardless of data
-- Watchdog `-MonitorOllama` still needs admin PowerShell
-- Consider adding `hypernexus.lic` for full feature access
+## Next steps for other sessions / harnesses
+- Port the same FTS hot-path + suggestion-feed pattern to MiMoCode plugin for parity
+  (mimo currently uses full search in some hooks — check `addons/mimo/plugin/`).
+- Add a `_template` harness adapter (e.g. Cursor / Claude Code) binding capabilities via
+  `addons/shared/hypernexus.manifest.json`.
+- Wire an autonomous orchestrator that reads the manifest to dispatch across harnesses.
+- Verify T10's TUI real interactive session test + Codemode Pi E2E (from prior handoff).
 
 ---
 
-## Session Date: 2026-10-01 (T55–T60)
-
-## Summary
-
-Provider breakdown, routing persistence, token usage, cost estimates, startupStatus HTTP fallbacks, Actions Node 22/Go 1.25. Commits `7c0cc93`..`747c5a7` (v1.0.9). Live on Hetzner; CI green. Full session export: docs/sessions/2026-10-01-t55-t60.md.
-
-## Completed (T55–T60)
-
-- `metrics.ProviderBreakdown()` aggregates routing history per provider (requests/ok/errors/avg latency/models/tokens/status)
-- `mergeProviderCatalog` merges routing usage with `providers.Catalog` (catalog-only providers show as idle)
-- `/api/metrics/stats` fallback includes `providerBreakdown` + `routingHistory`
-- `SetRoutingPersistence` + `saveRouting`/`loadRoutingFrom` — JSON ring at `MainConfigDir/metrics/routing-history.json` (on Hetzner: `/opt/tormentnexus/.hypernexus/metrics/routing-history.json`)
-- `ensureMetricsPersistence` MUST run AFTER `server.metricsService = metrics.NewMetricsService()` (earlier wiring hit the discarded global)
-- `RoutingEvent.tokenInput/tokenOutput` from LLM `Usage`; quota tracker overlay in provider breakdown
-- Dashboard metrics: HTTP fallback + Provider Breakdown table with cost column
-- `providers.EstimateCostUSD` + model price table for `totalCostUsd`
-- **HTTP fallback for startupStatus** - health/system/integrations pages survive tRPC outages via `use-startup-status.ts`
-- **Dashboard-compatible startup checks** - `/api/startup/status` returns `mcpAggregator`, `sessionSupervisor`, `extensionBridge`, `executionEnvironment` + `uptime`
-- Actions: checkout@v5, setup-go@v6, setup-node@v5, node 22, Go 1.25, `package-manager-cache: false` for npm-only jobs
-
-## Next agent must
-
-- Watchdog `-MonitorOllama` still needs admin PowerShell
-- Wire more dashboard pages to kernel HTTP fallbacks (mcp/search, mcp/inspector, mcp/ai-tools still tRPC-only)
-- `integration-catalog.ts` is a stub - integrations page shows zeros regardless of data
-
----
-## Session Date: 2026-10-01 (T53/T54)
-
-## Session Date: 2026-09-24
-
-## Summary
-
-Comprehensive repository synchronization, intelligent branch merge, submodule update, and version bump to 1.0.5.
-
-## Completed Tasks
-
-### 1. Upstream Tracking & Submodule Sanitization
-
-- Fetched all remotes and tags for root repo and all submodules
-- Synced local `main` with remote (fast-forward to `fc731eb86`)
-- Updated 3 submodules to latest tracking commits:
-  - `lumbros.me` -> `16261e00c` (heads/main)
-  - `vendor/deepseek-harness` -> `639ed01539` (dsh-v0.2.0-rc.2, 8177 commits fast-forwarded)
-  - `vendor/grok-build` -> `2bdd1d6a6` (heads/main)
-- Discovered new `lumbros.me` submodule (candlestixxx/lumbros.me)
-
-### 2. Dual-Direction Intelligent Merge Engine
-
-#### Forward Merges (Features -> Main)
-
-- **clean-main** (`a897b44b8`): Fast-forward merged - MCP tool schemas, GraphRAG relation extraction, L2 export/import, Ollama chat fallback, CI hardening (12 files, +1131/-126)
-- **feature/cloud-dashboard-mcp-sse**: Cherry-picked 14 valuable files (no merge base - unrelated histories):
-  - packages/core/src/daemons/hyperingest/BobbyBookmarksSyncWorker.ts
-  - packages/core/src/daemons/hyperingest/LinkCrawlerWorker.ts
-  - packages/core/src/data/mcp_registry.json
-  - 4 skill definitions (frontend-design, mcp-builder, treesitter-expert, web-research)
-  - scripts/assimilate_all_resources.py, scripts/bobbybookmarks_sync.py, scripts/fix_and_test_go_tools.py
-  - watchdog.py, config/mcp_servers.json, Dockerfile.prod, SUBMODULES_INDEX.md
-- **github-clean / github-mirror-clean**: Skipped - intentionally separate clean mirrors
-- **origin-tormentnexus/main**: Skipped - old fork, unique code only in backups
-
-#### Reverse Merges (Main -> Features)
-
-- **feature/cloud-dashboard-mcp-sse**: 400+ add/add conflicts from unrelated histories. Aborted per conflict-ownership protocol. Branch owner must rebase.
-
-#### Conflict Resolutions
-
-- go/cmd_root/foundation_http.go:150: Fixed undefined r - replaced r.Context() with context.Background()
-
-### 3. Version Governance
-
-- Bumped VERSION: 1.0.3 -> 1.0.5
-- Synced version across 35 packages via scripts/sync-versions.mjs
-
-## Next Steps
-
-- Commit and push all changes
-- Deploy to Hetzner if needed
-- Feature branch owner should rebase feature/cloud-dashboard-mcp-sse onto main
-
----
-
-## Session Date: 2026-08-21
-
-## Summary
-
-Live routing history + dashboard wiring. Commit `4a3fb3a` (v1.0.7). Kernel 695f03cb + dashboard BUILD_ID `hAnndr1G1UQ1DrCgy_qfg` live on Hetzner.
-
-## Completed (T53/T54)
-
-- `ai.recordLLMRouting` hooks AutoRoute / AutoRouteWithModel / Router.Route
-- `handleAgentRunTool` records tool routing (go-native / upstream / unavailable)
-- Dashboard `/dashboard/skills`: working-set panel + Load/Unload
-- Dashboard `/dashboard/metrics`: routing history table
-- Fixed `fmt.Sprint` `<nil>` leak in `recordLocalMetric`
-- Deploy gotcha: `/usr/local/bin/hypernexus` script wrapper holds :7778 — kill listeners before binary swap
-
----
-
-## Session Date: 2026-10-01
-
-## Summary
-
-Metrics local fallbacks, skill working-set API, and Next.js dashboard redeploy. Commit `5ecbbf6` on `clean-main` (v1.0.6). Kernel + dashboard live on Hetzner.
-
-## Completed (2026-10-01)
-
-### Metrics (T50)
-- `metrics.MetricsService` extended: `GetTimeline`, `RecordRouting`, `GetRoutingHistory` (500-entry ring)
-- `handleMetricsStats` / `Timeline` / `RoutingHistory` fall back to local store (200, `fallback: go-local-metrics`) when upstream tRPC is down
-- `handleMetricsTrack` always dual-writes locally via `recordLocalMetric`; routing-shaped payloads feed routing history
-
-### Skills (T51)
-- `handleSkillLoad` / `Unload` / `ListLoaded` implemented against an in-memory working set (was 501)
-- Routes: `GET/POST /api/skills/load|unload|list-loaded` (`?id=` or JSON `{"id":"..."}`)
-
-### Dashboard (T52)
-- `apps/web` rebuilt (Next.js 16.2.6 standalone, BUILD_ID `P9HUWlTE6tqDCp2aXxkua`)
-- Deployed via overlay: keep Hetzner `node_modules`, replace `.next-build`/`.next`/`server.js`/`public`
-- `hypernexus-dashboard.service` active on `:7779`; `/dashboard` 200
-
-### Live smoke (Hetzner)
-- `GET /api/metrics/stats` → 200 `go-local-metrics`
-- `GET /api/metrics/timeline` + `/routing-history` → 200 local fallbacks
-- `GET /api/skills/load?id=smoke-skill` → 200; `list-loaded` shows it; `unload` removes it
-- `GET :7779/dashboard` → 200; kernel `/dashboard` still 401 without token
-
----
-
-## Session Date: 2026-09-30
-
-## Summary
-
-HyperNexus memory stack hardened end-to-end: L2 export/import, GraphRAG extraction + visualization, MCP tool schemas, Ollama fallbacks, dashboard auth, deploy/backup automation. Work pushed to `clean-main` as `c6bfaae` → `a897b44` → `bd065da` → `60ba63f` (+ this commit).
-
-## Completed
-
-### Memory & Graph
-- `/api/memory/l2/export` + `import` with error reporting; round-trip stable (27→27)
-- `memory_extract_relations` + `memory_extract_relations_batch` (pattern + Ollama JSON triples)
-- `/api/memory/graph` with entity slug labels (`ent-ollama`) and memory previews
-- `/api/memory/graph/cleanup` drops opaque hashed `ent-xxxxxxxx` nodes
-- Conflict detector: Jaccard ≥0.9 / polarity flips / conflicting numbers only; upsert does not cascade-supersede
-- Relation-aware `SemanticSearch` boosts `l2_relations` neighbors
-- `search` returns `sources: [upstream|local-json|vectorstore]`
-- Dual-write `AddRelation` → `l2_relations` + `memory_relations`
-- FTS5 external-content delete triggers fixed; legacy table dropped on open
-
-### MCP / Tools
-- `tools.NativeToolMeta` — full `inputSchema` for 34 native tools (replaces incomplete switch)
-- `memory_extract_relations(_batch)` registered in kernel registry
-- `/api/agent/tool` accepts `name|toolName` + `arguments|args`
-- mcp.jsonc: 0 missing binaries (uvx/npx fallbacks); serena `--from` args split
-
-### Ops
-- Dashboard `HYPERNEXUS_DASHBOARD_TOKEN` (login form + write-API guard)
-- Write auth accepts `X-Dashboard-Token`, `?token=`, `Authorization: Bearer`, `hn_dash_token` cookie
-- `scripts/backup-l2.sh` cron `17 3 * * *` on Hetzner (keep 14)
-- `.github/workflows/deploy-hetzner.yml` (gzip + size check + smoke tests; needs `HETZNER_SSH_KEY` secret)
-- `scripts/test-l2-roundtrip.ps1` + `scripts/hetzner-setup.sh`
-- Nginx `/kernel-dashboard` → `:7778/dashboard`
-
-### Live auth verification (2026-09-30)
-- `POST /api/memory/l2/import` without/with wrong token → 401
-- `POST /api/memory/l2/import` with `X-Dashboard-Token` or `?token=` → 200
-- `POST /api/memory/graph/cleanup` without token → 401; with token → 200
-- `GET /kernel-dashboard` without token → 401
-- `GET /api/memory/l2/export` remains open (read path for local agents)
-
-## Hetzner state
-
-- Kernel `/opt/tormentnexus/tormentnexus` (Linux amd64), systemd `hypernexus-kernel` port 7778
-- Ollama systemd enabled, `nomic-embed-text`
-- Dashboard token file: `/root/.hn-dashboard-token`
-- L2 backups: `/opt/tormentnexus/backups/l2`
-- Graph ~36 nodes / 103+ edges; 25 long_term memories after supersede fix
-
-## Next agent must
-
-1. ~~GitHub secrets~~ — **DONE** `HETZNER_SSH_KEY` + `HETZNER_KNOWN_HOSTS` set (2026-09-30). `gh` logged in as `robertpelloni`.
-2. ~~Verify CI~~ — **DONE** HyperNexus CI green (build/lint/test) + `deploy-hetzner.yml` green (push + workflow_dispatch)
-3. Re-embed / re-extract after any VectorStore schema change
-4. Build Linux with `GOOS=linux GOARCH=amd64 CGO_ENABLED=0` — never ship Windows `.exe` to Hetzner
-5. CI deploy uses `scripts/ci-deploy-hetzner.sh` (gzip + size check + smoke tests). Secrets-in-`if` is invalid — use `env.HAS_SSH_KEY`.
-
-6. **Dashboard overlay deploy** — Windows pnpm standalone `node_modules` are broken symlinks on Linux. Keep Hetzner `node_modules`, overlay only `.next-build`/`.next`/`server.js`/`public`. Full standalone tar from Windows fails with `Cannot find module 'next'`.
-
-## Branch / remotes
-
-- Branch: `clean-main` (not `main`)
-- Remotes: `github`, `gitlab` (no `origin`)
-- Push both: `git push github clean-main; git push gitlab clean-main`
-
-## Useful scripts (repo)
-
-- `scripts/backup-l2.sh` — Hetzner L2/agent-memory backup
-- `scripts/test-l2-roundtrip.ps1` — export/import verification
-- `scripts/hetzner-setup.sh` — deploy + token + cron one-shot
-
-## 2026-09-22T16:27:07Z — Hetzner Production Deployment Complete (v1.0.3)
-
-**Deployed to production (hypernexus.site):**
-- Go kernel: /opt/tormentnexus/tormentnexus (systemd service created)
-- Dashboard: /opt/tormentnexus/apps/web/.next-build/standalone/apps/web
-- Both services active and verified externally
-- Kernel: 554 API routes, v1.0.0-b1 build
-- Dashboard: HTTP 200 on /dashboard
-
-**What the next agent must know:**
-- SSH access: `ssh hetzner` (config alias, host 5.161.250.43)
-- Services: `systemctl restart hypernexus-kernel hypernexus-dashboard`
-- Deploy: `./scripts/create-deploy-package.sh` then `./scripts/deploy-hetzner.sh hetzner`
-- GitHub CLI authenticated (robertpelloni) but repo is on GitLab
-
-## Deployment Complete — 2026-09-22
-
-**Production (hypernexus.site) fully deployed:**
-- Go kernel: v1.0.0-b1, 554 API routes, systemd managed
-- Dashboard: built on-server (Linux), HTTP 200
-- Both services active, external access verified
-- SSH: `ssh hetzner` (5.161.250.43)
-
-**Key lesson:** Standalone Next.js builds are platform-specific. Always build on the target OS or use `pnpm install` on the server before starting.
-
-
-## 2026-09-23T15:35:32Z — Session Complete (v1.0.3)
-
-**All tasks complete (22 tasks).**
-
-**What was done this session:**
-- GitLab CI pipeline disabled (was failing on decommissioned packages/core)
-- Branch protection off/on cycled for history scrub
-- Clean orphan commit force pushed to GitLab (5b4b98468) and GitHub (d496420e0)
-- All secrets scrubbed from remote history (1 commit each, no parents)
-- Stripe key management scripts committed
-- Marketing campaigns executed (Wed: Email + LinkedIn)
-
-**Production (hypernexus.site):**
-- Go kernel: active (23h uptime)
-- Dashboard: active (HTTP 200)
-- External: OK
-
-**What the next agent must know:**
-- Local main has full history with secrets in old commits (private)
-- Remote GitLab/GitHub have 1 clean commit each (no secrets)
-- 20 keys in server .env still need rotation (checklist in notes.md)
-- Weak Reddit passwords (Temppass0!) need changing
-- Marketing campaigns run via `python scripts/campaign_scheduler.py execute`
-
-
-
-## 2026-09-22T18:30:00Z — MiMo Addons in Installers + Global Extensions (T24)
-
-### Done
-- Created `addons/mimo/` package: 16 Desktop tools (was 6), 2 skills (hypernexus + hypernexus-ops), 6 MiMoCode commands, hooks, orchestrator agent
-- Tools bundled with esbuild+zod (same format as built-in MiMo Desktop tools)
-- Installer integration: NSIS (SecMiMo), install.bat, install-gui.ps1, install-gui.py, install-client-support.py (mimocode + mimo-desktop + install_mimo_addons), npm cli.js/setup.js (MIMO_TARGETS), linux/macos install.sh
-- Rebuilt NSIS: hypernexus-setup.exe (corporate, 6 sections) + tormentnexus-setup.exe — both 17.9MB with MiMo Addons section
-- Fixed pre-existing NSIS bug: nested double quotes in Cloud Connection FileWrite (lines 239/242/243) — use $\" escaping
-- Rebuilt npm tarball: hypernexus-install-1.0.1.tgz
-- Installed live: MiMoCode (skill+commands+hooks+agent+MCP), MiMo Desktop (2 skills + 16 tools), Agents (2 skills)
-
-### New global extension
-- `hypernexus-ops` skill: production deploy/runbook for Hetzner, systemd, health checks, marketing campaigns, key rotation
-
-### 16 Desktop tools
-search_memory, memory_vector_search, memory_list, add_fact, record_observation, knowledge_graph, context_harvest, session_search, session_context, mcp_search, tool_discover, mcp_call, code_search, repomap, system_status, billing_status
-
-### Gotchas
-- MiMo Desktop tools MUST be esbuild bundles with zod inlined (args are real zod objects)
-- Tools with empty args (`{}`) tree-shake zod to ~1.3KB; tools with args are ~440KB
-- NSIS FileWrite breaks on nested double quotes — use $\" for literal quotes
-- build-tools.mjs resolves zod from `~/.config/mimocode/node_modules/zod`, esbuild from HyperNexus pnpm store
+# HANDOFF — T10 MiMoCode Plugin SDK Surface Maximization
+
+## Status: COMPLETE (2026-10-19)
+
+Branch: feat/mimo-plugin-max-surface @ 5cea5332b (pushed github+gitlab, NOT merged per G0-G4)
+
+## What was done
+- Wired experimental.chat.messages.transform as safe observer (no mutation, feeds tool-suggestion monitor)
+- TUI deep-wiring: keybind.create, kv persistence, route.register, event.subscribe, meta param
+- TuiCommand keybind/suggested fields on hn-status
+- Added 4 high-value kernel tools (13 total): memory_stats, memory_handoff, skills_search, system_overview
+- Updated test assertions for 26-hook + 13-tool surface
+- Final: 48/51 ext suite (3 kernel 503s) + 16/16 TUI suite
+
+## SDK surface coverage
+- 26/26 Hooks keys (23 fn + tool + auth + provider + config)
+- 13 typed tools with Zod schemas
+- Workspace adaptor registered
+- TUI: keybind/kv/route/event/meta
+
+## Remaining (non-plugin surfaces)
+- Capability API (/v1 + mimo llm-server) — runtime feature
+- model_groups, dynamic workflows, permission config rules — MiMoCode config
+- ToolContext.ask() — Effect-based, low ROI for HTTP-only tools
+
+## Next steps for other sessions
+- TUI real interactive session test (mock is 16/16)
+- Codemode Pi E2E (b8d2b3c3a)
+- Cleanup: :7790 verification kernel (DONE)
