@@ -1409,17 +1409,17 @@ export default function (pi: ExtensionAPI) {
   async function refreshWidget(ctx: any) {
     try {
       const [mem, cold, mesh] = await Promise.all([
-        tnJson("/api/memory/list?limit=1"),
-        tnJson("/api/memory/cold-archive/count"),
-        tnJson("/api/mesh/status"),
+        tnFetchWithTimeout("/api/memory/list?limit=1", 4000).then((r: any) => r.ok ? r.json() : {}).catch(() => ({})),
+        tnFetchWithTimeout("/api/memory/cold-archive/count", 4000).then((r: any) => r.ok ? r.json() : {}).catch(() => ({})),
+        tnFetchWithTimeout("/api/mesh/status", 4000).then((r: any) => r.ok ? r.json() : {}).catch(() => ({})),
       ]);
-      const vaultCount = (mem as any).total ?? (mem as any).count ?? "?";
-      const coldCount = cold.count ?? "?";
-      const peers = (mesh as any).data?.peersCount ?? mesh.peersCount ?? 0;
+      const vaultCount = (mem as any)?.data?.total ?? (mem as any)?.total ?? (mem as any)?.count ?? "?";
+      const coldCount = (cold as any)?.data?.count ?? (cold as any)?.count ?? "?";
+      const peers = (mesh as any)?.data?.peersCount ?? (mesh as any)?.peersCount ?? 0;
 
-      ctx.ui.setWidget?.("tn-stats", [`🧠 L2: ${vaultCount}  ❄️ L3: ${coldCount}  🌐 Peers: ${peers}`], { placement: "belowEditor" });
+      ctx.ui.setStatus?.("tn-stats", `🧠 L2: ${vaultCount}  ❄️ L3: ${coldCount}  🌐 Peers: ${peers}`);
     } catch {
-      ctx.ui.setWidget?.("tn-stats", ["🧠 TN: waiting for server..."], { placement: "belowEditor" });
+      ctx.ui.setStatus?.("tn-stats", "🧠 TN: waiting for server...");
     }
   }
 
@@ -1427,10 +1427,11 @@ export default function (pi: ExtensionAPI) {
   let widgetInterval: ReturnType<typeof setInterval> | null = null;
 
   pi.on("session_start", async (_event, ctx) => {
-    // Session-scoped UI framing (footer + title) — needs ctx, so it lives here.
+    // Do NOT override pi default footer/title (setFooter/setTitle REPLACE the status
+    // bar that shows model + context fill). TN info goes via setStatus (additive).
     try {
-      ctx.ui.setFooter?.("tn-footer", "🧠 HyperNexus L2 • Tool catalog • Skills");
-      ctx.ui.setTitle?.("MiMoCode × HyperNexus");
+//       ctx.ui.setFooter?.("tn-footer", "🧠 HyperNexus L2 • Tool catalog • Skills");
+//       ctx.ui.setTitle?.("MiMoCode × HyperNexus");
     } catch { /* optional UI hooks */ }
     // Surface kernel reachability in the status bar so users see it immediately.
     try {
@@ -1517,7 +1518,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_shutdown", async (_event, ctx) => {
     try { ctx.ui.setStatus("tn", ""); } catch { /* skip */ }
-    try { ctx.ui.setWidget?.("tn-stats", undefined); } catch { /* skip */ }
+    try { ctx.ui.setStatus?.("tn-stats", ""); } catch { /* skip */ }
     if (widgetInterval) { clearInterval(widgetInterval); widgetInterval = null; }
   });
 }
