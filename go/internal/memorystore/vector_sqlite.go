@@ -76,6 +76,14 @@ func NewVectorStore(dbPath string) (*VectorStore, error) {
 		}
 	}
 
+	// SQLite is a single-writer store. The connection pool hands out fresh
+	// connections that don't inherit the PRAGMA busy_timeout above, so concurrent
+	// writes (Commit + background embed goroutines) raced and surfaced SQLITE_BUSY.
+	// Serializing access through one connection removes that contention; queries
+	// are brief (embeds happen outside the connection), so this is cheap.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
 	if _, err := db.Exec(controlplane.VectorSchemaSQL); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to init vector schema: %w", err)
