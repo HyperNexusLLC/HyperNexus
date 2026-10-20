@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.16] - 2026-10-20
+
+### Added
+- **`hypernexus_memory_relate`** — write knowledge-graph edges (`source_id → relation_type → target_id`, weighted) via `/api/memory/relations/add`
+- **`bin/test-opencode-e2e.mjs`** — REAL end-to-end through the OpenCode HTTP API (no mock, no model): plugin load-state (`GET /api/plugin?location[directory]`), live session creation, `/hn-*` command execution via `POST /api/session/{id}/command`, synthetic-output persistence, and command→kernel fact persistence (11 checks)
+
+### Fixed
+- **`memory_store` returned `id: null`** — the kernel wraps the record (`data.memory.id`); id extraction now unwraps the envelope so search results and `memory_delete`/`memory_relate` are actionable
+- **Shared mimo battery stale exact-count** — `bin/test-extensions.mjs` asserted exactly 20 mimo tools and broke when a concurrent harness agent grew the surface to 22; now asserts the floor (≥20) + required core names so additive changes from sibling harness agents don't false-fail
+
+### Optimized
+- **Search results surface record ids** (`[id] content [tags]`) across memory_search/list/harvest — delete/relate are directly actionable from output
+- **auto-store dedupe** — identical tool results are stored once (content-hash set)
+- **Audit flush parallelized** — the 2s observation batch now flushes concurrently
+
+### Verified (285 assertions green across 7 batteries)
+- OpenCode plugin 120/120 · OpenCode E2E (real service) 11/11 · MCP tools 23/23 · MCP sweep 46/46 · core-without-extension 18/18 · mimo extension 51/51 · mimo TUI 16/16
+
 ## [1.0.15] - 2026-10-19
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/agents",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

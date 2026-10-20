@@ -61,7 +61,15 @@ const hookNames = Object.keys(hooks).filter((k) => k !== "tool");
 // SDK surface: 23 function hooks + auth (AuthHook object) + provider (ProviderHook object).
 const fnHooks = hookNames.filter((k) => typeof hooks[k] === "function");
 const objHooks = hookNames.filter((k) => typeof hooks[k] === "object" && hooks[k] !== null);
-check("tool inventory = 20", toolNames.length === 20, toolNames.join(","));
+// Concurrent-harness note: the mimo plugin surface grows across harness agents
+// (13 → 20 → 22 tools). Assert the floor + required core names instead of an
+// exact count so this shared battery does not break on additive changes.
+const REQUIRED_MIMO_TOOLS = ["hypernexus_status", "hypernexus_memory_store", "hypernexus_memory_search", "hypernexus_mcp_call", "hypernexus_suggest_tools"];
+check(
+  `tool inventory >= 20 (currently ${toolNames.length})`,
+  toolNames.length >= 20 && REQUIRED_MIMO_TOOLS.every((n) => toolNames.includes(n)),
+  toolNames.join(",")
+);
 check("hook inventory = 25 (23 fn + auth + provider)", hookNames.length === 25 && typeof hooks.tool === "object", hookNames.join(","));
 check("total Hooks keys = 26", Object.keys(hooks).length === 26, Object.keys(hooks).join(","));
 check("auth is AuthHook object", objHooks.includes("auth") && typeof hooks.auth.provider === "string" && Array.isArray(hooks.auth.methods), `auth.provider=${hooks.auth && hooks.auth.provider}`);

@@ -1,7 +1,22 @@
-﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.15)
+﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.16)
 
-## Status: COMPLETE & VERIFIED (2026-10-19, two sessions)
-Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.14** (built session 1). Plugin: **v1.1.0 / manifest 1.0.15**.
+## Status: COMPLETE & VERIFIED (2026-10-19/20, three sessions)
+Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.14**. Plugin: **v1.3.x** manifest **1.0.16**.
+
+## Session 3 (v1.0.16) — knowledge-graph writes + REAL e2e + concurrency fixes
+### COMPLETE TEST MATRIX: 285/285 ALL GREEN (7 batteries)
+1. OpenCode plugin battery: **120/120**  2. OpenCode E2E (real service, no model): **11/11**
+3. MCP tools: **23/23**  4. MCP sweep (all tools + stdio): **46/46**  5. Core without extension: **18/18**
+6. MiMo extension: **51/51**  7. MiMo TUI: **16/16**
+
+### Session-3 changes
+- `hypernexus_memory_relate` — knowledge-graph edges via `/api/memory/relations/add`
+- `bin/test-opencode-e2e.mjs` — REAL end-to-end: `GET /api/plugin?location[directory]` load-state proof, live `POST /api/session/{id}/command` (body is `{name, text}`!), synthetic persistence (poll for async lag), command→kernel fact persistence
+- FIXED: `memory_store` id was always null (kernel wraps record at `data.memory.id`) — ids now surface in search output `[id] content [tags]`
+- FIXED (multi-agent): shared `bin/test-extensions.mjs` asserted exact mimo tool count (20) and broke when a concurrent mimocode agent grew it to 22 — now floor + required-names
+- OPTIMIZED: auto-store dedupe (content hash), audit flush parallelized
+- **API gotchas learned**: `opencode` CLI is an npm .ps1 shim — Node must spawn `cmd.exe /c opencode api ...`; `GET /api/plugin` is location-scoped (default `C:\Users\hyper`!) and takes `?location[directory]` deepObject; command endpoint wants `{name, text}` not `{command, arguments}`
+- **Multi-agent live**: mimocode agent landed 6 commits concurrently (54d5b3d23..6209f45bb: mimo 22 tools + endpoint repairs); work stacked cleanly, shared batteries made additive-resilient
 
 ## Session 2 (v1.0.15) — lifecycle + graph capture + hot-path optimization
 ### COMPLETE TEST MATRIX: 269/269 ALL GREEN

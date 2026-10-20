@@ -164,9 +164,11 @@ function memTags(m) {
 }
 
 function fmtMemory(m, max = 220) {
+  const r = recOf(parseMaybeJson(m)) || {};
+  const id = String(r.id ?? r.memory_id ?? "").trim();
   const content = memContent(m);
   const tags = memTags(m);
-  return `- ${clamp(content.replace(/\s+/g, " "), max)}${tags.length ? ` [${tags.slice(0, 4).join(", ")}]` : ""}`;
+  return `- ${id ? `[${id}] ` : ""}${clamp(content.replace(/\s+/g, " "), max)}${tags.length ? ` [${tags.slice(0, 4).join(", ")}]` : ""}`;
 }
 
 // â”€â”€â”€ Caches & fire-and-forget infrastructure â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -227,26 +229,28 @@ function audit(entry) {
 async function flushAudit() {
   const batch = auditQueue.splice(0, 20);
   if (batch.length === 0) return;
-  for (const entry of batch) {
-    const r = await kernel("/api/memory/observations/record", {
-      method: "POST",
-      body: entry,
-      budget: FAST_BUDGET,
-    });
-    if (!r.ok) {
-      // Fallback: facts/add keeps the trail even when observations are unavailable.
-      await kernel("/api/memory/facts/add", {
+  await Promise.all(
+    batch.map(async (entry) => {
+      const r = await kernel("/api/memory/observations/record", {
         method: "POST",
-        body: {
-          content: entry.content || entry.title,
-          title: entry.title,
-          tags: ["client:opencode", `tool:${entry.toolName}`, entry.type],
-          namespace: "project",
-        },
+        body: entry,
         budget: FAST_BUDGET,
       });
-    }
-  }
+      if (!r.ok) {
+        // Fallback: facts/add keeps the trail even when observations are unavailable.
+        await kernel("/api/memory/facts/add", {
+          method: "POST",
+          body: {
+            content: entry.content || entry.title,
+            title: entry.title,
+            tags: ["client:opencode", `tool:${entry.toolName}`, entry.type],
+            namespace: "project",
+          },
+          budget: FAST_BUDGET,
+        });
+      }
+    })
+  );
   if (auditQueue.length > 0 && !auditTimer) {
     auditTimer = setTimeout(() => {
       auditTimer = null;
@@ -423,9 +427,15 @@ async function buildSystemBlock(lastUserText) {
 
 // â”€â”€â”€ Result persistence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+const storedHashes = new Set(); // skip storing identical results twice
+
 function autoStoreResult(toolName, input, text) {
   const content = String(text ?? "");
   if (content.length < 400) return; // only substantial results are worth persisting
+  const h = hash(`${toolName}:${content}`);
+  if (storedHashes.has(h)) return; // dedupe repeated outputs
+  storedHashes.add(h);
+  if (storedHashes.size > 200) storedHashes.clear();
   audit({
     type: "progress",
     title: `tool-result:${toolName}`,
@@ -582,7 +592,9 @@ const TOOLS = [
         budget: SLOW_BUDGET,
       });
       if (!res.ok) return { content: `[hypernexus] memory_store failed: ${res.error}`, metadata: { ok: false } };
-      return { content: "Stored to HyperNexus L2 memory.", metadata: { ok: true, id: unwrap(res)?.id ?? null } };
+      const payload = unwrap(res) ?? {};
+      const id = payload?.memory?.id ?? payload?.id ?? payload?.record?.id ?? null;
+      return { content: "Stored to HyperNexus L2 memory.", metadata: { ok: true, id } };
     },
   },
   {
@@ -1094,6 +1106,39 @@ const TOOLS = [
         { budget: FAST_BUDGET }
       );
       return { content: JSON.stringify(unwrap(res) ?? res.error, null, 2) };
+    },
+  },
+  {
+    name: "memory_relate",
+    description: "Link two memories in the knowledge graph (source_id → relation_type → target_id) with an optional weight.",
+    input: {
+      type: "object",
+      properties: {
+        source_id: str("Source memory id (from search/list results)."),
+        target_id: str("Target memory id."),
+        relation_type: str("Relation, e.g. 'uses', 'causes', 'fixes', 'supersedes'."),
+        weight: { type: "number", description: "Strength 0..1 (default 0.8)." },
+      },
+      required: ["source_id", "target_id", "relation_type"],
+      additionalProperties: false,
+    },
+    async run({ source_id, target_id, relation_type, weight }) {
+      const res = await kernel("/api/memory/relations/add", {
+        method: "POST",
+        body: {
+          source_id: String(source_id),
+          target_id: String(target_id),
+          relation_type: String(relation_type),
+          weight: Number(weight ?? 0.8),
+        },
+        budget: FAST_BUDGET,
+      });
+      return {
+        content: res.ok
+          ? `Linked ${source_id} —[${relation_type}]→ ${target_id}`
+          : `[hypernexus] memory_relate failed: ${res.error}`,
+        metadata: { ok: res.ok },
+      };
     },
   },
   {

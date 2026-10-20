@@ -175,7 +175,7 @@ check("default export exists", !!plugin);
 check("plugin id is 'hypernexus'", plugin?.id === "hypernexus", `got ${plugin?.id}`);
 check("setup is a function", typeof plugin?.setup === "function");
 check("V1 server() shim is a function", typeof plugin?.server === "function");
-check("exports TOOLS (29)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 29, `got ${mod.TOOLS?.length}`);
+check("exports TOOLS (30)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 30, `got ${mod.TOOLS?.length}`);
 check("exports COMMANDS (11)", Array.isArray(mod.COMMANDS) && mod.COMMANDS.length === 11, `got ${mod.COMMANDS?.length}`);
 check("exports SKILLS (3)", Array.isArray(mod.SKILLS) && mod.SKILLS.length === 3, `got ${mod.SKILLS?.length}`);
 
@@ -199,7 +199,7 @@ const cleanup = await plugin.setup(ctx);
 section("3. Registration surface");
 check("setup returns cleanup function", typeof cleanup === "function");
 check("namespace registered", state.namespaces.length === 1 && state.namespaces[0].name === "hypernexus");
-check("29 tools registered", state.tools.size === 29, `got ${state.tools.size}`);
+check("30 tools registered", state.tools.size === 30, `got ${state.tools.size}`);
 check("tool names match rpc contract", [...state.tools.keys()].every((k) => rpcNames.includes(k)));
 check("11 commands registered", state.commands.size === 11, `got ${state.commands.size}`);
 check("3 skills registered with path", state.skills.size === 3 && [...state.skills.values()].every((s) => typeof s.path === "string" && s.path.length > 0));
@@ -296,6 +296,30 @@ const delFake = await runTool("memory_delete", { id: "does-not-exist-battery" })
 check("memory_delete degrades gracefully on unknown id", typeof delFake?.content === "string" && delFake.content.length > 0, delFake?.content?.slice(0, 80));
 const delByTag = await runTool("memory_delete", { tag: "definitely-not-a-real-tag-xyz" });
 check("memory_delete tag fan-out finds nothing gracefully", typeof delByTag?.content === "string" && /No memories|Deleted 0/i.test(delByTag.content), delByTag?.content?.slice(0, 80));
+check("memory_search surfaces ids for delete/relate", /\[[A-Za-z0-9_-]{4,}\]/.test(found.content ?? ""), (found.content ?? "").slice(0, 120));
+
+const m1 = await runTool("memory_store", { content: `relate-src ${Date.now()}`, tags: ["relate-test"] });
+const m2 = await runTool("memory_store", { content: `relate-dst ${Date.now()}`, tags: ["relate-test"] });
+const idOf = (out) => String(out?.metadata?.id ?? "").trim();
+const srcId = idOf(m1);
+const dstId = idOf(m2);
+check("memory_store returns record id", srcId.length > 0, srcId || JSON.stringify(m1?.metadata));
+if (srcId && dstId) {
+  const rel = await runTool("memory_relate", {
+    source_id: srcId,
+    target_id: dstId,
+    relation_type: "supports",
+  });
+  check("memory_relate links records", /Linked/.test(rel?.content ?? ""), (rel?.content ?? "").slice(0, 90));
+  const relCheck = await fetch(`http://127.0.0.1:7778/api/memory/relations/get?id=${encodeURIComponent(srcId)}`)
+    .then((r) => r.json())
+    .catch(() => null);
+  const relText = JSON.stringify(relCheck);
+  check("relation visible via relations/get", relText.includes(dstId) || relText.includes("supports"), relText.slice(0, 110));
+} else {
+  check("memory_relate links records", false, "could not obtain both record ids");
+  check("relation visible via relations/get", false, "skipped");
+}
 
 section("6. Command execution");
 for (const [name, cmd] of state.commands) {
@@ -395,7 +419,7 @@ const v1 = await plugin.server({}, {});
 check("V1 server() returns hook map", typeof v1 === "object" && typeof v1["tool.execute.before"] === "function");
 check("V1 chat.message hook", typeof v1["chat.message"] === "function");
 check("V1 permission.ask hook", typeof v1["permission.ask"] === "function");
-check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 29, `got ${Object.keys(v1.tool || {}).length}`);
+check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 30, `got ${Object.keys(v1.tool || {}).length}`);
 await v1["chat.message"]({ message: { role: "user", content: "hello battery world" } });
 const v1out = await v1.tool.hypernexus_status.execute({});
 check("V1 tool execute works", typeof v1out === "string" && v1out.length > 0);

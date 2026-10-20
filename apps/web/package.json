@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/web",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "private": true,
   "scripts": {
     "dev": "node ./scripts/dev.mjs",
