@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.14] - 2026-10-19
+
+### Added
+- **OpenCode V2 plugin (new)** — `addons/opencode/` full bridge: 28 typed tools (`hypernexus_*` namespace), 10 `/hn-*` commands, 3 skills, session hooks (prompt admission with `@memory:key` expansion + suggestion feed + session priming, per-turn fast-FTS context injection, compaction enrichment, model-request identity headers, retry observability), tool hooks (RBAC pre-check + fire-and-forget audit + result auto-store), permission hook (`HYPERNEXUS_RBAC=audit|ask|deny`), shell env injection, worktree strategy, event-stream turn observation, and auto-registration of the `hypernexus mcp` stdio server. V1 `server()` shim keeps OpenCode 1.x working from the same package. Installer: `addons/opencode/install.mjs` (project/global/uninstall/check)
+- **OpenCode shared RPC contract** — `addons/opencode/plugin/hypernexus/rpc.js` exposes TOOL/COMMAND/CAPABILITY/KERNEL/BUDGET maps; `addons/shared/hypernexus.manifest.json` now binds all 14 capabilities to `opencode` tool names
+- **Kernel router parity for 6 stdio-only tools** — `go/internal/tools/kernel_bridge.go` registers `mcp_status`, `mcp_list_servers`, `mcp_list_tools`, `mcp_call_tool`, `mcp_server_test`, `inspect_window_ui` so every advertised MCP tool also works through `POST /api/agent/tool` (previously "not implemented in Go and Node server is unreachable")
+- **Test batteries** — `bin/test-opencode-ext.mjs` (109 checks: registration, tools, commands, hooks, V1 shim, kernel-down degradation), `bin/test-mcp-sweep.mjs` (46 invoked + stdio transport: initialize/tools-list/tools-call; destructive tools documented-skipped)
+
+### Fixed
+- **Skill registrations must include `path`** — OpenCode V2 `Skill.Info` schema requires `path`; a missing key failed the skill transform and **disabled the entire plugin** ("disabled plugin after transform failure"). Skills now materialize SKILL.md files and register with `path`
+- **`options.baseUrl` never reached tool executors** — plugin tools fell back to the module-level kernel URL even when a per-instance base was configured; a runtime base now propagates from `setup()`/`server()` to every kernel call
+- **Adapter endpoint drift** — `skills/search` needs `q` (not `query`), `agent-memory/pickup` is POST-with-JSON-body, `sessions/imported/search` does not exist (list+filter), `cross-session-links` requires a JSON body, `relations/graph` takes `id`
+- **Flaky test regexes** — `bin/test-mcp-tools.mjs` asserted on `/error.*failed/i` inside memory *content* (false positives on real data) and read a non-existent `VERSION.md`; assertions now use the router envelope
+
+### Verified (1.0.14 kernel: 196 assertions green)
+- OpenCode plugin battery 109/109 · MCP tools 23/23 · MCP sweep 46/46 (6 documented skips) · core-without-extension 18/18 · stdio transport: initialize + 58 tools + tools/call
+
 ## [1.0.13] - 2026-10-06
+
 
 ### Changed
 - **Dual-remote sync** — `clean-main` fast-forwarded to `github/main`/`gitlab/main`; both remotes verified in sync

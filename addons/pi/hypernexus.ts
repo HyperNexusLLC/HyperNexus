@@ -8,7 +8,8 @@ const TN_BASE = "http://127.0.0.1:7778";
  *
  * Full bridge: pi ↔ HyperNexus
  * ───────────────────────────────────────────
- * - 11 custom tools (memory, tools, tool suggestions, sessions, skills, code, context, scratchpad)
+ * - 15 custom tools (memory store/search/vector, tool search + suggestions, sessions, skills,
+ *   code, context harvest, scratchpad, system status, billing, universal tool call, add-fact, subagent)
  * - Session priming + per-turn context harvesting + compaction hooks
  * - Fast FTS context injection (hot-path hooks never stall a turn)
  * - Preemptive tool-suggestion monitor (non-blocking) + hypernexus_suggest_tools
@@ -920,7 +921,112 @@ export default function (pi: ExtensionAPI) {
   // SLASH COMMANDS (6 commands)
   // ══════════════════════════════════════════════
 
-  // 1. /tn-store — interactive memory store
+  // 9b. hypernexus_system_status
+  pi.registerTool({
+    name: "hypernexus_system_status",
+    label: "TN System Status",
+    description: "Composite HyperNexus health: kernel uptime, L2/L3 memory counts, mesh peers.",
+    promptSnippet: "Check HyperNexus kernel + memory + mesh health",
+    promptGuidelines: ["Call at session start, before/after ops, or when the kernel may be degraded."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "direct",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), uptimeSec: Type.Optional(Type.Number()), l2: Type.Optional(Type.Number()), l3: Type.Optional(Type.Number()), peers: Type.Optional(Type.Number()) }),
+    parameters: Type.Object({}),
+    async execute(_toolCallId, _params, signal) {
+      const [health, mem, cold, mesh] = await Promise.all([
+        tnFetchWithTimeout("/health", 900, {}, signal).then((r: any) => r.ok ? r.json() : null).catch(() => null),
+        tnJson("/api/memory/list?limit=1", {}, signal).catch(() => ({})),
+        tnJson("/api/memory/cold-archive/count", {}, signal).catch(() => ({})),
+        tnJson("/api/mesh/status", {}, signal).catch(() => ({})),
+      ]);
+      const l2 = (mem as any)?.total ?? (mem as any)?.count;
+      const l3 = (cold as any)?.count;
+      const peers = (mesh as any)?.data?.peersCount ?? (mesh as any)?.peersCount;
+      const up = (health as any)?.uptimeSec;
+      const lines = [
+        `Kernel: ${(health as any)?.ok ? "OK" : "unreachable"}${up ? ` up ${Math.round(up)}s` : ""}`,
+        `L2 memory: ${l2 ?? "?"} L3 cold: ${l3 ?? "?"}`,
+        `Mesh peers: ${peers ?? 0}`,
+      ];
+      return { content: [{ type: "text", text: lines.join("\n") }], structuredContent: { ok: !!(health as any)?.ok, uptimeSec: up, l2, l3, peers } };
+    },
+  });
+
+  // 9c. hypernexus_billing_status
+  pi.registerTool({
+    name: "hypernexus_billing_status",
+    label: "TN Billing Status",
+    description: "Provider quotas, model pricing, and billing/usage status.",
+    promptSnippet: "Check billing + provider quotas",
+    promptGuidelines: ["Call to verify provider quotas before heavy model use."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), summary: Type.Optional(Type.String()) }),
+    parameters: Type.Object({}),
+    async execute(_toolCallId, _params, signal) {
+      const body = await tnJson("/api/billing/status", {}, signal).catch(() => null);
+      const text = body ? JSON.stringify((body as any).data ?? body).slice(0, 1500) : "Billing status unavailable.";
+      return { content: [{ type: "text", text }], structuredContent: { ok: !!body, summary: text } };
+    },
+  });
+
+  // 9d. hypernexus_mcp_call - universal tool dispatcher
+  pi.registerTool({
+    name: "hypernexus_mcp_call",
+    label: "TN Tool Call",
+    description: "Invoke any HyperNexus kernel/registry tool by name with args - a universal dispatcher (memory, files, code, MCP tools).",
+    promptSnippet: "Call any HyperNexus tool by name",
+    promptGuidelines: ["Use to invoke a capability you discovered via tool_search/suggest_tools without leaving the turn."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    outputSchema: Type.Object({ ok: Type.Boolean(), result: Type.Optional(Type.String()) }),
+    parameters: Type.Object({
+      tool: Type.String({ description: "Tool name (e.g. 'repomap', 'bash', 'memory_stats')" }),
+      args: Type.Optional(Type.Any({ description: "Arguments object for the tool" })),
+    }),
+    async execute(_toolCallId, params, signal) {
+      const res = await tnFetch("/api/agent/tool", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: params.tool, args: params.args ?? {} }),
+      }, signal);
+      const body: any = await res.json().catch(() => ({}));
+      const c = body?.data?.content;
+      const text = Array.isArray(c) ? c.map((x: any) => x.text ?? JSON.stringify(x)).join("\n") : JSON.stringify(body);
+      return { content: [{ type: "text", text: text.slice(0, 2000) || "(no output)" }], structuredContent: { ok: res.ok, result: text.slice(0, 2000) } };
+    },
+  });
+
+  // 9e. hypernexus_add_fact - structured memory write
+  pi.registerTool({
+    name: "hypernexus_add_fact",
+    label: "TN Add Fact",
+    description: "Persist a structured fact, observation, or decision to L2 memory with a type + tags for precise recall.",
+    promptSnippet: "Store a fact/observation/decision",
+    promptGuidelines: ["Prefer over memory_store when the item has a clear type (fact|observation|decision|gotcha)."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "direct",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean() }),
+    parameters: Type.Object({
+      content: Type.String({ description: "The fact / observation / decision" }),
+      kind: Type.Optional(Type.String({ description: "fact | observation | decision | gotcha (default 'fact')" })),
+      tags: Type.Optional(Type.Array(Type.String(), { description: "Tags for recall" })),
+      importance: Type.Optional(Type.Number({ description: "0..1 importance (default 0.6)" })),
+    }),
+    async execute(_toolCallId, params, signal) {
+      const ok = await tnOk("/api/memory/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: params.content, category: params.kind ?? "fact", tags: params.tags ?? [], importance: params.importance ?? 0.6, timestamp: now() }),
+      }, signal);
+      return ok
+        ? { content: [{ type: "text", text: "Stored fact." }], structuredContent: { ok: true } }
+        : { content: [{ type: "text", text: "Failed to store." }], isError: true, structuredContent: { ok: false } };
+    },
+  });
+
   pi.registerCommand("tn-store", {
     description: "Store a memory in TN L2 vault with structured form (optional per-project .memdb)",
     handler: async (args, ctx) => {

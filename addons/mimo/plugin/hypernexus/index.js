@@ -57,6 +57,36 @@ let lastMemories = { query: null, items: [], at: 0 };
 const MEM_TTL = 30_000; // don't re-search more than every 30s
 const SUG_TTL = 60_000;
 
+// Telemetry batcher: high-frequency fire-and-forget writes (tool-exec, llm-step,
+// chat-params, etc.) are buffered and flushed in a single batch POST every 2s or
+// at 20 items. Cuts HTTP round-trips from 8+/turn to ~1 batch. Never blocks.
+const telemBuf = [];
+let telemTimer = null;
+const TELEM_FLUSH_MS = 2000;
+const TELEM_MAX = 20;
+function queueTelemetry(entry) {
+  try {
+    telemBuf.push(entry);
+    if (telemBuf.length >= TELEM_MAX) { flushTelemetry(); return; }
+    if (!telemTimer) telemTimer = setTimeout(flushTelemetry, TELEM_FLUSH_MS);
+  } catch { /* ignore */ }
+}
+function flushTelemetry() {
+  if (telemTimer) { clearTimeout(telemTimer); telemTimer = null; }
+  if (!telemBuf.length) return;
+  const batch = telemBuf.splice(0, TELEM_MAX);
+  hnFetch("/api/memory/facts/add", {
+    method: "POST",
+    body: {
+      title: `telemetry-batch:${batch.length}`,
+      content: batch.map((e) => `${e.title}: ${e.content}`).join("\n").slice(0, 2000),
+      tags: ["telemetry", "batch"],
+      namespace: "global",
+    },
+    budget: HOOK_BUDGET,
+  }).catch(() => {});
+}
+
 // Warm the L2 memory cache in the background. Uses FTS search (~15ms) instead of
 // vector /api/memory/search (~800ms ONNX embed) so the result lands in time for the
 // SAME turn's system.transform — the slow search always blew the 400ms hot-path
@@ -582,20 +612,29 @@ export const server = async (input, options = {}) => {
       try {
         const msgs = (output && output.messages) || [];
         const parts = (output && output.parts) || [];
-        // Feed the last user text to the tool-suggestion monitor (PRIMARY design: LLM
-        // conversation monitor). Non-blocking, budgeted, degrades silently.
+        // Feed the last user text to the tool-suggestion monitor (PRIMARY design).
+        // chat.message already fires this — only fire here when chat.message was
+        // missed (e.g. replayed context) to avoid duplicate POSTs.
         const lastUser = [...msgs].reverse().find((m) => m && m.role === "user");
         const userText = lastUser
           ? typeof lastUser.content === "string"
             ? lastUser.content
             : JSON.stringify(lastUser.content || "").slice(0, 500)
           : "";
-        if (userText.length > 10) {
+        if (userText.length > 10 && (!lastSuggestions.query || lastSuggestions.query !== userText.slice(0, 500))) {
           hnFetch("/api/mcp/tool-suggestions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: userText.slice(0, 400) }),
+            body: { query: userText.slice(0, 400) },
             budget: HOOK_BUDGET,
+          }).then((res) => {
+            if (res && res.ok && res.data) {
+              const items = Array.isArray(res.data) ? res.data
+                : Array.isArray(res.data.suggestions) ? res.data.suggestions
+                : Array.isArray(res.data.tools) ? res.data.tools : [];
+              if (items.length > 0) {
+                lastSuggestions = { query: userText.slice(0, 500), tools: items.slice(0, 8), at: Date.now() };
+              }
+            }
           }).catch(() => {});
         }
         // Breadcrumb to kv (if available via context) — count only, no mutation.
@@ -610,48 +649,25 @@ export const server = async (input, options = {}) => {
       }
     },
 
-    // 4a. TOOL INTENT — observe tool calls before they run (fire-and-forget, never
-    //     mutates args or cancels). Completes the tool lifecycle alongside _after.
+    // 4a. TOOL INTENT — observe tool calls before they run (batched telemetry).
     "tool.execute.before": async (input) => {
       try {
-        hnFetch("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            title: `tool-intent:${input.tool}`,
-            content: `session=${input.sessionID} call=${input.callID} tool=${input.tool} (pre)`,
-            tags: ["tool-obs", input.tool],
-            namespace: "global",
-          },
-          budget: HOOK_BUDGET,
-        }).catch(() => {});
-      } catch {
-        /* ignore */
-      }
+        queueTelemetry({ title: `tool-intent:${input.tool}`, content: `session=${input.sessionID} call=${input.callID} tool=${input.tool} (pre)` });
+      } catch { /* ignore */ }
     },
 
-    // 4. TOOL OBSERVATION — record tool calls (fire-and-forget) as a signal for the monitor.
+    // 4. TOOL OBSERVATION — record tool calls as a signal for the monitor (batched).
     "tool.execute.after": async (input) => {
       try {
-        hnFetch("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            title: `tool-call:${input.tool}`,
-            content: `session=${input.sessionID} call=${input.callID} tool=${input.tool}`,
-            tags: ["tool-obs", input.tool],
-            namespace: "global",
-          },
-          budget: HOOK_BUDGET,
-        }).catch(() => {});
-      } catch {
-        /* ignore */
-      }
+        queueTelemetry({ title: `tool-call:${input.tool}`, content: `session=${input.sessionID} call=${input.callID} tool=${input.tool}` });
+      } catch { /* ignore */ }
     },
 
     // 5. PERMISSION HINTS — auto-allow read-only HyperNexus tools; leave the rest to policy.
     "permission.ask": async (input, output) => {
       try {
         const name = String((input && (input.tool || input.toolName)) || "");
-        if (/^hypernexus_(status|search_tools|suggest_tools|mcp_status|mcp_servers|mcp_tools|memory_search|context_harvest)$/.test(name)) {
+        if (/^hypernexus_(status|search_tools|suggest_tools|mcp_status|mcp_servers|mcp_tools|memory_search|memory_vector_search|memory_list|memory_stats|context_harvest|skills_search|system_overview|session_search|code_search)$/.test(name)) {
           output.status = "allow";
         }
       } catch {
@@ -733,38 +749,19 @@ export const server = async (input, options = {}) => {
       } catch { /* ignore */ }
     },
 
-    // 10. PER-STEP OBSERVABILITY — after each LLM step, record a compact signal to the
-    //     kernel (never blocks; feed is the trajectory summary).
+    // 10. PER-STEP OBSERVABILITY — batched telemetry after each LLM step.
     "session.userQuery.post": async (input) => {
       try {
         const q = input && input.query ? String(input.query).slice(0, 200) : "";
         const fin = input && input.finish ? input.finish : "";
-        hnFetch("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            title: "llm-step",
-            content: `session=${input.sessionID} step=${input.step} finish=${fin} q=${q}`,
-            tags: ["llm-step", fin || "step"],
-            namespace: "global",
-          },
-          budget: HOOK_BUDGET,
-        }).catch(() => {});
+        queueTelemetry({ title: "llm-step", content: `session=${input.sessionID} step=${input.step} finish=${fin} q=${q}` });
       } catch { /* ignore */ }
     },
 
-    // 11. LLM REQUEST OBSERVABILITY — record provider/model usage per request.
+    // 11. LLM REQUEST OBSERVABILITY — batched provider/model usage per request.
     "session.llm.request": async (input) => {
       try {
-        hnFetch("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            title: "llm-request",
-            content: `session=${input.sessionID} model=${input.providerID}/${input.modelID} trajectory=${(input.trajectory || []).length} msgs`,
-            tags: ["llm-request", input.providerID || "provider"],
-            namespace: "global",
-          },
-          budget: HOOK_BUDGET,
-        }).catch(() => {});
+        queueTelemetry({ title: "llm-request", content: `session=${input.sessionID} model=${input.providerID}/${input.modelID} trajectory=${(input.trajectory || []).length} msgs` });
       } catch { /* ignore */ }
     },
 
@@ -791,19 +788,10 @@ export const server = async (input, options = {}) => {
       } catch { /* ignore */ }
     },
 
-    // 14. CHAT PARAMS — observe (never override model params; telemetry only).
+    // 14. CHAT PARAMS — batched telemetry only (never overrides model params).
     "chat.params": async (input, output) => {
       try {
-        hnFetch("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            title: "chat-params",
-            content: `session=${input.sessionID} model=${input.model && input.model.id} temp=${output && output.temperature}`,
-            tags: ["chat-params"],
-            namespace: "global",
-          },
-          budget: HOOK_BUDGET,
-        }).catch(() => {});
+        queueTelemetry({ title: "chat-params", content: `session=${input.sessionID} model=${input.model && input.model.id} temp=${output && output.temperature}` });
       } catch { /* ignore */ }
     },
 
@@ -817,19 +805,10 @@ export const server = async (input, options = {}) => {
       } catch { /* ignore */ }
     },
 
-    // 16. COMMAND TELEMETRY — record slash-command usage (fire-and-forget).
+    // 16. COMMAND TELEMETRY — batched slash-command usage.
     "command.execute.before": async (input) => {
       try {
-        hnFetch("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            title: "command",
-            content: `session=${input.sessionID} cmd=${input.command} args=${String(input.arguments || "").slice(0, 120)}`,
-            tags: ["command", input.command],
-            namespace: "global",
-          },
-          budget: HOOK_BUDGET,
-        }).catch(() => {});
+        queueTelemetry({ title: "command", content: `session=${input.sessionID} cmd=${input.command} args=${String(input.arguments || "").slice(0, 120)}` });
       } catch { /* ignore */ }
     },
 
@@ -895,19 +874,10 @@ export const server = async (input, options = {}) => {
       } catch { /* ignore */ }
     },
 
-    // 21. TEXT COMPLETE OBSERVABILITY — fire-and-forget signal after completions.
+    // 21. TEXT COMPLETE OBSERVABILITY — batched signal after completions.
     "experimental.text.complete": async (input) => {
       try {
-        hnFetch("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            title: "text-complete",
-            content: `session=${input.sessionID} message=${input.messageID}`,
-            tags: ["text-complete"],
-            namespace: "global",
-          },
-          budget: HOOK_BUDGET,
-        }).catch(() => {});
+        queueTelemetry({ title: "text-complete", content: `session=${input.sessionID} message=${input.messageID}` });
       } catch { /* ignore */ }
     },
 

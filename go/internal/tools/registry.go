@@ -108,14 +108,30 @@ func NewRegistry() *Registry {
 	r.Register("memory_extract_relations_batch", HandleExtractRelationsBatch)
 	// Core I/O tools — accessible via POST /api/agent/tool
 	r.Register("bash", HandleBash)
+	r.Register("run_shell_command", HandleRunShellCommand)
 	r.Register("ls", HandleListDir)
 	r.Register("read", HandleReadFile)
+	r.Register("read_file", HandleReadFileAlias)
 	r.Register("write", HandleWriteFile)
+	r.Register("write_file", HandleWriteFileAlias)
+	r.Register("edit", HandleEdit)
+	r.Register("search", HandleSearchFiles)
 	r.Register("grep", HandleGrep)
 	r.Register("find", HandleFind)
+	r.Register("code_interpreter", HandleCodeInterpreter)
+	r.Register("install_mcp_server", HandleInstallMCPServer)
 	r.Register("repomap", HandleRepomap)
 	// System & utility tools
 	r.Register("get_system_stats", HandleGetSystemStats)
+	// Kernel-bridging MCP tools — identical output to the stdio MCP server
+	// implementations (cmd/tormentnexus/mcp_server.go), reachable through the
+	// HTTP tool router (/api/agent/tool) as well.
+	r.Register("mcp_status", HandleMCPStatus)
+	r.Register("mcp_list_servers", HandleMCPServersList)
+	r.Register("mcp_list_tools", HandleMCPListTools)
+	r.Register("mcp_call_tool", HandleMCPCallTool)
+	r.Register("mcp_server_test", HandleMCPServerTest)
+	r.Register("inspect_window_ui", HandleInspectWindowUI)
 	r.Register("apply_search_replace", HandleApplySearchReplace)
 	r.Register("launch_webview", HandleLaunchWebview)
 	r.Register("add_bookmark", HandleAddBookmark)

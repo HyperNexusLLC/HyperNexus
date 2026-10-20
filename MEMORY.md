@@ -136,7 +136,22 @@ Memories should be stored both:
 - **links_backlog**: production schema in `server.go:551` was missing `researched_at` and `raw_payload` columns. Also used wrong DB path (`catalog.db` instead of `hypernexus.db`). Test schemas in `server_test.go` had the correct columns.
 - **Dashboard build**: requires `pnpm` (workspace protocol). `lib/db.ts` was missing `db` export with Drizzle schema generic. `drizzle-orm` + `pg` deps were not in `package.json`.
 - **Hetzner deployment**: SSH not available from this session. Artifacts in `deploy-artifacts/`: `hypernexus.exe` (25MB) + `web-standalone/`. Manual deploy needed.
-- **GIT_AUTHOR_NAME env override**: `GIT_AUTHOR_NAME=TormentNexus Bot` is set in the shell environment and overrides `git config user.name` in test repos. Tests must `t.Setenv` git identity vars. This was the root cause of `TestGitLogFallsBackLocally` — `localGitLog` was running in the correct test temp dir, but commits were attributed to the env var author.
+- **GIT_AUTHOR_NAME env override**: `GIT_AUTHOR_NAME=TormentNexus Bot` is set in the shell environment and overrides `git config user.name` in test repos. Tests must `t.Setenv` git identity vars. This was the root cause of `TestGitLogFallsBackLocally` - `localGitLog` was running in the correct test temp dir, but commits were attributed to the env var author.
+
+## 2026-10-19 �?" v1.0.14 OpenCode Extension Session Observations
+
+- **OpenCode V2 plugin gotchas** (source of truth: https://opencode.ai/v2/docs/build/plugins):
+  - `Skill.Info` schema **requires `path`** — omitting it fails the skill transform and OpenCode **disables the entire plugin** (`disabled plugin after transform failure state=skill`). Always materialize SKILL.md and pass `path` + `content`.
+  - Any transform schema failure disables the whole plugin, not just that registration. Validate every editor.add() payload against the documented shape (tool: name/description/input/options/execute; worktree: id/create/remove/list).
+  - Plugin `options.baseUrl` does NOT reach tool executors automatically — `tool.run()` calls module-level helpers. Keep a module-level `RUNTIME_BASE` updated in `setup()`/`server()`.
+  - `ctx.mcp.transform` `editor.set(name, cfg)` uses `{type:"local", command:[...], environment:{...}, timeout:{startup}}`. MCP tools normalize to `<server>_<tool>`; same-named plugin tools with namespace `<server>` override MCP duplicates (later registration wins) — that is desirable for richer plugin versions but be aware of it.
+  - Plugin dirs auto-load from `.opencode/plugins/<name>/index.js` (package.json `exports` works). Default export needs `id` + `setup`; a `server()` export provides V1 compatibility.
+- **Kernel tool surface topology** (why tools "exist" in one surface but not another):
+  - `go/internal/tools.Registry` (= `s.toolsRegistry`) serves `POST /api/agent/tool` (the router every harness `mcp_call` uses).
+  - `go/tools` (roottools) serves accessory tools; `go/cmd/tormentnexus/mcp_server.go` has its OWN switch for stdio MCP tools (proxies to kernel HTTP via `tnKernelGet`).
+  - A tool can therefore work over stdio MCP yet 503 over the router. `go/internal/tools/kernel_bridge.go` is the fix pattern: thin self-proxies onto the kernel's own HTTP API. Added mcp_status/mcp_list_servers/mcp_list_tools/mcp_call_tool/mcp_server_test/inspect_window_ui (v1.0.14).
+- **Test hygiene**: assert on the router envelope (`r.success !== false && !r.error`), never regex payload content — stored memories legitimately contain strings like "Error: fetch failed" and flip `/error.*failed/i` checks (bit test-mcp-tools.mjs search_memory once).
+- **Windows binary swap**: `Move-Item -Force` does NOT overwrite an existing exe; use `cmd.exe /c copy /Y`. A running `hypernexus.exe` locks the file — kill processes first (there may be a stale multi-day-old pid; check `Get-NetTCPConnection -LocalPort 7778` for the real owner). The kernel has a single-instance guard that refuses to double-bind 7778 and says so on stderr.
 
 
 

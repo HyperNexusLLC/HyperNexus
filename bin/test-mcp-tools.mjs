@@ -46,9 +46,9 @@ console.log("=== T10-MCP: CORE FILE-OPS TOOLS ===");
   check("ls", t.length > 5 && !/error.*not found/i.test(t), t.slice(0, 80));
 }
 {
-  const r = await callTool("read", { path: "C:\\Users\\hyper\\workspace\\HyperNexus\\VERSION.md" });
+  const r = await callTool("read", { path: "C:\\Users\\hyper\\workspace\\HyperNexus\\README.md" });
   const t = extract(r);
-  check("read", t.length > 2 && !/ENOENT|not found/i.test(t), t.slice(0, 60));
+  check("read", t.length > 2 && r?.success !== false && !r?.error, t.slice(0, 60));
 }
 {
   const r = await callTool("find", { pattern: "README.md", path: "C:\\Users\\hyper\\workspace\\HyperNexus" });
@@ -70,12 +70,12 @@ console.log("=== T10-MCP: MEMORY TOOLS ===");
 {
   const r = await callTool("search_memory", { query: "T10 MCP test" });
   const t = extract(r);
-  check("search_memory", t.length > 2 && !/error.*failed/i.test(t), t.slice(0, 100));
+  check("search_memory", t.length > 2 && r?.success !== false && !r?.error, t.slice(0, 100));
 }
 {
   const r = await callTool("memory_stats", {});
   const t = extract(r);
-  check("memory_stats", t.length > 2 && !/error/i.test(t), t.slice(0, 100));
+  check("memory_stats", t.length > 2 && r?.success !== false && !r?.error, t.slice(0, 100));
 }
 {
   const r = await callTool("memory_scratchpad_set", { key: "t10-test", value: "scratchpad-value" });
