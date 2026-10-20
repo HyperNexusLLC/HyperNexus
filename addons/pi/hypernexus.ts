@@ -8,8 +8,9 @@ const TN_BASE = "http://127.0.0.1:7778";
  *
  * Full bridge: pi ↔ HyperNexus
  * ───────────────────────────────────────────
- * - 15 custom tools (memory store/search/vector, tool search + suggestions, sessions, skills,
- *   code, context harvest, scratchpad, system status, billing, universal tool call, add-fact, subagent)
+ * - 19 custom tools (memory store/search/list/vector, tool search + suggestions, sessions, skills,
+ *   code, repomap, knowledge graph, context harvest, scratchpad, system status, billing,
+ *   session context, universal tool call, add-fact, subagent)
  * - Session priming + per-turn context harvesting + compaction hooks
  * - Fast FTS context injection (hot-path hooks never stall a turn)
  * - Preemptive tool-suggestion monitor (non-blocking) + hypernexus_suggest_tools
@@ -1028,6 +1029,102 @@ export default function (pi: ExtensionAPI) {
       return ok
         ? { content: [{ type: "text", text: "Stored fact." }], structuredContent: { ok: true } }
         : { content: [{ type: "text", text: "Failed to store." }], isError: true, structuredContent: { ok: false } };
+    },
+  });
+
+  // 9f. hypernexus_memory_list — browse recent L2 memories
+  pi.registerTool({
+    name: "hypernexus_memory_list",
+    label: "TN Memory List",
+    description: "Browse/review recent L2 memories with tags — for recall and situational awareness.",
+    promptSnippet: "Browse recent memories",
+    promptGuidelines: ["Call to review what's stored before deciding what to recall or persist."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ count: Type.Number(), memories: Type.Array(Type.Any()) }),
+    parameters: Type.Object({ limit: Type.Optional(Type.Number({ description: "Max results (default 15)" })) }),
+    async execute(_toolCallId, params, signal) {
+      const body = await tnJson(`/api/memory/list?limit=${params.limit ?? 15}`, {}, signal).catch(() => null);
+      const mems = (body as any)?.memories ?? (body as any)?.data ?? [];
+      const items = (Array.isArray(mems) ? mems : []).slice(0, params.limit ?? 15).map((m: any, i: number) => {
+        let o = m; if (typeof m === "string") { try { o = JSON.parse(m); } catch { o = { content: m }; } }
+        return `  ${i + 1}. [${(o.tags ?? []).join(",")}] ${String(o.content ?? "").slice(0, 120)}`;
+      }).join("\n");
+      return { content: [{ type: "text", text: `\ud83d\udcda ${mems.length ?? 0} recent memories:\n${items}` }], structuredContent: { count: mems.length ?? 0, memories: [] } };
+    },
+  });
+
+  // 9g. hypernexus_repomap — repository map
+  pi.registerTool({
+    name: "hypernexus_repomap",
+    label: "TN Repo Map",
+    description: "Generate a repository map with file/symbol summaries to orient in a codebase quickly.",
+    promptSnippet: "Map the repository structure + key symbols",
+    promptGuidelines: ["Call at the start of code work to orient, or when asked to summarize a repo."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ map: Type.Optional(Type.String()) }),
+    parameters: Type.Object({ dir: Type.Optional(Type.String({ description: "Directory to map (default workspace root)" })) }),
+    async execute(_toolCallId, params, signal) {
+      const res = await tnFetch("/api/agent/tool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "repomap", args: { dir: params.dir ?? "" } }) }, signal);
+      const body: any = await res.json().catch(() => ({}));
+      const c = body?.data?.content;
+      const text = Array.isArray(c) ? c.map((x: any) => x.text ?? "").join("\n") : JSON.stringify(body);
+      return { content: [{ type: "text", text: text.slice(0, 4000) || "(empty map)" }], structuredContent: { map: text.slice(0, 4000) } };
+    },
+  });
+
+  // 9h. hypernexus_knowledge_graph — structured knowledge (entities/relations)
+  pi.registerTool({
+    name: "hypernexus_knowledge_graph",
+    label: "TN Knowledge Graph",
+    description: "Add entities, relations, or observations to the HyperNexus knowledge graph, or search it.",
+    promptSnippet: "Add/search the knowledge graph",
+    promptGuidelines: ["Use to persist structured domain knowledge (entities + relationships) beyond flat facts."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), result: Type.Optional(Type.String()) }),
+    parameters: Type.Object({
+      action: Type.String({ description: "add_entities | add_relations | add_observations | search" }),
+      entities: Type.Optional(Type.Any({ description: "Entities to add [{name,type,observations}]" })),
+      relations: Type.Optional(Type.Any({ description: "Relations to add [{from,to,type}]" })),
+      query: Type.Optional(Type.String({ description: "Query for action=search" })),
+    }),
+    async execute(_toolCallId, params, signal) {
+      if (params.action === "search") {
+        const body = await tnJson(`/api/memory/search?q=${encodeURIComponent(params.query ?? "")}`, {}, signal).catch(() => null);
+        return { content: [{ type: "text", text: JSON.stringify((body as any)?.data ?? body).slice(0, 2000) }], structuredContent: { ok: true } };
+      }
+      const res = await tnFetch("/api/knowledge/graph", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: params.action, entities: params.entities ?? [], relations: params.relations ?? [] }) }, signal);
+      const body: any = await res.json().catch(() => ({}));
+      return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 1500) }], structuredContent: { ok: res.ok, result: JSON.stringify(body).slice(0, 1500) } };
+    },
+  });
+
+  // 9i. hypernexus_session_context — session goal get/set
+  pi.registerTool({
+    name: "hypernexus_session_context",
+    label: "TN Session Context",
+    description: "Get or set the session goal/objective used by HyperNexus for context harvesting and handoff.",
+    promptSnippet: "Get/set the session goal",
+    promptGuidelines: ["Set the goal at session start; get it when resuming or handoff."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), value: Type.Optional(Type.String()) }),
+    parameters: Type.Object({ action: Type.String({ description: "'get' or 'set'" }), goal: Type.Optional(Type.String({ description: "Goal text (for set)" })), objective: Type.Optional(Type.String({ description: "Objective text (for set)" })) }),
+    async execute(_toolCallId, params, signal) {
+      if (params.action === "get") {
+        const body = await tnJson("/api/sessions/context", {}, signal).catch(() => null);
+        return { content: [{ type: "text", text: JSON.stringify((body as any)?.data ?? body).slice(0, 1500) }], structuredContent: { ok: true, value: JSON.stringify(body) } };
+      }
+      const ok = await tnOk("/api/memory/context/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ goal: params.goal ?? "", objective: params.objective ?? "" }) }, signal);
+      return ok
+        ? { content: [{ type: "text", text: "\u2705 Session context updated." }], structuredContent: { ok: true } }
+        : { content: [{ type: "text", text: "Failed to update." }], isError: true, structuredContent: { ok: false } };
     },
   });
 
