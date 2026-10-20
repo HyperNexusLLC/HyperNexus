@@ -177,12 +177,16 @@ export default function (pi: ExtensionAPI) {
     refreshWidget(ctx);
   });
 
-  // Register HyperNexus kernel as an MCP server so Pi can discover its tools natively
+  // Register HyperNexus kernel as an MCP server so Pi can discover its tools natively.
+  // Use the stdio transport (the kernel serves MCP via `hypernexus.exe mcp`, NOT over
+  // HTTP) — the previous http://127.0.0.1:7778/mcp URL returned 404 because no such
+  // HTTP endpoint exists. exposure "deferred" keeps tools reachable via tool_search +
+  // codemode without declaring all 58 up front (progressive routing).
   try {
     pi.registerMcpServer("hypernexus-kernel", {
-      url: "http://127.0.0.1:7778/mcp",
-      // deferred: callable from codemode scripts AND loadable by tool_search for the
-      // model, but not declared up front. This is the 50K->5K progressive-routing vehicle.
+      command: "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe",
+      args: ["mcp"],
+      env: { HYPERNEXUS_WORKSPACE_ROOT: "C:/Users/hyper/workspace" },
       exposure: "deferred",
     } as any);
   } catch { /* already registered or MCP extension not active */ }
