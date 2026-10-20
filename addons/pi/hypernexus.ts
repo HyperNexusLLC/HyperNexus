@@ -8,7 +8,7 @@ const TN_BASE = "http://127.0.0.1:7778";
  *
  * Full bridge: pi ↔ HyperNexus
  * ───────────────────────────────────────────
- * - 19 custom tools (memory store/search/list/vector, tool search + suggestions, sessions, skills,
+ * - 20 custom tools (memory store/search/list/vector, tool search + suggestions, sessions, skills,
  *   code, repomap, knowledge graph, context harvest, scratchpad, system status, billing,
  *   session context, universal tool call, add-fact, subagent)
  * - Session priming + per-turn context harvesting + compaction hooks
@@ -1125,6 +1125,31 @@ export default function (pi: ExtensionAPI) {
       return ok
         ? { content: [{ type: "text", text: "\u2705 Session context updated." }], structuredContent: { ok: true } }
         : { content: [{ type: "text", text: "Failed to update." }], isError: true, structuredContent: { ok: false } };
+    },
+  });
+
+  // 9j. hypernexus_workflow — list/run HyperNexus engineering workflows
+  pi.registerTool({
+    name: "hypernexus_workflow",
+    label: "TN Workflow",
+    description: "List or run HyperNexus engineering workflows (full-build, submodule-sync, etc.) for orchestration.",
+    promptSnippet: "List/run HyperNexus workflows",
+    promptGuidelines: ["Use to discover and trigger repeatable engineering workflows (orchestration)."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    outputSchema: Type.Object({ ok: Type.Boolean(), workflows: Type.Optional(Type.Array(Type.Any())) }),
+    parameters: Type.Object({ action: Type.String({ description: "'list' or 'run'" }), id: Type.Optional(Type.String({ description: "Workflow id (for run)" })) }),
+    async execute(_toolCallId, params, signal) {
+      if (params.action === "run" && params.id) {
+        const res = await tnFetch(`/api/workflows/${encodeURIComponent(params.id)}/run`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }, signal);
+        const body: any = await res.json().catch(() => ({}));
+        return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 1500) }], structuredContent: { ok: res.ok } };
+      }
+      const body = await tnJson("/api/workflows", {}, signal).catch(() => null);
+      const wfs = (body as any)?.data ?? body ?? [];
+      const items = (Array.isArray(wfs) ? wfs : []).map((w: any, i: number) => `  ${i + 1}. ${w.id ?? w.name ?? "?"} - ${(w.description ?? "").slice(0, 80)}`).join("\n");
+      return { content: [{ type: "text", text: `Workflows:\n${items || "(none)"}` }], structuredContent: { ok: true, workflows: [] } };
     },
   });
 
