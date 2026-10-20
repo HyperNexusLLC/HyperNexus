@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
@@ -180,6 +181,15 @@ type MCPServer struct {
 	tnKernelURL  string
 	tools        []ToolDefinition
 	rootRegistry *roottools.Registry
+
+	// mergedMu guards the last-good merged tool inventory. tools/list must not
+	// degrade to the static fallback just because the kernel was slow to answer
+	// /api/mcp/tools — a saturated box can exceed a tight timeout even though
+	// the inventory is perfectly healthy.
+	mergedMu    sync.Mutex
+	mergedCache []ToolDefinition
+	mergedAt    time.Time
+	mergedOK    bool
 }
 
 func NewMCPServer(tnKernelURL string) *MCPServer {
@@ -904,52 +914,46 @@ func tnKernelServerTest(baseURL string, args map[string]any) ToolResult {
 	return ToolResult{Content: []TextContent{{Type: "text", Text: string(data)}}}
 }
 
+// upstreamToolsCacheTTL bounds how long a successfully merged inventory is
+// reused without a refresh. Fresh enough to skip a round-trip on repeated
+// tools/list polling, short enough to pick up kernel-side tool changes quickly.
+const upstreamToolsCacheTTL = 15 * time.Second
+
+// upstreamToolsFetchTimeout is deliberately generous: the kernel's
+// /api/mcp/tools answers in well under a second when calm, but graph builds,
+// memory sweeps, and sibling agents on a loaded box can push it past the old
+// 3s timeout. A missing inventory is far worse than a slow tools/list.
+const upstreamToolsFetchTimeout = 8 * time.Second
+
 func (s *MCPServer) getMergedTools() []ToolDefinition {
+	s.mergedMu.Lock()
+	if s.mergedOK && time.Since(s.mergedAt) < upstreamToolsCacheTTL {
+		cached := s.mergedCache
+		s.mergedMu.Unlock()
+		return cached
+	}
+	s.mergedMu.Unlock()
+
 	merged := make([]ToolDefinition, len(s.tools))
 	copy(merged, s.tools)
 
-	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get(s.tnKernelURL + "/api/mcp/tools")
+	tools, err := s.fetchUpstreamTools()
+	if err != nil {
+		// One retry: kernel stalls under load are transient.
+		time.Sleep(300 * time.Millisecond)
+		tools, err = s.fetchUpstreamTools()
+	}
 	if err != nil {
 		log.Printf("[MCP] Upstream tools unavailable: %v", err)
-		return merged
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("[MCP] Upstream tools returned HTTP status %d", resp.StatusCode)
-		return merged
-	}
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("[MCP] Failed to read upstream tools body: %v", err)
-		return merged
-	}
-
-	var tools []ToolDefinition
-
-	// Try flat array format first: { "success": true, "data": [...] }
-	var upstreamRespFlat struct {
-		Success bool             `json:"success"`
-		Data    []ToolDefinition `json:"data"`
-	}
-	if err := json.Unmarshal(bodyBytes, &upstreamRespFlat); err == nil && upstreamRespFlat.Success {
-		tools = upstreamRespFlat.Data
-	} else {
-		// Fallback to nested tools format: { "success": true, "data": { "tools": [...] } }
-		var upstreamRespNested struct {
-			Success bool `json:"success"`
-			Data    struct {
-				Tools []ToolDefinition `json:"tools"`
-			} `json:"data"`
+		s.mergedMu.Lock()
+		hadCache := s.mergedOK
+		cached := s.mergedCache
+		s.mergedMu.Unlock()
+		if hadCache {
+			log.Printf("[MCP] Serving last-good merged tool list (%d tools)", len(cached))
+			return cached
 		}
-		if err := json.Unmarshal(bodyBytes, &upstreamRespNested); err == nil && upstreamRespNested.Success {
-			tools = upstreamRespNested.Data.Tools
-		} else {
-			log.Printf("[MCP] Failed to decode upstream tools: %v", err)
-			return merged
-		}
+		return merged
 	}
 
 	localNames := make(map[string]bool)
@@ -967,7 +971,53 @@ func (s *MCPServer) getMergedTools() []ToolDefinition {
 			merged = append(merged, ut)
 		}
 	}
+
+	s.mergedMu.Lock()
+	s.mergedCache = merged
+	s.mergedAt = time.Now()
+	s.mergedOK = true
+	s.mergedMu.Unlock()
 	return merged
+}
+
+func (s *MCPServer) fetchUpstreamTools() ([]ToolDefinition, error) {
+	client := &http.Client{Timeout: upstreamToolsFetchTimeout}
+	resp, err := client.Get(s.tnKernelURL + "/api/mcp/tools")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("upstream returned HTTP status %d", resp.StatusCode)
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read upstream tools body: %w", err)
+	}
+
+	// Try flat array format first: { "success": true, "data": [...] }
+	var upstreamRespFlat struct {
+		Success bool             `json:"success"`
+		Data    []ToolDefinition `json:"data"`
+	}
+	if err := json.Unmarshal(bodyBytes, &upstreamRespFlat); err == nil && upstreamRespFlat.Success && len(upstreamRespFlat.Data) > 0 {
+		return upstreamRespFlat.Data, nil
+	}
+
+	// Fallback to nested tools format: { "success": true, "data": { "tools": [...] } }
+	var upstreamRespNested struct {
+		Success bool `json:"success"`
+		Data    struct {
+			Tools []ToolDefinition `json:"tools"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(bodyBytes, &upstreamRespNested); err == nil && upstreamRespNested.Success && len(upstreamRespNested.Data.Tools) > 0 {
+		return upstreamRespNested.Data.Tools, nil
+	}
+
+	return nil, fmt.Errorf("failed to decode upstream tools")
 }
 
 func (s *MCPServer) forwardToolCallToUpstream(name string, args map[string]any) (ToolResult, error) {
@@ -1063,6 +1113,11 @@ func cmdMCP(args []string) int {
 	server := NewMCPServer(tnKernelURL)
 	scanner := bufio.NewScanner(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
+	var writeMu sync.Mutex
+	// Bound concurrent dispatches. A single slow upstream tool call must not
+	// block tools/list or other calls behind it (clients correlate by id), but
+	// an errant client must not spawn unbounded goroutines either.
+	dispatchSem := make(chan struct{}, 16)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -1076,16 +1131,23 @@ func cmdMCP(args []string) int {
 			continue
 		}
 
-		resp := server.HandleRequest(req)
 		log.Printf("[MCP] Handling Request Method: %s ID: %v", req.Method, req.ID)
-		if req.ID == nil {
-			continue
-		}
-		respBytes, _ := json.Marshal(resp)
-		log.Printf("[MCP] Sending Response: %s", string(respBytes))
-		writer.Write(respBytes)
-		writer.Write([]byte{'\n'})
-		writer.Flush()
+		go func(req MCPRequest) {
+			dispatchSem <- struct{}{}
+			defer func() { <-dispatchSem }()
+
+			resp := server.HandleRequest(req)
+			if req.ID == nil {
+				return
+			}
+			respBytes, _ := json.Marshal(resp)
+			writeMu.Lock()
+			defer writeMu.Unlock()
+			log.Printf("[MCP] Sending Response: %s", string(respBytes))
+			writer.Write(respBytes)
+			writer.Write([]byte{'\n'})
+			writer.Flush()
+		}(req)
 	}
 
 	if err := scanner.Err(); err != nil {

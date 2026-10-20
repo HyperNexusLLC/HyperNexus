@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.19] - 2026-10-20
+
+### Added
+- **Jcode harness integration (`addons/jcode/`)** — full HyperNexus integration for the Jcode harness: MCP server registration (`.jcode/mcp.json` / `~/.jcode/mcp.json`, `mcpServers` stdio schema), 3 skills (`hypernexus`, `hypernexus-ops`, `hypernexus-workflows`), prompt overlay (RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY), preferred-tool routing block, swarm-prompt persistence block, and an idempotent installer (`install.mjs`: project/global/check/uninstall, managed-block markers)
+- **`bin/test-jcode-ext.mjs` battery (43 checks)** — config shape, installer idempotence, skills byte-identity + frontmatter, managed-block balance, stdio MCP via the *configured* command (initialize, full inventory, memory round-trips add→search→delete with async-propagation polling, concurrent dispatch), stdio↔router parity
+- **Shared manifest `jcode` harness entry** — capability map bound to `mcp__hypernexus__*` tool names
+
+### Fixed
+- **MCP stdio `tools/list` degraded under kernel load** — `getMergedTools()` fetched the upstream inventory with a hard 3s timeout and no cache: whenever the kernel was busy (graph builds, sweeps, sibling agents) the fetch timed out and clients saw only the 49-tool static fallback instead of the full 58-tool merged inventory (core memory/search tools missing). Now: 8s fetch timeout + one retry + 15s-TTL last-good cache (stale cache preferred over degraded listing)
+- **MCP stdio serialized dispatch** — one slow `tools/call` (60s upstream budget) blocked every subsequent request behind it (tools/list, other calls); requests now dispatch concurrently (bounded semaphore, serialized writes) with id-based correlation preserved
+
+### Verified
+- Jcode extension battery **43/43** · MCP tools **23/23** · MCP sweep **54 invoked (53 pass + 1 load-induced soft, 0 fail)** · core-noext **18/18** · mimo **51/51** · mimo TUI **16/16** · OpenCode plugin battery re-run green on the swapped kernel
+- Live in this session: Jcode MCP manager connects `hypernexus` (58 tools), `hello_world`/`search_memory` round-trip through the harness's own MCP tool manager
+- Memory lifecycle quirks documented: `search_memory` keyword matching needs natural-language tokens (hyphenated ids don't tokenize), delete propagation is asynchronous across stores
+
 ## [1.0.18] - 2026-10-20
 
 ### Fixed

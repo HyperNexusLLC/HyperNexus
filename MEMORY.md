@@ -2,6 +2,20 @@
 
 ## Critical Architecture Lessons
 
+### Jcode Harness Integration + MCP Stdio Resilience (2026-10-20)
+
+**Problem 1 ("fix mcp in jcode"):** The `hypernexus mcp` stdio server advertised only 49 static tools to clients whenever the kernel was busy — `getMergedTools()` used a 3s HTTP timeout with no cache, so `/api/mcp/tools` (750ms calm, 3s+ loaded) timed out and silently dropped the 9 core memory/search tools.
+
+**Fix:** 8s fetch timeout + 1 retry + 15s-TTL last-good merged-inventory cache. A degraded `tools/list` must never be the steady state.
+
+**Problem 2:** Stdio dispatch was fully serial — one slow `tools/call` (60s upstream budget) blocked every other JSON-RPC request behind it. Fix: concurrent dispatch with bounded semaphore + serialized writes; clients correlate by id.
+
+**Jcode extension surfaces (no JS plugin API):** Jcode integrates via `~/.jcode/mcp.json` / `.jcode/mcp.json` (`mcpServers` stdio schema) + skills (`.jcode/skills/<name>/SKILL.md` with `name`/`description` frontmatter) + prompt overlay / preferred-tools / swarm-prompt managed blocks. Installer: `addons/jcode/install.mjs` (idempotent managed blocks). Battery: `bin/test-jcode-ext.mjs` (43 checks).
+
+**Memory semantics gotchas:** `search_memory` keyword matching tokenizes — hyphenated single tokens never match; use natural-language probe words. Deletes propagate asynchronously (poll ~6s before asserting gone). `add_memory` returns vectorstore `mem-general-*` ids only via `GET /api/memory/search`, not via MCP search output.
+
+**cmd.exe swap trap:** `if errorlevel 1 (echo A) else (echo B) & copy x y` swallows the trailing `&` commands — binary swaps must run copy as standalone statements.
+
 ### Dashboard API Routing (2026-07-17)
 
 **Problem:** Remote dashboard can't reach `localhost:7778` directly. Browser blocks cross-origin requests.

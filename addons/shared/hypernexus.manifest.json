@@ -71,6 +71,21 @@
       ],
       "notes": "28 tools + 10 /hn-* commands + 3 skills; auto-registers `hypernexus mcp` stdio server; hot-path FTS context injection; @memory:key prompt expansion; RBAC modes via HYPERNEXUS_RBAC."
     },
+    "jcode": {
+      "status": "active",
+      "api": "Jcode MCP manager (mcpServers stdio config) + skills / prompt-overlay / preferred-tools / swarm-prompt surfaces",
+      "adapter": "addons/jcode/",
+      "install": "<project>/.jcode/ or ~/.jcode/ — mcp.json, skills/, prompt-overlay.md, preferred-tools.md, swarm-prompt.md block",
+      "installer": "addons/jcode/install.mjs",
+      "surfaces": [
+        "mcp",
+        "skills",
+        "prompt-overlay",
+        "preferred-tools",
+        "swarm-prompt"
+      ],
+      "notes": "58 tools via `hypernexus mcp` stdio server registered in .jcode/mcp.json (toolNamespace mcp__hypernexus). 3 skills + discipline overlay + tool routing + swarm persistence block. Core works without the extension over HTTP. Stdio server serves last-good inventory on slow kernel (15s TTL cache + retry) and dispatches requests concurrently."
+    },
     "_template": {
       "status": "template",
       "api": "<harness plugin/extension API>",
@@ -110,7 +125,8 @@
       "harness": {
         "pi": "hypernexus_memory_store",
         "mimo": "hypernexus_memory_store",
-        "opencode": "hypernexus_memory_store"
+        "opencode": "hypernexus_memory_store",
+        "jcode": "mcp__hypernexus__add_memory"
       }
     },
     {
@@ -132,7 +148,8 @@
       "harness": {
         "pi": "hypernexus_memory_search",
         "mimo": "hypernexus_memory_search",
-        "opencode": "hypernexus_memory_search"
+        "opencode": "hypernexus_memory_search",
+        "jcode": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -149,7 +166,8 @@
       "harness": {
         "pi": "hypernexus_memory_vector_search",
         "mimo": "hypernexus_memory_vector_search",
-        "opencode": "hypernexus_memory_vector_search"
+        "opencode": "hypernexus_memory_vector_search",
+        "jcode": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -166,7 +184,8 @@
       "harness": {
         "pi": "hypernexus_memory_search",
         "mimo": "hypernexus_memory_list",
-        "opencode": "hypernexus_memory_list"
+        "opencode": "hypernexus_memory_list",
+        "jcode": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -183,7 +202,8 @@
       "harness": {
         "pi": "hypernexus_context_harvest",
         "mimo": "hypernexus_context_harvest",
-        "opencode": "hypernexus_context_harvest"
+        "opencode": "hypernexus_context_harvest",
+        "jcode": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -199,7 +219,8 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_scratchpad",
-        "opencode": "hypernexus_scratchpad"
+        "opencode": "hypernexus_scratchpad",
+        "jcode": "mcp__hypernexus__memory_scratchpad_get"
       }
     },
     {
@@ -216,7 +237,8 @@
       "harness": {
         "pi": "hypernexus_tool_search",
         "mimo": "hypernexus_search_tools",
-        "opencode": "hypernexus_tool_search"
+        "opencode": "hypernexus_tool_search",
+        "jcode": "mcp__hypernexus__mcp_list_tools"
       }
     },
     {
@@ -262,7 +284,8 @@
       "budgetMs": 8000,
       "harness": {
         "mimo": "hypernexus_mcp_call",
-        "opencode": "hypernexus_mcp_call"
+        "opencode": "hypernexus_mcp_call",
+        "jcode": "mcp__hypernexus__mcp_call_tool"
       }
     },
     {
@@ -310,7 +333,8 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_code_search",
-        "opencode": "hypernexus_code_search"
+        "opencode": "hypernexus_code_search",
+        "jcode": "mcp__hypernexus__codebase_search"
       }
     },
     {
@@ -347,7 +371,8 @@
       "harness": {
         "pi": "tn-status",
         "mimo": "hypernexus_status",
-        "opencode": "hypernexus_system_overview"
+        "opencode": "hypernexus_system_overview",
+        "jcode": "mcp__hypernexus__system_status"
       }
     }
   ],

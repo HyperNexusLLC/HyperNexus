@@ -1,4 +1,34 @@
-﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.18)
+﻿# HANDOFF — Jcode Harness Integration + MCP Stdio Resilience (v1.0.19)
+
+## Session 6 (v1.0.19) — Jcode extension + "fix mcp in jcode" + stdio resilience
+
+### DELIVERED
+1. **`addons/jcode/` — full Jcode harness integration** (the deliverable)
+   - `install.mjs` — project/global/check/uninstall modes; managed-block markers (`<!-- hypernexus:begin/end -->`); merges `mcpServers.hypernexus` without clobbering other servers
+   - MCP config at `.jcode/mcp.json` AND `~/.jcode/mcp.json` (`mcpServers` stdio schema: command/args/env) — Jcode's MCP manager picks these up via `mcp` reload
+   - 3 skills → `.jcode/skills/` (hypernexus, hypernexus-ops, hypernexus-workflows) — tool map uses real Jcode tool names (`mcp__hypernexus__*`), Jcode-native synergies (panel/schedule/memory complementarity)
+   - `prompt-overlay.md` (RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY + memory tiers + degradation contract), `preferred-tools.md` (routing without displacing native tools), `swarm-prompt-block.md` (worker persistence discipline)
+   - `bin/test-jcode-ext.mjs` — 43-check battery (config, installer idempotence, skills byte-identity, managed blocks, stdio via the *configured* command, memory round-trips, concurrency, parity)
+   - Shared manifest: `jcode` harness entry + capability `harness.jcode` bindings
+2. **"Fix MCP in jcode" root cause found and fixed in the kernel** (`go/cmd/tormentnexus/mcp_server.go`)
+   - `getMergedTools()` had a hard 3s upstream timeout + NO cache: under load `/api/mcp/tools` exceeds 3s and every client saw only the 49-tool static fallback (memory/search tools missing). Now: 8s fetch + 1 retry + 15s-TTL last-good cache (stale cache > degraded list)
+   - Stdio dispatch was serial: one slow tools/call (60s budget) blocked tools/list and other calls. Now concurrent (bounded sem 16, write mutex, id correlation)
+3. **Jcode-side MCP registration live**: `mcp reload` → Connected 1/1, 58 tools under `mcp__hypernexus__*`; hello_world/search_memory round-trip through Jcode's own MCP manager
+
+### VERIFIED matrix (all on the swapped 1.0.19 kernel)
+- Jcode ext battery **43/43** · MCP tools **23/23** · MCP sweep **54 invoked = 53 pass + 1 load-soft, 0 fail, 10 documented skips** · core-noext **18/18** · mimo **51/51** · mimo TUI **16/16** · OpenCode plugin **120/120**
+
+### Gotchas learned (Jcode + memory semantics)
+- Jcode MCP config locations: `~/.jcode/mcp.json` or project `.jcode/mcp.json` (`mcpServers` map; `.mcp.json`/`.claude/mcp.json` also read). Reload via the `mcp` tool — config touch alone doesn't reconnect stale stdio state
+- `search_memory` keyword matching needs **natural-language tokens**: a hyphenated single token (`jcode-ext-probe-123`) finds nothing even right after write; phrase queries work. Battery probes use word probes + poll
+- Memory delete propagates **asynchronously** across stores — assert "gone" with a ~6s poll, not an immediate re-check
+- `add_memory` writes vectorstore ids (`mem-general-*`); resolve ids for deletion via `GET /api/memory/search` (MCP search output has no ids)
+- Kernel binary swap trap again: `if errorlevel 1 (echo A) else (echo B) & copy ...` swallows the trailing `&` commands in cmd.exe — run copies as standalone statements
+- Version bump: `go/internal/buildinfo/buildinfo.go` + `/VERSION` + `node scripts/sync-versions.mjs` (34 packages)
+
+---
+
+# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.18)
 
 ## Status: COMPLETE & VERIFIED (2026-10-19/20, five sessions)
 Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.18**.
