@@ -352,7 +352,7 @@ export const server = async (input, options = {}) => {
         async execute(args, context) {
           try { if (context && context.metadata) context.metadata({ title: args.pickup ? "Memory pickup" : "Memory handoff" }); } catch { /* ignore */ }
           if (args.pickup) {
-            const r = await hnFetch("/api/agent-memory/pickup", { budget: FAST_BUDGET });
+            const r = await hnFetch("/api/agent-memory/pickup", { method: "POST", body: {}, budget: FAST_BUDGET });
             return { output: JSON.stringify(summarize(r, "memory pickup"), null, 2) };
           }
           const r = await hnFetch("/api/agent-memory/handoff", {
@@ -373,7 +373,7 @@ export const server = async (input, options = {}) => {
         async execute(args, context) {
           try { if (context && context.metadata) context.metadata({ title: `Skills: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
           const limit = args.limit || 8;
-          const r = await hnFetch(`/api/skills/search?query=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: FAST_BUDGET });
+          const r = await hnFetch(`/api/skills/search?q=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: FAST_BUDGET });
           return { output: JSON.stringify(summarize(r, "skills search"), null, 2) };
         },
       }),
@@ -455,7 +455,7 @@ export const server = async (input, options = {}) => {
         async execute(args, context) {
           try { if (context && context.metadata) context.metadata({ title: `Sessions: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
           const limit = args.limit || 8;
-          const r = await hnFetch(`/api/sessions/imported/search?query=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: FAST_BUDGET });
+          const r = await hnFetch(`/api/sessions/imported/list?query=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: FAST_BUDGET });
           return { output: JSON.stringify(summarize(r, "session search"), null, 2) };
         },
       }),
