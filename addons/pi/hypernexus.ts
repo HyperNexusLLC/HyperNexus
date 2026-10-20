@@ -637,7 +637,10 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({ query: Type.String({ description: "Natural language query" }), limit: Type.Optional(Type.Number({ description: "Max results (default 10)" })) }),
     async execute(_toolCallId, params, signal) {
       const limit = params.limit ?? 10;
-      const res = await tnFetch(`/api/memory/search?q=${encodeURIComponent(params.query)}`, {}, signal);
+      const q = String(params.query ?? "").trim();
+      if (!q) return { content: [{ type: "text", text: "Provide a query." }], isError: true, structuredContent: { count: 0, memories: [] } };
+      try {
+      const res = await tnFetch(`/api/memory/search?q=${encodeURIComponent(q)}&limit=${limit}`, {}, signal);
       if (!res.ok) return { content: [{ type: "text", text: "Search unavailable." }], isError: true, structuredContent: { count: 0, memories: [] } };
       const body = await res.json();
       const data = body.data ?? body;
@@ -647,7 +650,10 @@ export default function (pi: ExtensionAPI) {
         const formatted = memories.map((m: any, i: number) => `  ${i + 1}. ${m.content.slice(0, 200)}`).join("\n\n");
         return { content: [{ type: "text", text: `🧠 ${data.length} results:\n\n${formatted}` }], structuredContent: { count: memories.length, memories } };
       }
-      return { content: [{ type: "text", text: `No results for "${params.query}".` }], structuredContent: { count: 0, memories: [] } };
+      return { content: [{ type: "text", text: `No results for "${q}".` }], structuredContent: { count: 0, memories: [] } };
+      } catch {
+        return { content: [{ type: "text", text: "Search timed out or unavailable." }], isError: true, structuredContent: { count: 0, memories: [] } };
+      }
     },
   });
 
@@ -1068,11 +1074,15 @@ export default function (pi: ExtensionAPI) {
     outputSchema: Type.Object({ map: Type.Optional(Type.String()) }),
     parameters: Type.Object({ dir: Type.Optional(Type.String({ description: "Directory to map (default workspace root)" })) }),
     async execute(_toolCallId, params, signal) {
-      const res = await tnFetch("/api/agent/tool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "repomap", args: { dir: params.dir ?? "" } }) }, signal);
-      const body: any = await res.json().catch(() => ({}));
-      const c = body?.data?.content;
-      const text = Array.isArray(c) ? c.map((x: any) => x.text ?? "").join("\n") : JSON.stringify(body);
-      return { content: [{ type: "text", text: text.slice(0, 4000) || "(empty map)" }], structuredContent: { map: text.slice(0, 4000) } };
+      try {
+        const res = await tnFetch("/api/agent/tool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "repomap", args: { dir: params.dir ?? "" } }) }, signal);
+        const body: any = await res.json().catch(() => ({}));
+        const c = body?.data?.content;
+        const text = Array.isArray(c) ? c.map((x: any) => x.text ?? "").join("\n") : JSON.stringify(body);
+        return { content: [{ type: "text", text: text.slice(0, 4000) || "(empty map)" }], structuredContent: { map: text.slice(0, 4000) } };
+      } catch {
+        return { content: [{ type: "text", text: "Repo map timed out (large repo) or kernel busy." }], isError: true, structuredContent: { map: "" } };
+      }
     },
   });
 
