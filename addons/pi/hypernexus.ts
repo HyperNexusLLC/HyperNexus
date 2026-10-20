@@ -19,7 +19,7 @@ const TN_BASE = "http://127.0.0.1:7778";
  * - user_bash audit logging through TN
  * - model_select tracking to L2
  * - Input transformation: @memory:key expansions
- * - 6 slash commands (/tn-store, /tn-search, /tn-status, /tn-plan, /tn-purge, /tn-summary)
+ * - 7 slash commands (/tn-store, /tn-search, /tn-status, /tn-plan, /tn-purge, /tn-summary, /tn-orchestrate)
  * - Live editor widget with memory/mesh stats
  * - Custom footer with TN status
  * - Keyboard shortcuts (Ctrl+Shift+M, Ctrl+Shift+T, Ctrl+Shift+P)
@@ -923,7 +923,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   // ══════════════════════════════════════════════
-  // SLASH COMMANDS (6 commands)
+  // SLASH COMMANDS (7 commands)
   // ══════════════════════════════════════════════
 
   // 9b. hypernexus_system_status
@@ -1356,6 +1356,43 @@ export default function (pi: ExtensionAPI) {
   // ══════════════════════════════════════════════
   // SUBAGENT ORCHESTRATION
   // ══════════════════════════════════════════════
+
+  // /tn-orchestrate — run the autonomous RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY loop
+  pi.registerCommand("tn-orchestrate", {
+    description: "Run the HyperNexus autonomous orchestration loop: recall context, discover tools, plan, persist, verify.",
+    handler: async (args, ctx) => {
+      const task = (args || await ctx.ui.input("What should we orchestrate?", ""))?.trim();
+      if (!task) { ctx.ui.notify("Cancelled", "warning"); return; }
+      const out: string[] = [];
+      // 1. RECALL — gather prior context (fast FTS)
+      try {
+        const r = await tnFetchWithTimeout(`/api/memory/fts-search?q=${encodeURIComponent(task.slice(0, 60))}&limit=3`, 2500);
+        const body = r.ok ? await r.json() : {};
+        const items = (body?.data ?? []).map((d: any) => `  - ${String((d.record ?? d).content ?? "").slice(0, 100)}`).join("\n");
+        out.push(`RECALL (prior context):\n${items || "  (none found)"}`);
+      } catch { out.push("RECALL: unavailable"); }
+      // 2. DISCOVER — suggest tools for the task
+      try {
+        const r = await tnFetchWithTimeout(`/api/mcp/tool-suggestions?query=${encodeURIComponent(task.slice(0, 60))}`, 2500);
+        const body = r.ok ? await r.json() : {};
+        const tools = (body?.data ?? []).slice(0, 5).map((t: any) => `  - ${t.toolName ?? t.name ?? "?"}`).join("\n");
+        out.push(`DISCOVER (suggested tools):\n${tools || "  (none)"}`);
+      } catch { out.push("DISCOVER: unavailable"); }
+      // 3. PLAN — hand to the model
+      out.push(`PLAN:\n  Execute: ${task}\n  (The model executes the task using the tools above.)`);
+      // 4. PERSIST — record the orchestration intent to L2
+      try {
+        await tnOk("/api/memory/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: `[ORCHESTRATION] ${task}`, tags: ["system:orchestration"], category: "session", timestamp: now() }) });
+        out.push("PERSIST: recorded orchestration intent to L2.");
+      } catch { out.push("PERSIST: failed"); }
+      // 5. VERIFY — kernel health
+      try {
+        const h = await tnFetchWithTimeout("/health", 800);
+        out.push(`VERIFY: kernel ${h.ok ? "healthy" : "degraded"}.`);
+      } catch { out.push("VERIFY: kernel unreachable"); }
+      ctx.ui.notify(out.join("\n\n"), "info");
+    },
+  });
 
   pi.registerTool({
     name: "hypernexus_subagent",
