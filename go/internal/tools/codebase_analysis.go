@@ -16,7 +16,7 @@ import (
 )
 
 // ensureGraphBuilt ensures that the global repository graph is populated.
-// Returns immediately if graph isn't ready — callers should use lightweight fallback.
+// Returns immediately if graph isn't ready â€” callers should use lightweight fallback.
 func ensureGraphBuilt(ctx context.Context) error {
 	if GlobalRepoGraph == nil {
 		return fmt.Errorf("GlobalRepoGraph is not initialized")
@@ -53,7 +53,7 @@ func HandleCodebaseSearch(ctx context.Context, args map[string]interface{}) (Too
 
 	if errBuild := ensureGraphBuilt(ctx); errBuild != nil {
 		// Fallback: lightweight grep-based symbol search
-		return lightweightSymbolSearch(query, limit)
+		return lightweightSymbolSearchCtx(ctx, query, limit)
 	}
 
 	var data interface{}
@@ -134,24 +134,45 @@ func filepathToSlash(path string) string {
 // lightweightSymbolSearch is a fallback when the repo graph build times out.
 // It does a simple regex scan of source files for symbol definitions.
 func lightweightSymbolSearch(query string, limit int) (ToolResponse, error) {
+	return lightweightSymbolSearchCtx(context.Background(), query, limit)
+}
+
+func lightweightSymbolSearchCtx(ctx context.Context, query string, limit int) (ToolResponse, error) {
 	symbolRe := regexp.MustCompile(`(?i)(?:func|function|class|type|interface|struct|def)\s+(\w*` + regexp.QuoteMeta(query) + `\w*)`)
 	cwd, _ := os.Getwd()
 	var results []map[string]interface{}
+	skipDirs := map[string]bool{
+		".git": true, "node_modules": true, ".next": true, ".next-dev": true,
+		".next-build": true, ".turbo": true, ".venv": true, "__pycache__": true,
+		"vendor": true, ".hypernexus": true, "dist": true, "build": true,
+		"target": true, ".cache": true, "lancedb": true, ".pi": true,
+		"coverage": true, "archive": true, "_disabled": true, "mcpimpl": true,
+		".tormentnexus": true, "bin": true,
+	}
+	examined := 0
+	const maxExamined = 2000 // hard cap: broad queries must not walk the whole tree
 	_ = filepath.Walk(cwd, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() || len(results) >= limit {
+		if err != nil {
 			return nil
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if info.IsDir() {
+			if skipDirs[info.Name()] {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if len(results) >= limit || examined >= maxExamined {
+			return filepath.SkipAll
 		}
 		name := info.Name()
 		ext := filepath.Ext(name)
 		if ext != ".go" && ext != ".ts" && ext != ".js" && ext != ".py" {
 			return nil
 		}
-		// Skip heavy directories
-		for _, skip := range []string{"node_modules", ".git", "_disabled", "archive", "mcpimpl", "vendor"} {
-			if strings.Contains(path, string(os.PathSeparator)+skip+string(os.PathSeparator)) {
-				return nil
-			}
-		}
+		examined++
 		f, openErr := os.Open(path)
 		if openErr != nil {
 			return nil

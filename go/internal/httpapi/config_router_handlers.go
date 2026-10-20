@@ -88,8 +88,9 @@ func (s *Server) handleConfigUpsert(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.upsert", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.upsert"}})
+	var upstreamData104 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.upsert", payload, &upstreamData104); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData104, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.upsert"}})
 		return
 	}
 	key := fmt.Sprint(payload["key"])
@@ -108,8 +109,9 @@ func (s *Server) handleConfigUpsert(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleConfigDelete(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.delete", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.delete"}})
+	var upstreamData105 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.delete", payload, &upstreamData105); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData105, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.delete"}})
 		return
 	}
 	key := fmt.Sprint(payload["key"])
@@ -133,8 +135,9 @@ func (s *Server) handleConfigUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.update", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.update"}})
+	var upstreamData106 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "config.update", payload, &upstreamData106); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData106, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "config.update"}})
 		return
 	}
 	key := fmt.Sprint(payload["key"])
@@ -501,8 +504,9 @@ func (s *Server) handleConfigScalarSetFallback(w http.ResponseWriter, r *http.Re
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), procedure, payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": procedure}})
+	var upstreamData107 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), procedure, payload, &upstreamData107); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData107, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": procedure}})
 		return
 	}
 	value := fmt.Sprint(payload["value"])

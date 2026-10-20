@@ -1,7 +1,24 @@
-﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.17)
+﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.18)
 
-## Status: COMPLETE & VERIFIED (2026-10-19/20, four sessions)
-Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.17** (memory-store hardening included). Plugin manifest **1.0.17**.
+## Status: COMPLETE & VERIFIED (2026-10-19/20, five sessions)
+Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.18**.
+
+## Session 5 (v1.0.18) — kernel-killing race + bridge payloads + schema authority
+### VERIFIED: full Go suites + 293 battery assertions
+- **Go suites ALL GREEN (first time)**: `internal/httpapi` (full, 92s), `internal/tools`, `internal/memorystore`, `internal/repograph` — includes 6 new regression tests
+- Batteries: plugin 120 · E2E 11 · MCP tools 23 · MCP sweep 54 · core-noext 18 · mimo 51 · mimo TUI 16
+
+### Session-5 headline fixes
+1. **THE RECURRING KERNEL-DEATH MYSTERY SOLVED**: `repograph.Build` published the Nodes map after pass 1 while pass 2 kept writing it → readers (`SearchSymbols` etc.) hit `fatal error: concurrent map iteration and map write` — an UNRECOVERABLE runtime fatal (not a panic — recover() can't help). Triggered whenever code-search overlapped a graph build (sweeps, parallel battery runs). Fixed: single atomic publish at end of Build; resolvers thread the in-build `*Graph` instead of reading `rgs.graph`. Regression test `graph_race_test.go`. NOTE: `-race` needs cgo (unavailable here) — the fatal reproduces without it anyway
+2. **Bridge payloads discarded**: 32 handlers did `callUpstreamJSON(..., new(any))` and dropped the decoded result — every upstream-bridged route returned `{success:true, bridge}` with NO `data`. Mechanical fix (var + `&var` + `"data"` in response) across 5 files. Root cause found via `TestAutonomyBridgeRoutes` expecting `"high"` from the stub
+3. **Schema authority**: MCP inventory cache entries shadowed Go schemas (first-wins merge); `mergeAccessoryTools` now lets `tools.NativeToolMeta` override schema/description in a final pass + 22 catalog entries added. Only genuinely no-arg tools show empty schemas now
+4. **`lightweightSymbolSearch` unbounded walk** (codebase-search fallback): no growing skip list, no cap, no ctx → 90s hangs. Now skipDirs + 2000-file cap + ctx-aware
+5. Stale workflow test (built-in workflows seed the engine — `builtins.go`) updated; sweep readiness gate added (kernel boot is 15s+ on saturated boxes)
+
+### Multi-agent ops (2-core box at 100% CPU)
+- `jules-autopilot` + `Tabby` + the pi-agent's own kernel test loops run concurrently — expect load-induced timeouts; budgets: sweep 90s/call + readiness gate, e2e 10s poll
+- The kernel gets restarted by sibling agents and a watchdog mid-run — always re-check health before trusting battery results
+- **Go trap**: Set-Content -Encoding utf8 writes BOM — auto-strip after any PS string edit (script now checks bytes 239,187,191)
 
 ## Session 4 (v1.0.17) — full stdio↔router parity + memory-store hardening
 ### COMPLETE TEST MATRIX: 293/293 ALL GREEN (7 batteries)

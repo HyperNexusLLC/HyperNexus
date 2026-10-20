@@ -16,6 +16,21 @@
 const BASE = "http://127.0.0.1:7778";
 const TMP = process.env.TEMP || process.env.TMP || ".";
 
+// Readiness gate: kernel boot can take 15s+ on a saturated box; never race it.
+for (let i = 0; i < 60; i++) {
+  try {
+    const r = await fetch(`${BASE}/health`, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) break;
+  } catch {
+    /* retry */
+  }
+  await new Promise((res) => setTimeout(res, 2000));
+  if (i === 59) {
+    console.error("kernel never became ready");
+    process.exit(1);
+  }
+}
+
 // Never auto-invoke: destructive, externally mutating, or UI-automating.
 const SKIP = new Map([
   ["kill_process", "destructive: kills processes"],
@@ -121,7 +136,7 @@ function fillArgs(schema) {
 
 async function callTool(name, args) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 40000);
+  const timer = setTimeout(() => ctrl.abort(), 90000); // generous: shared 2-core box runs sibling autopilot agents
   try {
     const r = await fetch(`${BASE}/api/agent/tool`, {
       method: "POST",

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.18] - 2026-10-20
+
+### Fixed
+- **Kernel-killing data race (the recurring "kernel dies mid-battery" mystery)** — `RepoGraphService.Build` published the Nodes map after pass 1 while pass 2 kept writing it, racing `SearchSymbols`/`FindReferences` readers into `fatal error: concurrent map iteration and map write` (an UNRECOVERABLE runtime fatal that kills the process instantly). The graph is now published atomically after both passes; import resolvers thread the in-build graph instead of the shared pointer. Regression test: `go/internal/repograph/graph_race_test.go` (concurrent build + search hammering)
+- **Upstream bridge payloads silently discarded** — 32 bridge-success handlers called `callUpstreamJSON(..., new(any))` and threw the decoded result away, returning empty success envelopes on every upstream-bridged route (autonomy, config, council, settings, workflow, api-keys, UI-helper…). All now decode into a real value and return `data` (fixes 7 failing BridgeRoutes test groups)
+- **Tool schema authority** — stale MCP inventory-cache entries shadowed correct argument schemas (first-wins merge); the Go-native catalog now overrides schemas/descriptions in every merge pass, and 22 missing catalog entries were added. All arg-taking tools expose real schemas on `/api/mcp/tools`
+- **`lightweightSymbolSearch` unbounded repo walk** — the codebase-search fallback walked the entire tree with no skip list growth, no cap, and no context checks (90s+ hangs under load); now skips build/cache dirs, caps at 2000 files, honors ctx
+- **Stale workflow test** — `TestWorkflowReadRoutesFallBackToEngineZeroState` assumed an empty engine, but built-in workflows (`go/internal/workflow/builtins.go`) seed it; renamed + per-case status/needles
+
+### Added
+- `go/internal/httpapi/agent_memory_local_test.go` — 5 tests locking in memory-store durability (salvage merge/dedupe, garbage rejection, corrupt-file self-heal to 200, atomic write leaves no `.tmp`, delete keeps store valid)
+- `go/internal/repograph/graph_race_test.go` — concurrent Build+Search regression
+- Sweep readiness gate (never race a 15s+ kernel boot) and 90s per-call tolerance for saturated shared boxes
+
+### Verified
+- **Go suites green**: `internal/httpapi` (full), `internal/tools`, `internal/memorystore`, `internal/repograph` — first fully green kernel test run of this series
+- **Batteries green (293)**: OpenCode plugin 120 · E2E 11 · MCP tools 23 · MCP sweep 54 (53 pass + 1 graceful) · core-noext 18 · mimo 51 · mimo TUI 16
+
 ## [1.0.17] - 2026-10-20
 
 ### Added

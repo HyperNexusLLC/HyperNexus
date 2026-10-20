@@ -8878,7 +8878,7 @@ func TestGraphFileReadsFallBackToEmptyLists(t *testing.T) {
 	}
 }
 
-func TestWorkflowReadRoutesFallBackToEngineZeroState(t *testing.T) {
+func TestWorkflowReadRoutesFallBackToLocalEngine(t *testing.T) {
 	t.Setenv("HYPERNEXUS_TRPC_UPSTREAM", "http://127.0.0.1:1/trpc")
 
 	cfg := config.Default()
@@ -8892,28 +8892,33 @@ func TestWorkflowReadRoutesFallBackToEngineZeroState(t *testing.T) {
 		name      string
 		path      string
 		procedure string
+		status    int
 		contains  []string
 	}{
-		{name: "list", path: "/api/workflows", procedure: "workflow.list", contains: []string{`"data":[]`}},
-		{name: "graph", path: "/api/workflows/graph?workflowId=wf-1", procedure: "workflow.getGraph", contains: []string{`"nodes":[]`, `"edges":[]`}},
-		{name: "executions", path: "/api/workflows/executions", procedure: "workflow.listExecutions", contains: []string{`"data":[]`}},
-		{name: "execution", path: "/api/workflows/execution?executionId=exec-1", procedure: "workflow.getExecution", contains: []string{`"data":null`}},
-		{name: "history", path: "/api/workflows/history?executionId=exec-1", procedure: "workflow.getHistory", contains: []string{`"data":[]`}},
+		// The local engine seeds built-in workflows (go/internal/workflow/builtins.go),
+		// so list falls back to 200 with data rather than a zero state.
+		{name: "list", path: "/api/workflows", procedure: "workflow.list", status: http.StatusOK, contains: []string{`"id":`}},
+		{name: "graph", path: "/api/workflows/graph?workflowId=wf-1", procedure: "workflow.getGraph", status: http.StatusServiceUnavailable, contains: []string{`"nodes":[]`, `"edges":[]`}},
+		{name: "executions", path: "/api/workflows/executions", procedure: "workflow.listExecutions", status: http.StatusServiceUnavailable, contains: []string{`"data":[]`}},
+		{name: "execution", path: "/api/workflows/execution?executionId=exec-1", procedure: "workflow.getExecution", status: http.StatusServiceUnavailable, contains: []string{`"data":null`}},
+		{name: "history", path: "/api/workflows/history?executionId=exec-1", procedure: "workflow.getHistory", status: http.StatusServiceUnavailable, contains: []string{`"data":[]`}},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			server.Handler().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, tc.path, nil))
-			if recorder.Code != http.StatusServiceUnavailable {
-				t.Fatalf("expected %s 503, got %d with body %s", tc.name, recorder.Code, recorder.Body.String())
+			if recorder.Code != tc.status {
+				t.Fatalf("expected %s %d, got %d with body %s", tc.name, tc.status, recorder.Code, recorder.Body.String())
 			}
 
 			baseNeedles := []string{
-				`"success":false`,
 				`"fallback":"go-local-workflow"`,
 				`"procedure":"` + tc.procedure + `"`,
-				`workflow engine is not initialized`,
+			}
+			if tc.status == http.StatusServiceUnavailable {
+				// Engine-zero-state routes report why they degraded.
+				baseNeedles = append(baseNeedles, `"success":false`, `workflow engine is not initialized`)
 			}
 			for _, needle := range append(baseNeedles, tc.contains...) {
 				if !strings.Contains(recorder.Body.String(), needle) {

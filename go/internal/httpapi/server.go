@@ -6944,8 +6944,9 @@ func (s *Server) handleSettingsUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.update", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.update"}})
+	var upstreamData1 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.update", payload, &upstreamData1); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData1, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.update"}})
 		return
 	}
 	configPath := filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "config.json")
@@ -6999,8 +7000,9 @@ func (s *Server) handleSettingsTestConnection(w http.ResponseWriter, r *http.Req
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.testConnection", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.testConnection"}})
+	var upstreamData2 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.testConnection", payload, &upstreamData2); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData2, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.testConnection"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -7078,8 +7080,9 @@ func (s *Server) handleSettingsProviderKey(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.updateProviderKey", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.updateProviderKey"}})
+	var upstreamData3 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.updateProviderKey", payload, &upstreamData3); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData3, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.updateProviderKey"}})
 		return
 	}
 	provider := fmt.Sprint(payload["provider"])
@@ -8124,8 +8127,9 @@ func (s *Server) handleWorkflowStart(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.start", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.start"}})
+	var upstreamData4 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.start", payload, &upstreamData4); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData4, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.start"}})
 		return
 	}
 	id := strings.TrimSpace(fmt.Sprint(payload["id"]))
@@ -8240,8 +8244,9 @@ func (s *Server) handleWorkflowHistory(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleWorkflowResume(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.resume", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.resume"}})
+	var upstreamData5 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.resume", payload, &upstreamData5); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData5, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.resume"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -8254,8 +8259,9 @@ func (s *Server) handleWorkflowResume(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleWorkflowPause(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.pause", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.pause"}})
+	var upstreamData6 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.pause", payload, &upstreamData6); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData6, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.pause"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -8587,8 +8593,9 @@ func (s *Server) handleAPIKeysCreate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.create", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.create"}})
+	var upstreamData7 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.create", payload, &upstreamData7); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData7, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.create"}})
 		return
 	}
 	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
@@ -8615,8 +8622,9 @@ func (s *Server) handleAPIKeysUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.update", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.update"}})
+	var upstreamData8 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.update", payload, &upstreamData8); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData8, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.update"}})
 		return
 	}
 	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
@@ -8638,8 +8646,9 @@ func (s *Server) handleAPIKeysUpdate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAPIKeysDelete(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.delete", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.delete"}})
+	var upstreamData9 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.delete", payload, &upstreamData9); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData9, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.delete"}})
 		return
 	}
 	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
@@ -8660,8 +8669,9 @@ func (s *Server) handleAPIKeysDelete(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAPIKeysValidate(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.validate", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.validate"}})
+	var upstreamData10 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.validate", payload, &upstreamData10); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData10, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.validate"}})
 		return
 	}
 	key := fmt.Sprint(payload["key"])
@@ -10686,8 +10696,9 @@ func (s *Server) localCodeModeSet(enabled bool) {
 func (s *Server) handleCodeModeEnable(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.enable", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.enable"}})
+	var upstreamData11 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.enable", payload, &upstreamData11); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData11, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.enable"}})
 		return
 	}
 	s.localCodeModeSet(true)
@@ -10701,8 +10712,9 @@ func (s *Server) handleCodeModeEnable(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCodeModeDisable(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.disable", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.disable"}})
+	var upstreamData12 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.disable", payload, &upstreamData12); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData12, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.disable"}})
 		return
 	}
 	s.localCodeModeSet(false)
@@ -10719,8 +10731,9 @@ func (s *Server) handleCodeModeExecute(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.execute", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.execute"}})
+	var upstreamData13 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.execute", payload, &upstreamData13); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData13, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.execute"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -10942,8 +10955,9 @@ func (s *Server) handlePlanMode(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.setMode", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.setMode"}})
+	var upstreamData14 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.setMode", payload, &upstreamData14); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData14, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.setMode"}})
 		return
 	}
 	mode := fmt.Sprint(payload["mode"])
@@ -10987,8 +11001,9 @@ func (s *Server) handlePlanApproveDiff(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.approveDiff", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.approveDiff"}})
+	var upstreamData15 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.approveDiff", payload, &upstreamData15); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData15, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.approveDiff"}})
 		return
 	}
 	id := fmt.Sprint(payload["id"])
@@ -11006,8 +11021,9 @@ func (s *Server) handlePlanRejectDiff(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rejectDiff", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rejectDiff"}})
+	var upstreamData16 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rejectDiff", payload, &upstreamData16); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData16, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rejectDiff"}})
 		return
 	}
 	id := fmt.Sprint(payload["id"])
@@ -11022,8 +11038,9 @@ func (s *Server) handlePlanRejectDiff(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePlanApplyAll(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.applyAll", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.applyAll"}})
+	var upstreamData17 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.applyAll", payload, &upstreamData17); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData17, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.applyAll"}})
 		return
 	}
 	count := s.localPlanSetAllStatus("pending", "applied")
@@ -11092,8 +11109,9 @@ func (s *Server) handlePlanCreateCheckpoint(w http.ResponseWriter, r *http.Reque
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.createCheckpoint", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.createCheckpoint"}})
+	var upstreamData18 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.createCheckpoint", payload, &upstreamData18); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData18, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.createCheckpoint"}})
 		return
 	}
 	cp := s.localPlanCreateCheckpoint(payload)
@@ -11107,8 +11125,9 @@ func (s *Server) handlePlanCreateCheckpoint(w http.ResponseWriter, r *http.Reque
 func (s *Server) handlePlanRollback(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rollback", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rollback"}})
+	var upstreamData19 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rollback", payload, &upstreamData19); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData19, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rollback"}})
 		return
 	}
 	count := s.localPlanSetAllStatus("applied", "pending")
@@ -11122,8 +11141,9 @@ func (s *Server) handlePlanRollback(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePlanClear(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.clear", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.clear"}})
+	var upstreamData20 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.clear", payload, &upstreamData20); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData20, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.clear"}})
 		return
 	}
 	s.localPlanClear()

@@ -46,8 +46,9 @@ func (s *Server) handleBrowserClosePage(w http.ResponseWriter, r *http.Request) 
 func (s *Server) handleBrowserCloseAll(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "browser.closeAll", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "browser.closeAll"}})
+	var upstreamData103 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "browser.closeAll", payload, &upstreamData103); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData103, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "browser.closeAll"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{

@@ -54,8 +54,9 @@ func (s *Server) handleAutonomySetLevel(w http.ResponseWriter, r *http.Request) 
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "autonomy.setLevel", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "autonomy.setLevel"}})
+	var upstreamData101 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "autonomy.setLevel", payload, &upstreamData101); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData101, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "autonomy.setLevel"}})
 		return
 	}
 	level := fmt.Sprint(payload["level"])
@@ -72,8 +73,9 @@ func (s *Server) handleAutonomySetLevel(w http.ResponseWriter, r *http.Request) 
 func (s *Server) handleAutonomyActivateFull(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "autonomy.activateFullAutonomy", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "autonomy.activateFullAutonomy"}})
+	var upstreamData102 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "autonomy.activateFullAutonomy", payload, &upstreamData102); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData102, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "autonomy.activateFullAutonomy"}})
 		return
 	}
 	state := s.localAutonomyGet()

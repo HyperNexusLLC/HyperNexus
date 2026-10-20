@@ -907,6 +907,17 @@ func (s *Server) mergeAccessoryTools(toolsList []map[string]any) []map[string]an
 				continue
 			}
 			seen[name] = true
+			// The Go-native catalog is authoritative for schema/description of
+			// tools it knows: inventory-cache entries can be stale and would
+			// otherwise shadow correct argument schemas (first-wins dedupe).
+			if meta, hasMeta := tools.NativeToolMeta(name); hasMeta {
+				if meta.Schema != nil {
+					t["inputSchema"] = map[string]any(meta.Schema)
+				}
+				if desc, _ := t["description"].(string); strings.TrimSpace(desc) == "" && meta.Description != "" {
+					t["description"] = meta.Description
+				}
+			}
 			uniqueTools = append(uniqueTools, t)
 		} else {
 			uniqueTools = append(uniqueTools, t)
@@ -975,6 +986,22 @@ func (s *Server) mergeAccessoryTools(toolsList []map[string]any) []map[string]an
 				"source":      "native",
 			}
 			toolsList = append(toolsList, toolMap)
+		}
+	}
+
+	// Final pass: the Go-native catalog is authoritative for schemas of the
+	// tools it defines, regardless of which merge step contributed the entry
+	// (stale inventory caches and root-registry defaults may carry empty ones).
+	for _, t := range toolsList {
+		name, ok := t["name"].(string)
+		if !ok {
+			continue
+		}
+		if meta, hasMeta := tools.NativeToolMeta(name); hasMeta && meta.Schema != nil {
+			t["inputSchema"] = map[string]any(meta.Schema)
+			if desc, _ := t["description"].(string); strings.TrimSpace(desc) == "" && meta.Description != "" {
+				t["description"] = meta.Description
+			}
 		}
 	}
 
