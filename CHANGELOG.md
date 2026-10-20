@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.17] - 2026-10-20
+
+### Added
+- **Complete stdio↔router tool parity** — `go/internal/tools/console_parity.go` ports the 10 stdio-only tools (`billing_status`, `system_status`, `list_accessory_tools`, `update_supervisor_settings`, `click_chat_button`, `click_action_buttons`, `set_chat_input`, `submit_chat_input`, `simulate_input`, `advance_chat`) to the HTTP tool router; all 58 advertised MCP tools now work through both surfaces
+- **`click_chat_button` actually implemented** — it was advertised in `tools/list` on stdio but had NO dispatch case (fell through to "Unknown tool"); now a real UIAutomation button Invoke on both surfaces
+- **Sweep parity assertions** — `bin/test-mcp-sweep.mjs` verifies every stdio tool exists in the router inventory and safely exercises the newly-portable tools (SendKeys tools remain call-skipped: input injection is verified via parity + listing only)
+
+### Fixed
+- **Memory store corruption/torn reads** — `memories.json` writes were non-atomic `os.WriteFile`; concurrent read-during-write produced torn JSON that 503'd the ENTIRE memory subsystem (`invalid character '"' after top-level value`). Now: atomic temp+rename writes, an in-process mutex around every read-modify-write, and a **self-healing loader** that salvages balanced JSON documents instead of failing. Repaired the live store with zero data loss (1872 records; original preserved as `memories.json.corrupt.bak`)
+- **Supervisor settings drift** — `get_supervisor_settings` on the router returned a hardcoded map while stdio read `~/.hypernexus/supervisor-settings.json`; the router version is now file-backed with identical defaults
+- **Budget flakes under multi-agent load** — `memory_relate` now uses the slow-write budget; e2e synthetic-persistence poll widened to 10s; sweep tool timeout raised to 40s
+
+### Optimized
+- **Compact JSON memory writes** — the store is rewritten on every mutation; dropping indent whitespace cuts CPU/IO under write storms
+- **Batched audit flush** — N plugin events now coalesce into ONE observation write per flush (was 1 write per event), cadence 2s→4s; materially reduces kernel load when several harness plugins run concurrently
+
+### Verified (293 assertions green across 7 batteries)
+- OpenCode plugin 120/120 · OpenCode E2E 11/11 · MCP tools 23/23 · MCP sweep 54/54 (incl. parity) · core-without-extension 18/18 · mimo extension 51/51 · mimo TUI 16/16
+
 ## [1.0.16] - 2026-10-20
 
 ### Added

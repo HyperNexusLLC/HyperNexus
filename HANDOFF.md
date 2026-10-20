@@ -1,7 +1,26 @@
-﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.16)
+﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.17)
 
-## Status: COMPLETE & VERIFIED (2026-10-19/20, three sessions)
-Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.14**. Plugin: **v1.3.x** manifest **1.0.16**.
+## Status: COMPLETE & VERIFIED (2026-10-19/20, four sessions)
+Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.17** (memory-store hardening included). Plugin manifest **1.0.17**.
+
+## Session 4 (v1.0.17) — full stdio↔router parity + memory-store hardening
+### COMPLETE TEST MATRIX: 293/293 ALL GREEN (7 batteries)
+1. OpenCode plugin: **120/120**  2. OpenCode E2E (real service): **11/11**  3. MCP tools: **23/23**
+4. MCP sweep (incl. parity assertions): **54/54**  5. Core without extension: **18/18**
+6. MiMo extension: **51/51**  7. MiMo TUI: **16/16**
+
+### Session-4 changes
+- **Stdio↔router parity COMPLETE**: `go/internal/tools/console_parity.go` ports 10 stdio-only tools (billing_status, system_status, list_accessory_tools, update_supervisor_settings, click_chat_button, click_action_buttons, set_chat_input, submit_chat_input, simulate_input, advance_chat). All 58 advertised MCP tools work through BOTH surfaces; sweep asserts parity
+- **`click_chat_button` was advertised-but-unimplemented on stdio** (no dispatch case → "Unknown tool") — now a real UIAutomation Invoke on both surfaces
+- **MEMORY STORE CORRUPTION FIXED** (root cause of intermittent 503 storms across ALL harnesses): `memories.json` was written non-atomically; torn reads returned `invalid character '"' after top-level value` and 503'd the whole memory subsystem. Fixes: atomic temp+rename writes + in-process RMW mutex + self-healing salvage loader (merges balanced JSON docs on parse failure). Repaired live store: 1872 records, zero loss (backup: `.hypernexus/agent_memory/memories.json.corrupt.bak`)
+- **Write-storm optimization**: compact JSON (no indent) + plugin audit flush now batches N events into ONE observation write (cadence 4s). Each memories.json mutation rewrites the whole file — write amplification was melting the 2-core box
+- `get_supervisor_settings` router version now file-backed (was hardcoded map, drifted from stdio)
+- **MCP stale-connection recovery**: after killing hypernexus processes (kernel swaps) OpenCode holds a stale "exited 255" MCP state; `opencode service restart` clears it (config touch does NOT). The stdio server itself was healthy all along
+
+### Ops notes (2-core box at 100% CPU from sibling autopilot agents)
+- `jules-autopilot` was burning 30k+ CPU-seconds; expect load-induced latency in ALL tests. Budgets hardened: memory_relate → slow-write budget, e2e poll 10s, sweep call timeout 40s
+- Kernel startup under full load takes 10-40s before binding 7778 — don't declare it dead early
+- **Swap trap (bit me twice)**: if `Copy-Item` fails on a locked exe, do NOT `Remove-Item` the staged `hypernexus-new.exe` afterwards — the rebuild costs minutes. Order: kill all `hypernexus` processes → verify gone → copy → start
 
 ## Session 3 (v1.0.16) — knowledge-graph writes + REAL e2e + concurrency fixes
 ### COMPLETE TEST MATRIX: 285/285 ALL GREEN (7 batteries)

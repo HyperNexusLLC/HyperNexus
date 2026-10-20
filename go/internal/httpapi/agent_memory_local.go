@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -31,6 +32,67 @@ func (s *Server) localAgentMemoryFilePath() string {
 	return filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "agent_memory", "memories.json")
 }
 
+// salvageAgentMemorySnapshot extracts every balanced top-level JSON object from
+// potentially torn/concatenated bytes and merges their memory arrays.
+func salvageAgentMemorySnapshot(raw []byte) (localAgentMemorySnapshot, error) {
+	merged := localAgentMemorySnapshot{Memories: []localAgentMemoryRecord{}}
+	seen := map[string]bool{}
+	docs := 0
+	depth := 0
+	start := -1
+	inStr := false
+	esc := false
+	for i := 0; i < len(raw); i++ {
+		c := raw[i]
+		if inStr {
+			if esc {
+				esc = false
+			} else if c == '\\' {
+				esc = true
+			} else if c == '"' {
+				inStr = false
+			}
+			continue
+		}
+		switch c {
+		case '"':
+			inStr = true
+		case '{':
+			if depth == 0 {
+				start = i
+			}
+			depth++
+		case '}':
+			depth--
+			if depth == 0 && start >= 0 {
+				var snap localAgentMemorySnapshot
+				if json.Unmarshal(raw[start:i+1], &snap) == nil {
+					docs++
+					for _, m := range snap.Memories {
+						if m.ID != "" && seen[m.ID] {
+							continue
+						}
+						if m.ID != "" {
+							seen[m.ID] = true
+						}
+						merged.Memories = append(merged.Memories, m)
+					}
+				}
+				start = -1
+			}
+		}
+	}
+	if docs == 0 {
+		return merged, fmt.Errorf("no salvageable documents")
+	}
+	return merged, nil
+}
+
+// agentMemoryMu serializes in-process read-modify-write cycles on memories.json.
+// Cross-process safety comes from the atomic temp+rename write below (readers only
+// ever observe a complete document; a torn read can no longer corrupt the store).
+var agentMemoryMu sync.Mutex
+
 func (s *Server) localWriteAgentMemories(records []localAgentMemoryRecord) error {
 	path := s.localAgentMemoryFilePath()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -42,11 +104,18 @@ func (s *Server) localWriteAgentMemories(records []localAgentMemoryRecord) error
 		"savedAt":  time.Now().UTC().Format(time.RFC3339Nano),
 		"memories": records,
 	}
-	raw, err := json.MarshalIndent(snapshot, "", "  ")
+	raw, err := json.Marshal(snapshot)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, raw, 0o644)
+	// Atomic replace: write a temp file in the same directory, then rename.
+	// Compact JSON (not indented): this store is rewritten on every mutation and
+	// under multi-agent load the indent whitespace is pure CPU/IO waste.
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 func localNewAgentMemoryID() string {
@@ -215,6 +284,8 @@ func (s *Server) localAddAgentMemoryEntry(content, memoryType, namespace string,
 		return localAgentMemoryRecord{}, fmt.Errorf("missing memory content")
 	}
 
+	agentMemoryMu.Lock()
+	defer agentMemoryMu.Unlock()
 	records, err := s.localAgentMemories()
 	if err != nil {
 		return localAgentMemoryRecord{}, err
@@ -252,6 +323,8 @@ func (s *Server) localDeleteAgentMemory(id string) (bool, error) {
 		return false, fmt.Errorf("missing memory id")
 	}
 
+	agentMemoryMu.Lock()
+	defer agentMemoryMu.Unlock()
 	records, err := s.localAgentMemories()
 	if err != nil {
 		return false, err
@@ -276,6 +349,8 @@ func (s *Server) localDeleteAgentMemory(id string) (bool, error) {
 }
 
 func (s *Server) localClearSessionAgentMemories() (int, error) {
+	agentMemoryMu.Lock()
+	defer agentMemoryMu.Unlock()
 	records, err := s.localAgentMemories()
 	if err != nil {
 		return 0, err

@@ -563,6 +563,8 @@ func (s *MCPServer) callTool(name string, args map[string]any) ToolResult {
 		return submitChatInput(args)
 	case "click_action_buttons":
 		return clickActionButtons(args)
+	case "click_chat_button":
+		return clickChatButton(args)
 	case "advance_chat":
 		return advanceChat(args)
 	case "mcp_list_servers":
@@ -767,6 +769,36 @@ func advanceChat(args map[string]any) ToolResult {
 		parts = append(parts, fmt.Sprintf("bump: %s", bumpText))
 	}
 	return ToolResult{Content: []TextContent{{Type: "text", Text: fmt.Sprintf("Advance chat: %s", strings.Join(parts, ", "))}}}
+}
+
+// clickChatButton — UIAutomation Invoke on a named button in the target window.
+// (Previously advertised but missing from this dispatch table, so it fell
+// through to the default branch and returned "Unknown tool".)
+func clickChatButton(args map[string]any) ToolResult {
+	label, _ := args["label"].(string)
+	if label == "" {
+		return ToolResult{Content: []TextContent{{Type: "text", Text: "label is required"}}}
+	}
+	windowTitle, _ := args["windowTitle"].(string)
+	escLabel := strings.ReplaceAll(label, "'", "''")
+	escWindow := strings.ReplaceAll(windowTitle, "'", "''")
+	script := fmt.Sprintf(`
+Add-Type -AssemblyName UIAutomationClient
+$root = [System.Windows.Automation.AutomationElement]::RootElement
+$win = $root
+if ('%s') {
+  $p = Get-Process | Where-Object { $_.MainWindowTitle -like '*%s*' } | Select-Object -First 1
+  if ($p) { $winCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $p.Id); $win = $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $winCond) }
+}
+$cond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, '%s')
+$el = $win.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $cond)
+if (!$el) { 'Button not found: %s'; return }
+$inv = $el.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+$inv.Invoke()
+'Clicked: %s'
+`, escWindow, escWindow, escLabel, escLabel, escLabel)
+	out := runPowershell(script)
+	return ToolResult{Content: []TextContent{{Type: "text", Text: out}}}
 }
 
 // ─── TN Kernel API Tools ───

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * HyperNexus OpenCode Plugin â€” V2 native + V1 compatible
+ * HyperNexus OpenCode Plugin Ã¢â‚¬â€ V2 native + V1 compatible
  * =======================================================
  *
- * Full bridge: OpenCode â†” HyperNexus kernel (default http://127.0.0.1:7778).
+ * Full bridge: OpenCode Ã¢â€ â€ HyperNexus kernel (default http://127.0.0.1:7778).
  *
  * Surfaces
  * --------
@@ -23,7 +23,7 @@
  * Contract (see addons/shared/hypernexus.manifest.json)
  * -----------------------------------------------------
  *  - Every kernel call is budgeted (AbortSignal.timeout) and NEVER throws.
- *  - Hot-path hooks use FTS-only search (â‰¤400ms). Never vector search on a turn path.
+ *  - Hot-path hooks use FTS-only search (Ã¢â€°Â¤400ms). Never vector search on a turn path.
  *  - Per-event side effects are fire-and-forget.
  *  - Response shapes are normalized here so callers never see kernel shape drift.
  */
@@ -32,13 +32,13 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-// â”€â”€â”€ Identity & budgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Identity & budgets Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export const PLUGIN_ID = "hypernexus";
 export const PLUGIN_VERSION = "1.2.0";
 
 const DEFAULT_BASE = (process.env.HYPERNEXUS_URL || "http://127.0.0.1:7778").replace(/\/+$/, "");
-/** Active kernel base â€” updated by setup()/server() so tool executors honor options.baseUrl. */
+/** Active kernel base Ã¢â‚¬â€ updated by setup()/server() so tool executors honor options.baseUrl. */
 let RUNTIME_BASE = DEFAULT_BASE;
 
 const HOOK_BUDGET = Number(process.env.HYPERNEXUS_HOOK_BUDGET_MS || 400); // hot-path hooks
@@ -52,7 +52,7 @@ const SUG_TTL = 60_000;
 const MAX_STORE_CHARS = 4000;
 const MAX_SYSTEM_BLOCK = 1400; // chars of injected context per turn
 
-// â”€â”€â”€ Small utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Small utilities Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 function hash(str) {
   let h = 5381;
@@ -62,7 +62,7 @@ function hash(str) {
 
 function clamp(text, n) {
   const s = String(text ?? "");
-  return s.length > n ? `${s.slice(0, n)}â€¦` : s;
+  return s.length > n ? `${s.slice(0, n)}Ã¢â‚¬Â¦` : s;
 }
 
 function isAbort(err) {
@@ -77,7 +77,7 @@ function tryJson(text) {
   }
 }
 
-// â”€â”€â”€ Kernel client (budgeted, never throws) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Kernel client (budgeted, never throws) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 /**
  * @returns {Promise<{ok:boolean, status:number, data:any, error?:string, ms:number}>}
@@ -120,7 +120,7 @@ async function kernel(endpoint, { method = "GET", body, budget = FAST_BUDGET, si
   }
 }
 
-/** Unwrap the kernel envelope: {data:{data:â€¦}} / {data:â€¦} / raw â†’ payload. */
+/** Unwrap the kernel envelope: {data:{data:Ã¢â‚¬Â¦}} / {data:Ã¢â‚¬Â¦} / raw Ã¢â€ â€™ payload. */
 function unwrap(res) {
   let d = res?.data;
   if (d && typeof d === "object" && !Array.isArray(d) && "data" in d) d = d.data;
@@ -137,7 +137,7 @@ function asList(payload) {
   return [];
 }
 
-/** fts-search wraps rows as {record:{â€¦}} â€” normalize at the adapter boundary. */
+/** fts-search wraps rows as {record:{Ã¢â‚¬Â¦}} Ã¢â‚¬â€ normalize at the adapter boundary. */
 function recOf(x) {
   return x && typeof x === "object" && x.record && typeof x.record === "object" ? x.record : x;
 }
@@ -171,13 +171,13 @@ function fmtMemory(m, max = 220) {
   return `- ${id ? `[${id}] ` : ""}${clamp(content.replace(/\s+/g, " "), max)}${tags.length ? ` [${tags.slice(0, 4).join(", ")}]` : ""}`;
 }
 
-// â”€â”€â”€ Caches & fire-and-forget infrastructure â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Caches & fire-and-forget infrastructure Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const caches = {
   status: { at: 0, value: null },
   suggestions: { at: 0, value: null },
-  mem: new Map(), // query-hash â†’ {at, value}
-  fedAt: new Map(), // session â†’ ts of last suggestion feed
+  mem: new Map(), // query-hash Ã¢â€ â€™ {at, value}
+  fedAt: new Map(), // session Ã¢â€ â€™ ts of last suggestion feed
   booted: new Set(), // sessions already primed
 };
 
@@ -192,7 +192,7 @@ function cacheSet(cache, key, value) {
   else cache.value = value, (cache.at = Date.now());
 }
 
-// Batched observation/audit queue â†’ kernel (fire-and-forget, never on turn path)
+// Batched observation/audit queue Ã¢â€ â€™ kernel (fire-and-forget, never on turn path)
 const auditQueue = [];
 let auditTimer = null;
 
@@ -218,7 +218,7 @@ function audit(entry) {
       auditTimer = setTimeout(() => {
         auditTimer = null;
         void flushAudit();
-      }, 2000);
+      }, 4000);
       auditTimer.unref?.();
     }
   } catch {
@@ -227,42 +227,58 @@ function audit(entry) {
 }
 
 async function flushAudit() {
-  const batch = auditQueue.splice(0, 20);
+  const batch = auditQueue.splice(0, 40);
   if (batch.length === 0) return;
-  await Promise.all(
-    batch.map(async (entry) => {
-      const r = await kernel("/api/memory/observations/record", {
-        method: "POST",
-        body: entry,
-        budget: FAST_BUDGET,
-      });
-      if (!r.ok) {
-        // Fallback: facts/add keeps the trail even when observations are unavailable.
-        await kernel("/api/memory/facts/add", {
-          method: "POST",
-          body: {
-            content: entry.content || entry.title,
-            title: entry.title,
-            tags: ["client:opencode", `tool:${entry.toolName}`, entry.type],
-            namespace: "project",
-          },
-          budget: FAST_BUDGET,
-        });
-      }
-    })
-  );
+  // Coalesce the batch into ONE observation record: the store rewrites its whole
+  // file per write, so N events must cost 1 write, not N.
+  const filesModified = [...new Set(batch.flatMap((e) => e.filesModified || []))].slice(0, 20);
+  const filesRead = [...new Set(batch.flatMap((e) => e.filesRead || []))].slice(0, 20);
+  const types = [...new Set(batch.map((e) => e.type))];
+  const combined = {
+    type: types.length === 1 ? types[0] : "progress",
+    title: `opencode-activity:${batch.length} events`,
+    content: batch.map((e) => `${e.title}: ${e.content}`).join("\n").slice(0, 2000),
+    narrative: clamp(`OpenCode plugin batched ${batch.length} events (${types.join("/")}).`, 600),
+    toolName: "opencode.batch",
+    concepts: ["opencode-activity"],
+    filesRead,
+    filesModified,
+    metadata: {
+      source: "opencode-plugin",
+      client: "opencode",
+      batch: batch.slice(0, 40).map((e) => ({ t: e.title, c: clamp(e.content, 120), ty: e.type, tm: e.toolName })),
+    },
+  };
+  const r = await kernel("/api/memory/observations/record", {
+    method: "POST",
+    body: combined,
+    budget: FAST_BUDGET,
+  });
+  if (!r.ok) {
+    // Fallback: facts/add keeps the trail even when observations are unavailable.
+    await kernel("/api/memory/facts/add", {
+      method: "POST",
+      body: {
+        content: combined.content || combined.title,
+        title: combined.title,
+        tags: ["client:opencode", "tool:opencode.batch", combined.type],
+        namespace: "project",
+      },
+      budget: FAST_BUDGET,
+    });
+  }
   if (auditQueue.length > 0 && !auditTimer) {
     auditTimer = setTimeout(() => {
       auditTimer = null;
       void flushAudit();
-    }, 2000);
+    }, 4000);
     auditTimer.unref?.();
   }
 }
 
-// â”€â”€â”€ Fast-context features (hot path) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Fast-context features (hot path) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
-/** True while the kernel is known-down (negative cache) â€” skips hot-path fetches. */
+/** True while the kernel is known-down (negative cache) Ã¢â‚¬â€ skips hot-path fetches. */
 function kernelKnownDown() {
   const st = caches.status.value;
   return !!st && st.ok === false && Date.now() - caches.status.at < SYS_TTL;
@@ -389,7 +405,7 @@ async function getStatus() {
   return value;
 }
 
-/** Build the compact per-turn system block (â‰¤ MAX_SYSTEM_BLOCK chars). */
+/** Build the compact per-turn system block (Ã¢â€°Â¤ MAX_SYSTEM_BLOCK chars). */
 async function buildSystemBlock(lastUserText) {
   const deadline = Date.now() + HOOK_BUDGET;
   const parts = [];
@@ -397,12 +413,12 @@ async function buildSystemBlock(lastUserText) {
     const st = await getStatus();
     if (st.ok) {
       parts.push(
-        `HyperNexus kernel v${st.version} online â€” ${st.mcp.connectedCount} MCP servers connected` +
+        `HyperNexus kernel v${st.version} online Ã¢â‚¬â€ ${st.mcp.connectedCount} MCP servers connected` +
           (st.tools ? `, ${st.tools} tools` : "") +
           `. Tools: hypernexus_memory_search, hypernexus_tool_search, hypernexus_context_harvest, hypernexus_suggest_tools.`
       );
     } else {
-      parts.push("HyperNexus kernel is offline â€” hypernexus_* tools will report degraded status; rely on local tools.");
+      parts.push("HyperNexus kernel is offline Ã¢â‚¬â€ hypernexus_* tools will report degraded status; rely on local tools.");
     }
     const [memories, suggestions] = await Promise.all([
       harvestFast(lastUserText, deadline, 3),
@@ -415,7 +431,7 @@ async function buildSystemBlock(lastUserText) {
       const lines = suggestions.slice(0, 3).map((s) => {
         const name = String(s?.name ?? s?.tool ?? s?.id ?? "").slice(0, 48);
         const why = clamp(String(s?.reason ?? s?.description ?? s?.summary ?? ""), 90);
-        return `- ${name}${why ? ` â€” ${why}` : ""}`;
+        return `- ${name}${why ? ` Ã¢â‚¬â€ ${why}` : ""}`;
       });
       if (lines.length) parts.push("Suggested tools for this conversation:\n" + lines.join("\n"));
     }
@@ -425,7 +441,7 @@ async function buildSystemBlock(lastUserText) {
   return clamp(parts.join("\n\n"), MAX_SYSTEM_BLOCK);
 }
 
-// â”€â”€â”€ Result persistence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Result persistence Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const storedHashes = new Set(); // skip storing identical results twice
 
@@ -456,7 +472,7 @@ function autoStoreResult(toolName, input, text) {
   });
 }
 
-// â”€â”€â”€ File-change observation capture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ File-change observation capture Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const FILE_WRITE_TOOLS = new Set(["edit", "multiedit", "write", "apply_search_replace", "notebookedit"]);
 const FILE_READ_TOOLS = new Set(["read", "grep", "glob", "ls", "list", "codebase_search"]);
@@ -505,7 +521,7 @@ function captureFileObservation(toolName, input) {
   return false;
 }
 
-// â”€â”€â”€ RBAC policy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RBAC policy Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const DANGEROUS = [
   /\brm\s+-[a-z]*r/i,
@@ -536,7 +552,7 @@ function rbacMode() {
   return m === "ask" || m === "deny" ? m : "audit";
 }
 
-// â”€â”€â”€ Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Tools Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const str = (description) => ({ type: "string", description });
 const int = (description, def) => ({ type: "number", description: `${description} (default ${def})` });
@@ -599,7 +615,7 @@ const TOOLS = [
   },
   {
     name: "memory_search",
-    description: "Keyword + semantic search across L2 memory (slower, best relevance). Use before re-deriving known answers.",
+    description: "Keyword + semantic search across L2 memory (slower, best relevance). Use for explicit lookups before re-deriving known answers; for hot loops use memory_fts_search instead.",
     input: {
       type: "object",
       properties: {
@@ -640,7 +656,7 @@ const TOOLS = [
   },
   {
     name: "memory_vector_search",
-    description: "Semantic vector search over L2 plus cold-archive (L3) fallback for older knowledge.",
+    description: "Semantic vector search over L2 plus cold-archive (L3) fallback for older knowledge. Use when keywords are unknown or paraphrased â€” slower than memory_search due to embedding warm-up.",
     input: {
       type: "object",
       properties: { query: str("Natural-language query."), limit: int("Max results", 6), cold: { type: "boolean", description: "Also search L3 cold archive (default true)." } },
@@ -684,7 +700,7 @@ const TOOLS = [
   },
   {
     name: "scratchpad",
-    description: "Read/write the L1 scratchpad â€” short-lived working state shared across harnesses.",
+    description: "Read/write the L1 scratchpad Ã¢â‚¬â€ short-lived working state shared across harnesses.",
     input: {
       type: "object",
       properties: {
@@ -840,7 +856,7 @@ const TOOLS = [
     input: { type: "object", properties: {}, additionalProperties: false },
     async run() {
       const list = await getSuggestions();
-      if (!list.length) return { content: "No suggestions yet â€” they appear as the conversation progresses." };
+      if (!list.length) return { content: "No suggestions yet Ã¢â‚¬â€ they appear as the conversation progresses." };
       return {
         content: list
           .slice(0, 10)
@@ -938,7 +954,7 @@ const TOOLS = [
   },
   {
     name: "session_search",
-    description: "Search imported coding sessions (Claude Code, Aider, Gemini, â€¦) for prior work and decisions.",
+    description: "Search imported coding sessions (Claude Code, Aider, Gemini, Ã¢â‚¬Â¦) for prior work and decisions.",
     input: {
       type: "object",
       properties: { query: str("Search text."), limit: int("Max results", 10) },
@@ -1110,7 +1126,7 @@ const TOOLS = [
   },
   {
     name: "memory_relate",
-    description: "Link two memories in the knowledge graph (source_id → relation_type → target_id) with an optional weight.",
+    description: "Link two memories in the knowledge graph (source_id â†’ relation_type â†’ target_id) with an optional weight.",
     input: {
       type: "object",
       properties: {
@@ -1131,11 +1147,11 @@ const TOOLS = [
           relation_type: String(relation_type),
           weight: Number(weight ?? 0.8),
         },
-        budget: FAST_BUDGET,
+        budget: SLOW_BUDGET,
       });
       return {
         content: res.ok
-          ? `Linked ${source_id} —[${relation_type}]→ ${target_id}`
+          ? `Linked ${source_id} â€”[${relation_type}]â†’ ${target_id}`
           : `[hypernexus] memory_relate failed: ${res.error}`,
         metadata: { ok: res.ok },
       };
@@ -1235,7 +1251,7 @@ const TOOLS = [
       audit({
         type: "progress",
         title: `audit:${action}`,
-        content: `${action} â†’ ${target}${result ? `: ${result}` : ""}`,
+        content: `${action} Ã¢â€ â€™ ${target}${result ? `: ${result}` : ""}`,
         toolName: "opencode.audit_log",
         metadata: { action, target, result },
       });
@@ -1271,7 +1287,7 @@ const TOOLS = [
   },
 ];
 
-// â”€â”€â”€ Commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Commands Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const COMMANDS = [
   {
@@ -1285,7 +1301,7 @@ const COMMANDS = [
   },
   {
     name: "hn-store",
-    description: "Store a memory â€” /hn-store <text> [tags: a,b]",
+    description: "Store a memory Ã¢â‚¬â€ /hn-store <text> [tags: a,b]",
     kind: "report",
     async build(args) {
       const raw = String(args || "").trim();
@@ -1305,7 +1321,7 @@ const COMMANDS = [
   },
   {
     name: "hn-remember",
-    description: "Store a decision/insight with category â€” /hn-remember <text> [tags: a,b]",
+    description: "Store a decision/insight with category Ã¢â‚¬â€ /hn-remember <text> [tags: a,b]",
     kind: "report",
     async build(args) {
       const raw = String(args || "").trim();
@@ -1323,7 +1339,7 @@ const COMMANDS = [
   },
   {
     name: "hn-search",
-    description: "Search L2 memory â€” /hn-search <query>",
+    description: "Search L2 memory Ã¢â‚¬â€ /hn-search <query>",
     kind: "context",
     async build(args) {
       const q = String(args || "").trim();
@@ -1336,7 +1352,7 @@ const COMMANDS = [
   },
   {
     name: "hn-tools",
-    description: "Discover MCP tools â€” /hn-tools <what you need>",
+    description: "Discover MCP tools Ã¢â‚¬â€ /hn-tools <what you need>",
     kind: "context",
     async build(args) {
       const q = String(args || "").trim();
@@ -1354,7 +1370,7 @@ const COMMANDS = [
   },
   {
     name: "hn-session",
-    description: "Resume context from imported sessions â€” /hn-session <query>",
+    description: "Resume context from imported sessions Ã¢â‚¬â€ /hn-session <query>",
     kind: "context",
     async build(args) {
       const q = String(args || "").trim();
@@ -1391,7 +1407,7 @@ const COMMANDS = [
   },
   {
     name: "hn-plan",
-    description: "Store a plan to L2 â€” /hn-plan <plan text>",
+    description: "Store a plan to L2 Ã¢â‚¬â€ /hn-plan <plan text>",
     kind: "report",
     async build(args) {
       const text = String(args || "").trim() || "New plan";
@@ -1459,7 +1475,7 @@ const COMMANDS = [
   },
   {
     name: "hn-purge",
-    description: "Delete a memory by id, or by tag â€” /hn-purge <id|tag>",
+    description: "Delete a memory by id, or by tag Ã¢â‚¬â€ /hn-purge <id|tag>",
     kind: "report",
     async build(args) {
       const key = String(args || "").trim();
@@ -1468,7 +1484,7 @@ const COMMANDS = [
       const asId = /^[A-Za-z0-9_-]{8,}$/.test(key);
       if (asId) {
         const res = await kernel("/api/agent-memory/delete", { method: "POST", body: { id: key }, budget: FAST_BUDGET });
-        return res.ok ? `Deleted memory ${key}.` : `Delete failed: ${res.error} â€” retrying as tag match is also allowed.`;
+        return res.ok ? `Deleted memory ${key}.` : `Delete failed: ${res.error} Ã¢â‚¬â€ retrying as tag match is also allowed.`;
       }
       const found = await kernel(`/api/memory/fts-search?q=${encodeURIComponent(key)}&limit=20`, { budget: FAST_BUDGET });
       const rows = asList(unwrap(found)).map(recOf);
@@ -1486,7 +1502,7 @@ const COMMANDS = [
   },
 ];
 
-// â”€â”€â”€ Skills (registered programmatically; also shipped as SKILL.md files) â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Skills (registered programmatically; also shipped as SKILL.md files) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const SKILLS = [
   {
@@ -1498,10 +1514,10 @@ const SKILLS = [
 Use the \`hypernexus_*\` tools for durable memory that survives across sessions and harnesses.
 
 ## Discipline
-1. **RECALL first** â€” run \`hypernexus_context_harvest\` or \`hypernexus_memory_search\` before re-deriving known answers.
-2. **PERSIST non-obvious outcomes** â€” decisions, gotchas, and fixes go to \`hypernexus_memory_store\` with tags.
-3. **FAST on hot paths** â€” prefer \`hypernexus_memory_fts_search\` inside tight loops.
-4. **Scratchpad for working state** â€” \`hypernexus_scratchpad\` holds short-lived keys (goal, phase).
+1. **RECALL first** Ã¢â‚¬â€ run \`hypernexus_context_harvest\` or \`hypernexus_memory_search\` before re-deriving known answers.
+2. **PERSIST non-obvious outcomes** Ã¢â‚¬â€ decisions, gotchas, and fixes go to \`hypernexus_memory_store\` with tags.
+3. **FAST on hot paths** Ã¢â‚¬â€ prefer \`hypernexus_memory_fts_search\` inside tight loops.
+4. **Scratchpad for working state** Ã¢â‚¬â€ \`hypernexus_scratchpad\` holds short-lived keys (goal, phase).
 
 ## Inline recall
 Write \`@memory:keyword\` in a prompt to expand matching L2 context inline.
@@ -1516,10 +1532,10 @@ Record structured findings with \`hypernexus_record_observation\`: discovery | d
     description: "Operate and verify the HyperNexus kernel, MCP bridge, billing, and RBAC from the agent.",
     content: `# HyperNexus Ops
 
-- \`hypernexus_status\` / \`hypernexus_system_overview\` â€” health before and after production changes.
-- \`hypernexus_mcp_status\` / \`hypernexus_mcp_servers\` / \`hypernexus_mcp_tools\` â€” MCP bridge inventory.
-- \`hypernexus_billing_status\` â€” quotas, depleted models, fallback chain.
-- \`hypernexus_audit_log\` â€” record compliance-relevant actions.
+- \`hypernexus_status\` / \`hypernexus_system_overview\` Ã¢â‚¬â€ health before and after production changes.
+- \`hypernexus_mcp_status\` / \`hypernexus_mcp_servers\` / \`hypernexus_mcp_tools\` Ã¢â‚¬â€ MCP bridge inventory.
+- \`hypernexus_billing_status\` Ã¢â‚¬â€ quotas, depleted models, fallback chain.
+- \`hypernexus_audit_log\` Ã¢â‚¬â€ record compliance-relevant actions.
 
 ## Verify loop
 1. VERIFY before change: \`hypernexus_status\`
@@ -1534,18 +1550,18 @@ Record structured findings with \`hypernexus_record_observation\`: discovery | d
     description: "Reusable orchestration workflows: MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS.",
     content: `# HyperNexus Workflows
 
-- **MEM-FIRST** (multi-step tasks): context_harvest â†’ memory_search â†’ <execute> â†’ memory_store
-- **DISCOVER** (capability gap): suggest_tools â†’ tool_search â†’ mcp_call â†’ memory_store
-- **HARVEST** (resuming after a break): context_harvest â†’ session_context â†’ memory_list
-- **HANDOFF** (context switch / session end): session_handoff(write) â†’ memory_store(summary)
-- **OPS** (deployments/incidents): system_overview â†’ <act> â†’ system_overview â†’ memory_store
+- **MEM-FIRST** (multi-step tasks): context_harvest Ã¢â€ â€™ memory_search Ã¢â€ â€™ <execute> Ã¢â€ â€™ memory_store
+- **DISCOVER** (capability gap): suggest_tools Ã¢â€ â€™ tool_search Ã¢â€ â€™ mcp_call Ã¢â€ â€™ memory_store
+- **HARVEST** (resuming after a break): context_harvest Ã¢â€ â€™ session_context Ã¢â€ â€™ memory_list
+- **HANDOFF** (context switch / session end): session_handoff(write) Ã¢â€ â€™ memory_store(summary)
+- **OPS** (deployments/incidents): system_overview Ã¢â€ â€™ <act> Ã¢â€ â€™ system_overview Ã¢â€ â€™ memory_store
 
-Follow RECALL â†’ DISCOVER â†’ EXECUTE â†’ PERSIST â†’ VERIFY.
+Follow RECALL Ã¢â€ â€™ DISCOVER Ã¢â€ â€™ EXECUTE Ã¢â€ â€™ PERSIST Ã¢â€ â€™ VERIFY.
 `,
   },
 ];
 
-// â”€â”€â”€ MCP stdio server resolution â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ MCP stdio server resolution Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 function resolveMcpCommand() {
   const override = process.env.HYPERNEXUS_MCP_COMMAND;
@@ -1566,7 +1582,7 @@ function resolveMcpCommand() {
   return [process.platform === "win32" ? "hypernexus.exe" : "hypernexus", "mcp"]; // rely on PATH
 }
 
-// â”€â”€â”€ V2 plugin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ V2 plugin Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function setup(ctx) {
   const options = ctx.options || {};
@@ -1592,7 +1608,7 @@ async function setup(ctx) {
   const health = await kn("/health", { budget: FAST_BUDGET });
   const where = ctx.location?.directory || process.cwd();
   console.error(
-    `[hypernexus] opencode plugin v${PLUGIN_VERSION} loaded â€” kernel ${health.ok ? `v${health.data?.version} online` : `unreachable at ${base}`} @ ${where}`
+    `[hypernexus] opencode plugin v${PLUGIN_VERSION} loaded Ã¢â‚¬â€ kernel ${health.ok ? `v${health.data?.version} online` : `unreachable at ${base}`} @ ${where}`
   );
   try {
     await ctx.storage.set("boot", { at: new Date().toISOString(), kernelOk: !!health.ok, version: PLUGIN_VERSION });
@@ -1606,7 +1622,7 @@ async function setup(ctx) {
     return r;
   };
 
-  // â”€â”€ Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Tools Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   try {
     if (enabled.tools) {
       track(
@@ -1643,7 +1659,7 @@ async function setup(ctx) {
     console.error(`[hypernexus] tool registration skipped: ${String(err?.message || err)}`);
   }
 
-  // â”€â”€ Commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Commands Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   try {
     if (enabled.commands) {
       track(
@@ -1676,10 +1692,10 @@ async function setup(ctx) {
     console.error(`[hypernexus] command registration skipped: ${String(err?.message || err)}`);
   }
 
-  // â”€â”€ Skills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Skills Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   try {
     if (enabled.skills) {
-      // Skill.Info requires `path` (validated by schema) â€” materialize each SKILL.md
+      // Skill.Info requires `path` (validated by schema) Ã¢â‚¬â€ materialize each SKILL.md
       // so the registration is self-contained even without the installer.
       const skillRoot = path.join(ctx.location?.directory || process.cwd(), ".opencode", "skills");
       const resolved = SKILLS.map((skill) => {
@@ -1694,7 +1710,7 @@ async function setup(ctx) {
             fs.mkdirSync(path.dirname(skillPath), { recursive: true });
             fs.writeFileSync(skillPath, skill.content, "utf8");
           } catch {
-            /* fall through â€” path is still provided for the schema */
+            /* fall through Ã¢â‚¬â€ path is still provided for the schema */
           }
         }
         return { ...skill, path: skillPath };
@@ -1718,7 +1734,7 @@ async function setup(ctx) {
     console.error(`[hypernexus] skill registration skipped: ${String(err?.message || err)}`);
   }
 
-  // â”€â”€ MCP server registration (kernel stdio bridge) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MCP server registration (kernel stdio bridge) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   if (enabled.mcp) {
     try {
       track(
@@ -1742,7 +1758,7 @@ async function setup(ctx) {
     }
   }
 
-  // â”€â”€ Worktree strategy (HyperNexus-managed local worktrees) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Worktree strategy (HyperNexus-managed local worktrees) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   if (enabled.worktree) {
     try {
       track(
@@ -1789,7 +1805,7 @@ async function setup(ctx) {
     }
   }
 
-  // â”€â”€ Session hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Session hooks Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   try {
   if (enabled.hooks) {
     // Prompt admission: @memory expansion + suggestion feed + session priming
@@ -1906,7 +1922,7 @@ async function setup(ctx) {
     );
   }
 
-  // â”€â”€ Tool hooks: RBAC + audit + auto-store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Tool hooks: RBAC + audit + auto-store Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   } catch (err) {
     console.error(`[hypernexus] session hooks skipped: ${String(err?.message || err)}`);
   }
@@ -1954,7 +1970,7 @@ async function setup(ctx) {
     );
   }
 
-  // â”€â”€ Permission hook: kernel-aware RBAC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Permission hook: kernel-aware RBAC Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   } catch (err) {
     console.error(`[hypernexus] tool hooks skipped: ${String(err?.message || err)}`);
   }
@@ -1982,7 +1998,7 @@ async function setup(ctx) {
     );
   }
 
-  // â”€â”€ Shell hook: env injection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Shell hook: env injection Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   } catch (err) {
     console.error(`[hypernexus] permission hook skipped: ${String(err?.message || err)}`);
   }
@@ -2001,7 +2017,7 @@ async function setup(ctx) {
     );
   }
 
-  // â”€â”€ Event stream: turn observation (fire-and-forget) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Event stream: turn observation (fire-and-forget) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   } catch (err) {
     console.error(`[hypernexus] shell hook skipped: ${String(err?.message || err)}`);
   }
@@ -2048,7 +2064,7 @@ async function setup(ctx) {
   };
 }
 
-// â”€â”€â”€ V1 compatibility (OpenCode 1.x plugin API) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ V1 compatibility (OpenCode 1.x plugin API) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function server(input, options = {}) {
   const base = String(options.baseUrl || RUNTIME_BASE).replace(/\/+$/, "");
@@ -2124,7 +2140,7 @@ async function server(input, options = {}) {
   };
 }
 
-// â”€â”€â”€ Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Export Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const plugin = {
   id: PLUGIN_ID,

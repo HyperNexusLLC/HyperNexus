@@ -25,12 +25,9 @@ const SKIP = new Map([
   ["launch_webview", "external effect: opens GUI windows"],
   ["update_supervisor_settings", "mutates supervisor configuration"],
   ["jira_create_issue", "external effect: creates Jira tickets"],
-  ["advance_chat", "UI automation: drives a chat client"],
-  ["click_action_buttons", "UI automation: clicks buttons"],
-  ["click_chat_button", "UI automation: clicks buttons"],
-  ["set_chat_input", "UI automation: writes into a chat client"],
-  ["submit_chat_input", "UI automation: submits chat input"],
-  ["simulate_input", "UI automation: synthesizes input events"],
+  ["set_chat_input", "SendKeys input injection — verified via parity + stdio listing only"],
+  ["submit_chat_input", "SendKeys input injection — verified via parity + stdio listing only"],
+  ["simulate_input", "SendKeys input injection — verified via parity + stdio listing only"],
 ]);
 
 // Pre-create the file that edit/read flows depend on (inventory order is not guaranteed).
@@ -86,6 +83,14 @@ const SAFE_ARGS = new Map([
   ["apply_search_replace", { file_path: `${TMP}\\hn-sweep-write.txt`, search_block: "sweep-probe", replace: "sweep-probe" }],
   ["edit", { path: `${TMP}\\hn-sweep-write.txt`, edits: [{ oldText: "sweep-probe", newText: "sweep-probe" }] }],
   ["add_bookmark", { title: "sweep-probe", url: "https://example.invalid" }],
+  ["billing_status", {}],
+  ["system_status", {}],
+  ["list_accessory_tools", {}],
+  ["get_supervisor_settings", {}],
+  ["update_supervisor_settings", { focusDelayMs: 100 }], // idempotent: writes back the default value
+  ["click_chat_button", { label: "__hn_nonexistent_button__" }], // safe: no element matches, no click happens
+  ["click_action_buttons", {}], // safe: no labels/window → reports only
+  ["advance_chat", { bumpText: "sweep-probe" }], // safe: echoes a plan line, no input injection
 ]);
 
 function fillArgs(schema) {
@@ -116,7 +121,7 @@ function fillArgs(schema) {
 
 async function callTool(name, args) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 20000);
+  const timer = setTimeout(() => ctrl.abort(), 40000);
   try {
     const r = await fetch(`${BASE}/api/agent/tool`, {
       method: "POST",
@@ -241,6 +246,52 @@ console.log("=== T10-MCP-SWEEP: stdio transport (hypernexus mcp) ===");
   checkStdio("stdio tools/call hello_world", /stdio-sweep|hello/i.test(callText), callText.slice(0, 90));
 
   child.kill();
+}
+
+// 4. Stdio↔router parity: every tool the stdio server advertises must exist in
+//    the router registry inventory (/api/mcp/tools) — no more stdio-only tools.
+console.log("=== T10-MCP-SWEEP: stdio-router parity ===");
+{
+  const { spawn } = await import("node:child_process");
+  const exe = `bin\\hypernexus.exe`;
+  const child = spawn(exe, ["mcp"], { stdio: ["pipe", "pipe", "pipe"] });
+  let buf = "";
+  const pending = new Map();
+  child.stdout.on("data", (d) => {
+    buf += d.toString();
+    let i;
+    while ((i = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, i).trim();
+      buf = buf.slice(i + 1);
+      if (!line) continue;
+      try {
+        const m = JSON.parse(line);
+        if (m.id !== undefined && pending.has(m.id)) {
+          pending.get(m.id)(m);
+          pending.delete(m.id);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  });
+  const rpc = (method, params, id) =>
+    new Promise((resolve) => {
+      const t = setTimeout(() => resolve({ timeout: true }), 15000);
+      pending.set(id, (m) => {
+        clearTimeout(t);
+        resolve(m);
+      });
+      child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n");
+    });
+  await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t10-parity", version: "1" } }, 1);
+  const list = await rpc("tools/list", {}, 2);
+  const stdioNames = (list?.result?.tools ?? []).map((t) => t.name);
+  child.kill();
+  const invNames = inv.map((t) => t.name);
+  const missing = stdioNames.filter((n) => !invNames.includes(n));
+  checkStdio(`parity: all ${stdioNames.length} stdio tools present in router inventory`, missing.length === 0, missing.join(",") || "complete");
+  checkStdio("parity: click_chat_button registered (was advertised-but-unimplemented)", invNames.includes("click_chat_button"));
 }
 
 function checkStdio(name, ok, detail = "") {

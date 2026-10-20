@@ -17695,7 +17695,14 @@ func (s *Server) localAgentMemories() ([]localAgentMemoryRecord, error) {
 
 	var snapshot localAgentMemorySnapshot
 	if err := json.Unmarshal(raw, &snapshot); err != nil {
-		return nil, err
+		// Self-heal: a torn write or legacy corruption must not 503 the whole
+		// memory subsystem. Salvage every balanced top-level JSON document in
+		// the file and merge their memories (first occurrence of each id wins).
+		salvaged, salvageErr := salvageAgentMemorySnapshot(raw)
+		if salvageErr != nil || len(salvaged.Memories) == 0 {
+			return nil, err
+		}
+		snapshot = salvaged
 	}
 
 	now := time.Now()

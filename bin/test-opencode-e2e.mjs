@@ -86,7 +86,7 @@ if (sessionID) {
 
   // Synthetic messages persist asynchronously — poll briefly instead of a single fetch.
   let all = "";
-  for (let i = 0; i < 12 && !/Stored to L2 memory/i.test(all); i++) {
+  for (let i = 0; i < 20 && !/Stored to L2 memory/i.test(all); i++) {
     await new Promise((r) => setTimeout(r, 500));
     const messages = api(["get", `/api/session/${sessionID}/message`]);
     const msgs = Array.isArray(messages) ? messages : Array.isArray(messages?.data) ? messages.data : [];
