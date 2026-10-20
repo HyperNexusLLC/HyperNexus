@@ -1473,6 +1473,9 @@ export default function (pi: ExtensionAPI) {
     }
     refreshWidget(ctx);
     if (!widgetInterval) {
+      // Eager early refreshes so counts populate quickly even if the kernel is
+      // still warming up — a single 60s tick would leave "?" for a full minute.
+      for (const ms of [800, 2500, 6000]) setTimeout(() => refreshWidget(ctx), ms);
       widgetInterval = setInterval(() => refreshWidget(ctx), 60000); // Every 60s
     }
   });
