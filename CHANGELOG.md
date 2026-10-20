@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.15] - 2026-10-19
+
+### Added
+- **`hypernexus_memory_delete`** — full memory lifecycle: delete by id, or tag fan-out (capped) through `/api/agent-memory/delete`
+- **`/hn-restore`** — pick up the last session handoff artifact (completes the HANDOFF workflow from the `hypernexus-workflows` skill)
+- **Structured file observations** — tool hooks now record `file-change:*` / `file-read:*` observations with `filesModified`/`filesRead` into the kernel knowledge graph (edit/write/multiedit/apply_search_replace + read/grep/glob/ls)
+- **Assistant-turn advertiser feed** — both conversation roles now feed the preemptive tool-suggestion monitor (throttled per role)
+
+### Fixed
+- **`/hn-purge` was inert** — it sent `{tag}` but `/api/agent-memory/delete` reads `{id}`; now id-shaped keys delete directly and other keys fan out over tag matches
+- **Context-hook assistant feed scope bug** — referenced an undefined `sessionID` local instead of `event.sessionID`
+
+### Optimized
+- **Hot-path context injection parallelized** — FTS harvest and suggestion fetch run concurrently inside the 400ms hook budget
+- **Negative caching** — while the kernel is known-down (status cache), hot-path hooks skip all network attempts instead of re-probing every turn
+
+### Verified (269 assertions green)
+- OpenCode plugin battery 115/115 · MCP tools 23/23 · MCP sweep 46/46 · core-without-extension 18/18 · mimo extension 51/51 · mimo TUI 16/16
+
 ## [1.0.14] - 2026-10-19
 
 ### Added

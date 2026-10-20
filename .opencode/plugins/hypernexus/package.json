@@ -1,6 +1,6 @@
 {
   "name": "opencode-hypernexus-plugin",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "HyperNexus control-plane integration for OpenCode: persistent L2/L3 memory, MCP tool discovery, sessions, skills, knowledge graph, billing, and RBAC.",
   "type": "module",
   "main": "./index.js",

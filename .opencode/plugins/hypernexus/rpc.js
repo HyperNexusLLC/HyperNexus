@@ -16,6 +16,7 @@ export const TOOL = Object.freeze({
   MEMORY_FTS_SEARCH: "hypernexus_memory_fts_search",
   MEMORY_VECTOR_SEARCH: "hypernexus_memory_vector_search",
   MEMORY_LIST: "hypernexus_memory_list",
+  MEMORY_DELETE: "hypernexus_memory_delete",
   SCRATCHPAD: "hypernexus_scratchpad",
   CONTEXT_HARVEST: "hypernexus_context_harvest",
   RECORD_OBSERVATION: "hypernexus_record_observation",
@@ -49,6 +50,7 @@ export const COMMAND = Object.freeze({
   CONTEXT: "hn-context",
   PLAN: "hn-plan",
   SUMMARY: "hn-summary",
+  RESTORE: "hn-restore",
   PURGE: "hn-purge",
 });
 
@@ -99,6 +101,7 @@ export const KERNEL = Object.freeze({
   agentTool: "/api/agent/tool",
   agentMemoryHandoff: "/api/agent-memory/handoff",
   agentMemoryPickup: "/api/agent-memory/pickup",
+  agentMemoryDelete: "/api/agent-memory/delete",
   importedSessions: "/api/sessions/imported/list",
   skillsSearch: "/api/skills/search",
   skillsList: "/api/skills",

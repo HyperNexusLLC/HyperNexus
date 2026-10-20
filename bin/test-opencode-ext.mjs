@@ -175,8 +175,8 @@ check("default export exists", !!plugin);
 check("plugin id is 'hypernexus'", plugin?.id === "hypernexus", `got ${plugin?.id}`);
 check("setup is a function", typeof plugin?.setup === "function");
 check("V1 server() shim is a function", typeof plugin?.server === "function");
-check("exports TOOLS (28)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 28, `got ${mod.TOOLS?.length}`);
-check("exports COMMANDS (10)", Array.isArray(mod.COMMANDS) && mod.COMMANDS.length === 10, `got ${mod.COMMANDS?.length}`);
+check("exports TOOLS (29)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 29, `got ${mod.TOOLS?.length}`);
+check("exports COMMANDS (11)", Array.isArray(mod.COMMANDS) && mod.COMMANDS.length === 11, `got ${mod.COMMANDS?.length}`);
 check("exports SKILLS (3)", Array.isArray(mod.SKILLS) && mod.SKILLS.length === 3, `got ${mod.SKILLS?.length}`);
 
 // rpc contract consistency
@@ -199,9 +199,9 @@ const cleanup = await plugin.setup(ctx);
 section("3. Registration surface");
 check("setup returns cleanup function", typeof cleanup === "function");
 check("namespace registered", state.namespaces.length === 1 && state.namespaces[0].name === "hypernexus");
-check("28 tools registered", state.tools.size === 28, `got ${state.tools.size}`);
+check("29 tools registered", state.tools.size === 29, `got ${state.tools.size}`);
 check("tool names match rpc contract", [...state.tools.keys()].every((k) => rpcNames.includes(k)));
-check("10 commands registered", state.commands.size === 10, `got ${state.commands.size}`);
+check("11 commands registered", state.commands.size === 11, `got ${state.commands.size}`);
 check("3 skills registered with path", state.skills.size === 3 && [...state.skills.values()].every((s) => typeof s.path === "string" && s.path.length > 0));
 check("skill SKILL.md files materialized", [...state.skills.values()].every((s) => fs.existsSync(s.path)));
 check("MCP server 'hypernexus' registered", state.mcp.has("hypernexus"));
@@ -289,6 +289,14 @@ check("session_context cross-session links parse (no 'invalid JSON body')", !/in
 const kg = await runTool("knowledge_graph", { focus: "memory" });
 check("knowledge_graph returns graph payload", /graph/i.test(kg?.content ?? ""));
 
+section("5b. Memory lifecycle + observation capture");
+const delNoArg = await runTool("memory_delete", {});
+check("memory_delete requires id or tag", /requires id or tag/i.test(delNoArg?.content ?? ""));
+const delFake = await runTool("memory_delete", { id: "does-not-exist-battery" });
+check("memory_delete degrades gracefully on unknown id", typeof delFake?.content === "string" && delFake.content.length > 0, delFake?.content?.slice(0, 80));
+const delByTag = await runTool("memory_delete", { tag: "definitely-not-a-real-tag-xyz" });
+check("memory_delete tag fan-out finds nothing gracefully", typeof delByTag?.content === "string" && /No memories|Deleted 0/i.test(delByTag.content), delByTag?.content?.slice(0, 80));
+
 section("6. Command execution");
 for (const [name, cmd] of state.commands) {
   try {
@@ -346,6 +354,24 @@ check("tool execute.after hook is non-throwing", true);
 await state.hooks.tool.get("execute.after")({ tool: "hypernexus_status", status: "completed", input: {}, result: { content: "skip me" } });
 check("tool hooks skip hypernexus_* tools", true);
 
+// File-observation capture must reach the kernel through the audit queue.
+await state.hooks.tool.get("execute.after")({
+  tool: "edit",
+  status: "completed",
+  input: { path: path.join(tmp, "battery-file.txt") },
+  result: { content: "ok" },
+});
+await new Promise((r) => setTimeout(r, 2600)); // audit flush cadence is 2s
+const obsRes = await fetch("http://127.0.0.1:7778/api/memory/observations/search?query=file-change&limit=5")
+  .then((r) => r.json())
+  .catch(() => null);
+const obsRows = Array.isArray(obsRes?.data) ? obsRes.data : [];
+check(
+  "file-change observation reaches kernel",
+  obsRows.some((x) => /file-change/.test(JSON.stringify(x))),
+  JSON.stringify(obsRes)?.slice(0, 100)
+);
+
 const permEvent = { sessionID: "ses_hook", action: "bash", resources: ["rm -rf /data"], effect: "allow" };
 process.env.HYPERNEXUS_RBAC = "deny";
 await state.hooks.permission.get("evaluate")(permEvent);
@@ -369,7 +395,7 @@ const v1 = await plugin.server({}, {});
 check("V1 server() returns hook map", typeof v1 === "object" && typeof v1["tool.execute.before"] === "function");
 check("V1 chat.message hook", typeof v1["chat.message"] === "function");
 check("V1 permission.ask hook", typeof v1["permission.ask"] === "function");
-check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 28, `got ${Object.keys(v1.tool || {}).length}`);
+check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 29, `got ${Object.keys(v1.tool || {}).length}`);
 await v1["chat.message"]({ message: { role: "user", content: "hello battery world" } });
 const v1out = await v1.tool.hypernexus_status.execute({});
 check("V1 tool execute works", typeof v1out === "string" && v1out.length > 0);

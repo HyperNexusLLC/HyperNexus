@@ -7,11 +7,11 @@ HyperNexus control plane (Go kernel, default `http://127.0.0.1:7778`).
 
 | Surface | Detail |
 |---|---|
-| **28 tools** | `hypernexus_*` namespace: memory (store/search/fts/vector/list), scratchpad, context harvest, observations, tool discovery (3 layers), MCP bridge (status/servers/tools/search/call), imported sessions, handoff, skills, code search, knowledge graph, billing, audit, subagent dispatch |
-| **10 commands** | `/hn-status` `/hn-store` `/hn-remember` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-plan` `/hn-summary` `/hn-purge` |
+| **29 tools** | `hypernexus_*` namespace: memory (store/search/fts/vector/list/delete), scratchpad, context harvest, observations, tool discovery (3 layers), MCP bridge (status/servers/tools/search/call), imported sessions, handoff, skills, code search, knowledge graph, billing, audit, subagent dispatch |
+| **11 commands** | `/hn-status` `/hn-store` `/hn-remember` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-plan` `/hn-summary` `/hn-restore` `/hn-purge` |
 | **3 skills** | `hypernexus`, `hypernexus-ops`, `hypernexus-workflows` (registered programmatically + shipped as SKILL.md) |
 | **Session hooks** | prompt admission (`@memory:key` expansion, suggestion feed, session priming with active goal), per-turn context injection (fast FTS recall + status + proactive tool suggestions), compaction enrichment, model-request headers, retry observability |
-| **Tool hooks** | destructive-pattern RBAC pre-check, fire-and-forget audit trail, auto-store of substantial results to L2 |
+| **Tool hooks** | destructive-pattern RBAC pre-check, fire-and-forget audit trail, structured file-change/file-read observations for the knowledge graph, auto-store of substantial results to L2 |
 | **Permission hook** | kernel-aware RBAC (`HYPERNEXUS_RBAC=audit\|ask\|deny`) |
 | **Shell hook** | injects `HYPERNEXUS_URL` / `HYPERNEXUS_CLIENT` into spawned shells |
 | **MCP** | auto-registers the kernel's stdio MCP server (`hypernexus mcp`) when not already configured |

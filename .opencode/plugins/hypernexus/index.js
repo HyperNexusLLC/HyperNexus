@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * HyperNexus OpenCode Plugin — V2 native + V1 compatible
+ * HyperNexus OpenCode Plugin â€” V2 native + V1 compatible
  * =======================================================
  *
- * Full bridge: OpenCode ↔ HyperNexus kernel (default http://127.0.0.1:7778).
+ * Full bridge: OpenCode â†” HyperNexus kernel (default http://127.0.0.1:7778).
  *
  * Surfaces
  * --------
@@ -23,7 +23,7 @@
  * Contract (see addons/shared/hypernexus.manifest.json)
  * -----------------------------------------------------
  *  - Every kernel call is budgeted (AbortSignal.timeout) and NEVER throws.
- *  - Hot-path hooks use FTS-only search (≤400ms). Never vector search on a turn path.
+ *  - Hot-path hooks use FTS-only search (â‰¤400ms). Never vector search on a turn path.
  *  - Per-event side effects are fire-and-forget.
  *  - Response shapes are normalized here so callers never see kernel shape drift.
  */
@@ -32,13 +32,13 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-// ─── Identity & budgets ──────────────────────────────────────────────────────
+// â”€â”€â”€ Identity & budgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const PLUGIN_ID = "hypernexus";
-export const PLUGIN_VERSION = "1.1.0";
+export const PLUGIN_VERSION = "1.2.0";
 
 const DEFAULT_BASE = (process.env.HYPERNEXUS_URL || "http://127.0.0.1:7778").replace(/\/+$/, "");
-/** Active kernel base — updated by setup()/server() so tool executors honor options.baseUrl. */
+/** Active kernel base â€” updated by setup()/server() so tool executors honor options.baseUrl. */
 let RUNTIME_BASE = DEFAULT_BASE;
 
 const HOOK_BUDGET = Number(process.env.HYPERNEXUS_HOOK_BUDGET_MS || 400); // hot-path hooks
@@ -52,7 +52,7 @@ const SUG_TTL = 60_000;
 const MAX_STORE_CHARS = 4000;
 const MAX_SYSTEM_BLOCK = 1400; // chars of injected context per turn
 
-// ─── Small utilities ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Small utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function hash(str) {
   let h = 5381;
@@ -62,7 +62,7 @@ function hash(str) {
 
 function clamp(text, n) {
   const s = String(text ?? "");
-  return s.length > n ? `${s.slice(0, n)}…` : s;
+  return s.length > n ? `${s.slice(0, n)}â€¦` : s;
 }
 
 function isAbort(err) {
@@ -77,7 +77,7 @@ function tryJson(text) {
   }
 }
 
-// ─── Kernel client (budgeted, never throws) ──────────────────────────────────
+// â”€â”€â”€ Kernel client (budgeted, never throws) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * @returns {Promise<{ok:boolean, status:number, data:any, error?:string, ms:number}>}
@@ -120,7 +120,7 @@ async function kernel(endpoint, { method = "GET", body, budget = FAST_BUDGET, si
   }
 }
 
-/** Unwrap the kernel envelope: {data:{data:…}} / {data:…} / raw → payload. */
+/** Unwrap the kernel envelope: {data:{data:â€¦}} / {data:â€¦} / raw â†’ payload. */
 function unwrap(res) {
   let d = res?.data;
   if (d && typeof d === "object" && !Array.isArray(d) && "data" in d) d = d.data;
@@ -137,7 +137,7 @@ function asList(payload) {
   return [];
 }
 
-/** fts-search wraps rows as {record:{…}} — normalize at the adapter boundary. */
+/** fts-search wraps rows as {record:{â€¦}} â€” normalize at the adapter boundary. */
 function recOf(x) {
   return x && typeof x === "object" && x.record && typeof x.record === "object" ? x.record : x;
 }
@@ -169,13 +169,13 @@ function fmtMemory(m, max = 220) {
   return `- ${clamp(content.replace(/\s+/g, " "), max)}${tags.length ? ` [${tags.slice(0, 4).join(", ")}]` : ""}`;
 }
 
-// ─── Caches & fire-and-forget infrastructure ─────────────────────────────────
+// â”€â”€â”€ Caches & fire-and-forget infrastructure â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const caches = {
   status: { at: 0, value: null },
   suggestions: { at: 0, value: null },
-  mem: new Map(), // query-hash → {at, value}
-  fedAt: new Map(), // session → ts of last suggestion feed
+  mem: new Map(), // query-hash â†’ {at, value}
+  fedAt: new Map(), // session â†’ ts of last suggestion feed
   booted: new Set(), // sessions already primed
 };
 
@@ -190,7 +190,7 @@ function cacheSet(cache, key, value) {
   else cache.value = value, (cache.at = Date.now());
 }
 
-// Batched observation/audit queue → kernel (fire-and-forget, never on turn path)
+// Batched observation/audit queue â†’ kernel (fire-and-forget, never on turn path)
 const auditQueue = [];
 let auditTimer = null;
 
@@ -202,6 +202,9 @@ function audit(entry) {
       title: clamp(String(entry.title ?? entry.action ?? "opencode-event"), 160),
       narrative: clamp(String(entry.narrative ?? entry.content ?? ""), 600),
       toolName: String(entry.toolName ?? "opencode").slice(0, 64),
+      concepts: Array.isArray(entry.concepts) ? entry.concepts.slice(0, 8).map((c) => String(c).slice(0, 48)) : [],
+      filesRead: Array.isArray(entry.filesRead) ? entry.filesRead.slice(0, 10).map((f) => String(f).slice(0, 200)) : [],
+      filesModified: Array.isArray(entry.filesModified) ? entry.filesModified.slice(0, 10).map((f) => String(f).slice(0, 200)) : [],
       metadata: {
         source: "opencode-plugin",
         client: "opencode",
@@ -253,7 +256,13 @@ async function flushAudit() {
   }
 }
 
-// ─── Fast-context features (hot path) ────────────────────────────────────────
+// â”€â”€â”€ Fast-context features (hot path) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+/** True while the kernel is known-down (negative cache) â€” skips hot-path fetches. */
+function kernelKnownDown() {
+  const st = caches.status.value;
+  return !!st && st.ok === false && Date.now() - caches.status.at < SYS_TTL;
+}
 
 /** Expand @memory:key references with fast FTS context. Offset-safe. */
 async function expandMemoryRefs(text, deadline, prompt) {
@@ -317,6 +326,7 @@ function applyEdits(text, edits, prompt) {
 
 /** Hot-path harvest: FTS only, capped by the shared deadline. */
 async function harvestFast(text, deadline, limit = 3) {
+  if (kernelKnownDown()) return [];
   const query = clamp(String(text || "").replace(/\s+/g, " ").trim(), 120);
   if (query.length < 8) return [];
   const key = hash(query.toLowerCase());
@@ -342,6 +352,7 @@ function feedSuggestions(role, content) {
 }
 
 async function getSuggestions() {
+  if (kernelKnownDown()) return [];
   const cached = cacheGet(caches.suggestions, null, SUG_TTL);
   if (cached) return cached;
   const res = await kernel("/api/mcp/tool-suggestions", { budget: FAST_BUDGET });
@@ -374,7 +385,7 @@ async function getStatus() {
   return value;
 }
 
-/** Build the compact per-turn system block (≤ MAX_SYSTEM_BLOCK chars). */
+/** Build the compact per-turn system block (â‰¤ MAX_SYSTEM_BLOCK chars). */
 async function buildSystemBlock(lastUserText) {
   const deadline = Date.now() + HOOK_BUDGET;
   const parts = [];
@@ -382,23 +393,25 @@ async function buildSystemBlock(lastUserText) {
     const st = await getStatus();
     if (st.ok) {
       parts.push(
-        `HyperNexus kernel v${st.version} online — ${st.mcp.connectedCount} MCP servers connected` +
+        `HyperNexus kernel v${st.version} online â€” ${st.mcp.connectedCount} MCP servers connected` +
           (st.tools ? `, ${st.tools} tools` : "") +
           `. Tools: hypernexus_memory_search, hypernexus_tool_search, hypernexus_context_harvest, hypernexus_suggest_tools.`
       );
     } else {
-      parts.push("HyperNexus kernel is offline — hypernexus_* tools will report degraded status; rely on local tools.");
+      parts.push("HyperNexus kernel is offline â€” hypernexus_* tools will report degraded status; rely on local tools.");
     }
-    const memories = await harvestFast(lastUserText, deadline, 3);
+    const [memories, suggestions] = await Promise.all([
+      harvestFast(lastUserText, deadline, 3),
+      getSuggestions(),
+    ]);
     if (memories.length) {
       parts.push("Relevant L2 memory (recall before re-deriving):\n" + memories.map((m) => fmtMemory(m)).join("\n"));
     }
-    const suggestions = await getSuggestions();
     if (suggestions.length) {
       const lines = suggestions.slice(0, 3).map((s) => {
         const name = String(s?.name ?? s?.tool ?? s?.id ?? "").slice(0, 48);
         const why = clamp(String(s?.reason ?? s?.description ?? s?.summary ?? ""), 90);
-        return `- ${name}${why ? ` — ${why}` : ""}`;
+        return `- ${name}${why ? ` â€” ${why}` : ""}`;
       });
       if (lines.length) parts.push("Suggested tools for this conversation:\n" + lines.join("\n"));
     }
@@ -408,7 +421,7 @@ async function buildSystemBlock(lastUserText) {
   return clamp(parts.join("\n\n"), MAX_SYSTEM_BLOCK);
 }
 
-// ─── Result persistence ──────────────────────────────────────────────────────
+// â”€â”€â”€ Result persistence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function autoStoreResult(toolName, input, text) {
   const content = String(text ?? "");
@@ -433,7 +446,56 @@ function autoStoreResult(toolName, input, text) {
   });
 }
 
-// ─── RBAC policy ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ File-change observation capture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const FILE_WRITE_TOOLS = new Set(["edit", "multiedit", "write", "apply_search_replace", "notebookedit"]);
+const FILE_READ_TOOLS = new Set(["read", "grep", "glob", "ls", "list", "codebase_search"]);
+
+function fileRefs(input) {
+  const refs = [];
+  for (const key of ["path", "file_path", "filePath", "notebook_path", "target", "dest", "destination"]) {
+    const v = input?.[key];
+    if (typeof v === "string" && v.length > 1) refs.push(v);
+    if (Array.isArray(v)) for (const p of v) if (typeof p === "string") refs.push(p);
+  }
+  return [...new Set(refs)].slice(0, 10);
+}
+
+/** Record a structured file observation for the knowledge graph. Returns true when captured. */
+function captureFileObservation(toolName, input) {
+  const name = String(toolName || "").toLowerCase();
+  const refs = fileRefs(input);
+  if (!refs.length) return false;
+  if (FILE_WRITE_TOOLS.has(name)) {
+    audit({
+      type: "progress",
+      title: `file-change:${name}`,
+      content: `${name} modified ${refs.join(", ")}`,
+      narrative: `Tool ${toolName} modified ${refs.length} file(s) via the OpenCode session.`,
+      toolName: String(toolName),
+      filesModified: refs,
+      concepts: ["file-change"],
+      metadata: { kind: "file-change" },
+    });
+    return true;
+  }
+  if (FILE_READ_TOOLS.has(name)) {
+    audit({
+      type: "discovery",
+      title: `file-read:${name}`,
+      content: `${name} read ${refs.join(", ")}`,
+      narrative: `Tool ${toolName} read ${refs.length} file(s) via the OpenCode session.`,
+      toolName: String(toolName),
+      filesRead: refs,
+      concepts: ["file-read"],
+      metadata: { kind: "file-read" },
+    });
+    return true;
+  }
+  return false;
+}
+
+// â”€â”€â”€ RBAC policy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const DANGEROUS = [
   /\brm\s+-[a-z]*r/i,
@@ -464,7 +526,7 @@ function rbacMode() {
   return m === "ask" || m === "deny" ? m : "audit";
 }
 
-// ─── Tools ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const str = (description) => ({ type: "string", description });
 const int = (description, def) => ({ type: "number", description: `${description} (default ${def})` });
@@ -610,7 +672,7 @@ const TOOLS = [
   },
   {
     name: "scratchpad",
-    description: "Read/write the L1 scratchpad — short-lived working state shared across harnesses.",
+    description: "Read/write the L1 scratchpad â€” short-lived working state shared across harnesses.",
     input: {
       type: "object",
       properties: {
@@ -766,7 +828,7 @@ const TOOLS = [
     input: { type: "object", properties: {}, additionalProperties: false },
     async run() {
       const list = await getSuggestions();
-      if (!list.length) return { content: "No suggestions yet — they appear as the conversation progresses." };
+      if (!list.length) return { content: "No suggestions yet â€” they appear as the conversation progresses." };
       return {
         content: list
           .slice(0, 10)
@@ -864,7 +926,7 @@ const TOOLS = [
   },
   {
     name: "session_search",
-    description: "Search imported coding sessions (Claude Code, Aider, Gemini, …) for prior work and decisions.",
+    description: "Search imported coding sessions (Claude Code, Aider, Gemini, â€¦) for prior work and decisions.",
     input: {
       type: "object",
       properties: { query: str("Search text."), limit: int("Max results", 10) },
@@ -1069,6 +1131,49 @@ const TOOLS = [
     },
   },
   {
+    name: "memory_delete",
+    description: "Delete an L2 memory by id, or every memory carrying a tag (capped fan-out). Use for cleanup of stale or wrong facts.",
+    input: {
+      type: "object",
+      properties: {
+        id: str("Memory id to delete (from search/list results)."),
+        tag: str("Alternative: delete all memories carrying this tag (max 20)."),
+      },
+      additionalProperties: false,
+    },
+    async run({ id, tag }) {
+      if (id) {
+        const res = await kernel("/api/agent-memory/delete", {
+          method: "POST",
+          body: { id: String(id) },
+          budget: FAST_BUDGET,
+        });
+        return {
+          content: res.ok ? `Deleted memory ${id}.` : `[hypernexus] memory_delete failed: ${res.error}`,
+          metadata: { ok: res.ok, deleted: 1 },
+        };
+      }
+      if (!tag) return { content: "[hypernexus] memory_delete requires id or tag.", metadata: { ok: false } };
+      const found = await kernel(`/api/memory/fts-search?q=${encodeURIComponent(String(tag))}&limit=20`, { budget: FAST_BUDGET });
+      const rows = asList(unwrap(found)).map(recOf);
+      const targets = rows
+        .filter((r) => memTags(r).some((t) => t.toLowerCase() === String(tag).toLowerCase()) || String(r?.id ?? "") === String(tag))
+        .slice(0, 20);
+      if (!targets.length) return { content: `No memories with tag "${tag}" found.`, metadata: { ok: true, deleted: 0 } };
+      let deleted = 0;
+      for (const row of targets) {
+        const rid = String(row?.id ?? "");
+        if (!rid) continue;
+        const res = await kernel("/api/agent-memory/delete", { method: "POST", body: { id: rid }, budget: FAST_BUDGET });
+        if (res.ok) deleted++;
+      }
+      return {
+        content: `Deleted ${deleted}/${targets.length} memories with tag "${tag}".`,
+        metadata: { ok: deleted > 0, deleted },
+      };
+    },
+  },
+  {
     name: "audit_log",
     description: "Record an action to the HyperNexus audit/observation trail (compliance, RBAC evidence).",
     input: {
@@ -1085,7 +1190,7 @@ const TOOLS = [
       audit({
         type: "progress",
         title: `audit:${action}`,
-        content: `${action} → ${target}${result ? `: ${result}` : ""}`,
+        content: `${action} â†’ ${target}${result ? `: ${result}` : ""}`,
         toolName: "opencode.audit_log",
         metadata: { action, target, result },
       });
@@ -1121,7 +1226,7 @@ const TOOLS = [
   },
 ];
 
-// ─── Commands ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const COMMANDS = [
   {
@@ -1135,7 +1240,7 @@ const COMMANDS = [
   },
   {
     name: "hn-store",
-    description: "Store a memory — /hn-store <text> [tags: a,b]",
+    description: "Store a memory â€” /hn-store <text> [tags: a,b]",
     kind: "report",
     async build(args) {
       const raw = String(args || "").trim();
@@ -1155,7 +1260,7 @@ const COMMANDS = [
   },
   {
     name: "hn-remember",
-    description: "Store a decision/insight with category — /hn-remember <text> [tags: a,b]",
+    description: "Store a decision/insight with category â€” /hn-remember <text> [tags: a,b]",
     kind: "report",
     async build(args) {
       const raw = String(args || "").trim();
@@ -1173,7 +1278,7 @@ const COMMANDS = [
   },
   {
     name: "hn-search",
-    description: "Search L2 memory — /hn-search <query>",
+    description: "Search L2 memory â€” /hn-search <query>",
     kind: "context",
     async build(args) {
       const q = String(args || "").trim();
@@ -1186,7 +1291,7 @@ const COMMANDS = [
   },
   {
     name: "hn-tools",
-    description: "Discover MCP tools — /hn-tools <what you need>",
+    description: "Discover MCP tools â€” /hn-tools <what you need>",
     kind: "context",
     async build(args) {
       const q = String(args || "").trim();
@@ -1204,7 +1309,7 @@ const COMMANDS = [
   },
   {
     name: "hn-session",
-    description: "Resume context from imported sessions — /hn-session <query>",
+    description: "Resume context from imported sessions â€” /hn-session <query>",
     kind: "context",
     async build(args) {
       const q = String(args || "").trim();
@@ -1241,7 +1346,7 @@ const COMMANDS = [
   },
   {
     name: "hn-plan",
-    description: "Store a plan to L2 — /hn-plan <plan text>",
+    description: "Store a plan to L2 â€” /hn-plan <plan text>",
     kind: "report",
     async build(args) {
       const text = String(args || "").trim() || "New plan";
@@ -1293,25 +1398,50 @@ const COMMANDS = [
     },
   },
   {
-    name: "hn-purge",
-    description: "Delete memories matching a tag — /hn-purge <tag>",
+    name: "hn-restore",
+    description: "Pick up the last HyperNexus session handoff (resume after a break)",
     kind: "report",
-    async build(args) {
-      const tag = String(args || "").trim();
-      if (!tag) return "Usage: /hn-purge <tag>";
-      const res = await kernel(`/api/agent-memory/delete?tag=${encodeURIComponent(tag)}`, {
+    async build() {
+      const res = await kernel("/api/agent-memory/pickup", {
         method: "POST",
-        body: { tag },
+        body: {},
         budget: FAST_BUDGET,
       });
-      return res.ok
-        ? `Purged agent memories matching tag "${tag}": ${clamp(JSON.stringify(unwrap(res)), 200)}`
-        : `Purge failed: ${res.error}. Check /api/agent-memory/delete parameters.`;
+      const data = unwrap(res);
+      if (!res.ok) return `No handoff available: ${res.error}`;
+      return `## Restored HyperNexus handoff\n${clamp(JSON.stringify(data, null, 2), 1500)}`;
+    },
+  },
+  {
+    name: "hn-purge",
+    description: "Delete a memory by id, or by tag â€” /hn-purge <id|tag>",
+    kind: "report",
+    async build(args) {
+      const key = String(args || "").trim();
+      if (!key) return "Usage: /hn-purge <memory id | tag>";
+      // Id-shaped keys delete directly; anything else fans out over tag matches.
+      const asId = /^[A-Za-z0-9_-]{8,}$/.test(key);
+      if (asId) {
+        const res = await kernel("/api/agent-memory/delete", { method: "POST", body: { id: key }, budget: FAST_BUDGET });
+        return res.ok ? `Deleted memory ${key}.` : `Delete failed: ${res.error} â€” retrying as tag match is also allowed.`;
+      }
+      const found = await kernel(`/api/memory/fts-search?q=${encodeURIComponent(key)}&limit=20`, { budget: FAST_BUDGET });
+      const rows = asList(unwrap(found)).map(recOf);
+      const targets = rows.filter((r) => memTags(r).some((t) => t.toLowerCase() === key.toLowerCase())).slice(0, 20);
+      if (!targets.length) return `No memories with tag "${key}" found.`;
+      let deleted = 0;
+      for (const row of targets) {
+        const rid = String(row?.id ?? "");
+        if (!rid) continue;
+        const res = await kernel("/api/agent-memory/delete", { method: "POST", body: { id: rid }, budget: FAST_BUDGET });
+        if (res.ok) deleted++;
+      }
+      return `Purged ${deleted}/${targets.length} memories matching tag "${key}".`;
     },
   },
 ];
 
-// ─── Skills (registered programmatically; also shipped as SKILL.md files) ────
+// â”€â”€â”€ Skills (registered programmatically; also shipped as SKILL.md files) â”€â”€â”€â”€
 
 const SKILLS = [
   {
@@ -1323,10 +1453,10 @@ const SKILLS = [
 Use the \`hypernexus_*\` tools for durable memory that survives across sessions and harnesses.
 
 ## Discipline
-1. **RECALL first** — run \`hypernexus_context_harvest\` or \`hypernexus_memory_search\` before re-deriving known answers.
-2. **PERSIST non-obvious outcomes** — decisions, gotchas, and fixes go to \`hypernexus_memory_store\` with tags.
-3. **FAST on hot paths** — prefer \`hypernexus_memory_fts_search\` inside tight loops.
-4. **Scratchpad for working state** — \`hypernexus_scratchpad\` holds short-lived keys (goal, phase).
+1. **RECALL first** â€” run \`hypernexus_context_harvest\` or \`hypernexus_memory_search\` before re-deriving known answers.
+2. **PERSIST non-obvious outcomes** â€” decisions, gotchas, and fixes go to \`hypernexus_memory_store\` with tags.
+3. **FAST on hot paths** â€” prefer \`hypernexus_memory_fts_search\` inside tight loops.
+4. **Scratchpad for working state** â€” \`hypernexus_scratchpad\` holds short-lived keys (goal, phase).
 
 ## Inline recall
 Write \`@memory:keyword\` in a prompt to expand matching L2 context inline.
@@ -1341,10 +1471,10 @@ Record structured findings with \`hypernexus_record_observation\`: discovery | d
     description: "Operate and verify the HyperNexus kernel, MCP bridge, billing, and RBAC from the agent.",
     content: `# HyperNexus Ops
 
-- \`hypernexus_status\` / \`hypernexus_system_overview\` — health before and after production changes.
-- \`hypernexus_mcp_status\` / \`hypernexus_mcp_servers\` / \`hypernexus_mcp_tools\` — MCP bridge inventory.
-- \`hypernexus_billing_status\` — quotas, depleted models, fallback chain.
-- \`hypernexus_audit_log\` — record compliance-relevant actions.
+- \`hypernexus_status\` / \`hypernexus_system_overview\` â€” health before and after production changes.
+- \`hypernexus_mcp_status\` / \`hypernexus_mcp_servers\` / \`hypernexus_mcp_tools\` â€” MCP bridge inventory.
+- \`hypernexus_billing_status\` â€” quotas, depleted models, fallback chain.
+- \`hypernexus_audit_log\` â€” record compliance-relevant actions.
 
 ## Verify loop
 1. VERIFY before change: \`hypernexus_status\`
@@ -1359,18 +1489,18 @@ Record structured findings with \`hypernexus_record_observation\`: discovery | d
     description: "Reusable orchestration workflows: MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS.",
     content: `# HyperNexus Workflows
 
-- **MEM-FIRST** (multi-step tasks): context_harvest → memory_search → <execute> → memory_store
-- **DISCOVER** (capability gap): suggest_tools → tool_search → mcp_call → memory_store
-- **HARVEST** (resuming after a break): context_harvest → session_context → memory_list
-- **HANDOFF** (context switch / session end): session_handoff(write) → memory_store(summary)
-- **OPS** (deployments/incidents): system_overview → <act> → system_overview → memory_store
+- **MEM-FIRST** (multi-step tasks): context_harvest â†’ memory_search â†’ <execute> â†’ memory_store
+- **DISCOVER** (capability gap): suggest_tools â†’ tool_search â†’ mcp_call â†’ memory_store
+- **HARVEST** (resuming after a break): context_harvest â†’ session_context â†’ memory_list
+- **HANDOFF** (context switch / session end): session_handoff(write) â†’ memory_store(summary)
+- **OPS** (deployments/incidents): system_overview â†’ <act> â†’ system_overview â†’ memory_store
 
-Follow RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY.
+Follow RECALL â†’ DISCOVER â†’ EXECUTE â†’ PERSIST â†’ VERIFY.
 `,
   },
 ];
 
-// ─── MCP stdio server resolution ─────────────────────────────────────────────
+// â”€â”€â”€ MCP stdio server resolution â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function resolveMcpCommand() {
   const override = process.env.HYPERNEXUS_MCP_COMMAND;
@@ -1391,7 +1521,7 @@ function resolveMcpCommand() {
   return [process.platform === "win32" ? "hypernexus.exe" : "hypernexus", "mcp"]; // rely on PATH
 }
 
-// ─── V2 plugin ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ V2 plugin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function setup(ctx) {
   const options = ctx.options || {};
@@ -1417,7 +1547,7 @@ async function setup(ctx) {
   const health = await kn("/health", { budget: FAST_BUDGET });
   const where = ctx.location?.directory || process.cwd();
   console.error(
-    `[hypernexus] opencode plugin v${PLUGIN_VERSION} loaded — kernel ${health.ok ? `v${health.data?.version} online` : `unreachable at ${base}`} @ ${where}`
+    `[hypernexus] opencode plugin v${PLUGIN_VERSION} loaded â€” kernel ${health.ok ? `v${health.data?.version} online` : `unreachable at ${base}`} @ ${where}`
   );
   try {
     await ctx.storage.set("boot", { at: new Date().toISOString(), kernelOk: !!health.ok, version: PLUGIN_VERSION });
@@ -1431,7 +1561,7 @@ async function setup(ctx) {
     return r;
   };
 
-  // ── Tools ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
     if (enabled.tools) {
       track(
@@ -1468,7 +1598,7 @@ async function setup(ctx) {
     console.error(`[hypernexus] tool registration skipped: ${String(err?.message || err)}`);
   }
 
-  // ── Commands ───────────────────────────────────────────────────────────────
+  // â”€â”€ Commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
     if (enabled.commands) {
       track(
@@ -1501,10 +1631,10 @@ async function setup(ctx) {
     console.error(`[hypernexus] command registration skipped: ${String(err?.message || err)}`);
   }
 
-  // ── Skills ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Skills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
     if (enabled.skills) {
-      // Skill.Info requires `path` (validated by schema) — materialize each SKILL.md
+      // Skill.Info requires `path` (validated by schema) â€” materialize each SKILL.md
       // so the registration is self-contained even without the installer.
       const skillRoot = path.join(ctx.location?.directory || process.cwd(), ".opencode", "skills");
       const resolved = SKILLS.map((skill) => {
@@ -1519,7 +1649,7 @@ async function setup(ctx) {
             fs.mkdirSync(path.dirname(skillPath), { recursive: true });
             fs.writeFileSync(skillPath, skill.content, "utf8");
           } catch {
-            /* fall through — path is still provided for the schema */
+            /* fall through â€” path is still provided for the schema */
           }
         }
         return { ...skill, path: skillPath };
@@ -1543,7 +1673,7 @@ async function setup(ctx) {
     console.error(`[hypernexus] skill registration skipped: ${String(err?.message || err)}`);
   }
 
-  // ── MCP server registration (kernel stdio bridge) ──────────────────────────
+  // â”€â”€ MCP server registration (kernel stdio bridge) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (enabled.mcp) {
     try {
       track(
@@ -1567,7 +1697,7 @@ async function setup(ctx) {
     }
   }
 
-  // ── Worktree strategy (HyperNexus-managed local worktrees) ─────────────────
+  // â”€â”€ Worktree strategy (HyperNexus-managed local worktrees) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (enabled.worktree) {
     try {
       track(
@@ -1614,7 +1744,7 @@ async function setup(ctx) {
     }
   }
 
-  // ── Session hooks ──────────────────────────────────────────────────────────
+  // â”€â”€ Session hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
   if (enabled.hooks) {
     // Prompt admission: @memory expansion + suggestion feed + session priming
@@ -1659,12 +1789,20 @@ async function setup(ctx) {
             if (event.kind && event.kind !== "primary") return; // skip title/compaction/generate requests
             const messages = event.messages || [];
             let lastUser = "";
+            let lastAssistant = "";
             for (let i = messages.length - 1; i >= 0; i--) {
               const m = messages[i];
               const role = m?.role ?? m?.info?.role;
-              if (role === "user") {
-                lastUser = typeof m?.content === "string" ? m.content : JSON.stringify(m?.content ?? m?.parts ?? "");
-                break;
+              const text = typeof m?.content === "string" ? m.content : JSON.stringify(m?.content ?? m?.parts ?? "");
+              if (role === "user" && !lastUser) lastUser = text;
+              if (role === "assistant" && !lastAssistant) lastAssistant = text;
+              if (lastUser && lastAssistant) break;
+            }
+            if (enabled.suggestions && lastAssistant) {
+              const fed = caches.fedAt.get(`${event.sessionID}:asst`) || 0;
+              if (Date.now() - fed > 8000) {
+                caches.fedAt.set(`${event.sessionID}:asst`, Date.now());
+                feedSuggestions("assistant", lastAssistant);
               }
             }
             const block = await buildSystemBlock(lastUser);
@@ -1723,7 +1861,7 @@ async function setup(ctx) {
     );
   }
 
-  // ── Tool hooks: RBAC + audit + auto-store ──────────────────────────────────
+  // â”€â”€ Tool hooks: RBAC + audit + auto-store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   } catch (err) {
     console.error(`[hypernexus] session hooks skipped: ${String(err?.message || err)}`);
   }
@@ -1747,13 +1885,16 @@ async function setup(ctx) {
         try {
           const toolName = String(event.tool || "");
           if (toolName.startsWith("hypernexus_")) return;
-          audit({
-            type: "progress",
-            title: `tool:${toolName}`,
-            content: `${toolName} ${event.status}`,
-            toolName,
-            metadata: { status: event.status },
-          });
+          const captured = event.status === "completed" && captureFileObservation(toolName, event.input);
+          if (!captured) {
+            audit({
+              type: "progress",
+              title: `tool:${toolName}`,
+              content: `${toolName} ${event.status}`,
+              toolName,
+              metadata: { status: event.status },
+            });
+          }
           if (enabled.autoStore && event.status === "completed") {
             const text =
               typeof event.result?.content === "string"
@@ -1768,7 +1909,7 @@ async function setup(ctx) {
     );
   }
 
-  // ── Permission hook: kernel-aware RBAC ────────────────────────────────────
+  // â”€â”€ Permission hook: kernel-aware RBAC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   } catch (err) {
     console.error(`[hypernexus] tool hooks skipped: ${String(err?.message || err)}`);
   }
@@ -1796,7 +1937,7 @@ async function setup(ctx) {
     );
   }
 
-  // ── Shell hook: env injection ─────────────────────────────────────────────
+  // â”€â”€ Shell hook: env injection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   } catch (err) {
     console.error(`[hypernexus] permission hook skipped: ${String(err?.message || err)}`);
   }
@@ -1815,7 +1956,7 @@ async function setup(ctx) {
     );
   }
 
-  // ── Event stream: turn observation (fire-and-forget) ──────────────────────
+  // â”€â”€ Event stream: turn observation (fire-and-forget) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   } catch (err) {
     console.error(`[hypernexus] shell hook skipped: ${String(err?.message || err)}`);
   }
@@ -1862,7 +2003,7 @@ async function setup(ctx) {
   };
 }
 
-// ─── V1 compatibility (OpenCode 1.x plugin API) ──────────────────────────────
+// â”€â”€â”€ V1 compatibility (OpenCode 1.x plugin API) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function server(input, options = {}) {
   const base = String(options.baseUrl || RUNTIME_BASE).replace(/\/+$/, "");
@@ -1938,7 +2079,7 @@ async function server(input, options = {}) {
   };
 }
 
-// ─── Export ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const plugin = {
   id: PLUGIN_ID,

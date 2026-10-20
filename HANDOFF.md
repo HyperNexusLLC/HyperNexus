@@ -1,9 +1,25 @@
-﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.14)
+﻿# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.15)
 
-## Status: COMPLETE & VERIFIED (2026-10-19)
-Branch: clean-main worktree (commit below). Kernel: bin/hypernexus.exe **v1.0.14** (rebuilt this session).
+## Status: COMPLETE & VERIFIED (2026-10-19, two sessions)
+Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.14** (built session 1). Plugin: **v1.1.0 / manifest 1.0.15**.
 
-## COMPLETE TEST MATRIX: 196/196 ALL GREEN
+## Session 2 (v1.0.15) — lifecycle + graph capture + hot-path optimization
+### COMPLETE TEST MATRIX: 269/269 ALL GREEN
+1. OpenCode plugin battery: **115/115** (was 109; +memory lifecycle +file-observation kernel round-trip)
+2. MCP tools battery: **23/23** · 3. MCP sweep: **46/46** · 4. Core without extension: **18/18**
+5. MiMo extension battery: **51/51** · 6. MiMo TUI battery: **16/16**
+
+### Session-2 changes
+- `hypernexus_memory_delete` (id delete + tag fan-out) — full memory lifecycle
+- `/hn-restore` — handoff pickup (completes HANDOFF workflow)
+- Structured `file-change:*`/`file-read:*` observations with filesModified/filesRead → kernel knowledge graph
+- Assistant-turn advertiser feed (throttled per role)
+- FIXED: `/hn-purge` sent `{tag}` but `/api/agent-memory/delete` reads `{id}` (was inert); context-hook assistant feed used undefined `sessionID`
+- OPTIMIZED: hot-path context injection parallelized (FTS harvest ∥ suggestion fetch); negative caching skips all network attempts while kernel known-down
+- Live-verified in real OpenCode session: hooks fire (audit trail `src=opencode-plugin`), hot-reload picked up new tool mid-session (84→85 tools in merged namespace)
+
+## Session 1 (v1.0.14) — full V2 plugin + kernel router parity
+### COMPLETE TEST MATRIX (session 1): 196/196 ALL GREEN
 1. OpenCode plugin battery (`bin/test-opencode-ext.mjs`): **109/109** — registration surface, 28 tools live-kernel, 10 commands, 3 skills, MCP registration, worktree strategy, every hook, V1 shim, kernel-down degradation contract
 2. MCP tools battery (`bin/test-mcp-tools.mjs`): **23/23**
 3. MCP sweep (`bin/test-mcp-sweep.mjs`): **46/46** — every registry tool invoked with schema-derived safe args + stdio transport (initialize / tools/list=58 / tools/call). 6 destructive/external tools documented-skipped
