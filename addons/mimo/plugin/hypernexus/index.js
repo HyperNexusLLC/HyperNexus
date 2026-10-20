@@ -508,6 +508,35 @@ export const server = async (input, options = {}) => {
           };
         },
       }),
+
+      hypernexus_billing_status: tool({
+        description: "Provider quotas, model pricing, and billing/usage status. Verify quotas before heavy model use.",
+        args: {},
+        async execute(_args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "Billing status" }); } catch { /* ignore */ }
+          const r = await hnFetch("/api/billing/status", { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "billing status"), null, 2) };
+        },
+      }),
+
+      hypernexus_add_fact: tool({
+        description: "Persist a structured fact, observation, or decision to L2 memory with a kind + tags for precise recall. Prefer over memory_store when the item has a clear type.",
+        args: {
+          content: z.string().describe("The fact / observation / decision"),
+          kind: z.enum(["fact", "observation", "decision", "gotcha"]).optional().describe("Item type (default fact)"),
+          tags: z.array(z.string()).optional().describe("Tags for recall"),
+          importance: z.number().min(0).max(1).optional().describe("0..1 importance (default 0.6)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Add ${args.kind || "fact"}` }); } catch { /* ignore */ }
+          const r = await hnFetch("/api/memory/add", {
+            method: "POST",
+            body: { content: args.content, category: args.kind || "fact", tags: args.tags || [], importance: args.importance ?? 0.6 },
+            budget: SLOW_BUDGET,
+          });
+          return { output: JSON.stringify(summarize(r, "add fact"), null, 2) };
+        },
+      }),
     },
 
     // 2. CONVERSATION MONITOR — non-blocking tool suggestions on each message.
