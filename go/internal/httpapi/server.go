@@ -789,6 +789,10 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.repoGraph = repograph.NewRepoGraphService(cfg.WorkspaceRoot)
 	tools.GlobalRepoGraph = server.repoGraph
 
+	// Warm the bundled ONNX embedder in the background so the first memory
+	// write/search isn't slow (model load + first inference ~1s+).
+	go memorystore.PreloadEmbedder()
+
 	// Pre-build repo graph in background so codebase_search is instant on first call
 	go func() {
 		time.Sleep(5 * time.Second) // Let the server settle

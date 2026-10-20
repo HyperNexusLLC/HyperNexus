@@ -131,6 +131,13 @@ func localEmbed(ctx context.Context, text string) []float32 {
 }
 
 // closeLocalEmbedder releases the ONNX session (used by tests and shutdown).
+// PreloadEmbedder warms the bundled ONNX model in the background at startup so
+// the first memory write/search doesn't pay the ~1s model-load + first-inference
+// cost. Safe to call multiple times and from a goroutine.
+func PreloadEmbedder() {
+	_ = ensureLocalEmbedder()
+}
+
 func closeLocalEmbedder() {
 	localEmbedMu.Lock()
 	defer localEmbedMu.Unlock()
