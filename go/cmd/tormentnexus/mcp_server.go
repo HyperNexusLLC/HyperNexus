@@ -999,6 +999,9 @@ func cmdMCP(args []string) int {
 		if execErr == nil {
 			workspaceRoot := os.Getenv("HYPERNEXUS_WORKSPACE_ROOT")
 			if workspaceRoot == "" {
+				workspaceRoot = os.Getenv("TORMENTNEXUS_WORKSPACE_ROOT")
+			}
+			if workspaceRoot == "" {
 				workspaceRoot, _ = os.Getwd()
 			}
 			cmd := exec.Command(execPath, "serve")
