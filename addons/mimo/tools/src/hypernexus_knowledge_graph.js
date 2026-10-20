@@ -27,9 +27,9 @@ export default {
   args: { action: z.enum(["add_entities", "add_relations", "add_observations", "search"]), entities: z.array(z.object({ name: z.string(), type: z.string().optional(), observations: z.array(z.string()).optional() })).optional(), relations: z.array(z.object({ from: z.string(), to: z.string(), type: z.string() })).optional(), query: z.string().optional() },
   async execute(args) {
     const map = {
-      add_entities: ["/api/memory/entities/add", { entities: args.entities || [] }],
-      add_relations: ["/api/memory/relations/add", { relations: args.relations || [] }],
-      add_observations: ["/api/memory/observations/add", { entities: args.entities || [] }],
+      add_entities: ["/api/knowledge/graph", { action: "add_entities", entities: args.entities || [] }],
+      add_relations: ["/api/knowledge/graph", { action: "add_relations", relations: args.relations || [] }],
+      add_observations: ["/api/knowledge/graph", { action: "add_observations", entities: args.entities || [] }],
       search: ["/api/memory/search?query=" + encodeURIComponent(args.query || ""), null],
     };
     const entry = map[args.action];

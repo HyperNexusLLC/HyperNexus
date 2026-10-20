@@ -26,9 +26,9 @@ export default {
   description: "Generate a ranked repository map with lightweight symbol summaries for a directory.\nArguments:\n- dir: directory path to map (default: current workspace).\n- maxFiles: cap on files included (default 200).",
   args: { dir: z.string().optional(), maxFiles: z.number().int().min(1).max(2000).optional() },
   async execute(args) {
-    const data = await hnFetch("/api/code/repomap", {
+    const data = await hnFetch("/api/agent/tool", {
       method: "POST",
-      body: JSON.stringify({ dir: args.dir || "", maxFiles: args.maxFiles || 200 }),
+      body: JSON.stringify({ name: "repomap", args: { dir: args.dir || "", maxFiles: args.maxFiles || 200 } }),
     });
     if (data.error) return data.error;
     return fmt(data);

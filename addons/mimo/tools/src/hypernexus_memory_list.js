@@ -27,15 +27,10 @@ export default {
   args: { limit: z.number().int().min(1).max(100).optional(), namespace: z.string().optional() },
   async execute(args) {
     const params = new URLSearchParams({ limit: String(args.limit || 20) });
-    if (args.namespace) params.set("namespace", args.namespace);
-    const data = await hnFetch("/api/memory/facts/list?" + params.toString());
-    if (data.error) {
-      const alt = await hnFetch("/api/memory/search?query=*&limit=" + (args.limit || 20));
-      if (alt.error) return data.error;
-      return fmt(alt);
-    }
-    const items = data.results || data.facts || data.items || (Array.isArray(data) ? data : []);
+    const data = await hnFetch("/api/memory/list?" + params.toString());
+    if (data.error) return data.error;
+    const items = data.memories || data.results || data.facts || data.items || (Array.isArray(data) ? data : []);
     if (!items.length) return "No memories stored yet.";
-    return items.map((m, i) => (i + 1) + ". [" + (m.tags || []).join(",") + "] " + (m.title || "(untitled)") + " (" + (m.created_at || m.createdAt || "") + ")").join("\n");
+    return items.map((m, i) => (i + 1) + ". [" + ((m.tags || []).join(",")) + "] " + (m.content || m.title || "(untitled)")).join("\n");
   },
 };

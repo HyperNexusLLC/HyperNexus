@@ -26,15 +26,8 @@ export default {
   description: "Harvest relevant L2 context from HyperNexus memory for the current task and return it for injection.\nCall before complex multi-step tasks to pull in prior related work.\nArguments:\n- topic: the task topic / question to harvest context for.\n- depth: harvest depth 'quick' | 'standard' | 'deep' (default standard).",
   args: { topic: z.string().min(1), depth: z.enum(["quick", "standard", "deep"]).optional() },
   async execute(args) {
-    const data = await hnFetch("/api/memory/context/harvest", {
-      method: "POST",
-      body: JSON.stringify({ topic: args.topic, depth: args.depth || "standard" }),
-    });
-    if (data.error) {
-      const alt = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.topic) + "&limit=15");
-      if (alt.error) return data.error;
-      return fmt(alt);
-    }
+    const data = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.topic) + "&limit=15");
+    if (data.error) return data.error;
     return fmt(data);
   },
 };
