@@ -151,7 +151,7 @@ export default function (pi: ExtensionAPI) {
   // ══════════════════════════════════════════════
 
   pi.on("session_start", async (event, ctx) => {
-    const sessionFile = ctx.sessionManager.getSessionFile();
+    const sessionFile = ctx?.sessionManager?.getSessionFile?.() ?? "";
     const reason = event.reason;
 
     // Set session display name from TN metadata
@@ -550,7 +550,7 @@ export default function (pi: ExtensionAPI) {
       project: Type.Optional(Type.String({ description: "Project directory name. If set, also writes to project/.memdb for git tracking" })),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
-      const sessionFile = ctx.sessionManager.getSessionFile();
+      const sessionFile = ctx?.sessionManager?.getSessionFile?.() ?? "";
       const tags = params.tags ?? [];
       if (params.project) {
         // Ensure project tag is present
@@ -1295,7 +1295,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("tn-summary", {
     description: "Summarize current session using TN context",
     handler: async (_args, ctx) => {
-      const entries = ctx.sessionManager.getEntries();
+      const entries = ctx?.sessionManager?.getEntries?.() ?? [];
       if (entries.length === 0) { ctx.ui.notify("No entries to summarize", "warning"); return; }
 
       const lastTurns = entries.slice(-20);

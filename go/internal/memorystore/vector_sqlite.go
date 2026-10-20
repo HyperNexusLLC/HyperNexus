@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -139,9 +140,13 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 
 	// Only run conflict detection for brand-new IDs. Upserting an existing
 	// record (import restore) must never cascade-supersede its neighbors.
+	// Conflict detection embeds the content (ONNX) to find near-duplicates, which
+	// is slow and runs under this mutex — it dominated memory-write latency. It is
+	// now opt-in (HYPERNEXUS_MEMORY_DEDUP=1); by default writes are instant and the
+	// vault may accumulate near-duplicates, which search handles fine.
 	var exists int
 	_ = s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM l2_vault WHERE id = ?`, entry.ID).Scan(&exists)
-	if exists == 0 {
+	if exists == 0 && os.Getenv("HYPERNEXUS_MEMORY_DEDUP") == "1" {
 		conflicts, _ := s.detectConflicts(ctx, entry)
 		if len(conflicts) > 0 {
 			// Mark the old memory as superseded
@@ -205,19 +210,23 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 			return fmt.Errorf("memorystore commit embedding: %w", err)
 		}
 	} else if entry.Content != "" {
-		// Try the bundled semantic model, fall back to hash-based
-		vec := localEmbed(ctx, entry.Content)
-		if vec == nil {
-			vec = simpleEmbed(entry.Content, fallbackDim)
-		}
-		_, err = s.db.ExecContext(ctx, `
-			INSERT INTO vec_l2_vault (id, embedding)
-			VALUES (?, ?)
-			ON CONFLICT(id) DO UPDATE SET embedding = excluded.embedding
-		`, entry.ID, encodeVec(vec))
-		if err != nil {
-			return fmt.Errorf("memorystore commit auto-embed: %w", err)
-		}
+		// Embed + store the vector asynchronously so the write returns immediately.
+		// localEmbed runs ONNX inference which can take seconds under load; blocking
+		// here made every memory write (and any op contending on the store) slow.
+		// FTS (updated by trigger on l2_vault) is searchable synchronously — the
+		// semantic vector lands a moment later.
+		id, content := entry.ID, entry.Content
+		go func() {
+			vec := localEmbed(context.Background(), content)
+			if vec == nil {
+				vec = simpleEmbed(content, fallbackDim)
+			}
+			_, _ = s.db.Exec(`
+				INSERT INTO vec_l2_vault (id, embedding)
+				VALUES (?, ?)
+				ON CONFLICT(id) DO UPDATE SET embedding = excluded.embedding
+			`, id, encodeVec(vec))
+		}()
 	}
 	return nil
 }
