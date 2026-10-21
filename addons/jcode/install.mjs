@@ -38,7 +38,18 @@ const MODE = process.argv.includes("--uninstall")
     ? "check"
     : "install";
 const GLOBAL = process.argv.includes("--global");
-const TARGET = GLOBAL ? path.join(HOME, ".jcode") : path.join(REPO_ROOT, ".jcode");
+
+// --target <dir> / --target=<dir> overrides the install root (used by the
+// test battery to exercise install/uninstall against a temp directory without
+// touching real config).
+function argValue(flag) {
+  const i = process.argv.indexOf(flag);
+  if (i >= 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith("--")) return process.argv[i + 1];
+  const eq = process.argv.find((a) => a.startsWith(flag + "="));
+  return eq ? eq.slice(flag.length + 1) : "";
+}
+const TARGET_OVERRIDE = argValue("--target");
+const TARGET = TARGET_OVERRIDE || (GLOBAL ? path.join(HOME, ".jcode") : path.join(REPO_ROOT, ".jcode"));
 
 const BEGIN = "<!-- hypernexus:begin";
 const END = "<!-- hypernexus:end -->";
@@ -170,7 +181,7 @@ if (MODE === "install") {
     changed.push("prompt-overlay.md");
   if (upsertManagedBlock(path.join(TARGET, "preferred-tools.md"), fs.readFileSync(path.join(__dirname, "preferred-tools.md"), "utf8")))
     changed.push("preferred-tools.md");
-  if (GLOBAL) {
+  if (GLOBAL && !TARGET_OVERRIDE) {
     const swarmPath = path.join(HOME, ".jcode", "swarm-prompt.md");
     if (upsertManagedBlock(swarmPath, fs.readFileSync(path.join(__dirname, "swarm-prompt-block.md"), "utf8")))
       changed.push("swarm-prompt.md (managed block)");
@@ -207,7 +218,7 @@ if (MODE === "install") {
     console.log(`  ${ok ? "ok " : "GAP"} ${f} (managed block)`);
     if (!ok) gaps++;
   }
-  if (GLOBAL) {
+  if (GLOBAL && !TARGET_OVERRIDE) {
     const body = readIfExists(path.join(HOME, ".jcode", "swarm-prompt.md")) ?? "";
     const ok = body.includes(BEGIN);
     console.log(`  ${ok ? "ok " : "GAP"} swarm-prompt.md (managed block)`);

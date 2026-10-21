@@ -22,6 +22,7 @@ node addons/jcode/install.mjs             # project scope → .jcode/
 node addons/jcode/install.mjs --global    # global scope → ~/.jcode/ (+ swarm prompt)
 node addons/jcode/install.mjs --check     # verify (exit 1 on gaps)
 node addons/jcode/install.mjs --uninstall # remove managed blocks/files
+node addons/jcode/install.mjs --target <dir>  # override install root (used by the test battery)
 ```
 
 Then restart the Jcode session (or run the `mcp` tool with `{"action":"reload"}`) so the

@@ -20,6 +20,7 @@
  */
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -337,6 +338,46 @@ console.log("=== T6/T7/T8/T9: stdio MCP server (configured command) ===");
   }
 
   child.kill();
+}
+
+// T13 installer foreign-config preservation (temp target): a pre-existing
+// foreign MCP server must survive install AND uninstall — the installer may
+// never clobber user config (round-7 manual probe, now automated).
+{
+  const tmp = path.join(os.tmpdir(), `jcode-t13-${Date.now()}`);
+  fs.mkdirSync(tmp, { recursive: true });
+  fs.writeFileSync(
+    path.join(tmp, "mcp.json"),
+    JSON.stringify({ mcpServers: { "zz-foreign": { command: "foreign.exe", args: ["serve"] } } }, null, 2),
+  );
+  const installer = path.join(REPO_ROOT, "addons", "jcode", "install.mjs");
+  try {
+    execFileSync(process.execPath, [installer, "--target", tmp], { stdio: "pipe" });
+    const cfg = JSON.parse(fs.readFileSync(path.join(tmp, "mcp.json"), "utf8"));
+    check(
+      "installer adds hypernexus + preserves foreign server",
+      !!cfg.mcpServers?.hypernexus && !!cfg.mcpServers?.["zz-foreign"],
+      Object.keys(cfg.mcpServers ?? {}).join(","),
+    );
+    check("installer --target writes skills", fs.existsSync(path.join(tmp, "skills", "hypernexus", "SKILL.md")));
+    try {
+      execFileSync(process.execPath, [installer, "--check", "--target", tmp], { stdio: "pipe" });
+      check("installer --check --target exits 0", true);
+    } catch {
+      check("installer --check --target exits 0", false);
+    }
+    execFileSync(process.execPath, [installer, "--uninstall", "--target", tmp], { stdio: "pipe" });
+    const after = JSON.parse(fs.readFileSync(path.join(tmp, "mcp.json"), "utf8"));
+    check(
+      "uninstall removes hypernexus + preserves foreign",
+      !after.mcpServers?.hypernexus && !!after.mcpServers?.["zz-foreign"],
+      Object.keys(after.mcpServers ?? {}).join(","),
+    );
+    check("uninstall removed skills dir", !fs.existsSync(path.join(tmp, "skills", "hypernexus")));
+    check("uninstall removed managed-block files", !fs.existsSync(path.join(tmp, "prompt-overlay.md")));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 }
 
 console.log(`\n=== JCODE-EXT SUMMARY: ${pass + fail} checks — ${pass} pass, ${fail} fail ===`);
