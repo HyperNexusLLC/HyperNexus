@@ -520,6 +520,7 @@ func (s *Server) buildMCPServersList(ctx context.Context) (map[string]any, error
 		Name      string `json:"name"`
 		Status    string `json:"status"`
 		ToolCount int    `json:"toolCount"`
+		Kind      string `json:"kind,omitempty"`
 	}
 
 	var servers []serverEntry
@@ -565,7 +566,8 @@ func (s *Server) buildMCPServersList(ctx context.Context) (map[string]any, error
 		seen[h.ID] = true
 		servers = append(servers, serverEntry{
 			Name:   h.ID,
-			Status: "available",
+			Status: "installed",
+			Kind:   "harness",
 		})
 	}
 

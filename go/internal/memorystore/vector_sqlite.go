@@ -55,8 +55,54 @@ type VectorStore struct {
 	relationStore *RelationStore
 }
 
+// sqliteDSNWithPragmas embeds connection-level PRAGMAs in the DSN so EVERY
+// pooled connection — including ones database/sql opens after recycling the
+// original — inherits them. The previous db.Exec("PRAGMA ...") approach only
+// covered the first connection; once it was replaced, new connections ran with
+// busy_timeout=0 and concurrent access surfaced SQLITE_BUSY ("database is
+// locked") on writes.
+func sqliteDSNWithPragmas(dbPath string) string {
+	if dbPath == ":memory:" || strings.Contains(dbPath, "_pragma=") {
+		return dbPath
+	}
+	sep := "?"
+	if strings.Contains(dbPath, "?") {
+		sep = "&"
+	}
+	return dbPath + sep + "_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
+}
+
+// isSQLITEBusy reports whether err is transient lock contention.
+func isSQLITEBusy(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "database is locked") ||
+		strings.Contains(msg, "database table is locked") ||
+		strings.Contains(msg, "sqlite_busy")
+}
+
+// execBusyRetry runs exec, retrying transient SQLITE_BUSY with short backoff.
+// In-process writers are serialized (store mutex + single connection), so a
+// busy error means brief cross-connection/file contention that clears quickly.
+func execBusyRetry(ctx context.Context, exec func(context.Context) error) error {
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		if err = exec(ctx); err == nil || !isSQLITEBusy(err) {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(time.Duration(50*(1<<attempt)) * time.Millisecond):
+		}
+	}
+	return err
+}
+
 func NewVectorStore(dbPath string) (*VectorStore, error) {
-	db, err := database.Open("sqlite", dbPath)
+	db, err := database.Open("sqlite", sqliteDSNWithPragmas(dbPath))
 	if err != nil {
 		return nil, err
 	}
@@ -180,20 +226,23 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 		entry.Category = "general"
 	}
 
-	_, err := s.db.ExecContext(ctx, `
-		INSERT INTO l2_vault (id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET
-			content = excluded.content,
-			memory_kind = excluded.memory_kind,
-			category = excluded.category,
-			tags = excluded.tags,
-			source_url = excluded.source_url,
-			importance = excluded.importance,
-			heat_score = excluded.heat_score,
-			last_accessed_at = excluded.last_accessed_at,
-			created_at = excluded.created_at
-	`, entry.ID, entry.SessionID, string(entry.Type), entry.Kind, entry.Category, entry.Tags, entry.SourceURL, entry.Content, entry.Importance, entry.HeatScore, entry.LastAccessedAt.UTC().Format("2006-01-02 15:04:05"), entry.CreatedAt.UTC().Format("2006-01-02 15:04:05"))
+	err := execBusyRetry(ctx, func(c context.Context) error {
+		_, e := s.db.ExecContext(c, `
+			INSERT INTO l2_vault (id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(id) DO UPDATE SET
+				content = excluded.content,
+				memory_kind = excluded.memory_kind,
+				category = excluded.category,
+				tags = excluded.tags,
+				source_url = excluded.source_url,
+				importance = excluded.importance,
+				heat_score = excluded.heat_score,
+				last_accessed_at = excluded.last_accessed_at,
+				created_at = excluded.created_at
+		`, entry.ID, entry.SessionID, string(entry.Type), entry.Kind, entry.Category, entry.Tags, entry.SourceURL, entry.Content, entry.Importance, entry.HeatScore, entry.LastAccessedAt.UTC().Format("2006-01-02 15:04:05"), entry.CreatedAt.UTC().Format("2006-01-02 15:04:05"))
+		return e
+	})
 	if err != nil {
 		return fmt.Errorf("memorystore commit insert: %w", err)
 	}

@@ -19,6 +19,7 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
 	"io"
 	"io/fs"
+	"log"
 	"math"
 	"net"
 	"net/http"
@@ -28,6 +29,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"runtime/debug"
 	"slices"
 	"sort"
 	"strconv"
@@ -82,6 +84,26 @@ var sessionExportKnownFormats = []map[string]any{
 }
 
 // corsMiddleware wraps an http.Handler to add CORS headers for all responses.
+// recoverMiddleware converts handler panics into 500 responses. Go's net/http
+// does NOT recover panics — without this, a single buggy handler takes down the
+// entire control plane (the same blast radius as the repograph map fatal, but
+// recoverable ones must not be allowed to kill the process).
+func recoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				log.Printf("[RECOVER] panic in %s %s: %v\n%s", r.Method, r.URL.Path, rec, debug.Stack())
+				writeJSON(w, http.StatusInternalServerError, map[string]any{
+					"success": false,
+					"error":   "internal handler panic recovered",
+					"detail":  fmt.Sprint(rec),
+				})
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
 // This allows the Next.js dashboard (port 3000) and browser extensions to
 // call TN Kernel endpoints without CORS blocks.
 func corsMiddleware(next http.Handler) http.Handler {
@@ -1095,7 +1117,7 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 
 	httpServer := &http.Server{
 		Addr:              s.cfg.Host + ":" + jsonNumber(s.cfg.Port),
-		Handler:           corsMiddleware(handler),
+		Handler:           recoverMiddleware(corsMiddleware(handler)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -3979,7 +4001,7 @@ func (s *Server) probeDownstreamServer(ctx context.Context, serverName, operatio
 	servers := s.mcpConfig.GetServers()
 	cfg, ok := servers[serverName]
 	if !ok {
-		return nil, fmt.Errorf("downstream server '%s' is not configured", serverName)
+		return nil, fmt.Errorf("downstream server '%s' is not configured as a probeable MCP connection (installed harnesses appear in mcp_list_servers with kind=harness but cannot be probed)", serverName)
 	}
 
 	if cfg.Command == "" {

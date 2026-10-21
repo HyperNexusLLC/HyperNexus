@@ -43,15 +43,18 @@ func (vs *VectorStore) GetScratchpadValue(ctx context.Context, key string) (stri
 }
 
 // SetScratchpadValue sets or overwrites a core memory value by key.
+// Writes retry transient SQLITE_BUSY lock contention (see execBusyRetry).
 func (vs *VectorStore) SetScratchpadValue(ctx context.Context, key, value string) error {
-	_, err := vs.db.ExecContext(ctx, `
-		INSERT INTO core_memory_scratchpad (key, value, updated_at)
-		VALUES (?, ?, ?)
-		ON CONFLICT(key) DO UPDATE SET
-			value = excluded.value,
-			updated_at = excluded.updated_at
-	`, key, value, time.Now().UTC().Format("2006-01-02 15:04:05"))
-	return err
+	return execBusyRetry(ctx, func(c context.Context) error {
+		_, err := vs.db.ExecContext(c, `
+			INSERT INTO core_memory_scratchpad (key, value, updated_at)
+			VALUES (?, ?, ?)
+			ON CONFLICT(key) DO UPDATE SET
+				value = excluded.value,
+				updated_at = excluded.updated_at
+		`, key, value, time.Now().UTC().Format("2006-01-02 15:04:05"))
+		return err
+	})
 }
 
 // AppendScratchpadValue appends text to an existing core memory value.
@@ -87,4 +90,3 @@ func (vs *VectorStore) GetScratchpadMap(ctx context.Context) (map[string]string,
 	}
 	return res, nil
 }
-
