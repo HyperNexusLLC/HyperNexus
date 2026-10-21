@@ -97,6 +97,53 @@ func HandleSearchMemory(ctx context.Context, args map[string]interface{}) (ToolR
 	categoryFilter, _ := getString(args, "category")
 	includeCold, _ := getBool(args, "include_cold")
 
+	// Empty query returns recent memories (schema contract) — the FTS path
+	// returns nothing for an empty term.
+	if query == "" {
+		recs, listErr := GlobalVectorStore.ListVault(ctx, limit+offset)
+		if listErr != nil {
+			return err(fmt.Sprintf("search failed: %v", listErr))
+		}
+		if offset > len(recs) {
+			recs = nil
+		} else {
+			recs = recs[offset:]
+		}
+		if len(recs) > limit {
+			recs = recs[:limit]
+		}
+		filteredRecs := make([]controlplane.L2VaultRecord, 0, len(recs))
+		for _, rec := range recs {
+			if tagFilter != "" && !strings.Contains(rec.Tags, tagFilter) {
+				continue
+			}
+			if categoryFilter != "" && rec.Category != categoryFilter {
+				continue
+			}
+			filteredRecs = append(filteredRecs, rec)
+		}
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("Found %d memories (showing %d)\n", len(filteredRecs), len(filteredRecs)))
+		for i, rec := range filteredRecs {
+			displayContent := rec.Content
+			var wrapped map[string]interface{}
+			if json.Unmarshal([]byte(rec.Content), &wrapped) == nil {
+				if c, ok := wrapped["content"].(string); ok {
+					displayContent = c
+				}
+			}
+			contentStr := displayContent
+			if len(contentStr) > 120 {
+				contentStr = contentStr[:120] + "..."
+			}
+			sb.WriteString(fmt.Sprintf("%d. [%s] %s\n", i+1, rec.Category, contentStr))
+			if rec.Tags != "" {
+				sb.WriteString(fmt.Sprintf("   Tags: %s\n", rec.Tags))
+			}
+		}
+		return ok(sb.String())
+	}
+
 	// Use FTS search via the memory store
 	db := GlobalVectorStore.DB()
 	ftsSearcher, ftsErr := memorystore.NewFTSMemorySearch(db)
