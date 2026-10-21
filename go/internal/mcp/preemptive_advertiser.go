@@ -89,6 +89,11 @@ func NewPreemptiveAdvertiser(ds *DecisionSystem, cfg AdvertiseConfig) *Preemptiv
 
 // OnMessage is called when a new conversation message arrives.
 func (pa *PreemptiveAdvertiser) OnMessage(msg ConversationMessage) {
+	// Defensive: a zero timestamp would be trimmed below instantly and the
+	// message silently lost. Default it so callers cannot disable the feed.
+	if msg.Timestamp.IsZero() {
+		msg.Timestamp = time.Now()
+	}
 	pa.mu.Lock()
 	defer pa.mu.Unlock()
 
@@ -149,9 +154,13 @@ func (pa *PreemptiveAdvertiser) GetAdvertisements(ctx context.Context) []ToolAdv
 		}
 	}
 
-	// Filter out recently injected tools
+	// Filter out recently injected tools. Reads of pa.injected MUST hold pa.mu:
+	// an unlocked map read racing a locked write is still a fatal
+	// "concurrent map read and map write" (it killed the kernel under battery
+	// load whenever parallel tool-suggestion GETs overlapped).
 	now := time.Now()
 	var result []ToolAdvertisement
+	pa.mu.Lock()
 	for _, ad := range candidateMap {
 		if lastInjected, ok := pa.injected[ad.ToolName]; ok {
 			if now.Sub(lastInjected) < pa.cfg.Cooldown {
@@ -160,6 +169,7 @@ func (pa *PreemptiveAdvertiser) GetAdvertisements(ctx context.Context) []ToolAdv
 		}
 		result = append(result, *ad)
 	}
+	pa.mu.Unlock()
 
 	// Sort by score descending and limit
 	sortAdvertisements(result)

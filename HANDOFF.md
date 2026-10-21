@@ -34,10 +34,17 @@
 
 ---
 
-# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.19)
+# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.20)
 
-## Status: COMPLETE & VERIFIED (2026-10-19/20, six sessions)
-Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.19**.
+## Status: COMPLETE & VERIFIED (2026-10-19/20, seven sessions)
+Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.20**.
+
+## Session 7 (v1.0.20) — second fatal race hunted down + fixed
+### VERIFIED: Go suites green + 293 battery assertions + empty crash log
+- **Proactive race audit** (instead of waiting for the next crash) over shared mutable state in the tool-storm hot paths: cache (locked ✓), auditor (per-line file appends ✓), PreemptiveAdvertiser (**RACE FOUND**)
+- **The bug**: `GetAdvertisements` read `pa.injected` (cooldown filter) OUTSIDE `pa.mu` while concurrent calls wrote it under lock — unlocked map read vs locked map write = `fatal error: concurrent map read and map write`. Triggered by parallel tool-suggestion GETs — exactly the OpenCode plugin's session hooks + every battery. Fixed: cooldown reads hold the lock; `preemptive_advertiser_race_test.go` regression (8 goroutines, 3× repeat)
+- **Bonus fix**: `OnMessage` silently dropped zero-timestamp messages (window-trim) — forgot `Timestamp` = feed disabled. Now defaults to now
+- **Test-debug lesson**: `extractTopics` legitimately returned 0 topics for my first seed — the messages were being dropped by the timestamp trim, not the tokenizer. Debug with a probe test INSIDE the package (access unexported state), don't guess
 
 ## Session 6 (v1.0.19) — panic containment + self-diagnosing crashes
 ### VERIFIED: Go suites green + 293 battery assertions + empty crash log under load

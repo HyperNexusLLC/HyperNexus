@@ -29,6 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live in this session: Jcode MCP manager connects `hypernexus` (58 tools), `hello_world`/`search_memory` round-trip through the harness's own MCP tool manager
 - Memory lifecycle quirks documented: `search_memory` keyword matching needs natural-language tokens (hyphenated ids don't tokenize), delete propagation is asynchronous across stores
 
+## [1.0.20] - 2026-10-20
+
+### Fixed
+- **Second kernel-fatal race (proactively hunted)** — `PreemptiveAdvertiser.GetAdvertisements` read the `injected` cooldown map **outside** `pa.mu` while concurrent calls wrote it under lock; an unlocked map read racing a locked write is still `fatal error: concurrent map read and map write` (process death). This fired whenever parallel tool-suggestion GETs overlapped — exactly what the OpenCode plugin's session hooks and every battery do. Cooldown reads now hold the lock; regression test `preemptive_advertiser_race_test.go` (8 goroutines hammering, 3× repeat, covered filter path)
+- **Silent advertiser history loss** — `OnMessage` window-trim drops zero-timestamp messages instantly, so any caller that forgets `Timestamp` silently disables the suggestion feed; zero timestamps now default to now
+
+### Verified
+- Go suites green (`internal/mcp` incl. new race regression, httpapi, tools, memorystore, repograph)
+- Batteries 293/293 across 7 runs; crash log empty through full load
+
 ## [1.0.19] - 2026-10-20
 
 ### Added
