@@ -41,6 +41,61 @@ func TestHandleScratchpadGetSet(t *testing.T) {
 	}
 }
 
+// TestSearchMemoryEmptyQueryReturnsRecent locks in the schema contract: an empty
+// query serves recent vault records (the FTS path matches nothing on an empty
+// term), with category filtering and offset/limit honored.
+func TestSearchMemoryEmptyQueryReturnsRecent(t *testing.T) {
+	tmpDir := t.TempDir()
+	vs, err := memorystore.NewVectorStore(tmpDir + "/test.db")
+	if err != nil {
+		t.Fatalf("NewVectorStore: %v", err)
+	}
+	defer vs.Close()
+	GlobalVectorStore = vs
+	defer func() { GlobalVectorStore = nil }()
+
+	ctx := context.Background()
+	for i, rec := range []struct{ content, category string }{
+		{"emptyquery probe alpha", "general"},
+		{"emptyquery probe beta", "project"},
+		{"emptyquery probe gamma", "general"},
+	} {
+		if _, herr := HandleAddMemory(ctx, map[string]interface{}{"content": rec.content, "category": rec.category}); herr != nil {
+			t.Fatalf("add %d: %v", i, herr)
+		}
+	}
+
+	// Empty query returns recent, not zero.
+	resp, err := HandleSearchMemory(ctx, map[string]interface{}{"query": "", "limit": 10})
+	if err != nil {
+		t.Fatalf("search: %v", err)
+	}
+	out := resp.Content[0].Text
+	if !strings.Contains(out, "emptyquery probe") {
+		t.Fatalf("empty query returned no recent records: %q", out)
+	}
+	if !strings.Contains(out, "Showing") && !strings.Contains(out, "showing") {
+		t.Fatalf("missing count summary: %q", out)
+	}
+
+	// Category filter narrows the recent listing.
+	respCat, err := HandleSearchMemory(ctx, map[string]interface{}{"query": "", "category": "project", "limit": 10})
+	if err != nil {
+		t.Fatalf("search category: %v", err)
+	}
+	outCat := respCat.Content[0].Text
+	if !strings.Contains(outCat, "beta") || strings.Contains(outCat, "alpha") {
+		t.Fatalf("category filter wrong: %q", outCat)
+	}
+
+	// Offset pagination over the recent listing.
+	page1, _ := HandleSearchMemory(ctx, map[string]interface{}{"query": "", "limit": 1})
+	page2, _ := HandleSearchMemory(ctx, map[string]interface{}{"query": "", "limit": 1, "offset": 1})
+	if page1.Content[0].Text == page2.Content[0].Text {
+		t.Fatalf("offset ignored: identical pages")
+	}
+}
+
 func TestHandleScratchpadAppend(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := tmpDir + "/test.db"
