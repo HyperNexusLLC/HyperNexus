@@ -82,6 +82,11 @@ function removeManagedBlock(filePath) {
   const endIdx = existing.indexOf(END);
   if (beginIdx < 0 || endIdx < beginIdx) return false;
   const next = (existing.slice(0, beginIdx) + existing.slice(endIdx + END.length)).replace(/\n{3,}/g, "\n\n");
+  // If the file held only our managed block, remove the empty husk entirely.
+  if (next.trim() === "") {
+    fs.rmSync(filePath, { force: true });
+    return true;
+  }
   fs.writeFileSync(filePath, next, "utf8");
   return true;
 }
