@@ -69,7 +69,7 @@ func sqliteDSNWithPragmas(dbPath string) string {
 	if strings.Contains(dbPath, "?") {
 		sep = "&"
 	}
-	return dbPath + sep + "_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
+	return dbPath + sep + "_pragma=busy_timeout(20000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
 }
 
 // isSQLITEBusy reports whether err is transient lock contention.
@@ -83,19 +83,21 @@ func isSQLITEBusy(err error) bool {
 		strings.Contains(msg, "sqlite_busy")
 }
 
-// execBusyRetry runs exec, retrying transient SQLITE_BUSY with short backoff.
-// In-process writers are serialized (store mutex + single connection), so a
-// busy error means brief cross-connection/file contention that clears quickly.
+// execBusyRetry runs exec, retrying transient SQLITE_BUSY with exponential
+// backoff. In-process writers are serialized (store mutex + single connection),
+// so a busy error means cross-connection/file contention — sibling kernels or
+// test loops can hold the file lock for seconds on a saturated box, so the
+// window must cover multi-second holds, not just brief blips.
 func execBusyRetry(ctx context.Context, exec func(context.Context) error) error {
 	var err error
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := 0; attempt < 5; attempt++ {
 		if err = exec(ctx); err == nil || !isSQLITEBusy(err) {
 			return err
 		}
 		select {
 		case <-ctx.Done():
 			return err
-		case <-time.After(time.Duration(50*(1<<attempt)) * time.Millisecond):
+		case <-time.After(time.Duration(100*(1<<attempt)) * time.Millisecond):
 		}
 	}
 	return err

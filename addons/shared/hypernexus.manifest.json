@@ -2,7 +2,7 @@
   "$schema": "https://hypernexus.site/schemas/extension-manifest.v1.json",
   "name": "hypernexus",
   "displayName": "HyperNexus",
-  "version": "1.0.13",
+  "version": "1.0.21",
   "description": "Universal AI control plane integration: persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery across 26k+ tools, knowledge graph, session import, skill registry, code search, and agent orchestration.",
   "kind": "harness-extension",
   "generatedFor": "multi-harness + autonomous-orchestration",
@@ -92,6 +92,21 @@
       "adapter": "addons/<harness>/",
       "install": "<harness install dir>",
       "note": "Copy this entry to add a new harness. Bind each capability below to your harness's tool-registration primitive. Keep budgets + never-throw contract identical."
+    },
+    "codewhale": {
+      "status": "active",
+      "api": "Codewhale MCP manager (mcpServers stdio config) + Agent Plugins v1.0.0 bundle (commands/skills/mcp.json) + skills / prompt-overlay surfaces",
+      "adapter": "addons/codewhale/",
+      "install": "<project>/.codewhale/ or ~/.codewhale/ — mcp.json, plugins/hypernexus/ bundle (plugin.json + plugin.toml + commands/ + skills/), skills/ mirror, AGENTS.md managed block",
+      "installer": "addons/codewhale/install.mjs",
+      "surfaces": [
+        "mcp",
+        "plugin-bundle",
+        "commands",
+        "skills",
+        "prompt-overlay"
+      ],
+      "notes": "58 tools via hypernexus mcp stdio server registered in .codewhale/mcp.json (toolNamespace mcp__hypernexus). Agent Plugins v1.0.0 bundle adds 8 /hn-* commands + 3 skills (activate via /plugin validate/show/trust/enable). Skills mirrored to skills/ for direct discovery. Version stamped from /VERSION at install. Core works without the extension over HTTP."
     }
   },
   "contract": {
@@ -126,7 +141,8 @@
         "pi": "hypernexus_memory_store",
         "mimo": "hypernexus_memory_store",
         "opencode": "hypernexus_memory_store",
-        "jcode": "mcp__hypernexus__add_memory"
+        "jcode": "mcp__hypernexus__add_memory",
+        "codewhale": "mcp__hypernexus__add_memory"
       }
     },
     {
@@ -149,7 +165,8 @@
         "pi": "hypernexus_memory_search",
         "mimo": "hypernexus_memory_search",
         "opencode": "hypernexus_memory_search",
-        "jcode": "mcp__hypernexus__search_memory"
+        "jcode": "mcp__hypernexus__search_memory",
+        "codewhale": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -167,7 +184,8 @@
         "pi": "hypernexus_memory_vector_search",
         "mimo": "hypernexus_memory_vector_search",
         "opencode": "hypernexus_memory_vector_search",
-        "jcode": "mcp__hypernexus__search_memory"
+        "jcode": "mcp__hypernexus__search_memory",
+        "codewhale": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -185,7 +203,8 @@
         "pi": "hypernexus_memory_search",
         "mimo": "hypernexus_memory_list",
         "opencode": "hypernexus_memory_list",
-        "jcode": "mcp__hypernexus__search_memory"
+        "jcode": "mcp__hypernexus__search_memory",
+        "codewhale": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -203,7 +222,8 @@
         "pi": "hypernexus_context_harvest",
         "mimo": "hypernexus_context_harvest",
         "opencode": "hypernexus_context_harvest",
-        "jcode": "mcp__hypernexus__search_memory"
+        "jcode": "mcp__hypernexus__search_memory",
+        "codewhale": "mcp__hypernexus__search_memory"
       }
     },
     {
@@ -220,7 +240,8 @@
       "harness": {
         "pi": "hypernexus_scratchpad",
         "opencode": "hypernexus_scratchpad",
-        "jcode": "mcp__hypernexus__memory_scratchpad_get"
+        "jcode": "mcp__hypernexus__memory_scratchpad_get",
+        "codewhale": "mcp__hypernexus__memory_scratchpad_get"
       }
     },
     {
@@ -238,7 +259,8 @@
         "pi": "hypernexus_tool_search",
         "mimo": "hypernexus_search_tools",
         "opencode": "hypernexus_tool_search",
-        "jcode": "mcp__hypernexus__mcp_list_tools"
+        "jcode": "mcp__hypernexus__mcp_list_tools",
+        "codewhale": "mcp__hypernexus__mcp_list_tools"
       }
     },
     {
@@ -285,7 +307,8 @@
       "harness": {
         "mimo": "hypernexus_mcp_call",
         "opencode": "hypernexus_mcp_call",
-        "jcode": "mcp__hypernexus__mcp_call_tool"
+        "jcode": "mcp__hypernexus__mcp_call_tool",
+        "codewhale": "mcp__hypernexus__mcp_call_tool"
       }
     },
     {
@@ -334,7 +357,8 @@
       "harness": {
         "pi": "hypernexus_code_search",
         "opencode": "hypernexus_code_search",
-        "jcode": "mcp__hypernexus__codebase_search"
+        "jcode": "mcp__hypernexus__codebase_search",
+        "codewhale": "mcp__hypernexus__codebase_search"
       }
     },
     {
@@ -372,7 +396,8 @@
         "pi": "tn-status",
         "mimo": "hypernexus_status",
         "opencode": "hypernexus_system_overview",
-        "jcode": "mcp__hypernexus__system_status"
+        "jcode": "mcp__hypernexus__system_status",
+        "codewhale": "mcp__hypernexus__system_status"
       }
     }
   ],

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/mcp.json",
+  "mcpServers": {
+    "hypernexus": {
+      "type": "stdio",
+      "command": "hypernexus.exe",
+      "args": ["mcp"],
+      "env": {
+        "HYPERNEXUS_WORKSPACE_ROOT": "<repo-root>",
+        "HYPERNEXUS_URL": "http://127.0.0.1:7778"
+      },
+      "extensions": {
+        "net.codewhale": {
+          "execute_timeout": 120
+        }
+      }
+    }
+  }
+}

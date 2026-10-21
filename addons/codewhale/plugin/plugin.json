@@ -1,0 +1,30 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/plugin.json",
+  "name": "hypernexus",
+  "version": "1.0.19",
+  "description": "HyperNexus AI control plane for Codewhale — persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery across 26k+ tools, knowledge graph, kernel ops, and cross-harness session continuity.",
+  "author": {
+    "name": "HyperNexus"
+  },
+  "license": "MIT",
+  "keywords": [
+    "hypernexus",
+    "memory",
+    "mcp",
+    "control-plane",
+    "knowledge-graph",
+    "tool-discovery"
+  ],
+  "extensions": {
+    "net.codewhale": {
+      "display_name": "HyperNexus",
+      "commands": {
+        "path": "commands"
+      },
+      "skills": {
+        "path": "skills"
+      }
+    }
+  },
+  "homepage": "https://hypernexus.site"
+}

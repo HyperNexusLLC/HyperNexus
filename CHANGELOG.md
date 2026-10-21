@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.21] - 2026-10-21
+
+### Added
+- **Codewhale harness integration (`addons/codewhale/`)** — full HyperNexus integration for the Codewhale harness: MCP server registration (`mcpServers` stdio config in `.codewhale/mcp.json` / `~/.codewhale/mcp.json`), Agent Plugins v1.0.0 bundle (`plugin.json` + legacy `plugin.toml`, bundle `mcp.json`, 8 `/hn-*` commands: hn-status/hn-store/hn-search/hn-tools/hn-session/hn-context/hn-summary/hn-purge), 3 skills (bundle + direct mirror), AGENTS.md managed prompt-overlay block (RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY + preferred routing + subagent persistence + degradation contract), and an idempotent installer (`install.mjs`: project/global/check/uninstall; version stamped from `/VERSION` so the bundle cannot drift; uninstall never destroys user-edited skills)
+- **`bin/test-codewhale-ext.mjs` battery (85 checks)** — config shape across 4 locations, installer check + idempotence, skills byte-identity (bundle + mirror × project + global), plugin manifest validity (plugin.json/plugin.toml/commands frontmatter), managed-block balance, stdio MCP via the *configured* command (initialize, 58-tool inventory, memory round-trips with async-delete polling, concurrent dispatch, head-of-line regression), stdio↔router parity + schema parity, memory feature coverage (scratchpad lifecycle, tag filter, relation extraction), doc accuracy (skill/command tool refs all live), and core-WITHOUT-extension HTTP surface
+- **Shared manifest `codewhale` harness entry** — capability map bound to `mcp__hypernexus__*` tool names
+
+### Fixed
+- **Memory writes failed with SQLITE_BUSY under multi-second cross-process lock contention** (`memorystore commit insert: database is locked (5)`) — `execBusyRetry` window was 3 attempts/350ms against 10s+ lock holds. Now 5 attempts with exponential backoff (~3.1s) and DSN `busy_timeout` 10s→20s. Verified: `go test ./internal/memorystore/` green; MCP tools battery add_memory clean under load
+
+### Changed
+- `bin/test-core-noext.mjs` memory-search budget 15s→30s (vector+embed search is ~800ms nominal but observed 6-14s under host CPU saturation from unrelated processes)
+- `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` §6 rewritten for the current CodeWhale integration (58 tools, config paths, plugin bundle activation flow, verification commands)
+
+---
+
 ## [1.0.19] - 2026-10-20
 
 ### Added

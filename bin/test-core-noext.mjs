@@ -66,7 +66,10 @@ console.log("=== T10-CORE: MEMORY ENDPOINTS (no extension) ===");
   check("POST /api/memory/facts/add", r.status === 200 && r.body.success !== false, `status=${r.status}`);
 }
 {
-  const r = await get("/api/memory/search?query=core&limit=3");
+  // Budget: vector+embed search is documented ~800ms, but under heavy host load
+  // (saturated CPU from unrelated processes) 6-14s observed. 30s keeps the check
+  // honest while surviving load-induced latency spikes.
+  const r = await get("/api/memory/search?query=core&limit=3", 30000);
   check("GET /api/memory/search", r.status === 200, `status=${r.status}`);
 }
 {
