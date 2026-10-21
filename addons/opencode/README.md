@@ -51,6 +51,16 @@ Plugin options (via `opencode.jsonc` → `plugins: [{ package: ..., options: {..
 `baseUrl`, `mcp` (bool), `mcpCodemode` (bool), `tools`, `commands`, `skills`, `worktree`,
 `hooks`, `suggestions`, `autoStore`, `contextInjection`, `env` — set any to `false` to disable that surface.
 
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| MCP shows `✗ hypernexus failed: Connection closed` after a kernel swap | killing `hypernexus` processes kills the stdio MCP child; OpenCode holds the stale state | `opencode service restart` (a config touch does **not** clear it) — the stdio server itself is healthy; verify standalone with `hypernexus.exe mcp` |
+| Kernel "down" right after `Start-Process` | boot takes 10–40s on a saturated box before binding 7778 | wait and re-check `/health`; test batteries gate on readiness now |
+| Battery timeouts during heavy load | this is a 2-core box shared with sibling autopilot agents at 100% CPU | budgets are load-tolerant (sweep 90s/call); re-run before concluding a regression |
+| `Copy-Item` fails replacing `hypernexus.exe` | running processes lock the exe | kill all `hypernexus` processes → verify gone → copy → start; never delete the staged `hypernexus-new.exe` after a failed copy |
+| Go/Node parse errors on JSON we wrote | PowerShell `Set-Content -Encoding utf8` writes a BOM | write bytes without BOM (`fs.writeFileSync` utf8, or strip bytes 239,187,191) |
+
 ## Degradation contract
 
 - Every kernel call is budgeted (`AbortSignal.timeout`) and **never throws** — a hung or

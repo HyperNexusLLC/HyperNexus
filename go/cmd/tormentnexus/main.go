@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -33,7 +34,31 @@ func main() {
 	os.Exit(run(os.Args[1:]))
 }
 
+// installCrashCapture redirects the runtime's crash output (unrecoverable
+// fatals like "concurrent map iteration and map write", unrecovered panics,
+// out-of-memory) to .hypernexus/kernel-crash.log. Without this the fatal text
+// is lost to whichever parent spawned us, and every crash is undiagnosable.
+func installCrashCapture() {
+	root := strings.TrimSpace(os.Getenv("HYPERNEXUS_WORKSPACE_ROOT"))
+	if root == "" {
+		if cwd, err := os.Getwd(); err == nil {
+			root = cwd
+		}
+	}
+	if root == "" {
+		return
+	}
+	dir := filepath.Join(root, ".hypernexus")
+	_ = os.MkdirAll(dir, 0o755)
+	f, err := os.OpenFile(filepath.Join(dir, "kernel-crash.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	if err != nil {
+		return
+	}
+	debug.SetCrashOutput(f, debug.CrashOptions{})
+}
+
 func run(args []string) int {
+	installCrashCapture()
 	// Check if this is first run - auto-install if needed
 	if isFirstRun() {
 		log.Printf("First run detected - running installation...")

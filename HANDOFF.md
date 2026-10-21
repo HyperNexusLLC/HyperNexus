@@ -30,10 +30,17 @@
 
 ---
 
-# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.18)
+# HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.19)
 
-## Status: COMPLETE & VERIFIED (2026-10-19/20, five sessions)
-Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.18**.
+## Status: COMPLETE & VERIFIED (2026-10-19/20, six sessions)
+Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.19**.
+
+## Session 6 (v1.0.19) — panic containment + self-diagnosing crashes
+### VERIFIED: Go suites green + 293 battery assertions + empty crash log under load
+- `recoverMiddleware` outermost in the HTTP chain — handler panics return 500 + stack in log instead of killing the process (Go net/http does NOT recover panics; one buggy route = dead control plane). 3 tests incl. chain-wiring
+- **`debug.SetCrashOutput`** → `.hypernexus/kernel-crash.log` at startup: unrecoverable fatals (map races, OOM) now captured regardless of spawning parent. Empty log through full battery load = kernel stability confirmed
+- README troubleshooting table (MCP stale-state → `opencode service restart`; slow boot 10–40s; binary-swap + BOM traps)
+- **Ops notes**: Go's default `go test` 10m timeout trips under load — use `-timeout 25m` for httpapi; `where.exe gcc` absent so `-race` unavailable (cgo) — the SetCrashOutput hook is the crash-attribution strategy
 
 ## Session 5 (v1.0.18) — kernel-killing race + bridge payloads + schema authority
 ### VERIFIED: full Go suites + 293 battery assertions

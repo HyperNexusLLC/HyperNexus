@@ -26,6 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live in this session: Jcode MCP manager connects `hypernexus` (58 tools), `hello_world`/`search_memory` round-trip through the harness's own MCP tool manager
 - Memory lifecycle quirks documented: `search_memory` keyword matching needs natural-language tokens (hyphenated ids don't tokenize), delete propagation is asynchronous across stores
 
+## [1.0.19] - 2026-10-20
+
+### Added
+- **`recoverMiddleware`** (outermost HTTP layer) — Go's net/http does not recover handler panics, so one buggy route could take down the whole control plane; panics now return 500 with detail + full stack in the log. Tests: `recover_middleware_test.go` (recovery, pass-through, chain wiring)
+- **Self-diagnosing kernel crashes** — `debug.SetCrashOutput` redirects unrecoverable runtime fatals (map races, OOM) to `.hypernexus/kernel-crash.log` at startup regardless of which parent spawned the process; every future crash is now attributable
+- **README troubleshooting section** — MCP stale-state recovery (`opencode service restart`), slow-boot expectations, load tolerance, binary-swap trap, BOM trap
+
+### Verified
+- Go suites green (httpapi full 248s — note: Go's default 10m test timeout trips under load, use `-timeout 25m`), tools, memorystore, repograph
+- Batteries 293/293 across 7 runs; crash log stayed empty through full battery load (kernel survives sweep + mimo + e2e + core suites back-to-back)
+
 ## [1.0.18] - 2026-10-20
 
 ### Fixed
