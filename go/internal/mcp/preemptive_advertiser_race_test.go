@@ -11,17 +11,25 @@ import (
 // Regression test for the kernel-fatal "concurrent map read and map write" in
 // PreemptiveAdvertiser: GetAdvertisements read pa.injected (cooldown filter)
 // WITHOUT holding pa.mu while concurrent GetAdvertisements/OnMessage calls
-// wrote it. Map reads racing writes are fatal even when the writer locks â€” the
-// reader must lock too. This raced constantly in production because the
+// wrote it. Map reads racing writes are fatal even when the writer locks --
+// the reader must lock too. This raced constantly in production because the
 // OpenCode plugin's session hooks fire tool-suggestion GETs and feed POSTs
 // concurrently.
 //
 // NOTE: a regression makes the TEST PROCESS die with a runtime fatal (not a
-// recoverable panic) â€” that is exactly the signal we want.
+// recoverable panic) -- that is exactly the signal we want.
 func TestPreemptiveAdvertiserConcurrentSuggestions(t *testing.T) {
 	ds := NewDecisionSystem(DecisionConfig{}, nil)
 	ds.AddCatalogEntries(BuiltinTools())
-	pa := NewPreemptiveAdvertiser(ds, DefaultAdvertiseConfig())
+	// Zero cooldown: the first call marks ads injected, and with the production
+	// 30s cooldown every later call is filtered out -- on a loaded box the main
+	// goroutine can starve the readers through all its calls first and the
+	// coverage counter would stay zero (a scheduling lottery). Cooldown 0 keeps
+	// the pa.injected map READ on every call (race coverage intact) while
+	// making the count deterministic.
+	cfg := DefaultAdvertiseConfig()
+	cfg.Cooldown = 0
+	pa := NewPreemptiveAdvertiser(ds, cfg)
 
 	// Seed conversation history with words that rank builtin tools highly.
 	for i := 0; i < 8; i++ {
@@ -63,9 +71,13 @@ func TestPreemptiveAdvertiserConcurrentSuggestions(t *testing.T) {
 		}(i)
 	}
 
-	// Let the readers hammer while feeds run, then wind down.
+	// Let the readers hammer while feeds run, then wind down. Count these too:
+	// coverage must not depend on which goroutine wins the first call.
 	for i := 0; i < 200; i++ {
-		pa.GetAdvertisements(context.Background())
+		ads := pa.GetAdvertisements(context.Background())
+		adsMu.Lock()
+		totalAds += len(ads)
+		adsMu.Unlock()
 	}
 	close(stop)
 	wg.Wait()
