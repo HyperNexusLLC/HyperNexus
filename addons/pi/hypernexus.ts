@@ -1406,13 +1406,13 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "hypernexus_subagent",
-    label: "TN Subagent",
-    description: "Dispatch a task to a HyperNexus sub-agent. Uses TN's SupervisorManager for distributed execution with session isolation and result storage back to L2 memory.",
-    promptSnippet: "Dispatch a task to a sub-agent",
+    label: "TN Task Queue",
+    description: "Record a task / TODO to L2 memory for tracking and later recall. This records intent — it does NOT spawn a live sub-agent (pi executes work inline via ctx.executeTool). Retrieve stored tasks with hypernexus_memory_search tags system:subagent.",
+    promptSnippet: "Record a task/TODO for tracking",
     promptGuidelines: [
-      "Use hypernexus_subagent when a task can run independently — parallelizable work, background research, batch operations.",
-      "TN subagents run in isolated sessions with their own context window. Results are stored back to L2.",
-      "Good for: code reviews, file analysis, batch refactoring, parallel research.",
+      "Use to jot down a follow-up task / TODO so it's persisted and recallable across sessions.",
+      "This is a task tracker, not a live dispatcher — do the work inline with other tools.",
+      "Good for: capturing follow-ups, deferred work, multi-step plans to revisit.",
     ],
     namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
     exposure: "deferred",
@@ -1421,7 +1421,7 @@ export default function (pi: ExtensionAPI) {
     outputSchema: Type.Object({ taskId: Type.String(), mode: Type.String(), dispatched: Type.Boolean(), contextPreview: Type.Optional(Type.String()) }),
     parameters: Type.Object({
       task: Type.String({ description: "The task description for the sub-agent" }),
-      mode: Type.Optional(Type.String({ description: "'sync' (wait for result) or 'async' (fire and forget, default 'sync')" })),
+      mode: Type.Optional(Type.String({ description: "'record' (just save) or 'harvest' (also pull related context), default 'record'" })),
       context: Type.Optional(Type.String({ description: "Optional context to pass to the sub-agent" })),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
@@ -1442,7 +1442,7 @@ export default function (pi: ExtensionAPI) {
 
       if (mode === "async") {
         return {
-          content: [{ type: "text", text: `✅ Task dispatched to sub-agent (ID: ${taskId}). Results will appear in L2 memory when complete.` }],
+          content: [{ type: "text", text: `✅ Task recorded (ID: ${taskId}). Retrieve with hypernexus_memory_search (tag system:subagent).` }],
           details: { taskId, mode: "async" },
           structuredContent: { taskId, mode: "async", dispatched: true },
         };
@@ -1453,7 +1453,7 @@ export default function (pi: ExtensionAPI) {
         const harvestResult = await ctx.executeTool("hypernexus_context_harvest", { query: params.task });
         const harvestText = harvestResult?.content?.map((c: any) => c.text ?? "").join("\n") ?? "";
         return {
-          content: [{ type: "text", text: `🔧 Sub-agent task dispatched (ID: ${taskId}).\n\nHarvested context:\n${harvestText || "(none)"}\n\nTask stored in L2 memory. Check results with hypernexus_memory_search.` }],
+          content: [{ type: "text", text: `🔧 Task recorded (ID: ${taskId}).\n\nHarvested context:\n${harvestText || "(none)"}\n\nTask stored in L2 memory. Check results with hypernexus_memory_search.` }],
           details: { taskId, mode: "sync", nestedTool: "hypernexus_context_harvest" },
           structuredContent: { taskId, mode: "sync", dispatched: true, contextPreview: harvestText.slice(0, 500) },
         };
