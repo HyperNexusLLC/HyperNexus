@@ -265,6 +265,27 @@ console.log("=== T6/T7/T8/T9: stdio MCP server (configured command) ===");
   const ciProps = new Set(Object.keys(stdioByName.get("code_interpreter")?.inputSchema?.properties ?? {}));
   check("code_interpreter schema has code+language", ciProps.has("code") && ciProps.has("language"), [...ciProps].join(","));
 
+  // T10 head-of-line blocking regression: with concurrent dispatch a slow
+  // tools/call must NOT delay an interleaved quick call (dispatch used to
+  // serialize; one slow call froze every request queued behind it).
+  {
+    const order = [];
+    const slowP = rpc("tools/call", { name: "bash", arguments: { command: "ping -n 6 127.0.0.1", timeout: 20 } }, 30000).then((r) => {
+      order.push("slow");
+      return r;
+    });
+    await new Promise((res) => setTimeout(res, 200));
+    const quick = await rpc("tools/call", { name: "hello_world", arguments: { name: "hol-quick" } }, 30000);
+    order.push("quick");
+    check(
+      "head-of-line: quick call resolves while slow call pending",
+      order[0] === "quick" && /hol-quick/i.test(JSON.stringify(quick?.result ?? quick)),
+      order.join(" -> "),
+    );
+    await slowP;
+    check("slow call still completes", order.includes("slow"), order.join(" -> "));
+  }
+
   child.kill();
 }
 

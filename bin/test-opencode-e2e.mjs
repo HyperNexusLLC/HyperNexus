@@ -51,8 +51,16 @@ function api(args, opts = {}) {
 }
 
 console.log("== E2E-1. Plugin load-state (GET /api/plugin)");
-const plugins = api(["get", `/api/plugin?location%5Bdirectory%5D=${encodeURIComponent(ROOT)}`]);
-const list = Array.isArray(plugins) ? plugins : Array.isArray(plugins?.data) ? plugins.data : [];
+// Retry: right after kernel swaps the OpenCode service can briefly report an
+// empty plugin list before the local plugins re-register (observed transient).
+let plugins = { __error: "not attempted" };
+let list = [];
+for (let attempt = 0; attempt < 3; attempt++) {
+  plugins = api(["get", `/api/plugin?location%5Bdirectory%5D=${encodeURIComponent(ROOT)}`]);
+  list = Array.isArray(plugins) ? plugins : Array.isArray(plugins?.data) ? plugins.data : [];
+  if (list.length > 0) break;
+  await new Promise((res) => setTimeout(res, 2000));
+}
 const names = list.map((p) => String(p?.id ?? p?.name ?? ""));
 check("GET /api/plugin responds", !plugins?.__error, plugins?.__error || "");
 check("hypernexus plugin is loaded", names.some((n) => /hypernexus/.test(n)), names.join(","));

@@ -144,6 +144,35 @@ func TestGetMergedToolsSchemaOverrideOnCollision(t *testing.T) {
 	}
 }
 
+// TestHandleRequestUpstreamFailureIsGraceful: a tools/call for an upstream-only
+// tool with a failing kernel must return a JSON-RPC error envelope — never a
+// panic and never a silent empty result.
+func TestHandleRequestUpstreamFailureIsGraceful(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	s := NewMCPServer(srv.URL)
+	params, _ := json.Marshal(MCPParams{Name: "search_memory", Arguments: map[string]any{"query": "x"}})
+	resp := s.HandleRequest(MCPRequest{JSONRPC: "2.0", ID: 1, Method: "tools/call", Params: params})
+	if resp.Error == nil {
+		t.Fatalf("expected JSON-RPC error envelope on upstream failure, got result=%v", resp.Result)
+	}
+	if resp.Result != nil {
+		t.Fatalf("error envelope must not carry a result")
+	}
+}
+
+// TestHandleRequestUnknownMethod: unknown JSON-RPC methods return -32601.
+func TestHandleRequestUnknownMethod(t *testing.T) {
+	s := NewMCPServer("http://127.0.0.1:1") // never contacted for this method
+	resp := s.HandleRequest(MCPRequest{JSONRPC: "2.0", ID: 7, Method: "resources/list"})
+	if resp.Error == nil || resp.Error.Code != -32601 {
+		t.Fatalf("expected -32601 for unknown method, got %+v", resp.Error)
+	}
+}
+
 func hasTool(list []ToolDefinition, name string) bool {
 	return findTool(list, name) != nil
 }
