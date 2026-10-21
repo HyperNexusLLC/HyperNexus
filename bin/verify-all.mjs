@@ -35,6 +35,7 @@ const batteries = [
   { id: "core", cmd: "node", args: ["bin/test-core-noext.mjs"] },
   { id: "mimo", cmd: "node", args: ["bin/test-extensions.mjs"] },
   { id: "tui", cmd: "node", args: ["bin/test-tui.mjs"] },
+  { id: "drift", cmd: "node", args: ["bin/test-drift.mjs"] },
 ];
 
 const goSuites = [

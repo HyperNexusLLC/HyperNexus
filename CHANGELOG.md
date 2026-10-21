@@ -53,7 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flaky advertiser race regression test** — 30s cooldown meant only the first `GetAdvertisements` call returns ads; under load the main goroutine could starve the readers and leave the coverage counter at zero. Test now uses zero cooldown (map read still exercised every call) and counts all callers
 
 ### Added
-- **`bin/verify-all.mjs`** — one-command gauntlet: 7 Node batteries + 5 Go suites + crash-log check, single PASS/FAIL summary, `--fast` for batteries-only. Any agent on the shared branch can now verify in one shot
+- **`bin/test-drift.mjs` (89 checks) — the schema-drift guard** (in the gauntlet): every `/api/...` endpoint the extension references must exist on the live kernel (404 = drift), every `rpc.js` TOOL promise must be registered in `index.js`, every CAPABILITY mapping must resolve, and core registry tools must be live. Siblings rename kernel APIs daily — "extension broke because kernel moved" is now a red line
+- **`bin/verify-all.mjs`** — one-command gauntlet: 8 Node batteries + 5 Go suites + crash-log check, single PASS/FAIL summary, `--fast` for batteries-only. Any agent on the shared branch can now verify in one shot
 - **`bin/swap-kernel.ps1`** — the one sanctioned kernel swap path: lockfile (with stale-lock steal) → kill → verify gone → copy → verify size → optional **content verification** (`-Expect <fix-unique string literal>`; catches stale pre-commit builds — a real trap hit on 2026-10-21) → delete staged. Kills the multi-agent staged-binary collision class
 - **Gauntlet hardening** — `verify-all.mjs` uses `-timeout 30m` for httpapi (goroutine-leak growth documented by the sibling agent); the e2e battery captures full message dumps on store-confirmation failures and polls 20s
 
