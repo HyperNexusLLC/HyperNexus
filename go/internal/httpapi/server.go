@@ -638,7 +638,9 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 
 	server.swarmController = orchestration.NewSwarmController(server.a2aBroker)
 	server.coderAgent = orchestration.NewCoderAgent(server.a2aBroker, cfg.WorkspaceRoot)
-	server.coderAgent.Start(context.Background())
+	if !bgDisabled() {
+		server.coderAgent.Start(context.Background())
+	}
 	server.mcpPredictor = mcp.NewToolPredictor(server.mcpAggregator)
 	server.goDirector = orchestration.NewDirector(server.swarmController, server.coderAgent, server.a2aBroker)
 	server.expertManager = hsync.NewExpertManager(server.goDirector, server.mcpPredictor)
@@ -684,7 +686,10 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	// --- Auto-start alwaysOn MCP servers ---
 	// Only connect servers explicitly marked alwaysOn:true in mcp_servers.json.
 	// Other servers lazy-load on first tool use to avoid spawning 50+ processes at boot.
-	go server.autoStartAlwaysOnMCPServers(cfg.MainConfigDir)
+	// Skipped in tests: spawning MCP processes per New() leaked across ~200 tests.
+	if !bgDisabled() {
+		go server.autoStartAlwaysOnMCPServers(cfg.MainConfigDir)
+	}
 
 	// --- Initialize new Go-native services ---
 	server.eventBus = eventbus.New(1000)
@@ -702,7 +707,11 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	nodeID := server.mesh.LocalNodeID()
 	discovery := mesh.NewDiscoveryService(nodeID, cfg.Port, []string{"memory-status", "gossip-sync"}, mesh.DefaultDiscoveryConfig())
 	server.discoveryService = discovery
-	if err := discovery.Start(context.Background()); err == nil {
+	var discoveryErr error
+	if !bgDisabled() {
+		discoveryErr = discovery.Start(context.Background())
+	}
+	if err := discoveryErr; err == nil {
 		transport := NewHTTPGossipTransport(nodeID, discovery)
 		server.gossipTransport = transport
 		adapter := memorystore.NewGossipStoreAdapter(memoryVS)
@@ -710,13 +719,19 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 		gConfig.NodeID = nodeID
 		if proto, errProto := gossip.NewProtocol(gConfig, transport, adapter); errProto == nil {
 			server.gossipProtocol = proto
-			_ = proto.Start(context.Background())
-			fmt.Printf("[Gossip] Started P2P memory sync as node %s\n", nodeID)
+			if !bgDisabled() {
+				_ = proto.Start(context.Background())
+				fmt.Printf("[Gossip] Started P2P memory sync as node %s\n", nodeID)
+			}
 
 			// Initialize UDP-based Gossip memory sync
 			udpPort := cfg.Port + 100
 			server.udpGossip = mesh.NewGossipProtocol(nodeID, udpPort, nil)
-			if errUdp := server.udpGossip.Start(context.Background()); errUdp == nil {
+			udpErr := error(nil)
+			if !bgDisabled() {
+				udpErr = server.udpGossip.Start(context.Background())
+			}
+			if errUdp := udpErr; errUdp == nil {
 				fmt.Printf("[Gossip] Started UDP P2P memory sync on port %d\n", udpPort)
 				server.udpGossip.OnMessage(func(msg mesh.GossipMessage) {
 					if content, ok := msg.Payload["content"]; ok {
@@ -729,6 +744,9 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 
 			// Start periodic peer registration from discovery
 			go func() {
+				if bgDisabled() {
+					return
+				}
 				ticker := time.NewTicker(10 * time.Second)
 				for range ticker.C {
 					for _, p := range discovery.Peers() {
@@ -813,10 +831,15 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 
 	// Warm the bundled ONNX embedder in the background so the first memory
 	// write/search isn't slow (model load + first inference ~1s+).
-	go memorystore.PreloadEmbedder()
+	if !bgDisabled() {
+		go memorystore.PreloadEmbedder()
+	}
 
 	// Pre-build repo graph in background so codebase_search is instant on first call
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(5 * time.Second) // Let the server settle
 		buildCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
@@ -842,11 +865,23 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.workflowEngine.Register(workflow.LifecycleWorkflow(cfg.WorkspaceRoot, server.toolsRegistry))
 
 	// Start background prompt evolution loop
-	skillregistry.StartPromptEvolutionLoop(context.Background(), memoryVS.DB(), 12*time.Hour)
+	if !bgDisabled() {
+		skillregistry.StartPromptEvolutionLoop(context.Background(), memoryVS.DB(), 12*time.Hour)
+	}
 
 	server.StartWSBroker()
 	server.registerRoutes()
 	return server
+}
+
+// bgDisabled reports whether heavy background loops must exit immediately.
+// The httpapi test suite sets HYPERNEXUS_DISABLE_BACKGROUND_SERVICES=1 in
+// TestMain: every New() used to leak mesh/gossip/maintenance goroutines
+// (~45k accumulated per run until the suite outgrew go-test timeouts).
+// Object construction still runs so handlers always see non-nil collaborators;
+// only the long-running loops are skipped.
+func bgDisabled() bool {
+	return os.Getenv("HYPERNEXUS_DISABLE_BACKGROUND_SERVICES") != ""
 }
 
 func (s *Server) Close() error {
@@ -905,6 +940,9 @@ func (s *Server) PreWarmCaches() {
 		}
 	}()
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		// Sync registered native tools into catalog.db on startup
 		time.Sleep(5 * time.Second)
 		if err := catalogingestor.SyncRegisteredToolsToCatalog(s.cfg.WorkspaceRoot, s.toolsRegistry.List()); err != nil {
@@ -914,6 +952,9 @@ func (s *Server) PreWarmCaches() {
 		}
 	}()
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		// Glama/Smithery registry auto-sync: initial sync after startup delay, then periodic re-syncs
 		time.Sleep(bobbyBookmarksSyncDelay)
 		dbPath := filepath.Join(s.cfg.WorkspaceRoot, "catalog.db")
@@ -949,6 +990,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Session auto-import: background worker for periodic scanning and import
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(30 * time.Second)
 		homeDir, _ := os.UserHomeDir()
 
@@ -987,6 +1031,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Transcript maintenance: periodic archive and retention cleanup
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(5 * time.Minute) // Wait for initial import to settle
 		store := sessionimport.NewImportedSessionStore(s.cfg.WorkspaceRoot)
 
@@ -1017,6 +1064,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Memory maintenance: periodic decay, consolidation, cold archive, and dream cycle
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(2 * time.Minute) // Wait for server to settle
 		vs := tools.GlobalVectorStore
 		if vs == nil {
@@ -1077,6 +1127,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Project .memdb sync: scan workspace and import all project memories into global index
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(10 * time.Second) // Wait for server to fully initialize
 		vs := tools.GlobalVectorStore
 		if vs == nil {

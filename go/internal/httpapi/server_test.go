@@ -54,7 +54,30 @@ func TestMain(m *testing.M) {
 	// Individual tests that need a real or mock upstream override this.
 	os.Setenv("HYPERNEXUS_TRPC_UPSTREAM", "http://127.0.0.1:1/trpc")
 	os.Setenv("HYPERNEXUS_LOCK_PATH", os.TempDir() + "/hypernexus-test-nonexistent.lock")
-	os.Exit(m.Run())
+	// Skip heavy background loops (mesh/gossip/catalog/session/maintenance):
+	// ~200 servers are constructed per run and every New() used to leak a full
+	// kernel's goroutines (~45k accumulated, suite outgrew go-test timeouts).
+	os.Setenv("HYPERNEXUS_DISABLE_BACKGROUND_SERVICES", "1")
+	// Hermetic storage: config.Default() otherwise resolves to the real
+	// ~/.hypernexus and every test opened the PRODUCTION memory.db (1-conn
+	// sqlite pool contending with the live kernel's writes -> 20s busy waits,
+	// a 5m+ hang in TestMemorySearchIntegration, and "file is not a database"
+	// noise from concurrent schema writes).
+	tmpCfg, err := os.MkdirTemp("", "hypernexus-test-cfg-*")
+	if err != nil {
+		panic(err)
+	}
+	tmpWs, err := os.MkdirTemp("", "hypernexus-test-ws-*")
+	if err != nil {
+		panic(err)
+	}
+	os.Setenv("HYPERNEXUS_CONFIG_DIR", tmpCfg)
+	os.Setenv("HYPERNEXUS_MAIN_CONFIG_DIR", tmpCfg)
+	os.Setenv("HYPERNEXUS_WORKSPACE_ROOT", tmpWs)
+	code := m.Run()
+	os.RemoveAll(tmpCfg)
+	os.RemoveAll(tmpWs)
+	os.Exit(code)
 }
 
 func TestHealthEndpoint(t *testing.T) {

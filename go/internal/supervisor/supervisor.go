@@ -195,6 +195,11 @@ func (m *Manager) SetPredictor(predictor *mcp.ToolPredictor) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.monitor = NewConversationMonitor(m, predictor)
+	// The monitor is a ticker loop; test harnesses construct ~200 managers per
+	// run and set HYPERNEXUS_DISABLE_BACKGROUND_SERVICES to skip such loops.
+	if os.Getenv("HYPERNEXUS_DISABLE_BACKGROUND_SERVICES") != "" {
+		return
+	}
 	m.monitor.Start(context.Background())
 }
 
