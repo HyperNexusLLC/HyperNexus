@@ -200,10 +200,16 @@ func HandleClickActionButtons(ctx context.Context, args map[string]interface{}) 
 func HandleSetChatInput(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	text := strArg(args, "text", "content")
 	windowTitle := strArg(args, "windowTitle")
+	if windowTitle == "" {
+		return err("windowTitle is required — refusing to type into an arbitrary focused window")
+	}
 	script := fmt.Sprintf(`
 Add-Type -AssemblyName System.Windows.Forms
 $shell = New-Object -ComObject WScript.Shell
-if ('%s') { $shell.AppActivate((Get-Process | Where-Object { $_.MainWindowTitle -like '*%s*' } | Select-Object -First 1).Id) | Out-Null; Start-Sleep -Milliseconds 300 }
+$target = Get-Process | Where-Object { $_.MainWindowTitle -like '*%s*' } | Select-Object -First 1
+if (-not $target) { 'ERROR: no window matching ''%s'' — not typing'; exit }
+$shell.AppActivate($target.Id) | Out-Null
+Start-Sleep -Milliseconds 300
 $shell.SendKeys('%s')
 "Set text (%d chars) in chat input"
 `, psQuote(windowTitle), psQuote(windowTitle), escapeSendKeys(psQuote(text)), len(text))
@@ -217,10 +223,16 @@ $shell.SendKeys('%s')
 // HandleSubmitChatInput — submit_chat_input: press Enter in the chat input.
 func HandleSubmitChatInput(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	windowTitle := strArg(args, "windowTitle")
+	if windowTitle == "" {
+		return err("windowTitle is required — refusing to submit into an arbitrary focused window")
+	}
 	script := fmt.Sprintf(`
 Add-Type -AssemblyName System.Windows.Forms
 $shell = New-Object -ComObject WScript.Shell
-if ('%s') { $shell.AppActivate((Get-Process | Where-Object { $_.MainWindowTitle -like '*%s*' } | Select-Object -First 1).Id) | Out-Null; Start-Sleep -Milliseconds 300 }
+$target = Get-Process | Where-Object { $_.MainWindowTitle -like '*%s*' } | Select-Object -First 1
+if (-not $target) { 'ERROR: no window matching ''%s'' — not submitting'; exit }
+$shell.AppActivate($target.Id) | Out-Null
+Start-Sleep -Milliseconds 300
 [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
 "Submitted chat"
 `, psQuote(windowTitle), psQuote(windowTitle))
@@ -235,6 +247,9 @@ if ('%s') { $shell.AppActivate((Get-Process | Where-Object { $_.MainWindowTitle 
 func HandleSimulateInput(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	keys := strArg(args, "keys", "text", "keys_string")
 	windowTitle := strArg(args, "windowTitle")
+	if windowTitle == "" {
+		return err("windowTitle is required — refusing to send keys to an arbitrary focused window")
+	}
 	script := fmt.Sprintf(`
 Add-Type -AssemblyName System.Windows.Forms
 if ('%s') {
