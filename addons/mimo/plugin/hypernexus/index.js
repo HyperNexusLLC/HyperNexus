@@ -492,7 +492,7 @@ export const server = async (input, options = {}) => {
       }),
 
       hypernexus_subagent: tool({
-        description: "Dispatch an independent sub-task to the HyperNexus orchestration layer. The task is recorded and results are stored back to L2 memory. Use for parallelizable or isolated work.",
+        description: "Record a task / TODO to L2 memory for tracking and later recall. This records intent — it does NOT spawn a live sub-agent. Retrieve stored tasks with hypernexus_memory_search (tag subagent).",
         args: {
           task: z.string().describe("What the subagent should accomplish"),
           context: z.string().optional().describe("Additional context or constraints for the subagent"),

@@ -1260,7 +1260,7 @@ const TOOLS = [
   },
   {
     name: "subagent",
-    description: "Dispatch an independent sub-task to the HyperNexus orchestration layer; results are stored back to L2.",
+    description: "Record a task / TODO to L2 memory for tracking and later recall. This records intent — it does NOT spawn a live sub-agent. Retrieve with hypernexus_memory_search (tag subagent).",
     input: {
       type: "object",
       properties: {
