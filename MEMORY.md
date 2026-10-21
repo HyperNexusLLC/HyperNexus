@@ -12,9 +12,19 @@
 
 **Jcode extension surfaces (no JS plugin API):** Jcode integrates via `~/.jcode/mcp.json` / `.jcode/mcp.json` (`mcpServers` stdio schema) + skills (`.jcode/skills/<name>/SKILL.md` with `name`/`description` frontmatter) + prompt overlay / preferred-tools / swarm-prompt managed blocks. Installer: `addons/jcode/install.mjs` (idempotent managed blocks). Battery: `bin/test-jcode-ext.mjs` (43 checks).
 
-**Memory semantics gotchas:** `search_memory` keyword matching tokenizes — hyphenated single tokens never match; use natural-language probe words. Deletes propagate asynchronously (poll ~6s before asserting gone). `add_memory` returns vectorstore `mem-general-*` ids only via `GET /api/memory/search`, not via MCP search output.
+**Memory semantics gotchas:** `search_memory` keyword matching tokenizes — hyphenated single tokens never match; use natural-language probe words. `add_memory` returns vectorstore `mem-general-*` ids only via `GET /api/memory/search`, not via MCP search output. (An earlier "delete propagates async" note was actually the L1 stale-cache bug — fixed in round 6; deletes are now effective immediately.)
 
 **cmd.exe swap trap:** `if errorlevel 1 (echo A) else (echo B) & copy x y` swallows the trailing `&` commands — binary swaps must run copy as standalone statements.
+
+### Memory Subsystem Traps (2026-10-20, round 5-6)
+
+**SQLITE_BUSY on recycled connections:** `db.Exec("PRAGMA busy_timeout=N")` only applies to ONE pooled connection; when database/sql recycles it, new connections run with busy_timeout=0 and concurrent writes fail with "database is locked". Fix: embed pragmas in the DSN (`?_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)`) so every connection inherits them, plus bounded retry on writes.
+
+**Side effects inline in handlers stall requests:** `/api/memory/add` awaited gossip P2P propagation and hung indefinitely on a broken transport while the identical non-gossip write returned in 300ms. Side effects (gossip, audit, embeds) go fire-and-forget with a hard timeout.
+
+**Delete must clear caches, not just rows:** search checks the in-memory L1 cache before SQL; deleting rows alone let "deleted" records resurface until LRU eviction. `VectorStore.DeleteMemory` now evicts L1 + all row stores in one place.
+
+**agentgrep regex gotcha:** `pattern: "a|b"` without `regex: true` is a LITERAL match — multi-alternative searches silently return 0 hits and mislead root-cause analysis.
 
 ### Dashboard API Routing (2026-07-17)
 

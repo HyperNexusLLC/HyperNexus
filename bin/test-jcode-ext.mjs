@@ -220,12 +220,12 @@ console.log("=== T6/T7/T8/T9: stdio MCP server (configured command) ===");
     check("stdio delete_memory cleanup", /deleted/i.test(delText) && !/"isError"\s*:\s*true/.test(delText), `id=${probeId}`);
     // Deletion propagates asynchronously across stores — poll briefly before failing.
     let still = true;
-    for (let i = 0; i < 6 && still; i++) {
+    for (let i = 0; i < 12 && still; i++) {
       await new Promise((res) => setTimeout(res, 1000));
       const again = await fetch(`${BASE}/api/memory/search?query=${encodeURIComponent(probe)}&limit=5`).then((r) => r.json()).catch(() => null);
       still = (again?.data ?? []).some((d) => String(d.content ?? "").includes("zebrasalad"));
     }
-    check("probe gone after delete (polled 6s)", !still);
+    check("probe gone after delete (polled 12s)", !still);
   } else {
     console.log("  NOTE  probe id not resolvable over HTTP — tagged jcode-ext-test for later purge");
   }

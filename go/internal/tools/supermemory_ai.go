@@ -159,12 +159,12 @@ func HandleDeleteMemory(ctx context.Context, args map[string]interface{}) (ToolR
 	}
 
 	db := GlobalVectorStore.DB()
-	_, delErr := db.ExecContext(ctx, `DELETE FROM l2_vault WHERE id = ?`, id)
+	delErr := GlobalVectorStore.DeleteMemory(ctx, id)
 	if delErr != nil {
 		return err(fmt.Sprintf("delete failed: %v", delErr))
 	}
-	_, _ = db.ExecContext(ctx, `DELETE FROM l2_memory_fts WHERE memory_id = ?`, id)
-	_, _ = db.ExecContext(ctx, `DELETE FROM vec_l2_vault WHERE id = ?`, id)
+	_ = db // rows + caches already handled by DeleteMemory
+	// (vec + fts cleanup included in DeleteMemory)
 
 	return ok(fmt.Sprintf("Memory %s deleted", id))
 }

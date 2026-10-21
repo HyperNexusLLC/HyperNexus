@@ -288,6 +288,26 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 	return nil
 }
 
+// DeleteMemory removes a memory from the L2 vault AND every in-process cache.
+// Deleting only the SQL rows left stale L1 cache entries that kept resurfacing
+// in search results long after deletion (search checks L1 before the DB).
+func (s *VectorStore) DeleteMemory(ctx context.Context, id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.l1Cache, id)
+	if err := execBusyRetry(ctx, func(c context.Context) error {
+		if _, e := s.db.ExecContext(c, `DELETE FROM l2_vault WHERE id = ?`, id); e != nil {
+			return e
+		}
+		_, e := s.db.ExecContext(c, `DELETE FROM l2_memory_fts WHERE memory_id = ?`, id)
+		return e
+	}); err != nil {
+		return err
+	}
+	_, _ = s.db.ExecContext(ctx, `DELETE FROM vec_l2_vault WHERE id = ?`, id)
+	return nil
+}
+
 func (s *VectorStore) evictColdestL1Locked() {
 	if len(s.l1Cache) == 0 {
 		return
