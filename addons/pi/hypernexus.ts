@@ -47,8 +47,14 @@ function tnFetchWithTimeout(path: string, timeoutMs: number, init?: RequestInit,
   }
   return fetch(`${TN_BASE}${path}`, { ...init, signal: s });
 }
-function tnFetch(path: string, init?: RequestInit, signal?: AbortSignal) {
-  return tnFetchWithTimeout(path, TN_TIMEOUT_MS, init, signal);
+async function tnFetch(path: string, init?: RequestInit, signal?: AbortSignal): Promise<Response> {
+  try {
+    return await tnFetchWithTimeout(path, TN_TIMEOUT_MS, init, signal);
+  } catch {
+    // Never throw: return a graceful failed-response so tool code that checks
+    // res.ok / res.json() degrades cleanly instead of crashing the tool call.
+    return { ok: false, status: 0, json: async () => ({}), text: async () => "" } as unknown as Response;
+  }
 }
 // Non-blocking lookup: resolves to null on any failure/timeout instead of throwing.
 async function tnFetchFastJson(path: string, signal?: AbortSignal): Promise<any | null> {
