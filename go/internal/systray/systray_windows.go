@@ -148,6 +148,10 @@ var (
 	logMutex        sync.Mutex
 	logLines        []string
 	maxLogLines     = 200
+	// trayNID holds the notify-icon so we can remove it on any shutdown path
+	// (including os.Exit), preventing Windows "ghost" tray icons.
+	trayNID     *NOTIFYICONDATAW
+	trayNIDLock sync.Mutex
 )
 
 // Icons are preloaded lazily inside runMessageLoop on the actual UI message thread.
@@ -282,6 +286,9 @@ func runMessageLoop() {
 	copy(nid.SzTip[:], syscall.StringToUTF16(branding.TrayTooltip))
 
 	pShellNotifyIcon.Call(NIM_ADD, uintptr(unsafe.Pointer(&nid)))
+	trayNIDLock.Lock()
+	trayNID = &nid
+	trayNIDLock.Unlock()
 
 	// 4. Register log window class
 	logClassName, _ := syscall.UTF16PtrFromString(fmt.Sprintf("%sLogClass", branding.RegistryKey))
@@ -433,8 +440,22 @@ func hiddenCommand(name string, args ...string) *exec.Cmd {
 	return cmd
 }
 
+// removeTrayIcon deletes the notify icon so Windows doesn't leave a ghost.
+// Safe to call on any shutdown path (including before os.Exit).
+func removeTrayIcon() {
+	trayNIDLock.Lock()
+	defer trayNIDLock.Unlock()
+	if trayNID != nil {
+		pShellNotifyIcon.Call(NIM_DELETE, uintptr(unsafe.Pointer(trayNID)))
+		trayNID = nil
+	}
+}
+
 func TriggerFullShutdown() {
 	branding := config.GetBranding()
+
+	// Remove the tray icon first so Windows doesn't leave a ghost on exit.
+	removeTrayIcon()
 
 	// 1. Terminate watchdog
 	_ = hiddenCommand("taskkill", "/F", "/FI", fmt.Sprintf("WINDOWTITLE eq %s Watchdog", branding.ProductName)).Run()
