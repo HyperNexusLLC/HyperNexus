@@ -609,7 +609,7 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params, signal) {
       const res = await tnFetch("/api/memory/list", {}, signal);
-      if (!res.ok) return { content: [{ type: "text", text: "Memory unavailable." }], isError: true };
+      if (!res.ok) return { content: [{ type: "text", text: `Memory list failed (HTTP ${res.status ?? 0} — kernel busy or timed out). Retry.` }], isError: true };
       const lb: any = await res.json();
       const memories: string[] = Array.isArray(lb) ? lb : (lb.memories ?? lb.data ?? []);
       const limit = params.limit ?? 20;
@@ -647,7 +647,7 @@ export default function (pi: ExtensionAPI) {
       if (!q) return { content: [{ type: "text", text: "Provide a query." }], isError: true, structuredContent: { count: 0, memories: [] } };
       try {
       const res = await tnFetch(`/api/memory/search?q=${encodeURIComponent(q)}&limit=${limit}`, {}, signal);
-      if (!res.ok) return { content: [{ type: "text", text: "Search unavailable." }], isError: true, structuredContent: { count: 0, memories: [] } };
+      if (!res.ok) return { content: [{ type: "text", text: `Search failed (HTTP ${res.status ?? 0} — kernel busy or timed out). Retry.` }], isError: true, structuredContent: { count: 0, memories: [] } };
       const body = await res.json();
       const data = body.data ?? body;
       if (Array.isArray(data) && data.length > 0) {
@@ -928,7 +928,7 @@ export default function (pi: ExtensionAPI) {
         const ok = await tnOk("/api/memory/scratchpad/set", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: params.content }) }, signal);
         return ok
           ? { content: [{ type: "text", text: "✅ Scratchpad updated." }], structuredContent: { ok: true } }
-          : { content: [{ type: "text", text: "Failed." }], isError: true, structuredContent: { ok: false } };
+          : { content: [{ type: "text", text: "Scratchpad write failed (kernel busy/timed out). Retry." }], isError: true, structuredContent: { ok: false } };
       }
       return { content: [{ type: "text", text: 'Usage: action="get" or "set".' }], structuredContent: { ok: false } };
     },
@@ -1040,7 +1040,7 @@ export default function (pi: ExtensionAPI) {
       }, signal);
       return ok
         ? { content: [{ type: "text", text: "Stored fact." }], structuredContent: { ok: true } }
-        : { content: [{ type: "text", text: "Failed to store." }], isError: true, structuredContent: { ok: false } };
+        : { content: [{ type: "text", text: "Store failed (kernel busy/timed out). Retry." }], isError: true, structuredContent: { ok: false } };
     },
   });
 
@@ -1140,7 +1140,7 @@ export default function (pi: ExtensionAPI) {
       const ok = await tnOk("/api/memory/context/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ goal: params.goal ?? "", objective: params.objective ?? "" }) }, signal);
       return ok
         ? { content: [{ type: "text", text: "\u2705 Session context updated." }], structuredContent: { ok: true } }
-        : { content: [{ type: "text", text: "Failed to update." }], isError: true, structuredContent: { ok: false } };
+        : { content: [{ type: "text", text: "Context save failed (kernel busy/timed out). Retry." }], isError: true, structuredContent: { ok: false } };
     },
   });
 
