@@ -216,3 +216,6 @@ bin/hypernexus.exe
 
 # === Vendor ===
 vendor/
+bin/*.bak*
+bin/*.exe.bak*
+.hypernexus/memory/

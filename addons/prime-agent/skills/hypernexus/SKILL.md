@@ -33,7 +33,12 @@ hits = await hypernexus.memory_search("time zone")
 | Downstream MCP servers | `mcp_status()`, `mcp_servers()`, `mcp_tools(server)` |
 | Call a downstream MCP tool | `mcp_call(server, tool, arguments)` |
 | Sessions | `sessions()`, `session_context()` |
-| Cross-session handoff | `handoff(summary)`, `pickup()`, `agent_memory_search(query)` |
+| Cross-session handoff | `handoff(summary)` -> artifact, `pickup(artifact)`, `agent_memory_search(query)` |
+| Agent memory entries | `agent_memory_add(content)`, `agent_memory_recent(limit)` |
+| Knowledge-graph observations | `observation_record(kind, content, files)`, `observation_search(query)` |
+| Context bundles | `memory_context_save(key, content)`, `memory_context_get(key)`, `session_bootstrap()` |
+| Knowledge ingest | `knowledge_ingest(content, source)` |
+| Tool recommendations | `tool_context(limit)`, `mcp_search_tools(query)` |
 | System / billing | `system_status()`, `billing_status()` |
 
 Sectioned overview: `await hypernexus.status("memory" | "mcp" | "tools" | "sessions")`.

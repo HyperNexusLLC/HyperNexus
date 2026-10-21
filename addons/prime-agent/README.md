@@ -7,7 +7,7 @@ and the HyperNexus control plane (Go kernel, default `http://127.0.0.1:7778`).
 
 | Surface | Mechanism | Detail |
 |---|---|---|
-| **Python skill** | `hypernexus` skill package | 25 typed async calls: memory (store/structured facts/search/FTS/list/delete/graph/relations), L1 scratchpad (get/set/append), tool discovery (semantic search + suggestions), MCP bridge (status/servers/tools/call), sessions, knowledge graph, cross-session handoff (write/pickup/search), system & billing status |
+| **Python skill** | `hypernexus` skill package | 35 typed async calls: memory (store/structured facts/search/FTS/list/delete/graph/relations), L1 scratchpad (get/set/append), tool discovery (semantic search + suggestions + context), MCP bridge (status/servers/tools/call/tool-search), sessions + session bootstrap, knowledge graph (observations record/search, ingest), context bundles (save/get), cross-session handoff + agent memory, system & billing status |
 | **MCP server** | `prime-agent mcp add hypernexus -- hypernexus mcp` | 58 tools from the kernel's stdio MCP server: memory vault, scratchpad, MCP bridge, processes, chat-surface automation, accessory/root tools (bash/read/write/edit/grep/find/ls/repomap/codebase search & outline), code interpreter, system stats |
 | **Session workflow** | `handoff()` / `pickup()` | HANDOFF.md-style cross-session continuity through `/api/agent-memory/*` |
 | **Fail-soft** | bounded 5s calls | Kernel down => typed `KernelUnreachable` with a fix hint; never stalls a turn |

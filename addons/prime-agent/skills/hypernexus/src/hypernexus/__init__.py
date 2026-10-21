@@ -40,7 +40,17 @@ __all__ = [
     "knowledge_stats",
     "handoff",
     "pickup",
+    "agent_memory_add",
+    "agent_memory_recent",
     "agent_memory_search",
+    "observation_record",
+    "observation_search",
+    "memory_context_save",
+    "memory_context_get",
+    "session_bootstrap",
+    "knowledge_ingest",
+    "mcp_search_tools",
+    "tool_context",
     "system_status",
     "billing_status",
 ]
@@ -173,7 +183,8 @@ async def memory_search(
         params["category"] = category
     if include_cold:
         params["include_cold"] = "true"
-    return await _request("GET", "/api/memory/search", params=params)
+    # embedding-backed search can take 6s+ when a local embedder is cold
+    return await _request("GET", "/api/memory/search", params=params, timeout=15.0)
 
 
 async def memory_fts_search(query: str, limit: int = 10) -> Any:
@@ -227,12 +238,12 @@ async def scratchpad_append(key: str, value: str) -> Any:
 
 async def search_tools(query: str, limit: int = 10) -> Any:
     """Semantic search over the indexed MCP tool catalog."""
-    return await _request("GET", "/api/tools/search", params={"query": query, "limit": limit})
+    return await _request("GET", "/api/tools/search", params={"query": query, "limit": limit}, timeout=10.0)
 
 
 async def suggest_tools(context: str) -> Any:
     """Proactive tool suggestions for a task description."""
-    return await _request("GET", "/api/mcp/tool-suggestions", params={"context": context})
+    return await _request("GET", "/api/mcp/tool-suggestions", params={"context": context}, timeout=10.0)
 
 
 # ── MCP bridge (downstream MCP servers configured in the kernel) ────────
@@ -313,6 +324,110 @@ async def pickup(artifact: str) -> Any:
 async def agent_memory_search(query: str, limit: int = 10) -> Any:
     """Search cross-session agent memories."""
     return await _request("GET", "/api/agent-memory/search", params={"query": query, "limit": limit})
+
+
+async def agent_memory_add(content: str, type: str = "session", namespace: str = "project", metadata: dict | None = None) -> Any:
+    """Add a cross-session agent-memory entry (type: session | handoff | fact)."""
+    body: dict[str, Any] = {"content": content, "type": type, "namespace": namespace}
+    if metadata:
+        body["metadata"] = metadata
+    return await _request("POST", "/api/agent-memory/add", json=body)
+
+
+async def agent_memory_recent(limit: int = 10) -> Any:
+    """Most recent cross-session agent memories."""
+    return await _request("GET", "/api/agent-memory/recent", params={"limit": limit})
+
+
+async def observation_record(kind: str, content: str, files: list[str] | None = None, metadata: dict | None = None) -> Any:
+    """Record a structured observation (e.g. 'file-change:write') into the knowledge graph.
+
+    kind examples: file-change:write, file-change:delete, file-read, tool-use, decision.
+    """
+    body: dict[str, Any] = {"kind": kind, "content": content}
+    if files:
+        body["files"] = files
+    if metadata:
+        body["metadata"] = metadata
+    return await _request("POST", "/api/memory/observations/record", json=body)
+
+
+async def observation_search(query: str, limit: int = 10) -> Any:
+    """Search recorded observations."""
+    return await _request("GET", "/api/memory/observations/search", params={"query": query, "limit": limit})
+
+
+async def memory_context_save(id: str, content: str, title: str | None = None, metadata: dict | None = None) -> Any:
+    """Save a named context bundle (goal, plan, working notes) for later turns.
+
+    Requires the HyperNexus tRPC upstream (HYPERNEXUS_TRPC_UPSTREAM) or a kernel
+    build with the local context fallback; raises a clear error otherwise.
+    """
+    body: dict[str, Any] = {"id": id, "content": content}
+    if title:
+        body["title"] = title
+    if metadata:
+        body["metadata"] = metadata
+    try:
+        return await _request("POST", "/api/memory/context/save", json=body)
+    except RuntimeError as exc:
+        if "no tRPC upstream configured" in str(exc):
+            raise RuntimeError(
+                "memory_context_save needs the tRPC upstream (set HYPERNEXUS_TRPC_UPSTREAM) "
+                "or a kernel with the local context fallback. Use memory_fact/agent_memory_add "
+                "for offline-safe storage."
+            ) from exc
+        raise
+
+
+async def memory_context_get(id: str) -> Any:
+    """Load a context bundle by id (works offline via the kernel's local store)."""
+    return await _request("GET", "/api/memory/context/get", params={"id": id})
+
+
+async def session_bootstrap(session_id: str | None = None) -> Any:
+    """Session-start bundle: goal, recent memories, and context for the current session."""
+    params = {"session_id": session_id} if session_id else None
+    return await _request("GET", "/api/memory/session-bootstrap", params=params, timeout=10.0)
+
+
+async def knowledge_ingest(content: str, source: str = "prime-agent", metadata: dict | None = None) -> Any:
+    """Ingest text into the knowledge graph (entities + relations extracted).
+
+    Requires the tRPC upstream or a kernel with the local ingest fallback;
+    `observation_record` and `memory_relate` work offline as graph alternatives.
+    """
+    body: dict[str, Any] = {"content": content, "source": source}
+    if metadata:
+        body["metadata"] = metadata
+    try:
+        return await _request("POST", "/api/knowledge/ingest", json=body)
+    except RuntimeError as exc:
+        if "no tRPC upstream configured" in str(exc):
+            raise RuntimeError(
+                "knowledge_ingest needs the tRPC upstream (set HYPERNEXUS_TRPC_UPSTREAM) "
+                "or a kernel with the local ingest fallback. Use observation_record/memory_relate "
+                "for offline-safe graph writes."
+            ) from exc
+        raise
+
+
+async def mcp_search_tools(query: str, limit: int = 10) -> Any:
+    """Search the kernel's indexed MCP tool catalog (alias of search_tools)."""
+    return await search_tools(query, limit)
+
+
+async def tool_context(tool_name: str, active_goal: str | None = None, last_objective: str | None = None) -> Any:
+    """JIT context + tool recommendations for using a specific tool.
+
+    Returns prior-memory context, related/recommended tools, and a prompt blob.
+    """
+    params: dict[str, Any] = {"toolName": tool_name}
+    if active_goal:
+        params["activeGoal"] = active_goal
+    if last_objective:
+        params["lastObjective"] = last_objective
+    return await _request("GET", "/api/tools/context", params=params, timeout=10.0)
 
 
 # ── system ──────────────────────────────────────────────────────────────

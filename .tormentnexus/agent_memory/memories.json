@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-10-21T02:33:53.443346+00:00",
+  "savedAt": "2026-10-21T18:09:41.944004+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -169,6 +169,26 @@
       },
       "createdAt": "2026-10-21T02:33:53.443346+00:00",
       "accessedAt": "2026-10-21T02:33:53.443346+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "a9dd073f117a74af",
+      "content": "addons/codewhale/ delivers MCP config (.codewhale/mcp.json + ~/.codewhale/mcp.json), Agent Plugins v1.0.0 bundle (plugin.json+plugin.toml, 8 hn commands, 3 skills), AGENTS.md managed overlay. Battery 85/85; full matrix 237/237 on kernel v1.0.21. SQLITE_BUSY fix: execBusyRetry 350ms window too small vs 9-14s cross-process lock holds; now 5 attempts exponential + busy_timeout 20s. Next: stdio parity for session_search/skill_manage/suggest_tools/subagent (currently OpenCode-plugin-only), installer --target mode, cross-harness e2e.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "codewhale",
+          "session-summary",
+          "v1.0.21"
+        ],
+        "title": "v1.0.21 Codewhale integration landed"
+      },
+      "createdAt": "2026-10-21T18:09:41.941083+00:00",
+      "accessedAt": "2026-10-21T18:09:41.941083+00:00",
       "accessCount": 0,
       "ttl": null
     }

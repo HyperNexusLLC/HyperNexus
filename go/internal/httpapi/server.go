@@ -4339,7 +4339,39 @@ func (s *Server) handleMCPUnloadTool(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleMemoryContextSave(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "memory.saveContext")
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "memory.saveContext", payload, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data":    result,
+			"bridge":  map[string]any{"upstreamBase": upstreamBase, "procedure": "memory.saveContext"},
+		})
+		return
+	}
+	saved, localErr := s.localUpsertMemoryContext(payload)
+	if localErr != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": localErr.Error(), "detail": localErr.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    saved,
+		"bridge": map[string]any{
+			"fallback":  "go-local-memory",
+			"procedure": "memory.saveContext",
+			"reason":    "upstream unavailable; saved memory context to the local persisted store",
+		},
+	})
 }
 
 func (s *Server) handleMemoryContextGet(w http.ResponseWriter, r *http.Request) {
@@ -11241,7 +11273,47 @@ func (s *Server) handleKnowledgeStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleKnowledgeIngest(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "knowledge.ingest")
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if payload == nil {
+		payload = map[string]any{}
+	}
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "knowledge.ingest", payload, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data":    result,
+			"bridge":  map[string]any{"upstreamBase": upstreamBase, "procedure": "knowledge.ingest"},
+		})
+		return
+	}
+	if metadata, ok := payload["metadata"].(map[string]any); ok {
+		metadata["memoryKind"] = "knowledge"
+	} else {
+		payload["metadata"] = map[string]any{"memoryKind": "knowledge"}
+	}
+	saved, localErr := s.localUpsertMemoryContext(payload)
+	if localErr != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": localErr.Error(), "detail": localErr.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"id": saved["id"], "ingested": true},
+		"bridge": map[string]any{
+			"fallback":  "go-local-knowledge",
+			"procedure": "knowledge.ingest",
+			"reason":    "upstream unavailable; stored the knowledge payload in the local persisted store",
+		},
+	})
 }
 
 func (s *Server) handleKnowledgeResources(w http.ResponseWriter, r *http.Request) {
