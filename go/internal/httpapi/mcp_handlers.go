@@ -104,11 +104,11 @@ func (s *Server) buildMCPStatus(ctx context.Context) (map[string]any, error) {
 // Runs in a goroutine so it never blocks server startup. Each server gets a 15s connect timeout.
 func (s *Server) autoStartAlwaysOnMCPServers(mainConfigDir string) {
 	type mcpServerEntry struct {
-		Command   string            `json:"command"`
-		Args      []string          `json:"args"`
-		Env       map[string]string `json:"env"`
-		Disabled  bool              `json:"disabled"`
-		AlwaysOn  bool              `json:"alwaysOn"`
+		Command  string            `json:"command"`
+		Args     []string          `json:"args"`
+		Env      map[string]string `json:"env"`
+		Disabled bool              `json:"disabled"`
+		AlwaysOn bool              `json:"alwaysOn"`
 	}
 	// Check multiple config paths: MainConfigDir, workspace root config, and workspace go/config
 	candidates := []string{
@@ -458,9 +458,36 @@ func (s *Server) handleMCPPredictTools(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-		"success": false,
-		"error":   err.Error(),
+	// Local keyword fallback: search catalog.db so prediction always returns
+	// something useful even when LLM and upstream are both unavailable.
+	localResults, localErr := s.localDBToolSearch(payload.ChatHistory+" "+payload.ActiveGoal, 8)
+	if localErr == nil && len(localResults) > 0 {
+		names := make([]string, 0, len(localResults))
+		for _, lr := range localResults {
+			names = append(names, stringValue(lr["name"]))
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data": map[string]any{
+				"predictedTools": names,
+				"reasoning":      "Keyword fallback from catalog.db",
+			},
+			"bridge": map[string]any{
+				"source": "go-local-keyword-fallback",
+			},
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data": map[string]any{
+			"predictedTools": []string{},
+			"reasoning":      "No matching tools found in catalog",
+		},
+		"bridge": map[string]any{
+			"source": "go-local-empty-fallback",
+		},
 	})
 }
 
@@ -713,32 +740,136 @@ func (s *Server) handleToolSuggestions(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": "preemptive advertiser not initialized"})
 		return
 	}
-	if r.Method == http.MethodPost {
-		// Feed a conversation message to the advertiser
-		var msg struct {
-			Role    string `json:"role"`
-			Content string `json:"content"`
+	feed := func(role, content string) {
+		content = strings.TrimSpace(content)
+		if content == "" {
+			return
 		}
-		if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+		if role != "user" && role != "assistant" {
+			role = "user"
+		}
+		s.preemptiveAdvertiser.OnMessage(mcp.ConversationMessage{
+			Role:      role,
+			Content:   content,
+			Timestamp: time.Now(),
+		})
+	}
+
+	if r.Method == http.MethodPost {
+		// Feed conversation content to the advertiser. Accept every documented
+		// body shape: flat {"role","content"}, plugin shorthand {"query"},
+		// batch {"messages":[...]}, and bare {"content"}.
+		var raw map[string]json.RawMessage
+		if err := json.NewDecoder(r.Body).Decode(&raw); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 			return
 		}
-		s.preemptiveAdvertiser.OnMessage(mcp.ConversationMessage{
-			Role:      msg.Role,
-			Content:   msg.Content,
-			Timestamp: time.Now(),
-		})
+		if msgsRaw, ok := raw["messages"]; ok {
+			var msgs []struct {
+				Role    string `json:"role"`
+				Content string `json:"content"`
+			}
+			if err := json.Unmarshal(msgsRaw, &msgs); err == nil {
+				for _, m := range msgs {
+					feed(m.Role, m.Content)
+				}
+			}
+		}
+		var flat struct {
+			Role    string `json:"role"`
+			Content string `json:"content"`
+			Query   string `json:"query"`
+		}
+		if b, err := json.Marshal(raw); err == nil {
+			_ = json.Unmarshal(b, &flat)
+		}
+		feed(flat.Role, flat.Content)
+		if q := strings.TrimSpace(flat.Query); q != "" {
+			feed("user", q)
+		}
 		writeJSON(w, http.StatusOK, map[string]any{"success": true})
 		return
 	}
 
-	// GET — return current suggestions
+	// GET — return current suggestions. The advertiser ranks the builtin set
+	// against conversation topics; the query param seeds a catalog.db /
+	// hypernexus.db keyword search so suggestions draw from the full library.
+	query := strings.TrimSpace(r.URL.Query().Get("query"))
+	if query != "" {
+		feed("user", query)
+	}
 	ads := s.preemptiveAdvertiser.GetAdvertisements(r.Context())
+	if ads == nil {
+		ads = []mcp.ToolAdvertisement{}
+	}
+
+	seen := map[string]bool{}
+	for _, ad := range ads {
+		seen[ad.ToolName] = true
+	}
+	source := "preemptive-advertiser"
+	if query != "" {
+		// localDBToolSearch does whole-phrase substring matching, so natural
+		// language queries miss. Search per significant token and merge.
+		stop := map[string]bool{"and": true, "the": true, "for": true, "with": true,
+			"that": true, "this": true, "from": true, "into": true, "your": true,
+			"you": true, "are": true, "was": true, "were": true, "can": true,
+			"our": true, "all": true, "any": true, "not": true, "use": true,
+			"using": true, "used": true, "need": true, "want": true, "how": true,
+			"what": true, "when": true, "where": true, "which": true, "who": true,
+			"will": true, "would": true, "should": true, "could": true, "about": true,
+			"have": true, "has": true, "had": true, "been": true}
+		var tokens []string
+		for _, t := range strings.Fields(strings.ToLower(query)) {
+			t = strings.Trim(t, ".,!?;:()[]{}\"'")
+			if len(t) > 2 && !stop[t] {
+				tokens = append(tokens, t)
+			}
+		}
+		if len(tokens) == 0 {
+			tokens = []string{query}
+		}
+		added := 0
+		for _, tok := range tokens {
+			if len(ads) >= 8 {
+				break
+			}
+			hits, err := s.localDBToolSearch(tok, 5)
+			if err != nil {
+				continue
+			}
+			for _, h := range hits {
+				name := stringValue(h["name"])
+				if name == "" || seen[name] {
+					continue
+				}
+				seen[name] = true
+				desc := stringValue(h["description"])
+				if len(desc) > 120 {
+					desc = desc[:117] + "..."
+				}
+				ads = append(ads, mcp.ToolAdvertisement{
+					ToolName:    name,
+					Reason:      "catalog keyword match: " + tok,
+					Score:       1,
+					Category:    stringValue(h["kind"]),
+					Description: desc,
+				})
+				added++
+				if len(ads) >= 8 {
+					break
+				}
+			}
+		}
+		if added > 0 {
+			source = "preemptive-advertiser+catalog"
+		}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
 		"data":    ads,
 		"bridge": map[string]any{
-			"source": "preemptive-advertiser",
+			"source": source,
 		},
 	})
 }
