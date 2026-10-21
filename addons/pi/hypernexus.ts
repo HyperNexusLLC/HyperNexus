@@ -1169,6 +1169,64 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  // 9k. hypernexus_orchestrate — chain tools inline via ctx.executeTool
+  pi.registerTool({
+    name: "hypernexus_orchestrate",
+    label: "TN Orchestrate",
+    description: "Autonomously chain HyperNexus tools inline (ctx.executeTool) to run the RECALL -> DISCOVER -> EXECUTE -> PERSIST loop for a task in one call.",
+    promptSnippet: "Chain HyperNexus tools to handle a task",
+    promptGuidelines: ["Use to run the full context-harvest -> tool-search -> persist loop without manual steps."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "direct",
+    reachesTools: () => "all" as const,
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    outputSchema: Type.Object({ ok: Type.Boolean(), steps: Type.Array(Type.String()) }),
+    parameters: Type.Object({ task: Type.String({ description: "The task to orchestrate" }) }),
+    async execute(_toolCallId, params, signal, onUpdate, ctx) {
+      const task = String(params.task ?? "").trim();
+      if (!task) return { content: [{ type: "text", text: "Provide a task." }], isError: true, structuredContent: { ok: false, steps: [] } };
+      const steps: string[] = [];
+      const run = async (name: string, args: any, label: string) => {
+        try {
+          const res = await ctx.executeTool(name, args, { signal, onUpdate });
+          const txt = JSON.stringify(res?.content ?? res ?? {}).slice(0, 240);
+          steps.push(`${label}: ${txt}`);
+        } catch (e) { steps.push(`${label} failed: ${String(e).slice(0, 120)}`); }
+      };
+      await run("hypernexus_context_harvest", { query: task }, "RECALL");
+      await run("hypernexus_tool_search", { query: task, limit: 3 }, "DISCOVER");
+      await run("hypernexus_memory_store", { content: `[ORCHESTRATED] ${task}`, tags: ["system:orchestrated"] }, "PERSIST");
+      steps.push("EXECUTE: the model performs the task using the discovered tools above.");
+      return { content: [{ type: "text", text: `Orchestrated \"${task}\":\n\n${steps.join("\n\n")}` }], structuredContent: { ok: true, steps } };
+    },
+  });
+
+  // 9l. hypernexus_browser — browser automation (degrades gracefully when service is down)
+  pi.registerTool({
+    name: "hypernexus_browser",
+    label: "TN Browser",
+    description: "Browser automation: scrape a URL or check browser-service status. Degrades gracefully if the browser service isn't running.",
+    promptSnippet: "Scrape a web page / browser status",
+    promptGuidelines: ["Use to fetch web content via the HyperNexus browser service."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    outputSchema: Type.Object({ ok: Type.Boolean(), result: Type.Optional(Type.String()) }),
+    parameters: Type.Object({ action: Type.String({ description: "'status' or 'scrape'" }), url: Type.Optional(Type.String({ description: "URL to scrape (for action=scrape)" })) }),
+    async execute(_toolCallId, params, signal) {
+      if (params.action === "scrape" && params.url) {
+        const res = await tnFetch("/api/browser/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: params.url }) }, signal);
+        if (!res.ok) return { content: [{ type: "text", text: `Browser scrape unavailable (HTTP ${res.status}) — the browser service may not be running.` }], isError: true, structuredContent: { ok: false } };
+        const body: any = await res.json().catch(() => ({}));
+        return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3000) }], structuredContent: { ok: true, result: JSON.stringify(body).slice(0, 3000) } };
+      }
+      const res = await tnFetch("/api/browser/status", {}, signal);
+      const body: any = await res.json().catch(() => ({}));
+      const msg = res.ok ? JSON.stringify(body).slice(0, 500) : `Browser service not running (HTTP ${res.status}). Start it to enable scraping.`;
+      return { content: [{ type: "text", text: msg }], structuredContent: { ok: res.ok, result: msg } };
+    },
+  });
+
   pi.registerCommand("tn-store", {
     description: "Store a memory in TN L2 vault with structured form (optional per-project .memdb)",
     handler: async (args, ctx) => {
@@ -1321,9 +1379,26 @@ export default function (pi: ExtensionAPI) {
         if (!confirm) return;
         ctx.ui.notify("Session cleanup would run via TN maintenance cycle", "info");
       } else if (action === "by-tag") {
-        const tag = await ctx.ui.input("Tag to remove (e.g. system:turn):", "");
+        const tag = await ctx.ui.input("Tag/term to purge (e.g. system:turn):", "");
         if (!tag) return;
-        ctx.ui.notify(`Tag-based purge for "${tag}" would run via TN API`, "info");
+        // Find matching memories via FTS (returns deletable mem-... ids), preview, confirm, delete.
+        let matches: any[] = [];
+        try {
+          const r = await tnFetchWithTimeout(`/api/memory/fts-search?q=${encodeURIComponent(tag)}&limit=50`, 4000);
+          const body = r.ok ? await r.json() : {};
+          matches = (body?.data ?? []).map((d: any) => d.record ?? d).filter((x: any) => x.id);
+        } catch { /* fall through to empty */ }
+        if (matches.length === 0) { ctx.ui.notify(`No memories matching "${tag}".`, "warning"); return; }
+        const preview = matches.slice(0, 5).map((m: any) => `  - ${String(m.content ?? "").slice(0, 60)}`).join("\n");
+        const more = matches.length > 5 ? `\n  ...and ${matches.length - 5} more` : "";
+        const confirm = await ctx.ui.confirm("Purge", `Delete ${matches.length} memories matching "${tag}"?\n${preview}${more}`);
+        if (!confirm) return;
+        let deleted = 0;
+        for (const m of matches) {
+          const ok = await tnOk("/api/agent/tool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "delete_memory", args: { id: m.id } }) });
+          if (ok) deleted++;
+        }
+        ctx.ui.notify(`Purged ${deleted}/${matches.length} memories matching "${tag}".`, "info");
       } else {
         const confirm = await ctx.ui.confirm("Purge", "Delete all your stored memories?");
         if (!confirm) return;

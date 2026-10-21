@@ -21,6 +21,8 @@ const TOOL_ARGS = {
   hypernexus_knowledge_graph: { action: "add_entities", entities: [{ name: "PiExec", type: "test", observations: ["x"] }] },
   hypernexus_session_context: { action: "get" },
   hypernexus_subagent: { task: "pi-exec test task" },
+  hypernexus_orchestrate: { task: "test orchestration" },
+  hypernexus_browser: { action: "status" },
 };
 
 const mockPi = {
@@ -47,7 +49,8 @@ for (const name of names) {
   const args = TOOL_ARGS[name] ?? {};
   const signal = AbortSignal.timeout(20000);
   try {
-    const res = await t.execute("test-id", args, signal, () => {}, { ui: { notify() {}, setStatus() {} } });
+    const testCtx = { ui: { notify() {}, setStatus() {} }, executeTool: (n, a, o) => mockPi._tools[n] ? mockPi._tools[n].execute("nested", a, o?.signal ?? AbortSignal.timeout(15000), () => {}, { ui: { notify() {}, setStatus() {} } }) : Promise.resolve({ content: [] }) };
+    const res = await t.execute("test-id", args, signal, () => {}, testCtx);
     const s = JSON.stringify(res);
     const bad = res?.isError || /404 page not found|Cannot read|undefined is not|TypeError|ReferenceError/i.test(s);
     if (bad) { fail++; fails.push(`${name}: ${s.slice(0, 90)}`); }
