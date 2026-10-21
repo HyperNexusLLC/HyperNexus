@@ -23,6 +23,10 @@ import (
 
 const (
 	fallbackDim = 384
+	// archiveRankPenalty demotes archived memories in search ranking so active
+	// (working/long_term) memories surface first, while archived ones remain
+	// fully recallable (they hold real history, just lower priority).
+	archiveRankPenalty = 0.55
 )
 
 // Search-path embeds are latency-critical: SemanticSearch holds the store mutex
@@ -674,11 +678,13 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 	if isVectorSearch {
 		// Vector search with optional metadata filters
 		var args []interface{}
+		// Include all memory types (archive too) for full recall; archived records
+		// are rank-penalized in scoring so active memories surface first.
 		sqlQuery := `
 			SELECT v.id, v.embedding, l.session_id, l.memory_type, l.memory_kind, l.category, l.tags, l.source_url, l.content, l.importance, l.heat_score, l.last_accessed_at, l.created_at
 			FROM vec_l2_vault v
 			JOIN l2_vault l ON l.id = v.id
-			WHERE l.memory_type != 'archive'
+			WHERE 1=1
 		`
 		if filterKind != "" {
 			sqlQuery += " AND l.memory_kind = ?"
@@ -711,6 +717,11 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 
 			// Boost score slightly using importance
 			boostedSim := sim * (0.8 + 0.2*r.Importance)
+			// Archived memories are included for full recall but ranked below
+			// active (working/long_term) ones at equal relevance.
+			if mType == "archive" {
+				boostedSim *= archiveRankPenalty
+			}
 			if boostedSim >= 0.3 {
 				candidates = append(candidates, scored{record: r, score: boostedSim})
 			}
@@ -774,7 +785,7 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 	sqlQuery := `
 		SELECT id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at
 		FROM l2_vault
-		WHERE memory_type != 'archive'
+		WHERE 1=1
 	`
 	useFTS := false
 	if queryText != "" {
@@ -792,7 +803,7 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 				ftsQuery += " AND category = ?"
 				ftsArgs = append(ftsArgs, filterCategory)
 			}
-			ftsQuery += " ORDER BY importance DESC, heat_score DESC, created_at DESC LIMIT ?"
+			ftsQuery += " ORDER BY (memory_type = 'archive') ASC, importance DESC, heat_score DESC, created_at DESC LIMIT ?"
 			ftsArgs = append(ftsArgs, limit)
 
 			rows, err := s.db.QueryContext(ctx, ftsQuery, ftsArgs...)
@@ -835,7 +846,7 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 			sqlQuery += " AND category = ?"
 			args = append(args, filterCategory)
 		}
-		sqlQuery += " ORDER BY importance DESC, heat_score DESC, created_at DESC LIMIT ?"
+		sqlQuery += " ORDER BY (memory_type = 'archive') ASC, importance DESC, heat_score DESC, created_at DESC LIMIT ?"
 		args = append(args, limit)
 
 		rows, err := s.db.QueryContext(ctx, sqlQuery, args...)
