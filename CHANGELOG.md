@@ -45,6 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live in this session: Jcode MCP manager connects `hypernexus` (58 tools), `hello_world`/`search_memory` round-trip through the harness's own MCP tool manager
 - Memory lifecycle quirks documented: `search_memory` keyword matching needs natural-language tokens (hyphenated ids don't tokenize), delete propagation is asynchronous across stores
 
+## [1.0.21] - 2026-10-21
+
+### Fixed
+- **Third kernel-fatal race (found by completing the shared-state audit)** — `DecisionSystem.SearchTools` read `ds.loaded` (the `IsLoaded` flag) **without** `ds.mu` while `LoadTool`/`UnloadTool`/`evictIfNeededLocked`/`rebuildKnownLocked` write it under lock — the same `fatal error: concurrent map read and map write` class as the advertiser race. Fires whenever `search_and_call` runs while tools load/unload (every battery sweep, plugin storms). Fixed with a standalone `isToolLoaded` helper (self-locking, deadlock-safe); regression `decision_race_test.go` (9 goroutines searchers+loaders+unloaders, 5× repeat)
+- **Flaky advertiser race regression test** — 30s cooldown meant only the first `GetAdvertisements` call returns ads; under load the main goroutine could starve the readers and leave the coverage counter at zero. Test now uses zero cooldown (map read still exercised every call) and counts all callers
+
+### Added
+- **`bin/verify-all.mjs`** — one-command gauntlet: 7 Node batteries + 5 Go suites + crash-log check, single PASS/FAIL summary, `--fast` for batteries-only. Any agent on the shared branch can now verify in one shot
+- **`bin/swap-kernel.ps1`** — the one sanctioned kernel swap path: lockfile (with stale-lock steal) → kill → verify gone → copy → verify size → delete staged. Kills the multi-agent staged-binary collision class (a staged binary vanished mid-swap on 2026-10-21)
+
+### Verified
+- Shared-state race audit now complete: cache ✓, auditor ✓, metrics ✓, PreemptiveAdvertiser ✓, DecisionSystem ✓ (fixed), gossip ✓ (peerKeys/PeerSet guarded), SkillStore ✓ (working-set guarded)
+- Batteries 293/293; both race regressions 5× repeat under load; crash log empty
+
 ## [1.0.20] - 2026-10-20
 
 ### Fixed
