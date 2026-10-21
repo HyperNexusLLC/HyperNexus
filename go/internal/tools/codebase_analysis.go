@@ -77,6 +77,68 @@ func HandleCodebaseSearch(ctx context.Context, args map[string]interface{}) (Too
 }
 
 // HandleCodebaseOutline outlines symbols defined in a file or details a specific symbol.
+// outlineFileDirect extracts top-level symbols from a source file by pattern
+// matching, so codebase_outline works reliably without the repo graph. Returns
+// a JSON array of {name, kind, line, text}.
+func outlineFileDirect(filePath string) (ToolResponse, error) {
+	resolved := filePath
+	if !filepath.IsAbs(resolved) {
+		if root := os.Getenv("HYPERNEXUS_WORKSPACE_ROOT"); root != "" {
+			resolved = filepath.Join(root, resolved)
+		}
+	}
+	f, openErr := os.Open(resolved)
+	if openErr != nil {
+		return err(fmt.Sprintf("cannot open %s: %v", filePath, openErr))
+	}
+	defer f.Close()
+
+	patterns := []struct {
+		kind string
+		re   *regexp.Regexp
+	}{
+		{"func", regexp.MustCompile(`^\s*(?:export\s+)?(?:async\s+)?func\s+(?:\([^)]*\)\s*)?([A-Za-z_][A-Za-z0-9_]*)`)},
+		{"function", regexp.MustCompile(`^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_][A-Za-z0-9_]*)`)},
+		{"def", regexp.MustCompile(`^\s*(?:export\s+)?def\s+([A-Za-z_][A-Za-z0-9_]*)`)},
+		{"class", regexp.MustCompile(`^\s*(?:export\s+)?(?:abstract\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*)`)},
+		{"type", regexp.MustCompile(`^\s*type\s+([A-Za-z_][A-Za-z0-9_]*)`)},
+		{"const", regexp.MustCompile(`^\s*(?:export\s+)?const\s+([A-Za-z_][A-Za-z0-9_]*)\s*[:=]`)},
+	}
+
+	type sym struct {
+		Name string `json:"name"`
+		Kind string `json:"kind"`
+		Line int    `json:"line"`
+		Text string `json:"text"`
+	}
+	out := make([]sym, 0, 32)
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 0, 64*1024), 2*1024*1024)
+	lineNo := 0
+	for scanner.Scan() {
+		lineNo++
+		line := scanner.Text()
+		for _, p := range patterns {
+			if m := p.re.FindStringSubmatch(line); m != nil {
+				text := strings.TrimSpace(line)
+				if len(text) > 120 {
+					text = text[:120]
+				}
+				out = append(out, sym{Name: m[1], Kind: p.kind, Line: lineNo, Text: text})
+				break
+			}
+		}
+		if len(out) >= 200 {
+			break
+		}
+	}
+	b, e := json.Marshal(out)
+	if e != nil {
+		return err(fmt.Sprintf("marshal outline: %v", e))
+	}
+	return ok(string(b))
+}
+
 func HandleCodebaseOutline(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	filePath, hasPath := getString(args, "filePath")
 	symbolName, hasSymbol := getString(args, "symbolName")
@@ -85,7 +147,10 @@ func HandleCodebaseOutline(ctx context.Context, args map[string]interface{}) (To
 		return err("must provide either 'filePath' or 'symbolName'")
 	}
 
-	if errBuild := ensureGraphBuilt(ctx); errBuild != nil {
+	// A failed graph build is not fatal for filePath outlines (those fall back to
+	// direct parse), but symbolName lookups require the graph.
+	errBuild := ensureGraphBuilt(ctx)
+	if errBuild != nil && !hasPath {
 		return err(fmt.Sprintf("graph build failed: %v", errBuild))
 	}
 
@@ -93,28 +158,27 @@ func HandleCodebaseOutline(ctx context.Context, args map[string]interface{}) (To
 		// Clean filePath path separators for consistency
 		cleanPath := filepathToSlash(filePath)
 		graph := GlobalRepoGraph.GetGraph()
-		if graph == nil {
-			return err("graph is nil")
-		}
-
-		var fileNodes []*repograph.Node
-		for _, node := range graph.Nodes {
-			// Check path matches (ignoring node type NodeFile to list definition structures)
-			if filepathToSlash(node.Path) == cleanPath && node.Type != repograph.NodeFile && node.Type != repograph.NodeImport {
-				fileNodes = append(fileNodes, node)
+		if graph != nil {
+			var fileNodes []*repograph.Node
+			for _, node := range graph.Nodes {
+				if filepathToSlash(node.Path) == cleanPath && node.Type != repograph.NodeFile && node.Type != repograph.NodeImport {
+					fileNodes = append(fileNodes, node)
+				}
+			}
+			if len(fileNodes) > 0 {
+				sort.Slice(fileNodes, func(i, j int) bool {
+					return fileNodes[i].LineStart < fileNodes[j].LineStart
+				})
+				responseBytes, e := json.Marshal(fileNodes)
+				if e != nil {
+					return err(fmt.Sprintf("failed to marshal file outline: %s", e.Error()))
+				}
+				return ok(string(responseBytes))
 			}
 		}
-
-		// Sort by line start to outline in sequential order
-		sort.Slice(fileNodes, func(i, j int) bool {
-			return fileNodes[i].LineStart < fileNodes[j].LineStart
-		})
-
-		responseBytes, e := json.Marshal(fileNodes)
-		if e != nil {
-			return err(fmt.Sprintf("failed to marshal file outline: %s", e.Error()))
-		}
-		return ok(string(responseBytes))
+		// Graph unavailable / empty for this file: fall back to a direct parse so
+		// outline works reliably without the expensive full-repo graph build.
+		return outlineFileDirect(filePath)
 	}
 
 	// Lookup specific symbol definition
