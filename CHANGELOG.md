@@ -48,12 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.21] - 2026-10-21
 
 ### Fixed
+- **Dead provider held the session queue hostage (real e2e regression, root-caused)** — a 503 "Endpoint is unavailable" model retried 5+ times in one assistant turn while queued command outputs (`ctx.session.synthetic`) never landed: hn-store **executed** (fact reached the kernel) but its confirmation message vanished. The plugin's `retry` hook now caps retries (2 for hard 5xx/provider.internal failures, 4 otherwise) via `event.decision = { retry: false }` — the turn dies fast, report outputs flow, and the user sees the error instead of a hung session
 - **Third kernel-fatal race (found by completing the shared-state audit)** — `DecisionSystem.SearchTools` read `ds.loaded` (the `IsLoaded` flag) **without** `ds.mu` while `LoadTool`/`UnloadTool`/`evictIfNeededLocked`/`rebuildKnownLocked` write it under lock — the same `fatal error: concurrent map read and map write` class as the advertiser race. Fires whenever `search_and_call` runs while tools load/unload (every battery sweep, plugin storms). Fixed with a standalone `isToolLoaded` helper (self-locking, deadlock-safe); regression `decision_race_test.go` (9 goroutines searchers+loaders+unloaders, 5× repeat)
 - **Flaky advertiser race regression test** — 30s cooldown meant only the first `GetAdvertisements` call returns ads; under load the main goroutine could starve the readers and leave the coverage counter at zero. Test now uses zero cooldown (map read still exercised every call) and counts all callers
 
 ### Added
 - **`bin/verify-all.mjs`** — one-command gauntlet: 7 Node batteries + 5 Go suites + crash-log check, single PASS/FAIL summary, `--fast` for batteries-only. Any agent on the shared branch can now verify in one shot
-- **`bin/swap-kernel.ps1`** — the one sanctioned kernel swap path: lockfile (with stale-lock steal) → kill → verify gone → copy → verify size → delete staged. Kills the multi-agent staged-binary collision class (a staged binary vanished mid-swap on 2026-10-21)
+- **`bin/swap-kernel.ps1`** — the one sanctioned kernel swap path: lockfile (with stale-lock steal) → kill → verify gone → copy → verify size → optional **content verification** (`-Expect <fix-unique string literal>`; catches stale pre-commit builds — a real trap hit on 2026-10-21) → delete staged. Kills the multi-agent staged-binary collision class
+- **Gauntlet hardening** — `verify-all.mjs` uses `-timeout 30m` for httpapi (goroutine-leak growth documented by the sibling agent); the e2e battery captures full message dumps on store-confirmation failures and polls 20s
 
 ### Verified
 - Shared-state race audit now complete: cache ✓, auditor ✓, metrics ✓, PreemptiveAdvertiser ✓, DecisionSystem ✓ (fixed), gossip ✓ (peerKeys/PeerSet guarded), SkillStore ✓ (working-set guarded)

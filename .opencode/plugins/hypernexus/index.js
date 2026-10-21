@@ -1260,7 +1260,7 @@ const TOOLS = [
   },
   {
     name: "subagent",
-    description: "Dispatch an independent sub-task to the HyperNexus orchestration layer; results are stored back to L2.",
+    description: "Record a task / TODO to L2 memory for tracking and later recall. This records intent — it does NOT spawn a live sub-agent. Retrieve with hypernexus_memory_search (tag subagent).",
     input: {
       type: "object",
       properties: {
@@ -1904,7 +1904,12 @@ async function setup(ctx) {
       })
     );
 
-    // Retry observability: record provider failures for billing/routing insight
+    // Retry observability + retry budget: record provider failures for
+    // billing/routing insight, and cap retries so a dead provider cannot hold
+    // the session's message queue hostage. Observed live (2026-10-21): a 503
+    // "Endpoint is unavailable" provider retried 5+ times while queued command
+    // outputs (ctx.session.synthetic) never landed. Terminal-fail fast instead:
+    // the turn ends, report outputs flow, and the user sees the error.
     track(
       await ctx.session.hook("retry", (event) => {
         try {
@@ -1915,6 +1920,19 @@ async function setup(ctx) {
             toolName: "opencode.retry",
             metadata: { attempt: event.attempt, decision: event.decision },
           });
+          const status = event.error?.status;
+          const hardFail = status === 500 || status === 502 || status === 503 || event.error?.type === "provider.internal";
+          const cap = hardFail ? 3 : 5;
+          if (event.decision?.retry && event.attempt >= cap) {
+            event.decision = { retry: false };
+            audit({
+              type: "warning",
+              title: "provider-retry-capped",
+              content: `gave up after attempt ${event.attempt} (${event.error?.type ?? "unknown"}/${status ?? "?"}) so the session queue keeps flowing`,
+              toolName: "opencode.retry",
+              metadata: { attempt: event.attempt, status, hardFail },
+            });
+          }
         } catch {
           /* ignore */
         }

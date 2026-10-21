@@ -92,9 +92,11 @@ if (sessionID) {
     await new Promise((r) => setTimeout(r, 600)); // let synthetic messages persist
   }
 
-  // Synthetic messages persist asynchronously — poll briefly instead of a single fetch.
+  // Synthetic messages persist asynchronously - poll briefly instead of a single fetch.
+  // 20s: with the retry cap the stuck-turn case resolves in seconds, but command
+  // outputs still enqueue behind at most one terminal-failed turn.
   let all = "";
-  for (let i = 0; i < 20 && !/Stored to L2 memory/i.test(all); i++) {
+  for (let i = 0; i < 40 && !/Stored to L2 memory/i.test(all); i++) {
     await new Promise((r) => setTimeout(r, 500));
     const messages = api(["get", `/api/session/${sessionID}/message`]);
     const msgs = Array.isArray(messages) ? messages : Array.isArray(messages?.data) ? messages.data : [];
@@ -102,7 +104,12 @@ if (sessionID) {
   }
   check("session contains synthetic output", /HyperNexus|Stored to L2|Plan stored|handoff/i.test(all), all.slice(0, 160));
   check("hn-status report persisted", /HyperNexus status|kernel/i.test(all));
-  check("hn-store confirmation persisted", /Stored to L2 memory/i.test(all));
+  if (!/Stored to L2 memory/i.test(all)) {
+    // Debug aid: dump the full message list so failures show WHAT persisted.
+    const { writeFileSync } = await import("node:fs");
+    writeFileSync(new URL("./_e2e-messages.json", import.meta.url), all);
+  }
+  check("hn-store confirmation persisted", /Stored to L2 memory/i.test(all), all.slice(0, 2000));
 
   console.log("== E2E-3. Command → kernel persistence");
   const search = await fetch(`${KERNEL}/api/memory/search?query=e2e%20command%20probe&limit=5`)

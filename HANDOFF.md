@@ -70,12 +70,13 @@ Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.21**.
 One-command gauntlet: `node bin/verify-all.mjs` (add `--fast` for batteries only).
 Kernel swap: `powershell -File bin\swap-kernel.ps1 -Start` (the ONLY sanctioned swap path — it locks).
 
-## Session 8 (v1.0.21) — third fatal race found + shared-branch tooling
+## Session 8 (v1.0.21) — third fatal race found + dead-provider queue fix + shared-branch tooling
 ### VERIFIED: gauntlet green (293 battery assertions + Go suites) + empty crash log
 - **Completed the shared-state race audit** (cache/auditor/metrics/advertiser were done): gossip (peerKeys + PeerSet guarded ✓), SkillStore (working-set guarded ✓), and **DecisionSystem — RACE FOUND**
 - **The bug**: `SearchTools` read `ds.loaded` (IsLoaded flag) OUTSIDE `ds.mu` while LoadTool/UnloadTool/eviction/rebuild write it under lock — same fatal `concurrent map read and map write` class. Hit every time search_and_call runs while tools load/unload (battery sweeps, plugin storms). Fixed with self-locking `isToolLoaded()` helper; regression `decision_race_test.go` (9 goroutines, 5× repeat)
+- **e2e regression root-caused (provider-outage resilience)**: `/hn-store` executed (fact reached kernel) but its confirmation vanished. Evidence chain: e2e check + full message dump → one assistant turn stuck `retry.attempt=5` on `provider.internal` 503 "Endpoint is unavailable" → queued `ctx.session.synthetic()` calls blocked behind it. Fix: the plugin's retry hook caps retries (`event.decision = {retry:false}`, 3 for hard 5xx / 5 otherwise). Also learned: the live plugin at `.opencode/plugins/hypernexus/` is an INSTALLED COPY — `node addons/opencode/install.mjs project` + `opencode service restart` after every plugin edit, or you're debugging stale code (my edits today weren't even loaded)
 - **De-flaked my own advertiser regression**: 30s cooldown = only the first call returns ads = scheduling lottery under load; test now uses cooldown 0 (map read still exercised every call)
-- **New tooling**: `bin/verify-all.mjs` (one-command gauntlet, PASS/FAIL summary, per-step logs in `bin/_verify-logs/`) and `bin/swap-kernel.ps1` (lockfile swap; today a staged binary vanished mid-swap due to a concurrent sibling agent — the lock kills that collision class; stale locks stolen after 10 min)
+- **New tooling**: `bin/verify-all.mjs` (one-command gauntlet, PASS/FAIL summary, per-step logs in `bin/_verify-logs/`) and `bin/swap-kernel.ps1` (lockfile swap + `-Expect` content verification — stale pre-commit binaries caught by fix-unique string literal; constant NAMES don't land in stripped binaries, use string literals)
 - **Log-discovery gotcha**: `bin/kernel-crash.log` (42KB) turned out to be a sibling's misnamed serve STDOUT, not a crash dump — always check for `fatal error|panic:` markers before trusting a crash-log filename. Zero fatal markers anywhere = no third vector beyond the one found by audit
 
 ## Session 7 (v1.0.20) — second fatal race hunted down + fixed

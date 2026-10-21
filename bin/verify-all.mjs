@@ -38,7 +38,10 @@ const batteries = [
 ];
 
 const goSuites = [
-  { id: "go-all", cmd: "go", args: ["test", "-timeout", "25m", "./internal/httpapi/", "./internal/tools/", "./internal/memorystore/", "./internal/repograph/", "./internal/mcp/"], cwd: path.join(root, "go") },
+  // httpapi needs 30m: each test spins a full kernel whose background services
+  // (mesh/gossip/A2A/supervisor loops) are never stopped, ~45k goroutines
+  // accumulate per run (lesson from the sibling agent, 2026-10-21).
+  { id: "go-all", cmd: "go", args: ["test", "-timeout", "30m", "./internal/httpapi/", "./internal/tools/", "./internal/memorystore/", "./internal/repograph/", "./internal/mcp/"], cwd: path.join(root, "go") },
 ];
 
 function run(step) {

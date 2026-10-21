@@ -19,6 +19,7 @@ param(
     [string]$Live = "bin\hypernexus.exe",
     [switch]$Start,
     [string]$Version = "",
+    [string]$Expect = "",
     [int]$LockTimeoutSec = 120
 )
 
@@ -85,6 +86,22 @@ try {
         exit 1
     }
     Write-Step "copied + verified (size match: $liveSize)"
+
+    # --- 4b. stale-binary content verification ------------------------------
+    # Lesson learned live (2026-10-21): a swap once deployed a PRE-commit
+    # build that reported the right version but lacked a fresh fix. Size
+    # cannot tell that apart; a fix-unique byte string can. Pass -Expect with
+    # a string only present in the intended source state (e.g. a new function
+    # name) and the swap aborts if the live exe does not contain it.
+    if ($Expect -ne "") {
+        $bytes = [System.IO.File]::ReadAllBytes((Join-Path $root $Live))
+        $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
+        if (-not $ascii.Contains($Expect)) {
+            Write-Step "ERROR: live exe does NOT contain expected marker '$Expect' -- wrong/stale source state was built. Staged binary left in place."
+            exit 1
+        }
+        Write-Step "content verified: marker '$Expect' present in live exe"
+    }
 
     # --- 5. only now delete staged -----------------------------------------
     Remove-Item $Staged -Force
