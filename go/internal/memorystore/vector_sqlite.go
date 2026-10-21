@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	_ "github.com/glebarez/go-sqlite"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/ai"
@@ -27,7 +28,45 @@ const (
 	// (working/long_term) memories surface first, while archived ones remain
 	// fully recallable (they hold real history, just lower priority).
 	archiveRankPenalty = 0.55
+	// Hybrid retrieval bounds the expensive vector scan to an FTS-retrieved
+	// candidate set. Fast + full-coverage; falls back to a full scan when FTS
+	// returns too few candidates (pure-semantic matches with no keyword overlap).
+	hybridCandidateCap  = 600
+	hybridMinCandidates = 40
 )
+
+// ftsCandidateIDs returns up to cap memory ids whose content matches the query
+// via FTS5. Used to bound the vector-search scan (hybrid retrieve + rerank).
+func (s *VectorStore) ftsCandidateIDs(ctx context.Context, query string, cap int) []string {
+	clean := strings.TrimSpace(query)
+	if clean == "" {
+		return nil
+	}
+	// Keep only word chars so FTS MATCH syntax can't error out.
+	clean = strings.Map(func(r rune) rune {
+		if r == '_' || r == '-' || unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) {
+			return r
+		}
+		return ' '
+	}, clean)
+	clean = strings.TrimSpace(clean)
+	if clean == "" {
+		return nil
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT id FROM l2_vault_fts WHERE content MATCH ? LIMIT ?`, clean, cap)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	ids := make([]string, 0, 64)
+	for rows.Next() {
+		var id string
+		if rows.Scan(&id) == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
 
 // Search-path embeds are latency-critical: SemanticSearch holds the store mutex
 // across the embed call. Bound the local-embed timeout so a slow model load or
@@ -686,6 +725,18 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 			JOIN l2_vault l ON l.id = v.id
 			WHERE 1=1
 		`
+		// Hybrid: bound the scan to FTS-retrieved candidates when we have query
+		// text. Avoids loading + cosine-ing every row (slow under load). Falls back
+		// to a full scan when FTS returns too few (pure-semantic matches).
+		if queryText != "" {
+			if ids := s.ftsCandidateIDs(ctx, queryText, hybridCandidateCap); len(ids) >= hybridMinCandidates {
+				ph := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
+				sqlQuery += " AND v.id IN (" + ph + ")"
+				for _, id := range ids {
+					args = append(args, id)
+				}
+			}
+		}
 		if filterKind != "" {
 			sqlQuery += " AND l.memory_kind = ?"
 			args = append(args, filterKind)
