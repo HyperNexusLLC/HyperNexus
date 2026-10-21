@@ -956,20 +956,32 @@ func (s *MCPServer) getMergedTools() []ToolDefinition {
 		return merged
 	}
 
-	localNames := make(map[string]bool)
-	for _, t := range merged {
-		localNames[t.Name] = true
+	// Upstream (kernel registry) schemas are authoritative for arg-taking tools:
+	// local static/rootRegistry entries can carry empty schemas (silent Parameter
+	// unmarshal failures), which makes tools unusable for model callers. On name
+	// collision, let the strictly richer upstream schema/description win.
+	localIdx := make(map[string]int, len(merged))
+	for i, t := range merged {
+		localIdx[t.Name] = i
 	}
 	for _, ut := range tools {
-		if !localNames[ut.Name] {
-			if ut.InputSchema.Type == "" {
-				ut.InputSchema.Type = "object"
-			}
-			if ut.InputSchema.Properties == nil {
-				ut.InputSchema.Properties = make(map[string]PropertySchema)
-			}
-			merged = append(merged, ut)
+		if ut.InputSchema.Type == "" {
+			ut.InputSchema.Type = "object"
 		}
+		if ut.InputSchema.Properties == nil {
+			ut.InputSchema.Properties = make(map[string]PropertySchema)
+		}
+		if i, ok := localIdx[ut.Name]; ok {
+			if len(ut.InputSchema.Properties) > len(merged[i].InputSchema.Properties) {
+				merged[i].InputSchema = ut.InputSchema
+				if ut.Description != "" {
+					merged[i].Description = ut.Description
+				}
+			}
+			continue
+		}
+		localIdx[ut.Name] = len(merged)
+		merged = append(merged, ut)
 	}
 
 	s.mergedMu.Lock()

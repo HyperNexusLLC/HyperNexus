@@ -249,6 +249,22 @@ console.log("=== T6/T7/T8/T9: stdio MCP server (configured command) ===");
   const missing = invNames.filter((n) => !names.has(n));
   check(`parity: all ${invNames.length} registry tools advertised on stdio`, missing.length === 0, missing.join(",") || "complete");
 
+  // T9b schema parity: stdio must not advertise EMPTY schemas for arg-taking tools
+  // (regression: local-first name collision shadowed the authoritative registry schema,
+  // leaving tools like code_interpreter/jira_create_issue unusable for model callers).
+  const stdioByName = new Map(tools.map((t) => [t.name, t]));
+  const shadowed = [];
+  for (const t of inv?.data ?? []) {
+    const regProps = Object.keys(t.inputSchema?.properties ?? {});
+    if (!regProps.length) continue;
+    const stdProps = new Set(Object.keys(stdioByName.get(t.name)?.inputSchema?.properties ?? {}));
+    const lacks = regProps.filter((p) => !stdProps.has(p));
+    if (lacks.length) shadowed.push(`${t.name}:${lacks.join("+")}`);
+  }
+  check("schema parity: stdio covers registry properties", shadowed.length === 0, shadowed.join(",") || "complete");
+  const ciProps = new Set(Object.keys(stdioByName.get("code_interpreter")?.inputSchema?.properties ?? {}));
+  check("code_interpreter schema has code+language", ciProps.has("code") && ciProps.has("language"), [...ciProps].join(","));
+
   child.kill();
 }
 

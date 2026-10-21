@@ -17,9 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **MCP stdio `tools/list` degraded under kernel load** — `getMergedTools()` fetched the upstream inventory with a hard 3s timeout and no cache: whenever the kernel was busy (graph builds, sweeps, sibling agents) the fetch timed out and clients saw only the 49-tool static fallback instead of the full 58-tool merged inventory (core memory/search tools missing). Now: 8s fetch timeout + one retry + 15s-TTL last-good cache (stale cache preferred over degraded listing)
 - **MCP stdio serialized dispatch** — one slow `tools/call` (60s upstream budget) blocked every subsequent request behind it (tools/list, other calls); requests now dispatch concurrently (bounded semaphore, serialized writes) with id-based correlation preserved
+- **MCP stdio schema shadowing** — local-first name collision advertised EMPTY input schemas for 10 arg-taking tools (`code_interpreter`, `jira_create_issue`, `add_bookmark`, `cloud_troubleshoot`, `confluence_search`, `install_mcp_server`, `launch_webview`, `download_llamafile`, `generate_devops_pipeline`, `apply_search_replace`), so model callers could not construct arguments; the strictly richer registry schema/description now wins on collision. `code_interpreter` catalog entry corrected (was "JavaScript", actually `language`+`code` for shell langs)
 
 ### Verified
-- Jcode extension battery **43/43** · MCP tools **23/23** · MCP sweep **54 invoked (53 pass + 1 load-induced soft, 0 fail)** · core-noext **18/18** · mimo **51/51** · mimo TUI **16/16** · OpenCode plugin battery re-run green on the swapped kernel
+- Jcode extension battery **45/45** (incl. schema-parity regression checks) · MCP tools **23/23** · MCP sweep **54 invoked (53 pass + 1 load-induced soft, 0 fail)** · core-noext **18/18** · mimo **51/51** · mimo TUI **16/16** · OpenCode plugin battery re-run green on the swapped kernel
 - Live in this session: Jcode MCP manager connects `hypernexus` (58 tools), `hello_world`/`search_memory` round-trip through the harness's own MCP tool manager
 - Memory lifecycle quirks documented: `search_memory` keyword matching needs natural-language tokens (hyphenated ids don't tokenize), delete propagation is asynchronous across stores
 

@@ -455,7 +455,7 @@ var nativeToolCatalog = map[string]ToolMeta{
 	},
 	"code_interpreter": {
 		Name:        "code_interpreter",
-		Description: "Run a JavaScript snippet in a sandboxed interpreter",
-		Schema:      obj(map[string]any{"code": str("JavaScript code to run")}, "code"),
+		Description: "Execute code in a supported inline language (bash, sh, shell, powershell, cmd); other languages return guidance",
+		Schema:      obj(map[string]any{"code": str("Code to run"), "language": str("Language: bash, sh, shell, powershell, cmd, or go (default bash)")}, "code"),
 	},
 }

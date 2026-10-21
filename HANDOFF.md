@@ -13,6 +13,7 @@
 2. **"Fix MCP in jcode" root cause found and fixed in the kernel** (`go/cmd/tormentnexus/mcp_server.go`)
    - `getMergedTools()` had a hard 3s upstream timeout + NO cache: under load `/api/mcp/tools` exceeds 3s and every client saw only the 49-tool static fallback (memory/search tools missing). Now: 8s fetch + 1 retry + 15s-TTL last-good cache (stale cache > degraded list)
    - Stdio dispatch was serial: one slow tools/call (60s budget) blocked tools/list and other calls. Now concurrent (bounded sem 16, write mutex, id correlation)
+   - **Schema shadowing (follow-up)**: local-first name collision made stdio advertise EMPTY input schemas for 10 arg-taking tools (code_interpreter, jira_create_issue, add_bookmark, cloud_troubleshoot, confluence_search, install_mcp_server, launch_webview, download_llamafile, generate_devops_pipeline, apply_search_replace) — models literally could not construct arguments. Now the strictly richer upstream (registry) schema/description wins on collision. Plus catalog fix: `code_interpreter` was documented as "JavaScript" but takes `language`+`code` (handler runs shell langs) — corrected in `go/internal/tools/tool_schemas.go`. Regression checks: test-jcode-ext.mjs T9b schema parity (stdio ⊇ registry props) + code_interpreter code+language
 3. **Jcode-side MCP registration live**: `mcp reload` → Connected 1/1, 58 tools under `mcp__hypernexus__*`; hello_world/search_memory round-trip through Jcode's own MCP manager
 
 ### VERIFIED matrix (all on the swapped 1.0.19 kernel)
