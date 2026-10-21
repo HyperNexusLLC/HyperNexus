@@ -1,145 +1,33 @@
-# TODO — HyperNexus
+# HyperNexus — TODO (granular, immediate)
 
-> **Last Updated:** 2026-10-06
-> **Current Version:** 1.0.13
-> **Status:** Core infrastructure complete, dashboard consolidated, production deployed, ~1100+ endpoints tested, 21 bugs fixed, ~40 param mismatches documented, all MCP servers connected
+> Version source: `VERSION.md`. Reference the exact version in every commit.
 
----
+## 🔴 High (do next)
 
-## 🔥 Critical Path
+- [ ] **Dashboard consolidation** — map all 99 `dashboard/*` pages to the ~8 value-ordered home sections (see ROADMAP Milestone 1). Redirect retired subpages to their home anchor.
+- [ ] **Decompose `dashboard-home-view.tsx`** (4958 lines) → one lazy-loaded component per section.
+- [ ] **Tooltips** — add `title` tooltips to every dashboard panel/metric/action in `nav-config.ts` + section components (what/why/how).
+- [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
+- [ ] **Watchdog as scheduled task** — register `scripts/kernel-watchdog.ps1` for boot survival (currently only a background process).
 
-### Security & Ops
+## 🟡 Medium
 
-- [ ] **Rotate remaining API keys** — 20+ credentials pending (see `docs/API_KEY_ROTATION_CHECKLIST.md`)
-- [ ] **Reddit password** — `Temppass0!` is CRITICAL (dictionary-crackable), rotate immediately
-- [x] **Stripe webhook delivery** — handler wired at `/api/billing/stripe/webhook`, 11 STRIPE_* env vars on Hetzner, returns 400 on unsigned POST (expected)
-- [ ] **License file** — kernel runs in free mode (`hypernexus.lic` not found)
+- [ ] **Embedding cache** — in-memory vector matrix so semantic search stays sub-second under load (currently 0.8–2.5s with hybrid retrieve).
+- [ ] **Ollama install** — `llama-server` binary is missing; either repair the install or drop the watchdog's Ollama dependency (embeddings already use bundled MiniLM, so Ollama is now optional).
+- [ ] **Port pi tools** (`hypernexus_orchestrate`, `hypernexus_workflow`, `hypernexus_browser`) to mimo + opencode for parity.
+- [ ] **`codebase_search` docs** — its modes are `symbols|definitions|references` (not `ast|semantic|pattern`); document in the tool description.
+- [ ] **Gossip (:7878)** — confirm whether P2P gossip is expected to run locally; gate or start it.
 
-### Dashboard Completeness
+## 🟢 Low / cleanup
 
-- [x] **Wire HTTP fallbacks for 3 tRPC-only pages** — `mcp/search`, `mcp/inspector`, `mcp/ai-tools` all wired via `use-mcp-http.ts`
-- [x] **MCP server connections** — 56/56 connected via `POST /api/mcp/connect-all`; 4 alwaysOn auto-start at boot
-- [x] **Session import errors** — 38→0 errors fixed (scanner buffer, extractAllStrings fallback, config exclusion, silent skip for empty transcripts)
+- [ ] **Script consolidation** — `bin/` has many one-off `hypernexus-*.exe.bak` binaries + old `serve-*.log`; archive (non-destructively) to an `archive/` dir. (binaries already `.gitignore`d.)
+- [ ] **`bin/_pitest*.txt` + `_mcpall*.txt`** test artifacts — deleted; add to `.gitignore`.
+- [ ] **Docs sweep** — refresh `VISION.md`, `MEMORY.md`, `DEPLOY.md`, `IDEAS.md`, `CHANGELOG.md` to reflect the systray fix, search-coverage fix, hybrid retrieval, and dashboard consolidation plan.
+- [ ] **Version bump** — bump `VERSION.md` + CHANGELOG for this batch of fixes.
 
-### Build & Tests
-
-- [x] **Fix batch script paths** — `build.bat`, `build-editions.bat` use correct entrypoint (`./cmd/tormentnexus`) and module path (`HyperNexusLLC`); push scripts use `github`/`gitlab` remotes on `clean-main`
-- [x] **Feature branch audit** — `gitlab/feature/cloud-dashboard-mcp-sse-*` fully redundant (all 4 features already in clean-main); realestatecrm submodules (3 on feature branches) all 0 unique commits
-- [x] **Fix pre-existing test failures** — `TestToolResultSnapshots`, `TestVerifyLicense`, `TestResolveClientTargets` all fixed
-- [x] **Deploy v1.0.11 to Hetzner** — production running v1.0.11
-- [x] **Sync package versions on Hetzner** — node_modules present, dashboard returns 200
-
----
-
-## ✅ Completed (2026-10-05 Testing Sprint)
-
-- [x] **Comprehensive API testing** — ~1070+ endpoints across 26 categories (cycles 42-76)
-- [x] **21 bugs fixed** — 18 lazy CREATE TABLE + localSaveSkill + init order + tool_sets table
-- [x] **~40 param mismatches documented** — in `docs/API_ENDPOINTS.md` parameter reference
-- [x] **Dashboard consolidation** — 85+ pages → single page with 10 tab sections
-- [x] **Script cleanup** — 102 scripts organized, 4 stale archived, `SCRIPTS_INDEX.md` created
-- [x] **Build system** — `build-and-verify.mjs` master script created
-- [x] **MCP registry fix** — `HYPERNEXUS_MASTER_INDEX.jsonc` created (local + Hetzner)
-- [x] **Performance baseline** — Health 42ms avg, memory 55ms avg, mixed 53ms avg
-- [x] **Concurrency verified** — 10 parallel health: 253ms, 10 parallel mixed: 1935ms
-- [x] **Edge cases verified** — Unicode, large payloads (50KB), pagination, SQL injection, empty bodies
-- [x] **E2E flows verified** — Scripts CRUD, Skills CRUD, Agent-memory handoff, Observation, Session import/export
-
----
-
-## 📈 Short-Term (Next Sprint)
-
-### Product
-
-- [x] **MCP Client Examples** — Python, TypeScript, Go examples in `examples/mcp-clients/`
-- [x] **API Documentation** — OpenAPI 3.0 spec generated from kernel API index (554 routes) at `docs/openapi.json`
-- [x] **Getting Started Tutorial** — 5-minute quickstart in `docs/QUICKSTART.md`
-- [ ] **Video Demo** — 2-minute product demo
-
-### Integration
-
-- [x] **Full MCP catalog indexing** — multi-source sync (Glama + Smithery + 45 builtin presets) → 82 tools in `published_mcp_servers`
-- [x] **Cloud Landing Page** — `cloud/landing` with hero, features, stats, CTA, footer
-- [x] **Pricing Page** — `/pricing` with Stripe checkout integration (3 tiers: Basic $29, Pro $99, Commercial $499)
-
----
-
-## 🚀 Medium-Term (This Month)
-
-### Cloud Features
-
-- [x] **User Dashboard** — Account management (`/dashboard/account`), usage stats, billing summary
-- [x] **Team Accounts** — Shared memory pools + member mgmt via `/api/team/*` (create/invite/list/members/share/list)
-- [x] **SSO Integration** — SAML/OIDC/Okta/Azure AD/Google via `/api/sso/*` (config/status)
-- [x] **Custom Domains** — white-label via `/api/custom-domain/*` (add/list/verify with DNS TXT)
-
-### Billing
-
-- [x] **License Key System** — Ed25519-signed tokens via `go/cmd/licensegen` (keygen + signed `hypernexus.lic`)
-- [x] **Usage Metering** — `/api/usage/metering` returns memory count, versioned IDs, scratchpad keys
-- [x] **Referral Program** — Credits for referrals via `/api/referral/*` (generate/apply/status)
-
----
-
-## 🧠 Competitive Gap Features
-
-> From competitive analysis of mem0, Zep, LangMem, Letta, Hindsight, SuperMemory.
-> See `docs/competitive-analysis.md` for details.
-
-### Quick Wins (1-2 weeks)
-
-- [x] **Temporal Edges in Graph** — `valid_from`/`valid_to` already in `go/internal/graph/schema.go` (DATETIME columns on graph_edges)
-- [x] **Fact Conflict Resolution** — `resolveConflictLocked` + `extractSubject` in `go/internal/memory/manager.go` — supersede contradicting facts/preferences on Store
-- [x] **Memory Export/Import** — `/api/memory/export`, `/api/memory/import`, `/api/memory/l2/export`, `/api/memory/l2/import` all working
-
-### Differentiation (1 month)
-
-- [x] **Cross-Agent Memory Sharing** — real Memorix L2 vault with ACL/TTL in `mcpimpl/cross_agent_memory.go` (replaced stubs)
-- [x] **Mental Model Extraction** — `MentalModelReflection` in `vector_sqlite.go` (LLM synthesis via AutoRoute/Ollama, runs hourly in sleep cycle)
-
-### Enterprise (2-3 months)
-
-- [x] **SOC2/HIPAA Compliance** — Audit logging via `commercial.Auditor`, encryption at rest via `memorystore/encryption.go` (AES-256-GCM, `HYPERNEXUS_MEMORY_ENCRYPTION_KEY`)
-- [x] **Memory Access Control** — RBAC via `MemoryAccessControl` (admin/writer/reader/guest) + `RoleForResource`/`SetUserRole`/`ListRoles` in `commercial/commercial.go`
-- [x] **Memory Versioning** — git-like history via `RecordVersion`/`VersionHistory`/`GetVersion` + HTTP endpoints `/api/memory/versions*`
-- [x] **Usage Metering** — `/api/usage/metering` returns memory count, versioned IDs, scratchpad keys
-
----
-
-## ✅ Completed (2026-10)
-
-### v1.0.11 — MCP Auto-Start, Connect All, HTTP Fallbacks
-
-- [x] MCP alwaysOn auto-start (4 servers at kernel boot)
-- [x] MCP Connect All endpoint (`POST /api/mcp/connect-all` — 56/56 servers)
-- [x] `mcp-yfinance-server` config fix (uvx)
-- [x] ai-tools page HTTP fallbacks
-- [x] All Go tests pass (3 pre-existing failures fixed)
-- [x] Hetzner deploy v1.0.11
-- [x] Archive 16 obsolete scripts (nondestructive)
-- [x] Full rebuild verification (Go kernel + dashboard)
-- [x] Service restart with health checks
-
-### v1.0.10 — Dashboard Consolidation
-
-- [x] Sidebar navigation fix (anchor links into single-page dashboard)
-- [x] catalog.db corruption repair (LFS pointer fix)
-- [x] Kernel binary rebuild from source
-
-### v1.0.9 — HTTP Fallbacks
-
-- [x] `use-startup-status.ts` hook (tRPC primary + kernel HTTP fallback)
-- [x] Startup checks for dashboard-compatible shape
-
-### v1.0.8 — Intelligent Merge
-
-- [x] 79 `go/internal/` files from feature branch (L3, gossip, mcpimpl tools)
-- [x] mcpimpl redeclaration resolution (batch files win over stubs)
-- [x] Dual-remote git (GitHub + GitLab) unified history
-
-### v1.0.5 — MCP Search & Production
-
-- [x] `searchAccessoryTools` + `handleMCPSearchTools` merge
-- [x] Hetzner production deploy verified
-- [x] Disk cleanup 84% → 74%
-- [x] API key rotation checklist
+## ✅ Done this session
+- [x] Merged `clean-main` into `feat/mimo-plugin-max-surface` (resolved 6 conflicts, kept both reliability + features).
+- [x] Started the dashboard (:7779) — was down.
+- [x] Systray: no more ghost icons (NIM_DELETE on shutdown) + survives explorer restarts (TaskbarCreated).
+- [x] Watchdog activated (stall-vs-death aware, won't thrash).
+- [x] Verified tray menu is feature-complete (Dashboard / Logs / Auto-Start / Exit All Processes).
