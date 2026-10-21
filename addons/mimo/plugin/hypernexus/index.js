@@ -480,7 +480,7 @@ export const server = async (input, options = {}) => {
         description: "Invoke a discovered MCP tool through the HyperNexus kernel router. Use after hypernexus_search_tools or hypernexus_mcp_tools to execute a tool by name.",
         args: {
           tool: z.string().describe("Tool name (e.g. 'tormentnexus__hello_world' or 'server__tool')"),
-          args: z.record(z.any()).optional().describe("Arguments to pass to the tool"),
+          args: z.record(z.string(), z.any()).optional().describe("Arguments to pass to the tool"),
         },
         async execute(args, context) {
           try { if (context && context.metadata) context.metadata({ title: `MCP call: ${String(args.tool).slice(0, 40)}` }); } catch { /* ignore */ }
