@@ -4,9 +4,10 @@
 
 ## 🔴 High (do next)
 
-- [ ] **Dashboard consolidation** — map all 99 `dashboard/*` pages to the ~8 value-ordered home sections (see ROADMAP Milestone 1). Redirect retired subpages to their home anchor.
+- [x] ~~Dashboard consolidation~~ — **verified already consolidated** (nav = 7 value-ordered sections, all tooltips present, all hrefs → home-view anchors). Remaining polish below.
+- [ ] **Flesh out 3 thin home-view sections** — `health-metrics` (~676c), `skills-workflows` (~562c), `security-audit` (~550c) are stubs; add real content/forms/tooltips.
 - [ ] **Decompose `dashboard-home-view.tsx`** (4958 lines) → one lazy-loaded component per section.
-- [ ] **Tooltips** — add `title` tooltips to every dashboard panel/metric/action in `nav-config.ts` + section components (what/why/how).
+- [ ] **Retire 99 legacy `dashboard/*` pages** (not in nav) — redirect to home anchors to remove dead weight.
 - [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
 - [ ] **Watchdog as scheduled task** — register `scripts/kernel-watchdog.ps1` for boot survival (currently only a background process).
 

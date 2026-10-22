@@ -17,25 +17,31 @@
 
 ---
 
-## Milestone 1 — Dashboard Consolidation (HIGHEST VALUE)
+## Milestone 1 — Dashboard Consolidation (mostly DONE — polish remains)
 
-**Problem:** 99 separate pages + 66 components + a 4958-line `dashboard-home-view.tsx`. Deeply fragmented; the nav (`nav-config.ts`) already maps ~26 anchor sections in the home view, but 99 standalone pages duplicate them. Users can't tell where anything is.
+**Actual state (verified 2026-10-21):** The dashboard navigation is **already
+consolidated** into the single-page model. `nav-config.ts` has 7 value-ordered
+sections (Core/Agents/Tools/Knowledge/Infra/Data/Admin), every nav item has a
+tooltip, and all hrefs point to `dashboard-home-view.tsx` section anchors
+(`#mission-control`, `#memory-graphrag`, `#mcp-registry`, …) — not to the 99
+standalone pages. Those 99 `dashboard/*` pages are **legacy/dead** (not linked
+from the nav).
 
-**Goal:** ONE consolidated dashboard surface — a single home view organized into a small number of high-value, ordered sections, with every feature reachable + described.
+`dashboard-home-view.tsx` (4958 lines) has 10 sections; 7 are substantive
+(research-workflows 42KB, mcp-registry 18KB, governance-billing 18KB,
+memory-graphrag 15KB, healer-cognition 10KB, integrations 8KB, mission-control
+7KB) but **3 are thin stubs**:
+- `health-metrics` (~676 chars)
+- `skills-workflows` (~562 chars)
+- `security-audit` (~550 chars)
 
-1. **Audit + canonicalize** the 99 pages → map each to a target section. Anything not represented is a gap.
-2. **Order sections by value**, not alphabetically:
-   1. Mission Control (health, status, quick actions) — always first.
-   2. Memory & Knowledge (explorer, analytics, cold archive, skills, knowledge graph).
-   3. Tools & MCP (catalog, inspector, console, router).
-   4. Agents & Orchestration (swarm, council, director, workflows, subagents).
-   5. Code & Runtime (code platform, sandbox, sessions).
-   6. Observability (logs, metrics, audit, events, mesh).
-   7. Commercial (billing, providers, API keys, plans).
-   8. System (architecture, security, account, integrations).
-3. **Decompose `dashboard-home-view.tsx`** (4958 lines) into one component per section, lazy-loaded. Reduces bundle + makes each reviewable/testable.
-4. **Tooltips everywhere** — every panel, metric, and action gets a `title`/tooltip explaining *what it is, why it matters, and what to do*.
-5. **Retire redundant pages** — subpages that just wrap a home section get redirected to their anchor (`/dashboard/x` → `/dashboard#x`).
+**Remaining work (narrowed):**
+1. Flesh out the 3 thin sections (health-metrics, skills-workflows, security-audit)
+   with real content, forms, and tooltips.
+2. Decompose `dashboard-home-view.tsx` (4958 lines) → one lazy component per
+   section for maintainability.
+3. Retire the 99 legacy `dashboard/*` pages (redirect to their home anchors) to
+   remove dead weight and stop them reappearing in future navigation work.
 
 ## Milestone 2 — Kernel Resilience & Observability
 - Embedding cache (in-memory vector matrix) for sub-second semantic search under load.
