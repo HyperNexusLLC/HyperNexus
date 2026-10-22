@@ -151,6 +151,33 @@ function Stop-Kernel {
 }
 
 # Main watchdog loop
+# ── Dashboard (Next.js :7779) health + restart ─────────────────────────────
+# The dashboard is a core UI component; keep it alive like the kernel.
+$script:WebDir = Join-Path (Split-Path (Split-Path $KernelPath -Parent) -Parent) "apps\web"
+
+function Test-DashboardHealth {
+    try {
+        $r = Invoke-WebRequest -Uri "http://127.0.0.1:7779/" -UseBasicParsing -TimeoutSec 12
+        return $r.StatusCode -ge 200 -and $r.StatusCode -lt 500
+    } catch { return $false }
+}
+
+function Start-Dashboard {
+    $bat = Join-Path $WebDir "_start_prod.bat"
+    if (-not (Test-Path $bat)) { Write-Host "[dashboard] start script missing: $bat"; return $false }
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting dashboard (:7779)..."
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "_start_prod.bat" -WorkingDirectory $WebDir -WindowStyle Hidden
+    for ($i = 1; $i -le 15; $i++) {
+        Start-Sleep -Seconds 1
+        if (Test-DashboardHealth) {
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Dashboard started (after ${i}s)"
+            return $true
+        }
+    }
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Dashboard failed to respond after 15s"
+    return $false
+}
+
 Write-Host "[$(Get-Date -Format 'HH:mm:ss')] HyperNexus Kernel Watchdog started (port=$Port, interval=${CheckIntervalSec}s, mcp=$MonitorMCP, ollama=$MonitorOllama)"
 
 # Ensure Ollama is running before kernel starts (for embeddings)
@@ -218,6 +245,11 @@ while ($true) {
                 }
             }
         }
+    }
+    # Keep the dashboard (Next.js :7779) alive independently of the kernel.
+    if (-not (Test-DashboardHealth)) {
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Dashboard down, restarting..."
+        Start-Dashboard | Out-Null
     }
     Start-Sleep -Seconds $CheckIntervalSec
 }
