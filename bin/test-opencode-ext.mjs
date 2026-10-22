@@ -301,6 +301,20 @@ check("memory_search surfaces ids for delete/relate", /\[[A-Za-z0-9_-]{4,}\]/.te
 const m1 = await runTool("memory_store", { content: `relate-src ${Date.now()}`, tags: ["relate-test"] });
 const m2 = await runTool("memory_store", { content: `relate-dst ${Date.now()}`, tags: ["relate-test"] });
 const idOf = (out) => String(out?.metadata?.id ?? "").trim();
+// pollFor: retry an async read until it yields truthy (or budget exhausted).
+// The kernel propagates memory writes / relations / observations asynchronously;
+// under CPU load a single immediate read races the write and flakes. Per the
+// ops gotcha: assert with a poll, not an immediate re-check.
+async function pollFor(fn, tries = 14, delayMs = 700) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const v = await fn();
+      if (v) return v;
+    } catch { /* retry */ }
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+  return null;
+}
 const srcId = idOf(m1);
 const dstId = idOf(m2);
 check("memory_store returns record id", srcId.length > 0, srcId || JSON.stringify(m1?.metadata));
@@ -311,11 +325,15 @@ if (srcId && dstId) {
     relation_type: "supports",
   });
   check("memory_relate links records", /Linked/.test(rel?.content ?? ""), (rel?.content ?? "").slice(0, 90));
-  const relCheck = await fetch(`http://127.0.0.1:7778/api/memory/relations/get?id=${encodeURIComponent(srcId)}`)
-    .then((r) => r.json())
-    .catch(() => null);
+  const relCheck = await pollFor(async () => {
+    const j = await fetch(`http://127.0.0.1:7778/api/memory/relations/get?id=${encodeURIComponent(srcId)}`)
+      .then((r) => r.json())
+      .catch(() => null);
+    const txt = JSON.stringify(j);
+    return txt.includes(dstId) || txt.includes("supports") ? j : null;
+  });
   const relText = JSON.stringify(relCheck);
-  check("relation visible via relations/get", relText.includes(dstId) || relText.includes("supports"), relText.slice(0, 110));
+  check("relation visible via relations/get", !!relCheck, relText.slice(0, 110));
 } else {
   check("memory_relate links records", false, "could not obtain both record ids");
   check("relation visible via relations/get", false, "skipped");
@@ -386,9 +404,13 @@ await state.hooks.tool.get("execute.after")({
   result: { content: "ok" },
 });
 await new Promise((r) => setTimeout(r, 2600)); // audit flush cadence is 2s
-const obsRes = await fetch("http://127.0.0.1:7778/api/memory/observations/search?query=file-change&limit=5")
-  .then((r) => r.json())
-  .catch(() => null);
+const obsRes = await pollFor(async () => {
+  const j = await fetch("http://127.0.0.1:7778/api/memory/observations/search?query=file-change&limit=5")
+    .then((r) => r.json())
+    .catch(() => null);
+  const rows = Array.isArray(j?.data) ? j.data : [];
+  return rows.some((x) => /file-change/.test(JSON.stringify(x))) ? j : null;
+});
 const obsRows = Array.isArray(obsRes?.data) ? obsRes.data : [];
 check(
   "file-change observation reaches kernel",
