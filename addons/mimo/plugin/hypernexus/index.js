@@ -679,7 +679,7 @@ export const server = async (input, options = {}) => {
           sysCache.note =
             `HyperNexus kernel: ${ok ? `online (v${ver})` : "unavailable"}. ` +
             (ok
-              ? "Typed tools available: hypernexus_search_tools (progressive catalog routing over 50K+ MCP tools), hypernexus_suggest_tools (LLM tool suggestions), hypernexus_memory_search/store, hypernexus_mcp_* . Prefer hypernexus_search_tools to discover integrations rather than guessing."
+              ? "Typed tools: hypernexus_search_tools (50K+ catalog), hypernexus_suggest_tools, hypernexus_memory_search/store/update/delete/list, hypernexus_add_fact, hypernexus_memory_vector_search, hypernexus_context_harvest, hypernexus_session_search/list, hypernexus_code_search, hypernexus_kernel_routes, hypernexus_mcp_call/status/servers/tools, hypernexus_subagent, hypernexus_billing_status. Prefer hypernexus_search_tools to discover integrations."
               : "Memory/catalog tools will degrade gracefully.");
           sysCache.at = now;
         }
