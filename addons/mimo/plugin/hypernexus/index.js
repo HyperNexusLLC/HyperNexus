@@ -549,6 +549,64 @@ export const server = async (input, options = {}) => {
           return { output: JSON.stringify(summarize(r, "add fact"), null, 2) };
         },
       }),
+
+      hypernexus_memory_delete: tool({
+        description: "Delete an L2 memory by ID. Use after hypernexus_memory_search or hypernexus_memory_list to remove stale or incorrect entries.",
+        args: {
+          id: z.string().describe("Memory ID to delete"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Delete memory ${args.id}` }); } catch { /* ignore */ }
+          const r = await hnFetch("/api/memory/delete", {
+            method: "POST",
+            body: { id: args.id },
+            budget: FAST_BUDGET,
+          });
+          return { output: JSON.stringify(summarize(r, "delete memory"), null, 2) };
+        },
+      }),
+
+      hypernexus_kernel_routes: tool({
+        description: "List all registered kernel API routes with categories and descriptions. Use to discover available kernel endpoints beyond the typed tools.",
+        args: {
+          category: z.string().optional().describe("Filter by category (e.g. 'memory', 'mcp', 'session', 'control')"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "List kernel routes" }); } catch { /* ignore */ }
+          const r = await hnFetch("/api/routes", { budget: FAST_BUDGET });
+          if (r.ok && r.data) {
+            const routes = Array.isArray(r.data) ? r.data : (r.data.data || r.data.routes || []);
+            const filtered = args.category
+              ? routes.filter((x) => x.category === args.category || x.Category === args.category)
+              : routes;
+            return { output: JSON.stringify({ count: filtered.length, routes: filtered.slice(0, 80) }, null, 2) };
+          }
+          return { output: JSON.stringify(summarize(r, "kernel routes"), null, 2) };
+        },
+      }),
+
+      hypernexus_memory_update: tool({
+        description: "Update an existing L2 memory's content or tags. Use to correct or refine a stored fact.",
+        args: {
+          id: z.string().describe("Memory ID to update"),
+          content: z.string().optional().describe("New content (omit to keep current)"),
+          tags: z.array(z.string()).optional().describe("New tags (omit to keep current)"),
+          title: z.string().optional().describe("New title (omit to keep current)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Update memory ${args.id}` }); } catch { /* ignore */ }
+          const body = { id: args.id };
+          if (args.content !== undefined) body.content = args.content;
+          if (args.tags !== undefined) body.tags = args.tags;
+          if (args.title !== undefined) body.title = args.title;
+          const r = await hnFetch("/api/memory/update", {
+            method: "POST",
+            body,
+            budget: SLOW_BUDGET,
+          });
+          return { output: JSON.stringify(summarize(r, "update memory"), null, 2) };
+        },
+      }),
     },
 
     // 2. CONVERSATION MONITOR — non-blocking tool suggestions on each message.

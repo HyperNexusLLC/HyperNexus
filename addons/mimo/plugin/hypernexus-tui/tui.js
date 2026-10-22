@@ -200,6 +200,102 @@ export const tui = async (api, options = {}, meta = {}) => {
         } finally { clearTimeout(timer); }
       },
     },
+    {
+      title: "HyperNexus: MCP Servers",
+      value: "hn-mcp",
+      description: "Show connected MCP servers and tool counts",
+      category: "HyperNexus",
+      slash: { name: "hn-mcp", aliases: ["hnm"] },
+      onSelect: async () => {
+        toast(api, "info", "HyperNexus", "Checking MCP servers…");
+        const r = await get("/api/mcp/servers", 4000);
+        const servers = r && Array.isArray(r.data) ? r.data : [];
+        if (!servers.length) { toast(api, "warning", "No MCP servers", (r && r.note) || "No servers found"); return; }
+        const list = servers.map((s) => `• ${s.name || s.id || "?"} [${s.status || "?"}] ${s.toolCount ?? "?"} tools`).join("\n");
+        toast(api, "success", `${servers.length} MCP servers`, list.slice(0, 400));
+      },
+    },
+    {
+      title: "HyperNexus: Kernel Routes",
+      value: "hn-routes",
+      description: "List kernel API routes by category",
+      category: "HyperNexus",
+      slash: { name: "hn-routes", aliases: ["hnr"] },
+      onSelect: async () => {
+        let cat = "";
+        try {
+          const val = await new Promise((resolve) => {
+            api.ui.dialog.replace(() =>
+              api.ui.DialogPrompt({
+                title: "Filter kernel routes",
+                placeholder: "Category (memory, mcp, session…) or empty for all",
+                onConfirm: (v) => resolve(v),
+                onCancel: () => resolve(""),
+                onClose: () => resolve(""),
+              })
+            );
+          });
+          cat = String(val || "").trim();
+        } catch { /* dialog unavailable */ }
+        toast(api, "info", "HyperNexus", "Fetching kernel routes…");
+        const r = await get("/api/routes", 5000);
+        const routes = r && (Array.isArray(r.data) ? r.data : r.data?.routes || r.routes) || [];
+        const filtered = cat ? routes.filter((x) => (x.category || x.Category) === cat) : routes;
+        if (!filtered.length) { toast(api, "warning", "No routes", (r && r.note) || `No routes${cat ? ` in "${cat}"` : ""}`); return; }
+        const list = filtered.slice(0, 8).map((x) => `• ${x.path || x.Path || "?"} [${x.category || x.Category || "?"}]`).join("\n");
+        toast(api, "success", `${filtered.length} routes`, list.slice(0, 400));
+      },
+    },
+    {
+      title: "HyperNexus: Memory Stats",
+      value: "hn-memstats",
+      description: "Show L2 memory vault statistics",
+      category: "HyperNexus",
+      slash: { name: "hn-memstats", aliases: ["hnms"] },
+      onSelect: async () => {
+        toast(api, "info", "HyperNexus", "Fetching memory stats…");
+        const r = await get("/api/agent-memory/stats", 4000);
+        const d = r && r.data ? r.data : r;
+        if (d && (d.total || d.count || d.l2Count)) {
+          toast(api, "success", "Memory stats", JSON.stringify(d).slice(0, 400));
+        } else {
+          toast(api, "warning", "No stats", (r && r.note) || "Memory stats unavailable");
+        }
+      },
+    },
+    {
+      title: "HyperNexus: Code Search",
+      value: "hn-codesearch",
+      description: "Search codebase symbols via AST graph",
+      category: "HyperNexus",
+      slash: { name: "hn-codesearch", aliases: ["hncs"] },
+      onSelect: async () => {
+        let q = "";
+        try {
+          const val = await new Promise((resolve) => {
+            api.ui.dialog.replace(() =>
+              api.ui.DialogPrompt({
+                title: "Search codebase symbols",
+                placeholder: "Function, class, or variable name…",
+                onConfirm: (v) => resolve(v),
+                onCancel: () => resolve(""),
+                onClose: () => resolve(""),
+              })
+            );
+          });
+          q = String(val || "").trim();
+        } catch { /* dialog unavailable */ }
+        if (!q) return;
+        toast(api, "info", "HyperNexus", `Searching symbols for "${q}"…`);
+        const r = await get(`/api/code/symbols?q=${encodeURIComponent(q)}`, 5000);
+        const hits = r && (Array.isArray(r.data) ? r.data : r.data?.results || r.results) || [];
+        if (hits.length) {
+          toast(api, "success", `${hits.length} symbols`, hits.slice(0, 6).map((h) => `• ${h.name || h.symbol || h}`).join("\n").slice(0, 400));
+        } else {
+          toast(api, "warning", "No symbols", (r && r.note) || `Nothing for "${q}"`);
+        }
+      },
+    },
   ]);
 
   // === Deep-wiring: remaining TuiPluginApi surfaces (keybind, kv, route, event) ===
