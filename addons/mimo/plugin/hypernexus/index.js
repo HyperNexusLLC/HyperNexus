@@ -295,14 +295,27 @@ export const server = async (input, options = {}) => {
       }),
 
       hypernexus_memory_search: tool({
-        description: "Semantic + keyword search over the HyperNexus L2 memory vault (cross-session project knowledge). May be slow on first call (ONNX warmup).",
+        description: "Fast keyword search over the HyperNexus L2 memory vault (FTS-powered, ~15ms). Falls back to semantic vector search if no keyword matches.",
         args: {
           query: z.string().describe("What to look for in memory"),
           limit: z.number().int().min(1).max(20).optional().describe("Max results (default 5)"),
         },
         async execute(args, context) {
           try { if (context && context.metadata) context.metadata({ title: `Memory search: ${String(args.query).slice(0, 40)}` }); } catch { /* ignore */ }
-          const r = await hnFetch(`/api/memory/search?query=${encodeURIComponent(args.query)}&limit=${args.limit || 5}`, { budget: SLOW_BUDGET });
+          const limit = args.limit || 5;
+          const safe = String(args.query).replace(/[^a-zA-Z0-9\s_-]/g, " ").trim().slice(0, 80);
+          // Fast path: FTS keyword search (~15ms)
+          const fts = await hnFetch(`/api/memory/fts-search?q=${encodeURIComponent(safe)}&limit=${limit}`, { budget: FAST_BUDGET });
+          const ftsData = fts.ok && fts.data && Array.isArray(fts.data.data) ? fts.data.data : [];
+          if (ftsData.length) {
+            const items = ftsData.map((x) => {
+              const rec = x && x.record ? x.record : x;
+              return { title: rec.title || rec.tags || "memory", content: rec.content || rec.text || "", score: rec.score || 0 };
+            });
+            return { output: JSON.stringify({ count: items.length, source: "fts", data: items }, null, 2) };
+          }
+          // Slow path: semantic vector search (ONNX embed, ~800ms+)
+          const r = await hnFetch(`/api/memory/search?query=${encodeURIComponent(args.query)}&limit=${limit}`, { budget: SLOW_BUDGET });
           return { output: JSON.stringify(summarize(r, "memory search"), null, 2) };
         },
       }),
@@ -605,6 +618,18 @@ export const server = async (input, options = {}) => {
             budget: SLOW_BUDGET,
           });
           return { output: JSON.stringify(summarize(r, "update memory"), null, 2) };
+        },
+      }),
+
+      hypernexus_session_list: tool({
+        description: "List active and recent HyperNexus sessions with their status and metadata. Use to discover other agents or sessions working on related tasks.",
+        args: {
+          limit: z.number().int().min(1).max(50).optional().describe("Max sessions to return (default 10)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "List sessions" }); } catch { /* ignore */ }
+          const r = await hnFetch(`/api/sessions/summary?limit=${args.limit || 10}`, { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "session list"), null, 2) };
         },
       }),
     },
