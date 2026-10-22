@@ -68,11 +68,35 @@ try {
     $stagedSize = (Get-Item $Staged).Length
     Write-Step "staged: $Staged ($stagedSize bytes)"
 
-    # --- 3. kill + verify gone ---------------------------------------------
-    Get-Process -Name 'hypernexus' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 5
+    # --- 3. graceful shutdown first, then kill + verify gone -----------------
+    # POST /api/shutdown makes the kernel exit cleanly (and works even when the
+    # kernel holds an ELEVATED token that Stop-Process cannot touch -- e.g. when
+    # it was spawned by the HyperNexus-KernelWatchdog scheduled task).
     if (Get-Process -Name 'hypernexus' -ErrorAction SilentlyContinue) {
-        Write-Step "ERROR: hypernexus processes still alive after kill -- aborting, staged binary left in place."
+        try {
+            Invoke-WebRequest -Uri 'http://127.0.0.1:7778/api/shutdown' -Method POST -ContentType 'application/json' -Body '{}' -UseBasicParsing -TimeoutSec 8 | Out-Null
+            Write-Step "graceful /api/shutdown requested"
+        } catch {
+            Write-Step "graceful shutdown unavailable ($($_.Exception.Message)) - falling back to kill"
+        }
+        for ($i = 0; $i -lt 15; $i++) {
+            Start-Sleep -Seconds 2
+            if (-not (Get-Process -Name 'hypernexus' -ErrorAction SilentlyContinue)) { break }
+        }
+    }
+    $killErrs = @()
+    foreach ($proc in @(Get-Process -Name 'hypernexus' -ErrorAction SilentlyContinue)) {
+        try { Stop-Process -Id $proc.Id -Force -ErrorAction Stop } catch { $killErrs += "pid $($proc.Id): $($_.Exception.Message)" }
+    }
+    Start-Sleep -Seconds 5
+    $survivors = @(Get-Process -Name 'hypernexus' -ErrorAction SilentlyContinue)
+    if ($survivors.Count -gt 0) {
+        Write-Step "ERROR: hypernexus processes still alive after graceful shutdown + kill -- aborting, staged binary left in place."
+        foreach ($e in $killErrs) { Write-Step "  kill error: $e" }
+        if ($killErrs -match 'Access is denied') {
+            Write-Step "  HINT: the kernel runs with an ELEVATED token (e.g. spawned by the HyperNexus-KernelWatchdog scheduled task)."
+            Write-Step "  Re-run this script elevated (or stop the watchdog task first): Stop-ScheduledTask -TaskName 'HyperNexus-KernelWatchdog'"
+        }
         exit 1
     }
     Write-Step "all hypernexus processes gone"

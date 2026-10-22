@@ -36,13 +36,37 @@ func main() {
 
 // installCrashCapture redirects the runtime's crash output (unrecoverable
 // fatals like "concurrent map iteration and map write", unrecovered panics,
-// out-of-memory) to .hypernexus/kernel-crash.log. Without this the fatal text
-// is lost to whichever parent spawned us, and every crash is undiagnosable.
+// out-of-memory) to <workspace>/.hypernexus/kernel-crash.log. Without this the
+// fatal text is lost to whichever parent spawned us, and every crash is
+// undiagnosable. The path is ABSOLUTE: crash attribution must not scatter with
+// whatever cwd a watchdog or sibling agent happened to use (it once landed in
+// bin/ and looked like a missing crash log).
 func installCrashCapture() {
 	root := strings.TrimSpace(os.Getenv("HYPERNEXUS_WORKSPACE_ROOT"))
 	if root == "" {
+		// Walk up from cwd looking for workspace markers so spawning from a
+		// subdirectory (bin/, go/, a temp dir) still lands in the one
+		// canonical .hypernexus/kernel-crash.log.
 		if cwd, err := os.Getwd(); err == nil {
-			root = cwd
+			dir := cwd
+			for i := 0; i < 8; i++ {
+				if _, err := os.Stat(filepath.Join(dir, ".hypernexus")); err == nil {
+					root = dir
+					break
+				}
+				if _, err := os.Stat(filepath.Join(dir, "VERSION")); err == nil {
+					root = dir
+					break
+				}
+				parent := filepath.Dir(dir)
+				if parent == dir {
+					break
+				}
+				dir = parent
+			}
+			if root == "" {
+				root = cwd
+			}
 		}
 	}
 	if root == "" {
@@ -50,11 +74,13 @@ func installCrashCapture() {
 	}
 	dir := filepath.Join(root, ".hypernexus")
 	_ = os.MkdirAll(dir, 0o755)
-	f, err := os.OpenFile(filepath.Join(dir, "kernel-crash.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	path := filepath.Join(dir, "kernel-crash.log")
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
 		return
 	}
 	debug.SetCrashOutput(f, debug.CrashOptions{})
+	fmt.Printf("[CrashCapture] kernel fatals -> %s\n", path)
 }
 
 func run(args []string) int {
@@ -271,7 +297,7 @@ func runServe(args []string) int {
 	// Use a direct TCP dial (no proxy) — Go's http.Client routes localhost through
 	// system proxies on Windows, which would false-negative the health probe.
 	checkAlive := func(host string, port int) bool {
-		addr := fmt.Sprintf("%s:%d", host, port)
+		addr := net.JoinHostPort(host, fmt.Sprint(port))
 		conn, err := net.DialTimeout("tcp", addr, 1500*time.Millisecond)
 		if err != nil {
 			return false

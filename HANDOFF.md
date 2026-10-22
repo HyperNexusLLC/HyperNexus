@@ -65,10 +65,18 @@
 
 # HANDOFF — OpenCode Extension Max Surface + Full Verification (v1.0.21)
 
-## Status: COMPLETE & VERIFIED (2026-10-19/21, eight sessions)
+## Status: COMPLETE & VERIFIED (2026-10-19/22, nine sessions)
 Branch: feat/mimo-plugin-max-surface. Kernel: bin/hypernexus.exe **v1.0.21**.
 One-command gauntlet: `node bin/verify-all.mjs` (add `--fast` for batteries only).
-Kernel swap: `powershell -File bin\swap-kernel.ps1 -Start` (the ONLY sanctioned swap path — it locks).
+Kernel swap: `powershell -File bin\swap-kernel.ps1 -Start` (the ONLY sanctioned swap path — it locks and shuts down gracefully).
+Sustained-load soak: `node bin/soak.mjs --minutes=5` (the no-`-race` race detector).
+
+## Session 9 (2026-10-22) — soak test + crash-attribution hardening + swap playbook upgrade
+### VERIFIED: soak smoke PASS (all streams 0% errors, crash log intact) + gauntlet re-run after sibling merges
+- **`bin/soak.mjs`** — the sustained-load net (my #1 remaining item): hammers exactly the hot paths that historically raced (tool-suggestion storms, memory writes/searches, tools/search + agent/tool, stdio round-trips) with death/health-gap/crash-log detection and a PASS/FAIL summary. Every past kernel-fatal only surfaced under concurrent load — this is the standing regression net
+- **Crash attribution hardened**: crash-log path was cwd-relative (scattered when a watchdog spawned the kernel from bin/); now walks up to the workspace root and logs the absolute path at startup (`[CrashCapture]`)
+- **Swap playbook upgrade (learned the hard way)**: the `HyperNexus-KernelWatchdog` scheduled task spawns the kernel ELEVATED — `Stop-Process`/`taskkill`/`schtasks /create` all get "Access is denied" from a normal shell. The kernel's own `POST /api/shutdown` exits cleanly regardless of token (4s) — swap-kernel.ps1 now tries graceful shutdown first. Also: `Stop-ScheduledTask -TaskName 'HyperNexus-KernelWatchdog'` works from a normal shell (stop it if the watchdog races your swap; restart with `Start-ScheduledTask`)
+- Fixed pre-existing `go vet` IPv6 nit in the single-instance dial (`net.JoinHostPort`)
 
 ## Session 8 (v1.0.21) — third fatal race + dead-provider fix + httpapi suite collapse + shared-branch tooling
 ### VERIFIED: gauntlet ALL GREEN 10/10 in ~3 min (382 assertions + Go suites + empty crash log)
