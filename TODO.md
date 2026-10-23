@@ -9,7 +9,8 @@
 - [ ] **Decompose `dashboard-home-view.tsx`** (4958 lines) → one lazy-loaded component per section.
 - [ ] **Retire 99 legacy `dashboard/*` pages** (not in nav) — redirect to home anchors to remove dead weight.
 - [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
-- [ ] **Watchdog as scheduled task** — register `scripts/kernel-watchdog.ps1` for boot survival (currently only a background process).
+- [x] ~~Watchdog as scheduled task~~ — **verified done 2026-10-23**: `HyperNexus-KernelWatchdog` is registered and Running (spawns the kernel with an elevated token — see HANDOFF session 9 for the swap implications).
+- [x] **Port pi tools to opencode** — `hypernexus_workflow`, `hypernexus_orchestrate`, `hypernexus_browser` added to the OpenCode plugin (33 tools total; gauntlet 10/10). **mimo port still pending.**
 
 ## 🟡 Medium
 

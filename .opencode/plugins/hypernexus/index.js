@@ -1285,6 +1285,113 @@ const TOOLS = [
       };
     },
   },
+  {
+    name: "workflow",
+    description: "List or run HyperNexus engineering workflows (full-build, submodule-sync, etc.) for orchestration.",
+    input: {
+      type: "object",
+      properties: {
+        action: str("Action: 'list' or 'run'."),
+        id: str("Workflow id (required for action=run)."),
+      },
+      required: ["action"],
+      additionalProperties: false,
+    },
+    async run({ action, id }) {
+      if (action === "run") {
+        if (!id) return { content: "Usage: workflow {action:'run', id:'<workflow-id>'} — id is required.", metadata: { ok: false } };
+        const res = await kernel(`/api/workflows/${encodeURIComponent(String(id))}/run`, {
+          method: "POST",
+          body: {},
+          budget: CALL_BUDGET,
+        });
+        return {
+          content: JSON.stringify(unwrap(res) ?? { error: res.error, raw: res.data }, null, 2).slice(0, 1500),
+          metadata: { ok: res.ok },
+        };
+      }
+      const res = await kernel("/api/workflows", { budget: FAST_BUDGET });
+      const body = unwrap(res);
+      const wfs = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      const items = (Array.isArray(wfs) ? wfs : [])
+        .map((w, i) => `  ${i + 1}. ${w.id ?? w.name ?? "?"} - ${String(w.description ?? "").slice(0, 80)}`)
+        .join("\n");
+      return { content: `Workflows:\n${items || "(none)"}`, metadata: { ok: res.ok } };
+    },
+  },
+  {
+    name: "orchestrate",
+    description: "Run the RECALL -> DISCOVER -> PERSIST leg of the orchestration loop for a task in one call: harvests relevant memory, finds candidate tools, and records the task. EXECUTE is left to the model using the discovered tools.",
+    input: {
+      type: "object",
+      properties: {
+        task: str("The task to orchestrate."),
+      },
+      required: ["task"],
+      additionalProperties: false,
+    },
+    async run({ task }) {
+      const t = String(task || "").trim();
+      if (!t) return { content: "Provide a task.", metadata: { ok: false } };
+      const q = encodeURIComponent(clamp(t, 160));
+      const steps = [];
+      const recall = await kernel(`/api/memory/search?query=${q}&limit=3`, { budget: SLOW_BUDGET });
+      const memories = unwrap(recall);
+      steps.push(`RECALL: ${JSON.stringify(memories).slice(0, 240)}`);
+      const discover = await kernel(`/api/tools/search?query=${q}&limit=3`, { budget: SLOW_BUDGET });
+      steps.push(`DISCOVER: ${JSON.stringify(unwrap(discover)).slice(0, 240)}`);
+      const persist = await kernel("/api/memory/facts/add", {
+        method: "POST",
+        body: {
+          title: `orchestrated: ${clamp(t, 80)}`,
+          content: `[ORCHESTRATED] ${t}`,
+          tags: ["system:orchestrated", "client:opencode"],
+          namespace: "project",
+        },
+        budget: FAST_BUDGET,
+      });
+      steps.push(`PERSIST: ${persist.ok ? "task recorded in L2" : `failed (${persist.error})`}`);
+      steps.push("EXECUTE: perform the task using the discovered tools above.");
+      return { content: `Orchestrated "${t}":\n\n${steps.join("\n\n")}`, metadata: { ok: recall.ok || discover.ok || persist.ok } };
+    },
+  },
+  {
+    name: "browser",
+    description: "Browser automation: scrape a URL or check browser-service status. Degrades gracefully when the browser service isn't running.",
+    input: {
+      type: "object",
+      properties: {
+        action: str("Action: 'status' or 'scrape'."),
+        url: str("URL to scrape (required for action=scrape)."),
+      },
+      required: ["action"],
+      additionalProperties: false,
+    },
+    async run({ action, url }) {
+      if (action === "scrape") {
+        if (!url) return { content: "Usage: browser {action:'scrape', url:'https://...'} — url is required.", metadata: { ok: false } };
+        const res = await kernel("/api/browser/scrape", {
+          method: "POST",
+          body: { url: String(url) },
+          budget: CALL_BUDGET,
+        });
+        if (!res.ok) {
+          return {
+            content: `Browser scrape unavailable (${res.error ?? `HTTP ${res.status}`}) — the browser service may not be running.`,
+            metadata: { ok: false },
+          };
+        }
+        return { content: JSON.stringify(unwrap(res) ?? res.data, null, 2).slice(0, 3000), metadata: { ok: true } };
+      }
+      const res = await kernel("/api/browser/status", { budget: FAST_BUDGET });
+      return {
+        content: res.ok
+          ? JSON.stringify(unwrap(res) ?? res.data, null, 2).slice(0, 500)
+          : `Browser service not running (${res.error ?? `HTTP ${res.status}`}). Start it to enable scraping.`,
+        metadata: { ok: res.ok },
+      };
+    },
+  },
 ];
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Commands Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬

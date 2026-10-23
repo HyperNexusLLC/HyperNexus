@@ -39,6 +39,9 @@ export const TOOL = Object.freeze({
   BILLING_STATUS: "hypernexus_billing_status",
   AUDIT_LOG: "hypernexus_audit_log",
   SUBAGENT: "hypernexus_subagent",
+  WORKFLOW: "hypernexus_workflow",
+  ORCHESTRATE: "hypernexus_orchestrate",
+  BROWSER: "hypernexus_browser",
 });
 
 export const COMMAND = Object.freeze({

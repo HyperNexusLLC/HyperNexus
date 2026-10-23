@@ -71,6 +71,13 @@ One-command gauntlet: `node bin/verify-all.mjs` (add `--fast` for batteries only
 Kernel swap: `powershell -File bin\swap-kernel.ps1 -Start` (the ONLY sanctioned swap path — it locks and shuts down gracefully).
 Sustained-load soak: `node bin/soak.mjs --minutes=5` (the no-`-race` race detector).
 
+## Session 10 (2026-10-23) — pi-tool parity for the OpenCode extension
+### VERIFIED: gauntlet ALL GREEN 10/10 (ext 123/123, drift 95/95) after the port
+- **Ported the 3 pi-only tools to OpenCode** (TODO item "Port pi tools to mimo + opencode"): `hypernexus_workflow` (list/run via `/api/workflows`), `hypernexus_orchestrate` (one-call RECALL→DISCOVER→PERSIST; EXECUTE stays with the model — OpenCode tool run() has no ctx.executeTool, so it drives the kernel endpoints directly like pi does under the hood), `hypernexus_browser` (scrape/status, graceful when the browser service is down — currently 503 = correct degradation)
+- Plugin surface is now **33 tools / 11 commands / 3 skills**; `rpc.js` TOOL contract extended; battery exact-counts bumped 30→33; drift battery auto-picked up the new endpoints + contract entries (89→95)
+- TODO.md honesty sweep: "Watchdog as scheduled task" was already done (verified `HyperNexus-KernelWatchdog` registered + Running — stale checkbox); pi-tools port marked done for opencode, **mimo port flagged as still pending**
+- Next per my roadmap: memory-search perf (soak measured p95 6.6s under load — team TODO's "embedding cache" pairs with it), then production `Close()` bgCancel threading, then plugin polish (boot-time UX, npm packaging)
+
 ## Session 9 (2026-10-22) — soak test + crash-attribution hardening + swap playbook upgrade
 ### VERIFIED: soak smoke PASS (all streams 0% errors, crash log intact) + gauntlet re-run after sibling merges
 - **`bin/soak.mjs`** — the sustained-load net (my #1 remaining item): hammers exactly the hot paths that historically raced (tool-suggestion storms, memory writes/searches, tools/search + agent/tool, stdio round-trips) with death/health-gap/crash-log detection and a PASS/FAIL summary. Every past kernel-fatal only surfaced under concurrent load — this is the standing regression net

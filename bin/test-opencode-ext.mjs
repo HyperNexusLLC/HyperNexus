@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * test-opencode-ext.mjs — OpenCode plugin battery
+ * test-opencode-ext.mjs â€” OpenCode plugin battery
  * ================================================
  * Loads the HyperNexus OpenCode V2 plugin against a mock plugin-context and
  * exercises: registration surface, all 28 tools (live kernel), 10 commands,
@@ -30,7 +30,7 @@ function check(name, cond, detail = "") {
   } else {
     failed++;
     failures.push(name);
-    console.log(`  FAIL ${name}${detail ? ` — ${detail}` : ""}`);
+    console.log(`  FAIL ${name}${detail ? ` â€” ${detail}` : ""}`);
   }
 }
 
@@ -38,7 +38,7 @@ function section(name) {
   console.log(`\n== ${name}`);
 }
 
-// ── Mock plugin context ──────────────────────────────────────────────────────
+// â”€â”€ Mock plugin context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeMockCtx({ directory, baseUrl } = {}) {
   const state = {
@@ -165,7 +165,7 @@ function makeMockCtx({ directory, baseUrl } = {}) {
   return { ctx, state };
 }
 
-// ── Load plugin ──────────────────────────────────────────────────────────────
+// â”€â”€ Load plugin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const mod = await import(pathToFileURL(PLUGIN).href);
 const plugin = mod.default;
@@ -175,7 +175,7 @@ check("default export exists", !!plugin);
 check("plugin id is 'hypernexus'", plugin?.id === "hypernexus", `got ${plugin?.id}`);
 check("setup is a function", typeof plugin?.setup === "function");
 check("V1 server() shim is a function", typeof plugin?.server === "function");
-check("exports TOOLS (30)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 30, `got ${mod.TOOLS?.length}`);
+check("exports TOOLS (33)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 33, `got ${mod.TOOLS?.length}`);
 check("exports COMMANDS (11)", Array.isArray(mod.COMMANDS) && mod.COMMANDS.length === 11, `got ${mod.COMMANDS?.length}`);
 check("exports SKILLS (3)", Array.isArray(mod.SKILLS) && mod.SKILLS.length === 3, `got ${mod.SKILLS?.length}`);
 
@@ -190,7 +190,7 @@ check("every tool has JSON-schema input", mod.TOOLS.every((t) => t.input?.type =
 check("every tool has description", mod.TOOLS.every((t) => typeof t.description === "string" && t.description.length > 10));
 check("every tool has run()", mod.TOOLS.every((t) => typeof t.run === "function"));
 
-// ── Setup & registration ─────────────────────────────────────────────────────
+// â”€â”€ Setup & registration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "hn-opencode-test-"));
 const { ctx, state } = makeMockCtx({ directory: tmp });
@@ -199,7 +199,7 @@ const cleanup = await plugin.setup(ctx);
 section("3. Registration surface");
 check("setup returns cleanup function", typeof cleanup === "function");
 check("namespace registered", state.namespaces.length === 1 && state.namespaces[0].name === "hypernexus");
-check("30 tools registered", state.tools.size === 30, `got ${state.tools.size}`);
+check("33 tools registered", state.tools.size === 33, `got ${state.tools.size}`);
 check("tool names match rpc contract", [...state.tools.keys()].every((k) => rpcNames.includes(k)));
 check("11 commands registered", state.commands.size === 11, `got ${state.commands.size}`);
 check("3 skills registered with path", state.skills.size === 3 && [...state.skills.values()].every((s) => typeof s.path === "string" && s.path.length > 0));
@@ -227,9 +227,9 @@ check("list finds managed worktree", listed.some((w) => w.directory === wtDir));
 await wt.remove({ directory: wtDir, force: true }, { signal: new AbortController().signal });
 check("remove deletes marker", !fs.existsSync(path.join(wtDir, ".hypernexus-worktree.json")));
 
-// ── Live tool execution (kernel up) ──────────────────────────────────────────
+// â”€â”€ Live tool execution (kernel up) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-section("5. Tool execution — live kernel");
+section("5. Tool execution â€” live kernel");
 async function runTool(name, input = {}) {
   const t = state.tools.get(`hypernexus_${name}`);
   if (!t) return { error: "missing tool" };
@@ -441,7 +441,7 @@ const v1 = await plugin.server({}, {});
 check("V1 server() returns hook map", typeof v1 === "object" && typeof v1["tool.execute.before"] === "function");
 check("V1 chat.message hook", typeof v1["chat.message"] === "function");
 check("V1 permission.ask hook", typeof v1["permission.ask"] === "function");
-check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 30, `got ${Object.keys(v1.tool || {}).length}`);
+check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 33, `got ${Object.keys(v1.tool || {}).length}`);
 await v1["chat.message"]({ message: { role: "user", content: "hello battery world" } });
 const v1out = await v1.tool.hypernexus_status.execute({});
 check("V1 tool execute works", typeof v1out === "string" && v1out.length > 0);
@@ -472,7 +472,7 @@ check("context hook injects offline notice", /offline|unreachable|degraded/i.tes
 await deadCleanup();
 delete process.env.HYPERNEXUS_URL;
 
-// ── Summary ─────────────────────────────────────────────────────────────────
+// â”€â”€ Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 console.log(`\n== SUMMARY: ${passed}/${passed + failed} passed`);
 if (failed) {
