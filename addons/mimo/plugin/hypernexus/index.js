@@ -632,6 +632,113 @@ export const server = async (input, options = {}) => {
           return { output: JSON.stringify(summarize(r, "session list"), null, 2) };
         },
       }),
+
+      hypernexus_skill_manage: tool({
+        description: "Manage HyperNexus skills: list, search, read, create. Skills are reusable SKILL.md modules.",
+        args: {
+          action: z.enum(["list", "search", "read", "create"]).describe("Action to perform"),
+          id: z.string().optional().describe("Skill name for read/create"),
+          query: z.string().optional().describe("Search query (for search)"),
+          content: z.string().optional().describe("Full markdown content (for create)"),
+          limit: z.number().int().min(1).max(50).optional().describe("Max results (default 20)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Skill ${args.action}` }); } catch { /* ignore */ }
+          if (args.action === "list" || args.action === "search") {
+            const r = await hnFetch("/api/skills", { budget: FAST_BUDGET });
+            const skills = (r.ok && r.data && (r.data.data || r.data.skills)) || [];
+            const q = (args.query || "").toLowerCase();
+            const filtered = q ? skills.filter((s) => `${s.id || ""} ${s.name || ""} ${s.description || ""}`.toLowerCase().includes(q)) : skills;
+            return { output: JSON.stringify({ action: args.action, count: Math.min(filtered.length, args.limit || 20), items: filtered.slice(0, args.limit || 20) }, null, 2) };
+          }
+          if (args.action === "read") {
+            if (!args.id) return { output: JSON.stringify({ error: "Provide id" }) };
+            const r = await hnFetch(`/api/skills/read?name=${encodeURIComponent(args.id)}`, { budget: FAST_BUDGET });
+            return { output: JSON.stringify(summarize(r, "skill read"), null, 2) };
+          }
+          if (args.action === "create") {
+            if (!args.id || !args.content) return { output: JSON.stringify({ error: "Provide id and content" }) };
+            const r = await hnFetch("/api/skills/create", { method: "POST", body: { id: args.id, name: args.id, content: args.content }, budget: SLOW_BUDGET });
+            return { output: JSON.stringify(summarize(r, "skill create"), null, 2) };
+          }
+          return { output: JSON.stringify({ error: "action must be list|search|read|create" }) };
+        },
+      }),
+
+      hypernexus_repomap: tool({
+        description: "Generate a repository map with file/symbol summaries to orient in a codebase quickly.",
+        args: {
+          dir: z.string().optional().describe("Directory to map (default workspace root)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: "Repo map" }); } catch { /* ignore */ }
+          const r = await hnFetch("/api/agent/tool", { method: "POST", body: { name: "repomap", args: { dir: args.dir || "" } }, budget: SLOW_BUDGET });
+          if (r.ok && r.data) {
+            const c = r.data.data?.content;
+            const text = Array.isArray(c) ? c.map((x) => x.text || "").join("\n") : JSON.stringify(r.data);
+            return { output: text.slice(0, 4000) || "(empty map)" };
+          }
+          return { output: JSON.stringify(summarize(r, "repomap"), null, 2) };
+        },
+      }),
+
+      hypernexus_knowledge_graph: tool({
+        description: "Add entities, relations, or observations to the HyperNexus knowledge graph, or search it.",
+        args: {
+          action: z.enum(["add_entities", "add_relations", "add_observations", "search"]).describe("Action"),
+          entities: z.array(z.any()).optional().describe("Entities [{name,type,observations}]"),
+          relations: z.array(z.any()).optional().describe("Relations [{from,to,type}]"),
+          query: z.string().optional().describe("Search query"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `KG ${args.action}` }); } catch { /* ignore */ }
+          if (args.action === "search") {
+            const r = await hnFetch(`/api/memory/search?q=${encodeURIComponent(args.query || "")}`, { budget: SLOW_BUDGET });
+            return { output: JSON.stringify(summarize(r, "kg search"), null, 2) };
+          }
+          const r = await hnFetch("/api/knowledge/graph", { method: "POST", body: { action: args.action, entities: args.entities || [], relations: args.relations || [] }, budget: SLOW_BUDGET });
+          return { output: JSON.stringify(summarize(r, "knowledge graph"), null, 2) };
+        },
+      }),
+
+      hypernexus_session_context: tool({
+        description: "Get or set the session goal/objective used by HyperNexus for context harvesting and handoff.",
+        args: {
+          action: z.enum(["get", "set"]).describe("Action"),
+          goal: z.string().optional().describe("Goal text (for set)"),
+          objective: z.string().optional().describe("Objective text (for set)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Session context ${args.action}` }); } catch { /* ignore */ }
+          if (args.action === "get") {
+            const r = await hnFetch("/api/sessions/context", { budget: FAST_BUDGET });
+            return { output: JSON.stringify(summarize(r, "session context"), null, 2) };
+          }
+          const r = await hnFetch("/api/memory/context/save", { method: "POST", body: { goal: args.goal || "", objective: args.objective || "" }, budget: SLOW_BUDGET });
+          return { output: JSON.stringify(summarize(r, "session context save"), null, 2) };
+        },
+      }),
+
+      hypernexus_workflow: tool({
+        description: "List or run HyperNexus engineering workflows.",
+        args: {
+          action: z.enum(["list", "run"]).describe("Action"),
+          name: z.string().optional().describe("Workflow name (for run)"),
+          args: z.record(z.string(), z.any()).optional().describe("Workflow arguments"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Workflow ${args.action}` }); } catch { /* ignore */ }
+          if (args.action === "list") {
+            const r = await hnFetch("/api/workflows", { budget: FAST_BUDGET });
+            return { output: JSON.stringify(summarize(r, "workflow list"), null, 2) };
+          }
+          if (args.action === "run" && args.name) {
+            const r = await hnFetch("/api/workflows/run", { method: "POST", body: { name: args.name, args: args.args || {} }, budget: SLOW_BUDGET });
+            return { output: JSON.stringify(summarize(r, "workflow run"), null, 2) };
+          }
+          return { output: JSON.stringify({ error: "Provide action=list or action=run with name" }) };
+        },
+      }),
     },
 
     // 2. CONVERSATION MONITOR — non-blocking tool suggestions on each message.
