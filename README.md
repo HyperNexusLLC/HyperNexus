@@ -1,8 +1,10 @@
+> **Canonical development lives in [TormentNexus](https://github.com/MDMAtk/TormentNexus)** — the open-source original. This repository is the **commercial HyperNexus edition**: the same codebase under commercial license terms, for hosted deployment, support, and enterprise use. Build from TormentNexus; license it as HyperNexus. (Consolidation decided 2026-10-23.)
+
 # HyperNexus
 
 HyperNexus is a local-first AI control plane: a Go sidecar plus a web dashboard that sits between AI coding clients (Claude Code, Cursor, Codex, Gemini CLI, and others) and the models/tools behind them. Its core jobs are **progressive MCP tool routing** (injecting only the tool schemas relevant to the current prompt instead of the whole catalog), **provider failover** across API and local models, **two-tier memory** (ephemeral session scratchpad + persistent SQLite-backed semantic store), and **multi-agent coordination**.
 
-This repository (under the HyperNexusLLC org) is the commercial edition and the main development tree. The open-source counterpart is TormentNexus (tormentnexus.site). `robertpelloni/HyperNexus` is an empty private placeholder — this is the real repo. The Go module path is `gitlab.com/HyperNexusLLC/HyperNexus`; the tree is mirrored between GitHub and GitLab.
+This repository (under the HyperNexusLLC org) is the commercial edition; canonical development lives in TormentNexus, and this tree is its commercial mirror. The open-source counterpart is TormentNexus (tormentnexus.site). `robertpelloni/HyperNexus` is an empty private placeholder — this is the real repo. The Go module path is `gitlab.com/HyperNexusLLC/HyperNexus`; the tree is mirrored between GitHub and GitLab.
 
 ## Status
 
