@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-10-22T21:34:10.350890+00:00",
+  "savedAt": "2026-10-23T17:34:59.753691+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -236,6 +236,29 @@
       },
       "createdAt": "2026-10-22T21:34:10.350890+00:00",
       "accessedAt": "2026-10-22T21:34:10.350890+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "6157bafb3bdc85c8",
+      "content": "pi-tool parity: workflow/orchestrate/browser ported to OpenCode plugin (33 tools total). Drift guard auto-validates new endpoints (89->95). Gauntlet ALL GREEN 10/10. mimo port pending. Next: memory-search perf (soak p95 6.6s), Close() bgCancel, plugin polish.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "opencode",
+          "kernel",
+          "v1.0.21",
+          "session-summary",
+          "parity",
+          "tools"
+        ],
+        "title": "OpenCode extension v1.0.21 session 10"
+      },
+      "createdAt": "2026-10-23T17:34:59.753691+00:00",
+      "accessedAt": "2026-10-23T17:34:59.753691+00:00",
       "accessCount": 0,
       "ttl": null
     }
