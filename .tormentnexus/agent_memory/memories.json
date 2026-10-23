@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-10-21T18:09:41.944004+00:00",
+  "savedAt": "2026-10-22T21:34:10.350890+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -189,6 +189,53 @@
       },
       "createdAt": "2026-10-21T18:09:41.941083+00:00",
       "accessedAt": "2026-10-21T18:09:41.941083+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "d7c1012759dbdbed",
+      "content": "httpapi suite 900s timeout -> 34s (tests hit production memory.db via 1-conn sqlite pool + New() leaked background loops; HYPERNEXUS_DISABLE_BACKGROUND_SERVICES gate + temp-dir TestMain). Third kernel-fatal race fixed (DecisionSystem.SearchTools ds.loaded unlocked read). Dead-provider retry cap in plugin retry hook (event.decision={retry:false}). Gauntlet ALL GREEN 10/10 in ~3min. New: verify-all.mjs, swap-kernel.ps1 -Expect, test-drift.mjs 89 checks.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "opencode",
+          "kernel",
+          "v1.0.21",
+          "session-summary",
+          "testing",
+          "race",
+          "httpapi"
+        ],
+        "title": "OpenCode extension v1.0.21 session 8"
+      },
+      "createdAt": "2026-10-21T21:07:51.117047+00:00",
+      "accessedAt": "2026-10-21T21:07:51.117047+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "f42e9969adc3001d",
+      "content": "soak.mjs sustained-load test (6345 req/5min, zero crash growth). Crash path now walks up to workspace root + logs absolute path. Swap playbook: watchdog-spawned kernel is ELEVATED (Stop-Process denied) - use POST /api/shutdown for graceful swap; Stop-ScheduledTask works on the watchdog from a normal shell. Gauntlet ALL GREEN 10/10.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "opencode",
+          "kernel",
+          "v1.0.21",
+          "session-summary",
+          "soak",
+          "ops"
+        ],
+        "title": "OpenCode extension v1.0.21 session 9"
+      },
+      "createdAt": "2026-10-22T21:34:10.350890+00:00",
+      "accessedAt": "2026-10-22T21:34:10.350890+00:00",
       "accessCount": 0,
       "ttl": null
     }
