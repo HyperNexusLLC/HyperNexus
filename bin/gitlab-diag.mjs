@@ -1,8 +1,8 @@
 // Query GitLab for the failing pipeline's jobs + the tail of a failed job log.
 // Reads the token from the git remote (never prints it). node bin/gitlab-diag.mjs
-const { execSync } = require("child_process");
+import { execSync } from "child_process";
 
-const remote = execSync("git remote get-url gitlab", { cwd: __dirname + "/.." }).toString().trim();
+const remote = execSync("git remote get-url gitlab", { cwd: process.cwd() }).toString().trim();
 const m = remote.match(/oauth2:([^@]+)@/);
 const token = m ? m[1] : "";
 const PROJECT = "HyperNexusLLC%2FHyperNexus";
