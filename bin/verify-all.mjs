@@ -30,6 +30,7 @@ mkdirSync(LOG_DIR, { recursive: true });
 const batteries = [
   { id: "ext", cmd: "node", args: ["bin/test-opencode-ext.mjs"] },
   { id: "e2e", cmd: "node", args: ["bin/test-opencode-e2e.mjs"], slow: true },
+  { id: "reality", cmd: "node", args: ["bin/test-reality.mjs"] },
   { id: "sweep", cmd: "node", args: ["bin/test-mcp-sweep.mjs"] },
   { id: "mcp", cmd: "node", args: ["bin/test-mcp-tools.mjs"] },
   { id: "core", cmd: "node", args: ["bin/test-core-noext.mjs"] },

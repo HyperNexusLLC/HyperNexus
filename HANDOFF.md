@@ -71,6 +71,12 @@ One-command gauntlet: `node bin/verify-all.mjs` (add `--fast` for batteries only
 Kernel swap: `powershell -File bin\swap-kernel.ps1 -Start` (the ONLY sanctioned swap path — it locks and shuts down gracefully).
 Sustained-load soak: `node bin/soak.mjs --minutes=5` (the no-`-race` race detector).
 
+## Session 11 (2026-10-23) — reality battery + kernel stub honesty fixes
+### VERIFIED: reality 33/33 (LIVE execution) + gauntlet ALL GREEN 10/10
+- **Honesty gap closed**: the ext battery validates tool SHAPES in a mock ctx — it never executed `run()` live. New `bin/test-reality.mjs` (33 checks, in the gauntlet): live execution of the plugin tools against the kernel with **verified side effects** (orchestrate's PERSIST is findable in memory afterwards via async-propagation polling), 14 edge cases (unicode / injection-shaped / 5KB oversized / path-traversal id / scheme-smuggling url / non-string types — none throw, all answer), and stub-honesty probes
+- **Kernel tools lied about external side effects (found by the reality audit)**: `jira_create_issue` claimed "Created issue..." when nothing happened; `confluence_search` returned fabricated documents; `cloud_troubleshoot` presented invented root causes as findings. A model would cite these as real. Fixed in BOTH implementations (`go/internal/tools/server.go` + `go/tools/{cloud,integrations}.go`): outputs now LEAD with `[NOT CREATED — ...]` / `[SIMULATED DEMO OUTPUT — ...]` (front-loaded so truncation can't hide the marker). `generate_devops_pipeline` correctly reclassified: it really generates YAML templates (positive assertion, not a stub marker)
+- **Merge artifact for future cleanup**: the repo now has TWO `## [1.0.21]` sections in CHANGELOG.md (sibling Codewhale section + mine) — merge kept both; content is distinct so both are truthful, but a future pass should consolidate
+
 ## Session 10 (2026-10-23) — pi-tool parity for the OpenCode extension
 ### VERIFIED: gauntlet ALL GREEN 10/10 (ext 123/123, drift 95/95) after the port
 - **Ported the 3 pi-only tools to OpenCode** (TODO item "Port pi tools to mimo + opencode"): `hypernexus_workflow` (list/run via `/api/workflows`), `hypernexus_orchestrate` (one-call RECALL→DISCOVER→PERSIST; EXECUTE stays with the model — OpenCode tool run() has no ctx.executeTool, so it drives the kernel endpoints directly like pi does under the hood), `hypernexus_browser` (scrape/status, graceful when the browser service is down — currently 503 = correct degradation)
