@@ -15,6 +15,10 @@ variables:
   # GOMEMLIMIT forces the GC to work harder; GOFLAGS -p=1 compiles serially.
   GOMEMLIMIT: "2GiB"
   GOFLAGS: "-p=1"
+  # Redirect Go caches into the project dir so the CI cache can persist them across
+  # runs (GOPATH/pkg/mod + GOCACHE live outside the project by default).
+  GOMODCACHE: "$CI_PROJECT_DIR/.gomodcache"
+  GOCACHE: "$CI_PROJECT_DIR/.gocache"
   HETZNER_HOST: "5.161.250.43"
   HETZNER_USER: "root"
   DEPLOY_DIR: "/opt/tormentnexus"
@@ -27,6 +31,17 @@ variables:
   before_script:
     - export VERSION=$(cat $VERSION_FILE | tr -d '[:space:]')
     - echo "Building version $VERSION"
+  # Persist Go module + build caches across runs so the Go jobs don't
+  # re-download/re-compile the whole dependency graph (~5min) each time. The
+  # caches are redirected into the project dir via GOMODCACHE/GOCACHE (see
+  # variables) so the cache can pick them up. Harmless for non-Go jobs (the
+  # paths are simply empty). key includes GO_VERSION so a version bump refreshes.
+  cache:
+    key: "gocache-$GO_VERSION"
+    paths:
+      - .gomodcache/
+      - .gocache/
+    policy: pull-push
 
 # ─── Build Stage ────────────────────────────────────────────
 
