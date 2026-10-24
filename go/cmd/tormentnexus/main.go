@@ -1,8 +1,6 @@
 package main
 
 import (
-	"syscall"
-	"unsafe"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -242,31 +240,10 @@ func runDeepLink(deepLink string) int {
 	return 0
 }
 
-// setConsoleTitle sets the Windows console window title via kernel32.
-// Falls back silently on non-Windows or when no console is attached.
-func setConsoleTitle(title string) {
-	k32 := syscall.NewLazyDLL("kernel32.dll")
-	u32 := syscall.NewLazyDLL("user32.dll")
-
-	// Set the console's internal title buffer
-	if proc := k32.NewProc("SetConsoleTitleW"); proc != nil {
-		ptr, _ := syscall.UTF16PtrFromString(title)
-		proc.Call(uintptr(unsafe.Pointer(ptr)))
-	}
-
-	// Also set the window text directly — on modern Windows, conhost and
-	// Windows Terminal manage the visible title separately from the console
-	// title buffer, so Get-Process.MainWindowTitle may still show the old label.
-	if getHwnd := k32.NewProc("GetConsoleWindow"); getHwnd != nil {
-		hwnd, _, _ := getHwnd.Call()
-		if hwnd != 0 {
-			if setText := u32.NewProc("SetWindowTextW"); setText != nil {
-				ptr, _ := syscall.UTF16PtrFromString(title)
-				setText.Call(hwnd, uintptr(unsafe.Pointer(ptr)))
-			}
-		}
-	}
-}
+// setConsoleTitle is platform-specific: the Windows implementation (kernel32 /
+// user32 syscall) lives in main_windows.go; main_other.go provides a no-op for
+// non-Windows so Linux/Darwin builds don't fail on undefined syscall.NewLazyDLL.
+// This call site stays identical on every platform.
 
 func runServe(args []string) int {
 	cfg := config.Default()
