@@ -219,3 +219,55 @@ func (s *Server) localMemoryQueryResults(query string, limit int) ([]map[string]
 	}
 	return results, nil
 }
+
+// localUpsertMemoryContext persists one context body through the local store so
+// memory.saveContext and knowledge.ingest keep working without the tRPC upstream.
+// The record keeps the same shape localFindMemoryContext returns (id, content,
+// title, source, metadata, createdAt), so the get-side fallback reads it back.
+func (s *Server) localUpsertMemoryContext(payload map[string]any) (map[string]any, error) {
+	content := strings.TrimSpace(stringValue(payload["content"]))
+	if content == "" {
+		return nil, os.ErrInvalid
+	}
+	id := strings.TrimSpace(stringValue(payload["id"]))
+	if id == "" {
+		id = strings.TrimSpace(stringValue(payload["key"]))
+	}
+	if id == "" {
+		id = strings.TrimSpace(stringValue(payload["uuid"]))
+	}
+	contexts, err := s.localMemoryContexts()
+	if err != nil {
+		contexts = nil
+	}
+	record := map[string]any{
+		"content":   content,
+		"title":     stringValue(payload["title"]),
+		"source":    stringValue(payload["source"]),
+		"createdAt": time.Now().UTC().Format(time.RFC3339),
+	}
+	if metadata, ok := payload["metadata"].(map[string]any); ok {
+		record["metadata"] = cloneMap(metadata)
+	}
+	if id == "" {
+		id = "context-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+	}
+	record["id"] = id
+	updated := make([]map[string]any, 0, len(contexts)+1)
+	replaced := false
+	for index, context := range contexts {
+		if localMemoryContextID(context, index+1) == id {
+			updated = append(updated, record)
+			replaced = true
+			continue
+		}
+		updated = append(updated, context)
+	}
+	if !replaced {
+		updated = append(updated, record)
+	}
+	if err := s.localWriteMemoryContexts(updated); err != nil {
+		return nil, err
+	}
+	return record, nil
+}

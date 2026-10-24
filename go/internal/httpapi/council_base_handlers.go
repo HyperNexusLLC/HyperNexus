@@ -46,8 +46,9 @@ func (s *Server) handleCouncilBaseUpdateConfig(w http.ResponseWriter, r *http.Re
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.updateConfig", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.updateConfig"}})
+	var upstreamData108 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.updateConfig", payload, &upstreamData108); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData108, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.updateConfig"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -63,8 +64,9 @@ func (s *Server) handleCouncilBaseAddSupervisors(w http.ResponseWriter, r *http.
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.addSupervisors", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.addSupervisors"}})
+	var upstreamData109 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.addSupervisors", payload, &upstreamData109); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData109, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.addSupervisors"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -77,8 +79,9 @@ func (s *Server) handleCouncilBaseAddSupervisors(w http.ResponseWriter, r *http.
 func (s *Server) handleCouncilBaseClearSupervisors(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.clearSupervisors", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.clearSupervisors"}})
+	var upstreamData110 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.clearSupervisors", payload, &upstreamData110); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData110, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.clearSupervisors"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -170,8 +173,9 @@ func (s *Server) handleCouncilBaseDebate(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleCouncilBaseToggle(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.toggle", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.toggle"}})
+	var upstreamData111 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.toggle", payload, &upstreamData111); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData111, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.toggle"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -184,8 +188,9 @@ func (s *Server) handleCouncilBaseToggle(w http.ResponseWriter, r *http.Request)
 func (s *Server) handleCouncilBaseAddMock(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.addMock", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.addMock"}})
+	var upstreamData112 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "council.addMock", payload, &upstreamData112); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData112, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "council.addMock"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{

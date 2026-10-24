@@ -582,12 +582,26 @@ def install():
                 if config.get("ext"):
                     ext_dir = os.path.join(base, "extensions")
                     os.makedirs(ext_dir, exist_ok=True)
-                    # Copy Pi extension for clients that support it
-                    src_ext = os.path.join(
-                        HOME, ".pi", "agent", "extensions", "tormentnexus.ts"
+                    # Install the Pi extension from the repo source (the installed
+                    # copy under ~/.pi is not the source of truth). Source lives at
+                    # addons/pi/hypernexus.ts relative to this script.
+                    src_ext = os.path.normpath(
+                        os.path.join(
+                            os.path.dirname(os.path.abspath(__file__)),
+                            "..", "addons", "pi", "hypernexus.ts",
+                        )
                     )
                     if os.path.exists(src_ext):
                         shutil.copy2(src_ext, ext_dir)
+                    else:
+                        # Fall back to an already-installed pi copy if repo source is absent
+                        for legacy in (
+                            os.path.join(HOME, ".pi", "agent", "extensions", "hypernexus.ts"),
+                            os.path.join(HOME, ".pi", "agent", "extensions", "tormentnexus.ts"),
+                        ):
+                            if os.path.exists(legacy):
+                                shutil.copy2(legacy, ext_dir)
+                                break
 
                 # OpenHands-specific: install agent, actions, plugin, docker compose
                 if client_name == "openhands":

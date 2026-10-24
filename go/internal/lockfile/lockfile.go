@@ -25,6 +25,7 @@ type StartupProvenance struct {
 type Record struct {
 	Host      string             `json:"host"`
 	Port      int                `json:"port"`
+	PID       int                `json:"pid,omitempty"`
 	Version   string             `json:"version"`
 	StartedAt string             `json:"startedAt"`
 	Startup   *StartupProvenance `json:"startup,omitempty"`

@@ -27,11 +27,11 @@ export default {
   args: { action: z.enum(["get", "set"]), goal: z.string().optional(), objective: z.string().optional() },
   async execute(args) {
     if (args.action === "get") {
-      const data = await hnFetch("/api/session/context");
+      const data = await hnFetch("/api/memory/context/get");
       if (data.error) return data.error;
       return fmt(data);
     }
-    const data = await hnFetch("/api/session/context", {
+    const data = await hnFetch("/api/memory/context/save", {
       method: "POST",
       body: JSON.stringify({ goal: args.goal || "", objective: args.objective || "" }),
     });

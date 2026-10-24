@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -44,17 +45,23 @@ func (s *Server) handleMemoryAdd(w http.ResponseWriter, r *http.Request) {
 
 	// If P2P gossip protocol is active, propagate the newly ingested memory to peer nodes
 	if s.gossipProtocol != nil {
+		// Pure side effect: fire-and-forget with a hard bound — awaiting gossip
+		// inline stalled /api/memory/add indefinitely on a broken gossip transport.
+		go func(content string) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
 		nodeID := s.mesh.LocalNodeID()
-		version, _ := s.gossipProtocol.GetStore().IncrementClock(r.Context())
+			version, _ := s.gossipProtocol.GetStore().IncrementClock(ctx)
 		entry := gossip.StateEntry{
 			ID:        fmt.Sprintf("mem-%d", time.Now().UnixNano()),
 			Type:      "memory",
 			Version:   version,
 			Origin:    nodeID,
 			Timestamp: time.Now().UnixMilli(),
-			Content:   req.Content,
+			Content:   content,
 		}
-		_ = s.gossipProtocol.BroadcastUpdate(r.Context(), []gossip.StateEntry{entry})
+			_ = s.gossipProtocol.BroadcastUpdate(ctx, []gossip.StateEntry{entry})
+		}(req.Content)
 	}
 
 	w.WriteHeader(http.StatusCreated)

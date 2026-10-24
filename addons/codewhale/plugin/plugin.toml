@@ -1,0 +1,24 @@
+# HyperNexus plugin bundle (legacy manifest)
+# ============================================
+# Agent Plugins v1.0.0 canonical manifest is plugin.json. This legacy
+# plugin.toml is kept because AGENTS.md documents
+# `.codewhale/plugins/hypernexus/plugin.toml` as a maintained path.
+# Keep both in sync — install.mjs stamps the version from /VERSION.
+
+name = "hypernexus"
+version = "1.0.19"
+description = "HyperNexus AI control plane for Codewhale — persistent multi-tier memory, semantic MCP tool discovery across 26k+ tools, knowledge graph, kernel ops, and cross-harness session continuity."
+license = "MIT"
+homepage = "https://hypernexus.site"
+
+[extensions."net.codewhale"]
+display_name = "HyperNexus"
+
+[extensions."net.codewhale".commands]
+path = "commands"
+
+[extensions."net.codewhale".skills]
+path = "skills"
+
+[mcp]
+path = "mcp.json"

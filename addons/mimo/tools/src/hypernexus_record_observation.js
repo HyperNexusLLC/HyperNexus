@@ -26,9 +26,9 @@ export default {
   description: "Record a structured observation into the HyperNexus knowledge graph (entity + observation).\nUse for durable domain knowledge: entities you discovered, relationships, constraints, gotchas.\nArguments:\n- entity: the entity name this observation is about.\n- observation: the observation text.\n- relations: optional array of {to, type} relation hints.",
   args: { entity: z.string().min(1), observation: z.string().min(1), relations: z.array(z.object({ to: z.string(), type: z.string() })).optional() },
   async execute(args) {
-    const data = await hnFetch("/api/memory/observations/add", {
+    const data = await hnFetch("/api/memory/observations/record", {
       method: "POST",
-      body: JSON.stringify({ entity: args.entity, observation: args.observation, relations: args.relations || [] }),
+      body: JSON.stringify({ entity: args.entity, content: args.observation, relations: args.relations || [] }),
     });
     if (data.error) return data.error;
     return "Observation recorded for entity: " + args.entity;

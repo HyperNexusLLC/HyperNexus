@@ -238,8 +238,16 @@ func HandleFind(ctx context.Context, args map[string]interface{}) (ToolResponse,
 // HandleRepomap generates a ranked repository map.
 func HandleRepomap(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	baseDir, _ := getString(args, "dir")
-	if baseDir == "" {
-		baseDir = "."
+	if baseDir == "" || baseDir == "." {
+		// Default to the workspace root, not the process cwd — the kernel often runs
+		// from bin/, so "." would map the wrong directory.
+		baseDir = os.Getenv("HYPERNEXUS_WORKSPACE_ROOT")
+		if baseDir == "" {
+			baseDir = os.Getenv("TORMENTNEXUS_WORKSPACE_ROOT")
+		}
+		if baseDir == "" {
+			baseDir = "."
+		}
 	}
 	maxFiles, _ := getInt(args, "max_files")
 	if maxFiles <= 0 {
@@ -472,17 +480,10 @@ func HandleListSurfaceProfiles(ctx context.Context, args map[string]interface{})
 	return ok(string(data))
 }
 
-// HandleGetSupervisorSettings returns supervisor autopilot settings.
+// HandleGetSupervisorSettings returns supervisor autopilot settings (file-backed
+// with the same defaults as the stdio MCP server implementation).
 func HandleGetSupervisorSettings(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
-	settings := map[string]interface{}{
-		"bumpText":           "keep going",
-		"actionLabels":       []string{"Run", "Expand", "Always Allow", "Retry", "Accept all", "Accept", "Allow", "Approve", "Proceed", "Keep"},
-		"focusDelayMs":       100,
-		"afterClickDelayMs":  150,
-		"inputSettleDelayMs": 120,
-	}
-	data, _ := json.MarshalIndent(settings, "", "  ")
-	return ok(string(data))
+	return HandleGetSupervisorSettingsFile(ctx, args)
 }
 
 // runPowerShellScript executes a PowerShell script and returns stdout.

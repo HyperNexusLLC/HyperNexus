@@ -1,0 +1,11 @@
+{
+  "name": "hypernexus-mimo",
+  "version": "1.0.0",
+  "description": "HyperNexus server plugin for MiMoCode — typed tools, conversation-monitor tool suggestions, L2 memory, session/actor lifecycle hooks, and progressive catalog routing.",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@mimo-ai/plugin": "*"
+  }
+}

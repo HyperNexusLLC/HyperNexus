@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (rgs *RepoGraphService) resolveGoImport(importPath string) string {
+func (rgs *RepoGraphService) resolveGoImport(g *Graph, importPath string) string {
 	// If it's a relative import (rare in Go, but possible in some projects)
 	if strings.HasPrefix(importPath, "./") || strings.HasPrefix(importPath, "../") {
 		return "import:" + importPath
@@ -25,10 +25,10 @@ func (rgs *RepoGraphService) resolveGoImport(importPath string) string {
 		internalPath := strings.TrimPrefix(importPath, modulePrefix)
 		internalPath = strings.TrimPrefix(internalPath, "/")
 
-		if rgs.graph != nil {
+		if g != nil {
 			targetPkg := filepath.Base(internalPath)
 
-			for _, node := range rgs.graph.Nodes {
+			for _, node := range g.Nodes {
 				if node.Type == NodeFile && node.Package == targetPkg {
 					if strings.Contains(node.Path, internalPath) {
 						return "file:" + node.Path

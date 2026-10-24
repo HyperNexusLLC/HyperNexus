@@ -26,7 +26,7 @@ export default {
   description: "Search imported sessions (from Claude Code, Aider, Gemini, etc.) in the HyperNexus session store.\nArguments:\n- query: search terms.\n- limit: max results (default 10).",
   args: { query: z.string().min(1), limit: z.number().int().min(1).max(50).optional() },
   async execute(args) {
-    const data = await hnFetch("/api/sessions/search?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 10));
+    const data = await hnFetch("/api/sessions/imported/list?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 10));
     if (data.error) return data.error;
     return fmt(data);
   },

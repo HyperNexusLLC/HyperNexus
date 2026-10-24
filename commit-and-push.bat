@@ -42,16 +42,7 @@ echo.
 REM Get commit message
 set /p COMMIT_MSG="Enter commit message (or press Enter for default): "
 if "%COMMIT_MSG%"=="" (
-    set "COMMIT_MSG=feat: corporate mode - HyperNexus/HyperNexus dual edition support
-
-- Added branding configuration system (go/internal/config/branding.go)
-- Updated system tray to use dynamic branding
-- Created unified installer supporting both editions
-- Added build script for both editions
-- Added corporate mode documentation
-- Added sample configuration files
-- Removed GPL license, kept MIT license
-- Updated all references to use GitLab repository"
+    set "COMMIT_MSG=chore: sync workspace and push all remotes"
 )
 
 REM Commit changes
@@ -75,7 +66,7 @@ echo.
 
 REM Confirm push
 echo.
-echo This will push to GitLab ONLY.
+echo This will push to both GitHub and GitLab (clean-main).
 set /p CONFIRM="Continue? (Y/N): "
 if /i not "%CONFIRM%"=="Y" (
     echo Push cancelled.
@@ -83,28 +74,18 @@ if /i not "%CONFIRM%"=="Y" (
     exit /b 0
 )
 
-REM Push to GitLab (origin)
+REM Push to both remotes
 echo.
-echo Pushing to GitLab...
-git push origin main
+echo Pushing to GitHub...
+git push github clean-main
 if errorlevel 1 (
-    echo [WARNING] Push to origin failed, trying with force...
-    set /p FORCE="Force push? (Y/N): "
-    if /i "!FORCE!"=="Y" (
-        git push origin main --force
-        if errorlevel 1 (
-            echo [ERROR] Force push failed
-            pause
-            exit /b 1
-        )
-        echo Force push successful!
-    ) else (
-        echo Push cancelled.
-        pause
-        exit /b 0
-    )
-) else (
-    echo Push successful!
+    echo [WARNING] Push to github failed
+)
+
+echo Pushing to GitLab...
+git push gitlab clean-main
+if errorlevel 1 (
+    echo [WARNING] Push to gitlab failed
 )
 
 echo.

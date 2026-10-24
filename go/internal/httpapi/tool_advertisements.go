@@ -73,8 +73,16 @@ func (s *Server) buildToolSuggestionSnapshotWithLimit(r *http.Request, query str
 		},
 	}, &relatedTools)
 	if err != nil {
-		// Return static empty results for related tools on error
-		relatedTools = map[string]any{}
+		// Upstream is decommissioned in local mode — serve related tools from
+		// the catalog library instead of returning an empty stub. This is the
+		// primary path the conversation monitor uses to suggest MCP servers.
+		if catalogHits, catErr := s.localCatalogSearch(normalizedQuery, limit); catErr == nil && len(catalogHits) > 0 {
+			relatedTools = map[string]any{"tools": catalogHits}
+		} else if fallback, fbErr := s.localDBToolSearch(normalizedQuery, limit); fbErr == nil && len(fallback) > 0 {
+			relatedTools = map[string]any{"tools": fallback}
+		} else {
+			relatedTools = map[string]any{"tools": []any{}}
+		}
 	}
 
 	recToolsBridge := map[string]any{

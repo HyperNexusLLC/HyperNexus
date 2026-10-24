@@ -10,6 +10,11 @@ stages:
 
 variables:
   GO_VERSION: "1.25"
+  # Cap Go build memory: the box has ~3GiB free; a parallel compile of this
+  # codebase peaks >3GiB and gets OOM-killed ("compile: signal: terminated").
+  # GOMEMLIMIT forces the GC to work harder; GOFLAGS -p=1 compiles serially.
+  GOMEMLIMIT: "2GiB"
+  GOFLAGS: "-p=1"
   HETZNER_HOST: "5.161.250.43"
   HETZNER_USER: "root"
   DEPLOY_DIR: "/opt/tormentnexus"

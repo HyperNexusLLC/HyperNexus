@@ -26,15 +26,8 @@ export default {
   description: "Semantic vector search over HyperNexus L2 memory — finds conceptually related past context even without exact keyword matches.\nUse for nuanced recall when keyword search is too literal.\nArguments:\n- query: natural language query.\n- limit: max results (default 8).",
   args: { query: z.string().min(1), limit: z.number().int().min(1).max(50).optional() },
   async execute(args) {
-    const data = await hnFetch("/api/memory/vector/search", {
-      method: "POST",
-      body: JSON.stringify({ query: args.query, limit: args.limit || 8 }),
-    });
-    if (data.error) {
-      const alt = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 8) + "&mode=vector");
-      if (alt.error) return data.error;
-      return fmt(alt);
-    }
+    const data = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 8));
+    if (data.error) return data.error;
     return fmt(data);
   },
 };

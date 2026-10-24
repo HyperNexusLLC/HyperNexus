@@ -1,19 +1,19 @@
 package memorystore
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math"
-	"net/http"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	_ "github.com/glebarez/go-sqlite"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/ai"
@@ -23,10 +23,56 @@ import (
 )
 
 const (
-	ollamaURL     = "http://localhost:11434/api/embed"
-	ollamaModel   = "nomic-embed-text"
-	ollamaDim     = 768
-	fallbackDim   = 384
+	fallbackDim = 384
+	// archiveRankPenalty demotes archived memories in search ranking so active
+	// (working/long_term) memories surface first, while archived ones remain
+	// fully recallable (they hold real history, just lower priority).
+	archiveRankPenalty = 0.55
+	// Hybrid retrieval bounds the expensive vector scan to an FTS-retrieved
+	// candidate set. Fast + full-coverage; falls back to a full scan when FTS
+	// returns too few candidates (pure-semantic matches with no keyword overlap).
+	hybridCandidateCap  = 600
+	hybridMinCandidates = 40
+)
+
+// ftsCandidateIDs returns up to cap memory ids whose content matches the query
+// via FTS5. Used to bound the vector-search scan (hybrid retrieve + rerank).
+func (s *VectorStore) ftsCandidateIDs(ctx context.Context, query string, cap int) []string {
+	clean := strings.TrimSpace(query)
+	if clean == "" {
+		return nil
+	}
+	// Keep only word chars so FTS MATCH syntax can't error out.
+	clean = strings.Map(func(r rune) rune {
+		if r == '_' || r == '-' || unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) {
+			return r
+		}
+		return ' '
+	}, clean)
+	clean = strings.TrimSpace(clean)
+	if clean == "" {
+		return nil
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT id FROM l2_vault_fts WHERE content MATCH ? LIMIT ?`, clean, cap)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	ids := make([]string, 0, 64)
+	for rows.Next() {
+		var id string
+		if rows.Scan(&id) == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
+// Search-path embeds are latency-critical: SemanticSearch holds the store mutex
+// across the embed call. Bound the local-embed timeout so a slow model load or
+// inference falls back to hash embeddings instead of serializing every search.
+const (
+	searchEmbedTimeout = 2 * time.Second
 )
 
 type l1Entry struct {
@@ -52,8 +98,56 @@ type VectorStore struct {
 	relationStore *RelationStore
 }
 
+// sqliteDSNWithPragmas embeds connection-level PRAGMAs in the DSN so EVERY
+// pooled connection — including ones database/sql opens after recycling the
+// original — inherits them. The previous db.Exec("PRAGMA ...") approach only
+// covered the first connection; once it was replaced, new connections ran with
+// busy_timeout=0 and concurrent access surfaced SQLITE_BUSY ("database is
+// locked") on writes.
+func sqliteDSNWithPragmas(dbPath string) string {
+	if dbPath == ":memory:" || strings.Contains(dbPath, "_pragma=") {
+		return dbPath
+	}
+	sep := "?"
+	if strings.Contains(dbPath, "?") {
+		sep = "&"
+	}
+	return dbPath + sep + "_pragma=busy_timeout(20000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
+}
+
+// isSQLITEBusy reports whether err is transient lock contention.
+func isSQLITEBusy(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "database is locked") ||
+		strings.Contains(msg, "database table is locked") ||
+		strings.Contains(msg, "sqlite_busy")
+}
+
+// execBusyRetry runs exec, retrying transient SQLITE_BUSY with exponential
+// backoff. In-process writers are serialized (store mutex + single connection),
+// so a busy error means cross-connection/file contention — sibling kernels or
+// test loops can hold the file lock for seconds on a saturated box, so the
+// window must cover multi-second holds, not just brief blips.
+func execBusyRetry(ctx context.Context, exec func(context.Context) error) error {
+	var err error
+	for attempt := 0; attempt < 5; attempt++ {
+		if err = exec(ctx); err == nil || !isSQLITEBusy(err) {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(time.Duration(100*(1<<attempt)) * time.Millisecond):
+		}
+	}
+	return err
+}
+
 func NewVectorStore(dbPath string) (*VectorStore, error) {
-	db, err := database.Open("sqlite", dbPath)
+	db, err := database.Open("sqlite", sqliteDSNWithPragmas(dbPath))
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +166,14 @@ func NewVectorStore(dbPath string) (*VectorStore, error) {
 			return nil, fmt.Errorf("failed to set busy timeout: %w", err)
 		}
 	}
+
+	// SQLite is a single-writer store. The connection pool hands out fresh
+	// connections that don't inherit the PRAGMA busy_timeout above, so concurrent
+	// writes (Commit + background embed goroutines) raced and surfaced SQLITE_BUSY.
+	// Serializing access through one connection removes that contention; queries
+	// are brief (embeds happen outside the connection), so this is cheap.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 
 	if _, err := db.Exec(controlplane.VectorSchemaSQL); err != nil {
 		db.Close()
@@ -137,9 +239,13 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 
 	// Only run conflict detection for brand-new IDs. Upserting an existing
 	// record (import restore) must never cascade-supersede its neighbors.
+	// Conflict detection embeds the content (ONNX) to find near-duplicates, which
+	// is slow and runs under this mutex — it dominated memory-write latency. It is
+	// now opt-in (HYPERNEXUS_MEMORY_DEDUP=1); by default writes are instant and the
+	// vault may accumulate near-duplicates, which search handles fine.
 	var exists int
 	_ = s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM l2_vault WHERE id = ?`, entry.ID).Scan(&exists)
-	if exists == 0 {
+	if exists == 0 && os.Getenv("HYPERNEXUS_MEMORY_DEDUP") == "1" {
 		conflicts, _ := s.detectConflicts(ctx, entry)
 		if len(conflicts) > 0 {
 			// Mark the old memory as superseded
@@ -165,20 +271,23 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 		entry.Category = "general"
 	}
 
-	_, err := s.db.ExecContext(ctx, `
-		INSERT INTO l2_vault (id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET
-			content = excluded.content,
-			memory_kind = excluded.memory_kind,
-			category = excluded.category,
-			tags = excluded.tags,
-			source_url = excluded.source_url,
-			importance = excluded.importance,
-			heat_score = excluded.heat_score,
-			last_accessed_at = excluded.last_accessed_at,
-			created_at = excluded.created_at
-	`, entry.ID, entry.SessionID, string(entry.Type), entry.Kind, entry.Category, entry.Tags, entry.SourceURL, entry.Content, entry.Importance, entry.HeatScore, entry.LastAccessedAt.UTC().Format("2006-01-02 15:04:05"), entry.CreatedAt.UTC().Format("2006-01-02 15:04:05"))
+	err := execBusyRetry(ctx, func(c context.Context) error {
+		_, e := s.db.ExecContext(c, `
+			INSERT INTO l2_vault (id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(id) DO UPDATE SET
+				content = excluded.content,
+				memory_kind = excluded.memory_kind,
+				category = excluded.category,
+				tags = excluded.tags,
+				source_url = excluded.source_url,
+				importance = excluded.importance,
+				heat_score = excluded.heat_score,
+				last_accessed_at = excluded.last_accessed_at,
+				created_at = excluded.created_at
+		`, entry.ID, entry.SessionID, string(entry.Type), entry.Kind, entry.Category, entry.Tags, entry.SourceURL, entry.Content, entry.Importance, entry.HeatScore, entry.LastAccessedAt.UTC().Format("2006-01-02 15:04:05"), entry.CreatedAt.UTC().Format("2006-01-02 15:04:05"))
+		return e
+	})
 	if err != nil {
 		return fmt.Errorf("memorystore commit insert: %w", err)
 	}
@@ -203,20 +312,44 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 			return fmt.Errorf("memorystore commit embedding: %w", err)
 		}
 	} else if entry.Content != "" {
-		// Try Ollama for real semantic embeddings, fall back to hash-based
-		vec := ollamaEmbed(ctx, entry.Content)
-		if vec == nil {
-			vec = simpleEmbed(entry.Content, fallbackDim)
-		}
-		_, err = s.db.ExecContext(ctx, `
-			INSERT INTO vec_l2_vault (id, embedding)
-			VALUES (?, ?)
-			ON CONFLICT(id) DO UPDATE SET embedding = excluded.embedding
-		`, entry.ID, encodeVec(vec))
-		if err != nil {
-			return fmt.Errorf("memorystore commit auto-embed: %w", err)
-		}
+		// Embed + store the vector asynchronously so the write returns immediately.
+		// localEmbed runs ONNX inference which can take seconds under load; blocking
+		// here made every memory write (and any op contending on the store) slow.
+		// FTS (updated by trigger on l2_vault) is searchable synchronously — the
+		// semantic vector lands a moment later.
+		id, content := entry.ID, entry.Content
+		go func() {
+			vec := localEmbed(context.Background(), content)
+			if vec == nil {
+				vec = simpleEmbed(content, fallbackDim)
+			}
+			_, _ = s.db.Exec(`
+				INSERT INTO vec_l2_vault (id, embedding)
+				VALUES (?, ?)
+				ON CONFLICT(id) DO UPDATE SET embedding = excluded.embedding
+			`, id, encodeVec(vec))
+		}()
 	}
+	return nil
+}
+
+// DeleteMemory removes a memory from the L2 vault AND every in-process cache.
+// Deleting only the SQL rows left stale L1 cache entries that kept resurfacing
+// in search results long after deletion (search checks L1 before the DB).
+func (s *VectorStore) DeleteMemory(ctx context.Context, id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.l1Cache, id)
+	if err := execBusyRetry(ctx, func(c context.Context) error {
+		if _, e := s.db.ExecContext(c, `DELETE FROM l2_vault WHERE id = ?`, id); e != nil {
+			return e
+		}
+		_, e := s.db.ExecContext(c, `DELETE FROM l2_memory_fts WHERE memory_id = ?`, id)
+		return e
+	}); err != nil {
+		return err
+	}
+	_, _ = s.db.ExecContext(ctx, `DELETE FROM vec_l2_vault WHERE id = ?`, id)
 	return nil
 }
 
@@ -380,19 +513,29 @@ func extractNumbers(s string) []string {
 func sharedKeywords(a, b string) int {
 	wordsA := make(map[string]bool)
 	for _, w := range strings.Fields(a) {
-		if len(w) > 3 { wordsA[w] = true }
+		if len(w) > 3 {
+			wordsA[w] = true
+		}
 	}
 	count := 0
 	for _, w := range strings.Fields(b) {
-		if len(w) > 3 && wordsA[w] { count++ }
+		if len(w) > 3 && wordsA[w] {
+			count++
+		}
 	}
 	return count
 }
 
 func slicesOverlap(a, b []string) bool {
 	set := make(map[string]bool)
-	for _, v := range a { set[v] = true }
-	for _, v := range b { if set[v] { return true } }
+	for _, v := range a {
+		set[v] = true
+	}
+	for _, v := range b {
+		if set[v] {
+			return true
+		}
+	}
 	return false
 }
 
@@ -406,6 +549,40 @@ func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit in
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.semanticSearchLocked(ctx, query, limit)
+}
+
+// ListVault returns L2 vault records directly from SQLite without touching the
+// embed mutex or Ollama. Used by GetMemories/GetAll so that memory listing stays
+// responsive even when an embedding request has wedged the vector-search lock.
+func (s *VectorStore) ListVault(ctx context.Context, limit int) ([]controlplane.L2VaultRecord, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("vector store db uninitialized")
+	}
+	if limit <= 0 {
+		limit = 1000
+	}
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at
+		FROM l2_vault
+		WHERE memory_type != 'archive'
+		ORDER BY created_at DESC
+		LIMIT ?`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("memorystore list vault: %w", err)
+	}
+	defer rows.Close()
+
+	var out []controlplane.L2VaultRecord
+	for rows.Next() {
+		var r controlplane.L2VaultRecord
+		var mType string
+		if err := rows.Scan(&r.ID, &r.SessionID, &mType, &r.Kind, &r.Category, &r.Tags, &r.SourceURL, &r.Content, &r.Importance, &r.HeatScore, &r.LastAccessedAt, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		r.Type = controlplane.MemoryType(mType)
+		out = append(out, r)
+	}
+	return out, rows.Err()
 }
 
 // boostWithRelationsLocked expands top candidates with GraphRAG neighbors.
@@ -523,9 +700,15 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 
 	isVectorSearch := len(queryVec) > 0
 
-	// If we have text but no vector, try to get a real embedding from Ollama
+	// If we have text but no vector, try to get a real embedding from Ollama.
+	// Bound the embed: this runs under the store mutex, so a hung Ollama would
+	// stall every concurrent search behind it. 2s is enough for a local embed
+	// and small enough that hash-fallback keeps search responsive.
 	if !isVectorSearch && queryText != "" {
-		if vec := ollamaEmbed(ctx, queryText); vec != nil {
+		embedCtx, cancel := context.WithTimeout(ctx, searchEmbedTimeout)
+		vec := localEmbed(embedCtx, queryText)
+		cancel()
+		if vec != nil {
 			queryVec = vec
 			isVectorSearch = true
 		}
@@ -534,12 +717,26 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 	if isVectorSearch {
 		// Vector search with optional metadata filters
 		var args []interface{}
+		// Include all memory types (archive too) for full recall; archived records
+		// are rank-penalized in scoring so active memories surface first.
 		sqlQuery := `
 			SELECT v.id, v.embedding, l.session_id, l.memory_type, l.memory_kind, l.category, l.tags, l.source_url, l.content, l.importance, l.heat_score, l.last_accessed_at, l.created_at
 			FROM vec_l2_vault v
 			JOIN l2_vault l ON l.id = v.id
-			WHERE l.memory_type != 'archive'
+			WHERE 1=1
 		`
+		// Hybrid: bound the scan to FTS-retrieved candidates when we have query
+		// text. Avoids loading + cosine-ing every row (slow under load). Falls back
+		// to a full scan when FTS returns too few (pure-semantic matches).
+		if queryText != "" {
+			if ids := s.ftsCandidateIDs(ctx, queryText, hybridCandidateCap); len(ids) >= hybridMinCandidates {
+				ph := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
+				sqlQuery += " AND v.id IN (" + ph + ")"
+				for _, id := range ids {
+					args = append(args, id)
+				}
+			}
+		}
 		if filterKind != "" {
 			sqlQuery += " AND l.memory_kind = ?"
 			args = append(args, filterKind)
@@ -571,6 +768,11 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 
 			// Boost score slightly using importance
 			boostedSim := sim * (0.8 + 0.2*r.Importance)
+			// Archived memories are included for full recall but ranked below
+			// active (working/long_term) ones at equal relevance.
+			if mType == "archive" {
+				boostedSim *= archiveRankPenalty
+			}
 			if boostedSim >= 0.3 {
 				candidates = append(candidates, scored{record: r, score: boostedSim})
 			}
@@ -634,7 +836,7 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 	sqlQuery := `
 		SELECT id, session_id, memory_type, memory_kind, category, tags, source_url, content, importance, heat_score, last_accessed_at, created_at
 		FROM l2_vault
-		WHERE memory_type != 'archive'
+		WHERE 1=1
 	`
 	useFTS := false
 	if queryText != "" {
@@ -652,7 +854,7 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 				ftsQuery += " AND category = ?"
 				ftsArgs = append(ftsArgs, filterCategory)
 			}
-			ftsQuery += " ORDER BY importance DESC, heat_score DESC, created_at DESC LIMIT ?"
+			ftsQuery += " ORDER BY (memory_type = 'archive') ASC, importance DESC, heat_score DESC, created_at DESC LIMIT ?"
 			ftsArgs = append(ftsArgs, limit)
 
 			rows, err := s.db.QueryContext(ctx, ftsQuery, ftsArgs...)
@@ -695,7 +897,7 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 			sqlQuery += " AND category = ?"
 			args = append(args, filterCategory)
 		}
-		sqlQuery += " ORDER BY importance DESC, heat_score DESC, created_at DESC LIMIT ?"
+		sqlQuery += " ORDER BY (memory_type = 'archive') ASC, importance DESC, heat_score DESC, created_at DESC LIMIT ?"
 		args = append(args, limit)
 
 		rows, err := s.db.QueryContext(ctx, sqlQuery, args...)
@@ -1198,12 +1400,7 @@ func (s *VectorStore) MentalModelReflection(ctx context.Context) error {
 	}
 	resp, err := ai.AutoRoute(ctx, messages)
 	if err != nil {
-		// Fallback to Ollama for reflection
-		ollamaResp, ollamaErr := ollamaGenerate(ctx, prompt)
-		if ollamaErr != nil {
-			return fmt.Errorf("MentalModelReflection: both AutoRoute (%v) and Ollama (%v) failed", err, ollamaErr)
-		}
-		resp = &ai.LLMResponse{Content: ollamaResp}
+		return fmt.Errorf("MentalModelReflection: AutoRoute failed: %w", err)
 	}
 
 	lines := strings.Split(resp.Content, "\n")
@@ -1270,8 +1467,8 @@ func (s *VectorStore) MigrateScratchpadToL2(ctx context.Context) (int, error) {
 	return migrated, nil
 }
 
-// ReEmbedAll re-embeds all L2 vault records using Ollama.
-// Intended for one-time migration from hash-based to real embeddings.
+// ReEmbedAll re-embeds all L2 vault records using the bundled local embedder.
+// Intended for one-time migration from hash-based to semantic embeddings.
 // Returns (updated, skipped, errors) counts.
 func (s *VectorStore) ReEmbedAll(ctx context.Context) (int, int, int) {
 	s.mu.Lock()
@@ -1303,15 +1500,15 @@ func (s *VectorStore) ReEmbedAll(ctx context.Context) (int, int, int) {
 
 	updated, skipped, errs := 0, 0, 0
 	for _, t := range targets {
-		// Skip if already has a 768-dim (Ollama) embedding
-		if t.EmbLen == ollamaDim*4 {
+		// 384-dim means already embedded with the local model (post-migration).
+		if t.EmbLen == localEmbedDim*4 {
 			skipped++
 			continue
 		}
 
-		vec := ollamaEmbed(ctx, t.Content)
+		vec := localEmbed(ctx, t.Content)
 		if vec == nil {
-			skipped++ // Ollama unavailable for this one
+			skipped++ // local model unavailable for this one
 			continue
 		}
 
@@ -1327,98 +1524,9 @@ func (s *VectorStore) ReEmbedAll(ctx context.Context) (int, int, int) {
 		} else {
 			updated++
 		}
-
-		// Rate limit: don't hammer Ollama
-		time.Sleep(50 * time.Millisecond)
 	}
 
 	return updated, skipped, errs
-}
-
-// ollamaEmbed calls the local Ollama server to generate a real embedding vector.
-// Returns nil if Ollama is unreachable or returns an error — caller should fall back to simpleEmbed.
-func ollamaEmbed(ctx context.Context, text string) []float32 {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	payload := struct {
-		Model string `json:"model"`
-		Input string `json:"input"`
-	}{Model: ollamaModel, Input: text}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return nil
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", ollamaURL, bytes.NewReader(body))
-	if err != nil {
-		return nil
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil // Ollama not running — silent fallback
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil
-	}
-
-	var result struct {
-		Embeddings [][]float32 `json:"embeddings"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil
-	}
-	if len(result.Embeddings) == 0 || len(result.Embeddings[0]) == 0 {
-		return nil
-	}
-
-	return result.Embeddings[0]
-}
-
-// ollamaGenerate calls Ollama's /api/generate for text generation (used by MentalModelReflection).
-func ollamaGenerate(ctx context.Context, prompt string) (string, error) {
-	payload := struct {
-		Model  string `json:"model"`
-		Prompt string `json:"prompt"`
-		Stream bool   `json:"stream"`
-	}{Model: ollamaModel, Prompt: prompt, Stream: false}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", "http://localhost:11434/api/generate", bytes.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("ollama generate: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("ollama generate: status %d", resp.StatusCode)
-	}
-
-	var result struct {
-		Response string `json:"response"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
-	}
-	return result.Response, nil
 }
 
 // simpleEmbed generates a deterministic hash-based embedding vector from text.
@@ -1434,8 +1542,10 @@ func simpleEmbed(text string, dim int) []float32 {
 			h ^= uint32(c)
 			h *= 16777619
 		}
-		idx := int(h%uint32(dim))
-		if idx < 0 { idx = -idx }
+		idx := int(h % uint32(dim))
+		if idx < 0 {
+			idx = -idx
+		}
 		// Alternate +/- based on second hash bit
 		if h&2 == 0 {
 			vec[idx] += 1.0
@@ -1445,10 +1555,14 @@ func simpleEmbed(text string, dim int) []float32 {
 	}
 	// L2 normalize
 	var norm float64
-	for _, v := range vec { norm += float64(v) * float64(v) }
+	for _, v := range vec {
+		norm += float64(v) * float64(v)
+	}
 	if norm > 0 {
 		norm = math.Sqrt(norm)
-		for i := range vec { vec[i] = float32(float64(vec[i]) / norm) }
+		for i := range vec {
+			vec[i] = float32(float64(vec[i]) / norm)
+		}
 	}
 	return vec
 }

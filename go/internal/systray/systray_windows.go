@@ -46,7 +46,8 @@ var (
 	pSetForegroundWindow = user32.NewProc("SetForegroundWindow")
 	pDestroyMenu         = user32.NewProc("DestroyMenu")
 
-	pShellNotifyIcon = shell32.NewProc("Shell_NotifyIconW")
+	pShellNotifyIcon       = shell32.NewProc("Shell_NotifyIconW")
+	pRegisterWindowMessage = user32.NewProc("RegisterWindowMessageW")
 )
 
 const (
@@ -148,6 +149,13 @@ var (
 	logMutex        sync.Mutex
 	logLines        []string
 	maxLogLines     = 200
+	// trayNID holds the notify-icon so we can remove it on any shutdown path
+	// (including os.Exit), preventing Windows "ghost" tray icons.
+	trayNID     *NOTIFYICONDATAW
+	trayNIDLock sync.Mutex
+	// taskbarCreatedMsg is the dynamic message Windows broadcasts when explorer
+	// restarts; we re-add the tray icon so it isn't orphaned.
+	taskbarCreatedMsg uint32
 )
 
 // Icons are preloaded lazily inside runMessageLoop on the actual UI message thread.
@@ -282,6 +290,16 @@ func runMessageLoop() {
 	copy(nid.SzTip[:], syscall.StringToUTF16(branding.TrayTooltip))
 
 	pShellNotifyIcon.Call(NIM_ADD, uintptr(unsafe.Pointer(&nid)))
+	trayNIDLock.Lock()
+	trayNID = &nid
+	trayNIDLock.Unlock()
+	// Track explorer restarts so we can re-add the icon (it's orphaned when the
+	// taskbar is rebuilt).
+	if taskbarName, err := syscall.UTF16PtrFromString("TaskbarCreated"); err == nil {
+		if r, _, _ := pRegisterWindowMessage.Call(uintptr(unsafe.Pointer(taskbarName))); r != 0 {
+			taskbarCreatedMsg = uint32(r)
+		}
+	}
 
 	// 4. Register log window class
 	logClassName, _ := syscall.UTF16PtrFromString(fmt.Sprintf("%sLogClass", branding.RegistryKey))
@@ -423,6 +441,12 @@ func hiddenWndProc(hWnd windows.HWND, msg uint32, wParam uintptr, lParam uintptr
 		pPostQuitMessage.Call(0)
 		return 0
 	}
+	// Explorer restarted (taskbar rebuilt) — re-add our tray icon so it isn't
+	// orphaned. (RegisterWindowMessage values are >0xC000; skip when unset.)
+	if taskbarCreatedMsg != 0 && msg == taskbarCreatedMsg {
+		reAddTrayIcon()
+		return 0
+	}
 	ret, _, _ := pDefWindowProc.Call(uintptr(hWnd), uintptr(msg), wParam, lParam)
 	return ret
 }
@@ -433,8 +457,32 @@ func hiddenCommand(name string, args ...string) *exec.Cmd {
 	return cmd
 }
 
+// removeTrayIcon deletes the notify icon so Windows doesn't leave a ghost.
+// Safe to call on any shutdown path (including before os.Exit).
+func removeTrayIcon() {
+	trayNIDLock.Lock()
+	defer trayNIDLock.Unlock()
+	if trayNID != nil {
+		pShellNotifyIcon.Call(NIM_DELETE, uintptr(unsafe.Pointer(trayNID)))
+		trayNID = nil
+	}
+}
+
+// reAddTrayIcon re-registers the notify icon after explorer restarts (the icon
+// is orphaned when the taskbar rebuilds, leaving the app looking "not running").
+func reAddTrayIcon() {
+	trayNIDLock.Lock()
+	defer trayNIDLock.Unlock()
+	if trayNID != nil {
+		pShellNotifyIcon.Call(NIM_ADD, uintptr(unsafe.Pointer(trayNID)))
+	}
+}
+
 func TriggerFullShutdown() {
 	branding := config.GetBranding()
+
+	// Remove the tray icon first so Windows doesn't leave a ghost on exit.
+	removeTrayIcon()
 
 	// 1. Terminate watchdog
 	_ = hiddenCommand("taskkill", "/F", "/FI", fmt.Sprintf("WINDOWTITLE eq %s Watchdog", branding.ProductName)).Run()

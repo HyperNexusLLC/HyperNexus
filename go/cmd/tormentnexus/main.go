@@ -1,6 +1,8 @@
 package main
 
 import (
+	"syscall"
+	"unsafe"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -8,9 +10,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -30,7 +34,57 @@ func main() {
 	os.Exit(run(os.Args[1:]))
 }
 
+// installCrashCapture redirects the runtime's crash output (unrecoverable
+// fatals like "concurrent map iteration and map write", unrecovered panics,
+// out-of-memory) to <workspace>/.hypernexus/kernel-crash.log. Without this the
+// fatal text is lost to whichever parent spawned us, and every crash is
+// undiagnosable. The path is ABSOLUTE: crash attribution must not scatter with
+// whatever cwd a watchdog or sibling agent happened to use (it once landed in
+// bin/ and looked like a missing crash log).
+func installCrashCapture() {
+	root := strings.TrimSpace(os.Getenv("HYPERNEXUS_WORKSPACE_ROOT"))
+	if root == "" {
+		// Walk up from cwd looking for workspace markers so spawning from a
+		// subdirectory (bin/, go/, a temp dir) still lands in the one
+		// canonical .hypernexus/kernel-crash.log.
+		if cwd, err := os.Getwd(); err == nil {
+			dir := cwd
+			for i := 0; i < 8; i++ {
+				if _, err := os.Stat(filepath.Join(dir, ".hypernexus")); err == nil {
+					root = dir
+					break
+				}
+				if _, err := os.Stat(filepath.Join(dir, "VERSION")); err == nil {
+					root = dir
+					break
+				}
+				parent := filepath.Dir(dir)
+				if parent == dir {
+					break
+				}
+				dir = parent
+			}
+			if root == "" {
+				root = cwd
+			}
+		}
+	}
+	if root == "" {
+		return
+	}
+	dir := filepath.Join(root, ".hypernexus")
+	_ = os.MkdirAll(dir, 0o755)
+	path := filepath.Join(dir, "kernel-crash.log")
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	if err != nil {
+		return
+	}
+	debug.SetCrashOutput(f, debug.CrashOptions{})
+	fmt.Printf("[CrashCapture] kernel fatals -> %s\n", path)
+}
+
 func run(args []string) int {
+	installCrashCapture()
 	// Check if this is first run - auto-install if needed
 	if isFirstRun() {
 		log.Printf("First run detected - running installation...")
@@ -188,6 +242,32 @@ func runDeepLink(deepLink string) int {
 	return 0
 }
 
+// setConsoleTitle sets the Windows console window title via kernel32.
+// Falls back silently on non-Windows or when no console is attached.
+func setConsoleTitle(title string) {
+	k32 := syscall.NewLazyDLL("kernel32.dll")
+	u32 := syscall.NewLazyDLL("user32.dll")
+
+	// Set the console's internal title buffer
+	if proc := k32.NewProc("SetConsoleTitleW"); proc != nil {
+		ptr, _ := syscall.UTF16PtrFromString(title)
+		proc.Call(uintptr(unsafe.Pointer(ptr)))
+	}
+
+	// Also set the window text directly — on modern Windows, conhost and
+	// Windows Terminal manage the visible title separately from the console
+	// title buffer, so Get-Process.MainWindowTitle may still show the old label.
+	if getHwnd := k32.NewProc("GetConsoleWindow"); getHwnd != nil {
+		hwnd, _, _ := getHwnd.Call()
+		if hwnd != 0 {
+			if setText := u32.NewProc("SetWindowTextW"); setText != nil {
+				ptr, _ := syscall.UTF16PtrFromString(title)
+				setText.Call(hwnd, uintptr(unsafe.Pointer(ptr)))
+			}
+		}
+	}
+}
+
 func runServe(args []string) int {
 	cfg := config.Default()
 
@@ -213,9 +293,35 @@ func runServe(args []string) int {
 		log.Printf("No hypernexus.lic license file found. Running under free limitations.")
 	}
 
+	// Single-instance guard: refuse to start if the port is already serving.
+	// Use a direct TCP dial (no proxy) — Go's http.Client routes localhost through
+	// system proxies on Windows, which would false-negative the health probe.
+	checkAlive := func(host string, port int) bool {
+		addr := net.JoinHostPort(host, fmt.Sprint(port))
+		conn, err := net.DialTimeout("tcp", addr, 1500*time.Millisecond)
+		if err != nil {
+			return false
+		}
+		_ = conn.Close()
+		return true
+	}
+	if existing, err := lockfile.Read(cfg.LockPath()); err == nil {
+		if checkAlive(existing.Host, existing.Port) {
+			log.Printf("Another HyperNexus instance is already running on %s:%d (pid %d, started %s). Refusing to start a second instance. Use /api/shutdown to stop it first.", existing.Host, existing.Port, existing.PID, existing.StartedAt)
+			return 0
+		}
+		log.Printf("Stale lock file found (previous instance on %s:%d is gone). Proceeding with startup.", existing.Host, existing.Port)
+		_ = os.Remove(cfg.LockPath())
+	} else if checkAlive(cfg.Host, cfg.Port) {
+		// No lock file but the port is live — still refuse.
+		log.Printf("Port %s:%d is already in use by a running HyperNexus instance (no lock file). Refusing to start.", cfg.Host, cfg.Port)
+		return 0
+	}
+
 	record := lockfile.Record{
 		Host:      cfg.Host,
 		Port:      cfg.Port,
+		PID:       os.Getpid(),
 		Version:   buildinfo.Version,
 		StartedAt: time.Now().UTC().Format(time.RFC3339),
 	}
@@ -226,6 +332,10 @@ func runServe(args []string) int {
 	defer func() {
 		_ = os.Remove(cfg.LockPath())
 	}()
+
+	// Set console window title so it doesn't inherit a stale label
+	// (e.g. "pi" from a prior Pi CLI session in the same terminal).
+	setConsoleTitle("HyperNexus — " + buildinfo.Version)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

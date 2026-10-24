@@ -46,18 +46,28 @@ pnpm -C packages/cli exec tsc --noEmit
 
 ## 6. CodeWhale Integration
 
-CodeWhale has a native Rust extension (`crates/tn-extension`) with full Pi extension parity:
+CodeWhale integrates with HyperNexus through the `hypernexus` MCP server plus a full
+plugin bundle (managed by `node addons/codewhale/install.mjs`, project or `--global`):
 
-- **Lifecycle hooks**: SessionStart, BeforeAgentStart, ToolCall, ToolResult, TurnEnd, Input, UserBash, ModelSelect, SessionCompact — all logged to TN L2 memory
-- **Tools**: 49 MCP tools via `hypernexus.exe mcp` (memory, file I/O, MCP routing, UI automation, enterprise integrations)
-- **Custom tool reg**: 9 tool definitions, 6 slash commands, 3 keyboard shortcuts
-- **SKILL.md**: at `.codewhale/plugins/hypernexus/skills/SKILL.md`
-- **REST API**: Sidecar on port 7778 for direct L2 memory operations
+- **MCP server**: 58 tools via `hypernexus.exe mcp` (memory, scratchpad, knowledge
+  graph, MCP discovery/routing, code search, kernel ops, UI automation, enterprise
+  integrations) — registered in `.codewhale/mcp.json` (project) / `~/.codewhale/mcp.json`
+  (global), tool namespace `mcp__hypernexus__*`
+- **Plugin bundle**: `.codewhale/plugins/hypernexus/` (Agent Plugins v1.0.0 `plugin.json`
+  + legacy `plugin.toml`) with 8 `/hn-*` commands and 3 skills — activate via
+  `/plugin validate hypernexus` → `/plugin show` → `/plugin trust` → `/plugin enable`
+- **Skills**: `hypernexus`, `hypernexus-ops`, `hypernexus-workflows` (bundle + direct
+  mirror in `.codewhale/skills/`)
+- **Prompt overlay**: managed block in `AGENTS.md` (RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY)
+- **REST API**: Sidecar on port 7778 for direct L2 memory operations (works without the extension)
 
 When working on CodeWhale integration, verify:
+
 ```bash
-codewhale mcp connect hypernexus
-codewhale mcp tools | grep mcp_hypernexus | wc -l  # should be 49
+node addons/codewhale/install.mjs --check    # installation gaps (exit 1 on gaps)
+node bin/test-codewhale-ext.mjs              # full battery (85 checks)
+codewhale mcp validate && codewhale mcp tools  # hypernexus: 58 tools
+curl -s http://127.0.0.1:7778/health            # kernel liveness (no extension needed)
 ```
 
 ## 7. Autopilot & Encouragement

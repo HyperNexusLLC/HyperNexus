@@ -162,7 +162,9 @@
         font-size: 0.75rem;
       }
     </style>
-  </head>
+      <script defer data-domain="hypernexus.site" src="https://plausible.io/js/script.js"></script>
+    <script defer src="/analytics.js"></script>
+</head>
   <body>
     <div class="container">
       <div class="logo">
@@ -270,6 +272,7 @@
             const data = await res.json();
 
             if (res.ok && data.sessionId) {
+              if (typeof hnTrack === "function") hnTrack("funnel_checkout_success", { price: "annual" });
               const result = await stripe.redirectToCheckout({
                 sessionId: data.sessionId,
               });
@@ -293,6 +296,7 @@
       // Check for success parameter
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("success") === "true") {
+        if (typeof hnTrack === "function") hnTrack("funnel_purchase_complete", { price: "annual" });
         document.getElementById("checkoutCard").style.display = "none";
         document.getElementById("successCard").style.display = "block";
       }

@@ -9,6 +9,45 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
 )
 
+// TestDeleteMemoryEvictsL1AndRows locks in the round-6 fix: deleting must clear
+// the in-memory L1 cache as well as the SQL rows — search checks L1 first, and
+// row-only deletes let "deleted" records resurface until LRU eviction.
+func TestDeleteMemoryEvictsL1AndRows(t *testing.T) {
+	vs, err := NewVectorStore(":memory:")
+	if err != nil {
+		t.Fatalf("failed to open memory db: %v", err)
+	}
+	defer vs.Close()
+	ctx := context.Background()
+
+	rec := controlplane.L2VaultRecord{
+		ID:        "del-1",
+		SessionID: "s",
+		Type:      controlplane.MemoryLongTerm,
+		Kind:      "fact",
+		Category:  "general",
+		Content:   "zebrasalad delete eviction probe",
+	}
+	if err := vs.Commit(ctx, rec); err != nil {
+		t.Fatalf("commit: %v", err)
+	}
+	// Populate L1 via the search path (substring match on the L1 cache).
+	if res, _ := vs.SemanticSearch(ctx, "zebrasalad", 5); len(res) == 0 {
+		t.Fatalf("expected search hit before delete")
+	}
+	if err := vs.DeleteMemory(ctx, "del-1"); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	if res, _ := vs.SemanticSearch(ctx, "zebrasalad", 5); len(res) != 0 {
+		t.Fatalf("deleted record still resurfacing from cache/rows: %+v", res)
+	}
+	var count int
+	_ = vs.DB().QueryRow(`SELECT COUNT(*) FROM l2_vault WHERE id = ?`, "del-1").Scan(&count)
+	if count != 0 {
+		t.Fatalf("row not deleted from l2_vault")
+	}
+}
+
 func TestVectorStoreAdvancedFeatures(t *testing.T) {
 	vs, err := NewVectorStore(":memory:")
 	if err != nil {

@@ -148,9 +148,10 @@ func (rgs *RepoGraphService) Build(ctx context.Context) (*Graph, error) {
 		return nil, err
 	}
 
-	rgs.mu.Lock()
-	rgs.graph = graph
-	rgs.mu.Unlock()
+	// NOTE: the graph is published only AFTER both passes complete. Pass 2 keeps
+	// writing the same Nodes/Edges maps, and publishing mid-build raced concurrent
+	// readers (SearchSymbols et al.) with "fatal error: concurrent map iteration
+	// and map write" — an unrecoverable runtime fatal that killed the whole kernel.
 
 	// 2. Second pass: parse content and resolve imports
 	err = filepath.WalkDir(rgs.root, func(path string, d os.DirEntry, err error) error {
@@ -204,6 +205,11 @@ func (rgs *RepoGraphService) Build(ctx context.Context) (*Graph, error) {
 		TotalImports:   rgs.countByType(graph, NodeImport),
 		TotalEdges:     len(graph.Edges),
 	}
+
+	// Publish the fully-built graph atomically.
+	rgs.mu.Lock()
+	rgs.graph = graph
+	rgs.mu.Unlock()
 
 	return graph, nil
 }
@@ -474,7 +480,7 @@ var (
 	rsAbsoluteImportRe = regexp.MustCompile(`^(?:std|core|alloc|serde|tokio|anyhow|axum|reqwest|sqlx)::`)
 )
 
-func (rgs *RepoGraphService) resolveTSImport(currentFile, importPath string) string {
+func (rgs *RepoGraphService) resolveTSImport(g *Graph, currentFile, importPath string) string {
 	if tsAbsoluteImportRe.MatchString(importPath) {
 		return "import:" + importPath
 	}
@@ -486,8 +492,8 @@ func (rgs *RepoGraphService) resolveTSImport(currentFile, importPath string) str
 	extensions := []string{".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx"}
 	for _, ext := range extensions {
 		fullPath := target + ext
-		if rgs.graph != nil {
-			if _, ok := rgs.graph.Nodes["file:"+fullPath]; ok {
+		if g != nil {
+			if _, ok := g.Nodes["file:"+fullPath]; ok {
 				return "file:" + fullPath
 			}
 		}
@@ -496,7 +502,7 @@ func (rgs *RepoGraphService) resolveTSImport(currentFile, importPath string) str
 	return "import:" + importPath
 }
 
-func (rgs *RepoGraphService) resolvePythonRelativeImport(relPath, dots, modName string) string {
+func (rgs *RepoGraphService) resolvePythonRelativeImport(g *Graph, relPath, dots, modName string) string {
 	dir := filepath.Dir(relPath)
 	if dir == "." {
 		dir = ""
@@ -525,17 +531,17 @@ func (rgs *RepoGraphService) resolvePythonRelativeImport(relPath, dots, modName 
 	extensions := []string{".py", "/__init__.py"}
 	for _, ext := range extensions {
 		fullPath := fullTarget + ext
-		if rgs.graph != nil {
-			if _, ok := rgs.graph.Nodes["file:"+fullPath]; ok {
+		if g != nil {
+			if _, ok := g.Nodes["file:"+fullPath]; ok {
 				return "file:" + fullPath
 			}
 		}
 	}
 
 	// Special case: if we are importing a module name that is a file in that target dir
-	if rgs.graph != nil && current != "" {
+	if g != nil && current != "" {
 		checkPath := filepath.ToSlash(filepath.Join(current, modName+".py"))
-		if _, ok := rgs.graph.Nodes["file:"+checkPath]; ok {
+		if _, ok := g.Nodes["file:"+checkPath]; ok {
 			return "file:" + checkPath
 		}
 	}
@@ -574,7 +580,7 @@ func (rgs *RepoGraphService) indexGoFile(graph *Graph, relPath, content string) 
 				continue
 			}
 			if matches := goImportRe.FindStringSubmatch(line); len(matches) > 1 {
-				target := rgs.resolveGoImport(matches[1])
+				target := rgs.resolveGoImport(graph, matches[1])
 				graph.Edges = append(graph.Edges, Edge{
 					From: fileID, To: target, Type: "imports",
 				})
@@ -582,7 +588,7 @@ func (rgs *RepoGraphService) indexGoFile(graph *Graph, relPath, content string) 
 			continue
 		}
 		if matches := regexp.MustCompile(`import\s+"([^"]+)"`).FindStringSubmatch(line); len(matches) > 1 {
-			target := rgs.resolveGoImport(matches[1])
+			target := rgs.resolveGoImport(graph, matches[1])
 			graph.Edges = append(graph.Edges, Edge{
 				From: fileID, To: target, Type: "imports",
 			})
@@ -632,7 +638,7 @@ func (rgs *RepoGraphService) indexTSFile(graph *Graph, relPath, content string) 
 	// Imports
 	for _, match := range tsImportRe.FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
-			target := rgs.resolveTSImport(relPath, match[1])
+			target := rgs.resolveTSImport(graph, relPath, match[1])
 			graph.Edges = append(graph.Edges, Edge{
 				From: fileID, To: target, Type: "imports",
 			})
@@ -731,7 +737,7 @@ func (rgs *RepoGraphService) indexPythonFile(graph *Graph, relPath, content stri
 					effectiveMod = symbol
 				}
 
-				target := rgs.resolvePythonRelativeImport(relPath, dots, effectiveMod)
+				target := rgs.resolvePythonRelativeImport(graph, relPath, dots, effectiveMod)
 				graph.Edges = append(graph.Edges, Edge{
 					From: fileID, To: target, Type: "imports",
 				})
@@ -800,7 +806,7 @@ func (rgs *RepoGraphService) indexRustFile(graph *Graph, relPath, content string
 		// Rust 'mod' resolution
 		if matches := rsModRe.FindStringSubmatch(line); len(matches) > 1 {
 			modName := matches[1]
-			target := rgs.resolveRustPath(relPath, modName)
+			target := rgs.resolveRustPath(graph, relPath, modName)
 			graph.Edges = append(graph.Edges, Edge{
 				From: fileID, To: target, Type: "imports",
 			})
@@ -809,7 +815,7 @@ func (rgs *RepoGraphService) indexRustFile(graph *Graph, relPath, content string
 		// Rust 'use' resolution
 		if matches := rsUseRe.FindStringSubmatch(line); len(matches) > 0 {
 			basePath := matches[1]
-			target := rgs.resolveRustPath(relPath, basePath)
+			target := rgs.resolveRustPath(graph, relPath, basePath)
 			graph.Edges = append(graph.Edges, Edge{
 				From: fileID, To: target, Type: "imports",
 			})
@@ -845,7 +851,7 @@ func (rgs *RepoGraphService) indexRustFile(graph *Graph, relPath, content string
 	}
 }
 
-func (rgs *RepoGraphService) resolveRustPath(currentFile, rustPath string) string {
+func (rgs *RepoGraphService) resolveRustPath(g *Graph, currentFile, rustPath string) string {
 	if rsAbsoluteImportRe.MatchString(rustPath) {
 		return "import:" + rustPath
 	}
@@ -888,7 +894,7 @@ func (rgs *RepoGraphService) resolveRustPath(currentFile, rustPath string) strin
 		target := filepath.ToSlash(targetDir)
 		extensions := []string{"/lib.rs", "/main.rs"}
 		for _, ext := range extensions {
-			if _, ok := rgs.graph.Nodes["file:"+target+ext]; ok {
+			if _, ok := g.Nodes["file:"+target+ext]; ok {
 				return "file:" + target + ext
 			}
 		}
@@ -900,8 +906,8 @@ func (rgs *RepoGraphService) resolveRustPath(currentFile, rustPath string) strin
 	extensions := []string{".rs", "/mod.rs", "/lib.rs", "/main.rs"}
 	for _, ext := range extensions {
 		fullPath := target + ext
-		if rgs.graph != nil {
-			if _, ok := rgs.graph.Nodes["file:"+fullPath]; ok {
+		if g != nil {
+			if _, ok := g.Nodes["file:"+fullPath]; ok {
 				return "file:" + fullPath
 			}
 		}

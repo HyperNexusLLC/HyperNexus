@@ -300,4 +300,162 @@ var nativeToolCatalog = map[string]ToolMeta{
 		Description: "Get supervisor autopilot defaults (bump text, action labels, delays)",
 		Schema:      obj(map[string]any{}),
 	},
+	// ── kernel-bridge parity tools (kernel_bridge.go) ──
+	"mcp_status": {
+		Name:        "mcp_status",
+		Description: "Get MCP runtime status from the HyperNexus kernel",
+		Schema:      obj(map[string]any{}),
+	},
+	"mcp_list_servers": {
+		Name:        "mcp_list_servers",
+		Description: "List configured MCP servers from the HyperNexus kernel",
+		Schema:      obj(map[string]any{}),
+	},
+	"mcp_list_tools": {
+		Name:        "mcp_list_tools",
+		Description: "List available MCP tools from the HyperNexus kernel",
+		Schema:      obj(map[string]any{}),
+	},
+	"mcp_call_tool": {
+		Name:        "mcp_call_tool",
+		Description: "Call a tool on a configured MCP server through the kernel",
+		Schema: obj(map[string]any{
+			"serverName": str("Configured MCP server name"),
+			"toolName":   str("Tool to invoke on that server"),
+			"arguments":  map[string]any{"type": "object", "description": "Tool arguments"},
+		}, "toolName"),
+	},
+	"mcp_server_test": {
+		Name:        "mcp_server_test",
+		Description: "Validate a configured MCP server (default operation: tools/list)",
+		Schema: obj(map[string]any{
+			"serverName": str("Configured MCP server name"),
+			"operation":  str("Operation to run (default tools/list)"),
+		}),
+	},
+	"inspect_window_ui": {
+		Name:        "inspect_window_ui",
+		Description: "Inspect the active window via UIAutomation (read-only)",
+		Schema:      obj(map[string]any{"windowTitle": str("Optional partial window title")}),
+	},
+	// ── console/autopilot parity tools (console_parity.go) ──
+	"billing_status": {
+		Name:        "billing_status",
+		Description: "Get billing and provider status",
+		Schema:      obj(map[string]any{}),
+	},
+	"system_status": {
+		Name:        "system_status",
+		Description: "Get overall system health status",
+		Schema:      obj(map[string]any{}),
+	},
+	"list_accessory_tools": {
+		Name:        "list_accessory_tools",
+		Description: "List all built-in Go accessory tools",
+		Schema:      obj(map[string]any{}),
+	},
+	"update_supervisor_settings": {
+		Name:        "update_supervisor_settings",
+		Description: "Update supervisor autopilot settings (merged into the saved settings file)",
+		Schema: obj(map[string]any{
+			"bumpText":           str("Bump text typed when chat is ready"),
+			"actionLabels":       str("Comma-separated action button labels"),
+			"focusDelayMs":       integer("Delay before focusing (ms)"),
+			"afterClickDelayMs":  integer("Delay after clicking (ms)"),
+			"inputSettleDelayMs": integer("Delay for input to settle (ms)"),
+		}),
+	},
+	"click_chat_button": {
+		Name:        "click_chat_button",
+		Description: "Click a button on the active chat surface",
+		Schema: obj(map[string]any{
+			"label":       str("The label text on the button to click"),
+			"windowTitle": str("Optional partial window title"),
+			"processName": str("Optional process name"),
+		}, "label"),
+	},
+	"click_action_buttons": {
+		Name:        "click_action_buttons",
+		Description: "Focus the target window and report the action labels",
+		Schema: obj(map[string]any{
+			"labels":      str("Comma-separated button labels"),
+			"windowTitle": str("Optional partial window title"),
+			"processName": str("Optional process name"),
+		}),
+	},
+	"set_chat_input": {
+		Name:        "set_chat_input",
+		Description: "Type text into the chat input of the target window",
+		Schema: obj(map[string]any{
+			"text":        str("Text to type"),
+			"windowTitle": str("Optional partial window title"),
+		}, "text"),
+	},
+	"submit_chat_input": {
+		Name:        "submit_chat_input",
+		Description: "Press Enter in the chat input of the target window",
+		Schema:      obj(map[string]any{"windowTitle": str("Optional partial window title")}),
+	},
+	"simulate_input": {
+		Name:        "simulate_input",
+		Description: "Send keystrokes via SendKeys to the target window",
+		Schema: obj(map[string]any{
+			"keys":        str("SendKeys syntax string"),
+			"windowTitle": str("Optional partial window title"),
+		}, "keys"),
+	},
+	"advance_chat": {
+		Name:        "advance_chat",
+		Description: "Single-step autopilot: announce bump text / target window",
+		Schema: obj(map[string]any{
+			"bumpText":    str("Text to type when chat is ready"),
+			"windowTitle": str("Optional partial window title"),
+			"processName": str("Optional process name"),
+		}),
+	},
+	// ── core file/shell parity tools (file_ops_extra.go / registry.go) ──
+	"read_file": {
+		Name:        "read_file",
+		Description: "Read a file's contents (alias of read accepting file_path)",
+		Schema:      obj(map[string]any{"file_path": str("Path to read")}, "file_path"),
+	},
+	"write_file": {
+		Name:        "write_file",
+		Description: "Write a file's contents (alias of write accepting file_path)",
+		Schema: obj(map[string]any{
+			"file_path": str("Path to write"),
+			"content":   str("Content to write"),
+		}, "file_path", "content"),
+	},
+	"edit": {
+		Name:        "edit",
+		Description: "Apply structured {oldText, newText} replacements to a file",
+		Schema: obj(map[string]any{
+			"path":  str("File to edit"),
+			"edits": map[string]any{"type": "array", "description": "Array of {oldText, newText} replacements", "items": map[string]any{"type": "object"}},
+		}, "path", "edits"),
+	},
+	"search": {
+		Name:        "search",
+		Description: "Search file contents for a pattern (alias of grep)",
+		Schema: obj(map[string]any{
+			"pattern": str("Pattern to search for"),
+			"path":    str("Directory to search"),
+		}, "pattern"),
+	},
+	"run_shell_command": {
+		Name:        "run_shell_command",
+		Description: "Execute a shell command (alias of bash)",
+		Schema:      obj(map[string]any{"command": str("Command to run")}, "command"),
+	},
+	"install_mcp_server": {
+		Name:        "install_mcp_server",
+		Description: "Install an MCP server package for the kernel",
+		Schema:      obj(map[string]any{"package_name": str("npm package name")}, "package_name"),
+	},
+	"code_interpreter": {
+		Name:        "code_interpreter",
+		Description: "Execute code in a supported inline language (bash, sh, shell, powershell, cmd); other languages return guidance",
+		Schema:      obj(map[string]any{"code": str("Code to run"), "language": str("Language: bash, sh, shell, powershell, cmd, or go (default bash)")}, "code"),
+	},
 }

@@ -94,9 +94,9 @@ tools.hypernexus_record_observation = {
     "- relations: optional array of {to, type} relation hints.",
   ].join("\n"),
   args: `{ entity: z.string().min(1), observation: z.string().min(1), relations: z.array(z.object({ to: z.string(), type: z.string() })).optional() }`,
-  body: `const data = await hnFetch("/api/memory/observations/add", {
+  body: `const data = await hnFetch("/api/memory/observations/record", {
       method: "POST",
-      body: JSON.stringify({ entity: args.entity, observation: args.observation, relations: args.relations || [] }),
+      body: JSON.stringify({ entity: args.entity, content: args.observation, relations: args.relations || [] }),
     });
     if (data.error) return data.error;
     return "Observation recorded for entity: " + args.entity;`,
@@ -159,15 +159,8 @@ tools.hypernexus_memory_vector_search = {
     "- limit: max results (default 8).",
   ].join("\n"),
   args: `{ query: z.string().min(1), limit: z.number().int().min(1).max(50).optional() }`,
-  body: `const data = await hnFetch("/api/memory/vector/search", {
-      method: "POST",
-      body: JSON.stringify({ query: args.query, limit: args.limit || 8 }),
-    });
-    if (data.error) {
-      const alt = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 8) + "&mode=vector");
-      if (alt.error) return data.error;
-      return fmt(alt);
-    }
+  body: `const data = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 8));
+    if (data.error) return data.error;
     return fmt(data);`,
 };
 
@@ -180,16 +173,11 @@ tools.hypernexus_memory_list = {
   ].join("\n"),
   args: `{ limit: z.number().int().min(1).max(100).optional(), namespace: z.string().optional() }`,
   body: `const params = new URLSearchParams({ limit: String(args.limit || 20) });
-    if (args.namespace) params.set("namespace", args.namespace);
-    const data = await hnFetch("/api/memory/facts/list?" + params.toString());
-    if (data.error) {
-      const alt = await hnFetch("/api/memory/search?query=*&limit=" + (args.limit || 20));
-      if (alt.error) return data.error;
-      return fmt(alt);
-    }
-    const items = data.results || data.facts || data.items || (Array.isArray(data) ? data : []);
+    const data = await hnFetch("/api/memory/list?" + params.toString());
+    if (data.error) return data.error;
+    const items = data.memories || data.results || data.facts || data.items || (Array.isArray(data) ? data : []);
     if (!items.length) return "No memories stored yet.";
-    return items.map((m, i) => (i + 1) + ". [" + (m.tags || []).join(",") + "] " + (m.title || "(untitled)") + " (" + (m.created_at || m.createdAt || "") + ")").join("\\n");`,
+    return items.map((m, i) => (i + 1) + ". [" + ((m.tags || []).join(",")) + "] " + (m.content || m.title || "(untitled)")).join("\\n");`,
 };
 
 tools.hypernexus_session_search = {
@@ -200,7 +188,7 @@ tools.hypernexus_session_search = {
     "- limit: max results (default 10).",
   ].join("\n"),
   args: `{ query: z.string().min(1), limit: z.number().int().min(1).max(50).optional() }`,
-  body: `const data = await hnFetch("/api/sessions/search?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 10));
+  body: `const data = await hnFetch("/api/sessions/imported/list?query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit || 10));
     if (data.error) return data.error;
     return fmt(data);`,
 };
@@ -215,11 +203,11 @@ tools.hypernexus_session_context = {
   ].join("\n"),
   args: `{ action: z.enum(["get", "set"]), goal: z.string().optional(), objective: z.string().optional() }`,
   body: `if (args.action === "get") {
-      const data = await hnFetch("/api/session/context");
+      const data = await hnFetch("/api/memory/context/get");
       if (data.error) return data.error;
       return fmt(data);
     }
-    const data = await hnFetch("/api/session/context", {
+    const data = await hnFetch("/api/memory/context/save", {
       method: "POST",
       body: JSON.stringify({ goal: args.goal || "", objective: args.objective || "" }),
     });
@@ -236,10 +224,9 @@ tools.hypernexus_code_search = {
     "- path: optional path to scope the search.",
   ].join("\n"),
   args: `{ query: z.string().min(1), mode: z.enum(["pattern", "ast", "semantic"]).optional(), path: z.string().optional() }`,
-  body: `const data = await hnFetch("/api/code/search", {
-      method: "POST",
-      body: JSON.stringify({ query: args.query, mode: args.mode || "pattern", path: args.path || "" }),
-    });
+  body: `const mode = args.mode || "pattern";
+    const q = (mode ? mode + " " : "") + args.query + (args.path ? " path:" + args.path : "");
+    const data = await hnFetch("/api/mcp/native/search?query=" + encodeURIComponent(q));
     if (data.error) return data.error;
     return fmt(data);`,
 };
@@ -267,9 +254,9 @@ tools.hypernexus_knowledge_graph = {
   ].join("\n"),
   args: `{ action: z.enum(["add_entities", "add_relations", "add_observations", "search"]), entities: z.array(z.object({ name: z.string(), type: z.string().optional(), observations: z.array(z.string()).optional() })).optional(), relations: z.array(z.object({ from: z.string(), to: z.string(), type: z.string() })).optional(), query: z.string().optional() }`,
   body: `const map = {
-      add_entities: ["/api/memory/entities/add", { entities: args.entities || [] }],
-      add_relations: ["/api/memory/relations/add", { relations: args.relations || [] }],
-      add_observations: ["/api/memory/observations/add", { entities: args.entities || [] }],
+      add_entities: ["/api/knowledge/graph", { action: "add_entities", entities: args.entities || [] }],
+      add_relations: ["/api/knowledge/graph", { action: "add_relations", relations: args.relations || [] }],
+      add_observations: ["/api/knowledge/graph", { action: "add_observations", entities: args.entities || [] }],
       search: ["/api/memory/search?query=" + encodeURIComponent(args.query || ""), null],
     };
     const entry = map[args.action];
@@ -301,9 +288,9 @@ tools.hypernexus_repomap = {
     "- maxFiles: cap on files included (default 200).",
   ].join("\n"),
   args: `{ dir: z.string().optional(), maxFiles: z.number().int().min(1).max(2000).optional() }`,
-  body: `const data = await hnFetch("/api/code/repomap", {
+  body: `const data = await hnFetch("/api/agent/tool", {
       method: "POST",
-      body: JSON.stringify({ dir: args.dir || "", maxFiles: args.maxFiles || 200 }),
+      body: JSON.stringify({ name: "repomap", args: { dir: args.dir || "", maxFiles: args.maxFiles || 200 } }),
     });
     if (data.error) return data.error;
     return fmt(data);`,
@@ -318,15 +305,8 @@ tools.hypernexus_context_harvest = {
     "- depth: harvest depth 'quick' | 'standard' | 'deep' (default standard).",
   ].join("\n"),
   args: `{ topic: z.string().min(1), depth: z.enum(["quick", "standard", "deep"]).optional() }`,
-  body: `const data = await hnFetch("/api/memory/context/harvest", {
-      method: "POST",
-      body: JSON.stringify({ topic: args.topic, depth: args.depth || "standard" }),
-    });
-    if (data.error) {
-      const alt = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.topic) + "&limit=15");
-      if (alt.error) return data.error;
-      return fmt(alt);
-    }
+  body: `const data = await hnFetch("/api/memory/search?query=" + encodeURIComponent(args.topic) + "&limit=15");
+    if (data.error) return data.error;
     return fmt(data);`,
 };
 

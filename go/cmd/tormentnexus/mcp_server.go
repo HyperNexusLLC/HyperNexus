@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
@@ -180,6 +181,15 @@ type MCPServer struct {
 	tnKernelURL  string
 	tools        []ToolDefinition
 	rootRegistry *roottools.Registry
+
+	// mergedMu guards the last-good merged tool inventory. tools/list must not
+	// degrade to the static fallback just because the kernel was slow to answer
+	// /api/mcp/tools — a saturated box can exceed a tight timeout even though
+	// the inventory is perfectly healthy.
+	mergedMu    sync.Mutex
+	mergedCache []ToolDefinition
+	mergedAt    time.Time
+	mergedOK    bool
 }
 
 func NewMCPServer(tnKernelURL string) *MCPServer {
@@ -563,6 +573,8 @@ func (s *MCPServer) callTool(name string, args map[string]any) ToolResult {
 		return submitChatInput(args)
 	case "click_action_buttons":
 		return clickActionButtons(args)
+	case "click_chat_button":
+		return clickChatButton(args)
 	case "advance_chat":
 		return advanceChat(args)
 	case "mcp_list_servers":
@@ -769,6 +781,36 @@ func advanceChat(args map[string]any) ToolResult {
 	return ToolResult{Content: []TextContent{{Type: "text", Text: fmt.Sprintf("Advance chat: %s", strings.Join(parts, ", "))}}}
 }
 
+// clickChatButton — UIAutomation Invoke on a named button in the target window.
+// (Previously advertised but missing from this dispatch table, so it fell
+// through to the default branch and returned "Unknown tool".)
+func clickChatButton(args map[string]any) ToolResult {
+	label, _ := args["label"].(string)
+	if label == "" {
+		return ToolResult{Content: []TextContent{{Type: "text", Text: "label is required"}}}
+	}
+	windowTitle, _ := args["windowTitle"].(string)
+	escLabel := strings.ReplaceAll(label, "'", "''")
+	escWindow := strings.ReplaceAll(windowTitle, "'", "''")
+	script := fmt.Sprintf(`
+Add-Type -AssemblyName UIAutomationClient
+$root = [System.Windows.Automation.AutomationElement]::RootElement
+$win = $root
+if ('%s') {
+  $p = Get-Process | Where-Object { $_.MainWindowTitle -like '*%s*' } | Select-Object -First 1
+  if ($p) { $winCond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $p.Id); $win = $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $winCond) }
+}
+$cond = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, '%s')
+$el = $win.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $cond)
+if (!$el) { 'Button not found: %s'; return }
+$inv = $el.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+$inv.Invoke()
+'Clicked: %s'
+`, escWindow, escWindow, escLabel, escLabel, escLabel)
+	out := runPowershell(script)
+	return ToolResult{Content: []TextContent{{Type: "text", Text: out}}}
+}
+
 // ─── TN Kernel API Tools ───
 
 func tnKernelGet(url string) ToolResult {
@@ -872,70 +914,122 @@ func tnKernelServerTest(baseURL string, args map[string]any) ToolResult {
 	return ToolResult{Content: []TextContent{{Type: "text", Text: string(data)}}}
 }
 
+// upstreamToolsCacheTTL bounds how long a successfully merged inventory is
+// reused without a refresh. Fresh enough to skip a round-trip on repeated
+// tools/list polling, short enough to pick up kernel-side tool changes quickly.
+const upstreamToolsCacheTTL = 15 * time.Second
+
+// upstreamToolsFetchTimeout is deliberately generous: the kernel's
+// /api/mcp/tools answers in well under a second when calm, but graph builds,
+// memory sweeps, and sibling agents on a loaded box can push it past the old
+// 3s timeout. A missing inventory is far worse than a slow tools/list.
+const upstreamToolsFetchTimeout = 8 * time.Second
+
 func (s *MCPServer) getMergedTools() []ToolDefinition {
+	s.mergedMu.Lock()
+	if s.mergedOK && time.Since(s.mergedAt) < upstreamToolsCacheTTL {
+		cached := s.mergedCache
+		s.mergedMu.Unlock()
+		return cached
+	}
+	s.mergedMu.Unlock()
+
 	merged := make([]ToolDefinition, len(s.tools))
 	copy(merged, s.tools)
 
-	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get(s.tnKernelURL + "/api/mcp/tools")
+	tools, err := s.fetchUpstreamTools()
+	if err != nil {
+		// One retry: kernel stalls under load are transient.
+		time.Sleep(300 * time.Millisecond)
+		tools, err = s.fetchUpstreamTools()
+	}
 	if err != nil {
 		log.Printf("[MCP] Upstream tools unavailable: %v", err)
+		s.mergedMu.Lock()
+		hadCache := s.mergedOK
+		cached := s.mergedCache
+		s.mergedMu.Unlock()
+		if hadCache {
+			log.Printf("[MCP] Serving last-good merged tool list (%d tools)", len(cached))
+			return cached
+		}
 		return merged
+	}
+
+	// Upstream (kernel registry) schemas are authoritative for arg-taking tools:
+	// local static/rootRegistry entries can carry empty schemas (silent Parameter
+	// unmarshal failures), which makes tools unusable for model callers. On name
+	// collision, let the strictly richer upstream schema/description win.
+	localIdx := make(map[string]int, len(merged))
+	for i, t := range merged {
+		localIdx[t.Name] = i
+	}
+	for _, ut := range tools {
+		if ut.InputSchema.Type == "" {
+			ut.InputSchema.Type = "object"
+		}
+		if ut.InputSchema.Properties == nil {
+			ut.InputSchema.Properties = make(map[string]PropertySchema)
+		}
+		if i, ok := localIdx[ut.Name]; ok {
+			if len(ut.InputSchema.Properties) > len(merged[i].InputSchema.Properties) {
+				merged[i].InputSchema = ut.InputSchema
+				if ut.Description != "" {
+					merged[i].Description = ut.Description
+				}
+			}
+			continue
+		}
+		localIdx[ut.Name] = len(merged)
+		merged = append(merged, ut)
+	}
+
+	s.mergedMu.Lock()
+	s.mergedCache = merged
+	s.mergedAt = time.Now()
+	s.mergedOK = true
+	s.mergedMu.Unlock()
+	return merged
+}
+
+func (s *MCPServer) fetchUpstreamTools() ([]ToolDefinition, error) {
+	client := &http.Client{Timeout: upstreamToolsFetchTimeout}
+	resp, err := client.Get(s.tnKernelURL + "/api/mcp/tools")
+	if err != nil {
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("[MCP] Upstream tools returned HTTP status %d", resp.StatusCode)
-		return merged
+		return nil, fmt.Errorf("upstream returned HTTP status %d", resp.StatusCode)
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("[MCP] Failed to read upstream tools body: %v", err)
-		return merged
+		return nil, fmt.Errorf("failed to read upstream tools body: %w", err)
 	}
-
-	var tools []ToolDefinition
 
 	// Try flat array format first: { "success": true, "data": [...] }
 	var upstreamRespFlat struct {
 		Success bool             `json:"success"`
 		Data    []ToolDefinition `json:"data"`
 	}
-	if err := json.Unmarshal(bodyBytes, &upstreamRespFlat); err == nil && upstreamRespFlat.Success {
-		tools = upstreamRespFlat.Data
-	} else {
-		// Fallback to nested tools format: { "success": true, "data": { "tools": [...] } }
-		var upstreamRespNested struct {
-			Success bool `json:"success"`
-			Data    struct {
-				Tools []ToolDefinition `json:"tools"`
-			} `json:"data"`
-		}
-		if err := json.Unmarshal(bodyBytes, &upstreamRespNested); err == nil && upstreamRespNested.Success {
-			tools = upstreamRespNested.Data.Tools
-		} else {
-			log.Printf("[MCP] Failed to decode upstream tools: %v", err)
-			return merged
-		}
+	if err := json.Unmarshal(bodyBytes, &upstreamRespFlat); err == nil && upstreamRespFlat.Success && len(upstreamRespFlat.Data) > 0 {
+		return upstreamRespFlat.Data, nil
 	}
 
-	localNames := make(map[string]bool)
-	for _, t := range merged {
-		localNames[t.Name] = true
+	// Fallback to nested tools format: { "success": true, "data": { "tools": [...] } }
+	var upstreamRespNested struct {
+		Success bool `json:"success"`
+		Data    struct {
+			Tools []ToolDefinition `json:"tools"`
+		} `json:"data"`
 	}
-	for _, ut := range tools {
-		if !localNames[ut.Name] {
-			if ut.InputSchema.Type == "" {
-				ut.InputSchema.Type = "object"
-			}
-			if ut.InputSchema.Properties == nil {
-				ut.InputSchema.Properties = make(map[string]PropertySchema)
-			}
-			merged = append(merged, ut)
-		}
+	if err := json.Unmarshal(bodyBytes, &upstreamRespNested); err == nil && upstreamRespNested.Success && len(upstreamRespNested.Data.Tools) > 0 {
+		return upstreamRespNested.Data.Tools, nil
 	}
-	return merged
+
+	return nil, fmt.Errorf("failed to decode upstream tools")
 }
 
 func (s *MCPServer) forwardToolCallToUpstream(name string, args map[string]any) (ToolResult, error) {
@@ -999,6 +1093,9 @@ func cmdMCP(args []string) int {
 		if execErr == nil {
 			workspaceRoot := os.Getenv("HYPERNEXUS_WORKSPACE_ROOT")
 			if workspaceRoot == "" {
+				workspaceRoot = os.Getenv("TORMENTNEXUS_WORKSPACE_ROOT")
+			}
+			if workspaceRoot == "" {
 				workspaceRoot, _ = os.Getwd()
 			}
 			cmd := exec.Command(execPath, "serve")
@@ -1028,6 +1125,11 @@ func cmdMCP(args []string) int {
 	server := NewMCPServer(tnKernelURL)
 	scanner := bufio.NewScanner(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
+	var writeMu sync.Mutex
+	// Bound concurrent dispatches. A single slow upstream tool call must not
+	// block tools/list or other calls behind it (clients correlate by id), but
+	// an errant client must not spawn unbounded goroutines either.
+	dispatchSem := make(chan struct{}, 16)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -1041,16 +1143,23 @@ func cmdMCP(args []string) int {
 			continue
 		}
 
-		resp := server.HandleRequest(req)
 		log.Printf("[MCP] Handling Request Method: %s ID: %v", req.Method, req.ID)
-		if req.ID == nil {
-			continue
-		}
-		respBytes, _ := json.Marshal(resp)
-		log.Printf("[MCP] Sending Response: %s", string(respBytes))
-		writer.Write(respBytes)
-		writer.Write([]byte{'\n'})
-		writer.Flush()
+		go func(req MCPRequest) {
+			dispatchSem <- struct{}{}
+			defer func() { <-dispatchSem }()
+
+			resp := server.HandleRequest(req)
+			if req.ID == nil {
+				return
+			}
+			respBytes, _ := json.Marshal(resp)
+			writeMu.Lock()
+			defer writeMu.Unlock()
+			log.Printf("[MCP] Sending Response: %s", string(respBytes))
+			writer.Write(respBytes)
+			writer.Write([]byte{'\n'})
+			writer.Flush()
+		}(req)
 	}
 
 	if err := scanner.Err(); err != nil {

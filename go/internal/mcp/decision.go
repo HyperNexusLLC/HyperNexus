@@ -182,7 +182,10 @@ func (ds *DecisionSystem) SearchTools(ctx context.Context, query string) ([]Unif
 
 	var results []UnifiedSearchResult
 	for _, r := range ranked {
-		_, isLoaded := ds.loaded[r.AdvertisedName]
+		// isToolLoaded must lock: ds.loaded is written by LoadTool, eviction
+		// and rebuildKnownLocked under ds.mu, and an unlocked map read racing
+		// a locked write is a kernel-fatal "concurrent map read and map write".
+		isLoaded := ds.isToolLoaded(r.AdvertisedName)
 		results = append(results, UnifiedSearchResult{
 			Rank:           r.Rank,
 			Name:           r.AdvertisedName,
@@ -738,6 +741,15 @@ func (ds *DecisionSystem) getAllKnownTools() []ToolEntry {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 	return ds.getAllKnownToolsLocked()
+}
+
+// isToolLoaded reports whether a tool is currently loaded. Standalone lock:
+// safe to call from anywhere (including while NOT holding ds.mu).
+func (ds *DecisionSystem) isToolLoaded(advertisedName string) bool {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+	_, ok := ds.loaded[advertisedName]
+	return ok
 }
 
 func (ds *DecisionSystem) getAllKnownToolsLocked() []ToolEntry {

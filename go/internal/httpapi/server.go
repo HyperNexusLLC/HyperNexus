@@ -19,6 +19,7 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
 	"io"
 	"io/fs"
+	"log"
 	"math"
 	"net"
 	"net/http"
@@ -28,6 +29,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"runtime/debug"
 	"slices"
 	"sort"
 	"strconv"
@@ -50,6 +52,8 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/tools"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/workflow"
 
+	_ "github.com/glebarez/go-sqlite"
+	"github.com/google/uuid"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/cache"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/ctxharvester"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/eventbus"
@@ -64,8 +68,6 @@ import (
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/systray"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/toolregistry"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/workspaces"
-	_ "github.com/glebarez/go-sqlite"
-	"github.com/google/uuid"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/database"
 )
@@ -82,6 +84,26 @@ var sessionExportKnownFormats = []map[string]any{
 }
 
 // corsMiddleware wraps an http.Handler to add CORS headers for all responses.
+// recoverMiddleware converts handler panics into 500 responses. Go's net/http
+// does NOT recover panics — without this, a single buggy handler takes down the
+// entire control plane (the same blast radius as the repograph map fatal, but
+// recoverable ones must not be allowed to kill the process).
+func recoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				log.Printf("[RECOVER] panic in %s %s: %v\n%s", r.Method, r.URL.Path, rec, debug.Stack())
+				writeJSON(w, http.StatusInternalServerError, map[string]any{
+					"success": false,
+					"error":   "internal handler panic recovered",
+					"detail":  fmt.Sprint(rec),
+				})
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
 // This allows the Next.js dashboard (port 3000) and browser extensions to
 // call TN Kernel endpoints without CORS blocks.
 func corsMiddleware(next http.Handler) http.Handler {
@@ -186,6 +208,7 @@ type Server struct {
 
 	// Phase 113 — conversational tool injection
 	conversationalPredictor *mcp.ConversationalPredictor
+	preemptiveAdvertiser    *mcp.PreemptiveAdvertiser
 	udpGossip               *mesh.GossipProtocol
 
 	// --- Commercial Security (alpha.129+) ---
@@ -311,11 +334,11 @@ type LockRuntimeSummary struct {
 }
 
 type ConfigRuntimeSummary struct {
-	WorkspaceRootAvailable         bool `json:"workspaceRootAvailable"`
-	ConfigDirAvailable             bool `json:"configDirAvailable"`
-	MainConfigDirAvailable         bool `json:"mainConfigDirAvailable"`
-	RepoConfigAvailable            bool `json:"repoConfigAvailable"`
-	MCPConfigAvailable             bool `json:"mcpConfigAvailable"`
+	WorkspaceRootAvailable       bool `json:"workspaceRootAvailable"`
+	ConfigDirAvailable           bool `json:"configDirAvailable"`
+	MainConfigDirAvailable       bool `json:"mainConfigDirAvailable"`
+	RepoConfigAvailable          bool `json:"repoConfigAvailable"`
+	MCPConfigAvailable           bool `json:"mcpConfigAvailable"`
 	HyperNexusSubmoduleAvailable bool `json:"hypernexusSubmoduleAvailable"`
 }
 
@@ -615,7 +638,9 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 
 	server.swarmController = orchestration.NewSwarmController(server.a2aBroker)
 	server.coderAgent = orchestration.NewCoderAgent(server.a2aBroker, cfg.WorkspaceRoot)
-	server.coderAgent.Start(context.Background())
+	if !bgDisabled() {
+		server.coderAgent.Start(context.Background())
+	}
 	server.mcpPredictor = mcp.NewToolPredictor(server.mcpAggregator)
 	server.goDirector = orchestration.NewDirector(server.swarmController, server.coderAgent, server.a2aBroker)
 	server.expertManager = hsync.NewExpertManager(server.goDirector, server.mcpPredictor)
@@ -653,10 +678,18 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 		}
 	}
 
+	// Preemptive tool advertiser — watches conversation topics and suggests
+	// relevant tools from the decision system catalog before the model searches.
+	// Must be created AFTER mcpDecision so it captures the live pointer.
+	server.preemptiveAdvertiser = mcp.NewPreemptiveAdvertiser(server.mcpDecision, mcp.DefaultAdvertiseConfig())
+
 	// --- Auto-start alwaysOn MCP servers ---
 	// Only connect servers explicitly marked alwaysOn:true in mcp_servers.json.
 	// Other servers lazy-load on first tool use to avoid spawning 50+ processes at boot.
-	go server.autoStartAlwaysOnMCPServers(cfg.MainConfigDir)
+	// Skipped in tests: spawning MCP processes per New() leaked across ~200 tests.
+	if !bgDisabled() {
+		go server.autoStartAlwaysOnMCPServers(cfg.MainConfigDir)
+	}
 
 	// --- Initialize new Go-native services ---
 	server.eventBus = eventbus.New(1000)
@@ -674,7 +707,11 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	nodeID := server.mesh.LocalNodeID()
 	discovery := mesh.NewDiscoveryService(nodeID, cfg.Port, []string{"memory-status", "gossip-sync"}, mesh.DefaultDiscoveryConfig())
 	server.discoveryService = discovery
-	if err := discovery.Start(context.Background()); err == nil {
+	var discoveryErr error
+	if !bgDisabled() {
+		discoveryErr = discovery.Start(context.Background())
+	}
+	if err := discoveryErr; err == nil {
 		transport := NewHTTPGossipTransport(nodeID, discovery)
 		server.gossipTransport = transport
 		adapter := memorystore.NewGossipStoreAdapter(memoryVS)
@@ -682,13 +719,19 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 		gConfig.NodeID = nodeID
 		if proto, errProto := gossip.NewProtocol(gConfig, transport, adapter); errProto == nil {
 			server.gossipProtocol = proto
-			_ = proto.Start(context.Background())
-			fmt.Printf("[Gossip] Started P2P memory sync as node %s\n", nodeID)
+			if !bgDisabled() {
+				_ = proto.Start(context.Background())
+				fmt.Printf("[Gossip] Started P2P memory sync as node %s\n", nodeID)
+			}
 
 			// Initialize UDP-based Gossip memory sync
 			udpPort := cfg.Port + 100
 			server.udpGossip = mesh.NewGossipProtocol(nodeID, udpPort, nil)
-			if errUdp := server.udpGossip.Start(context.Background()); errUdp == nil {
+			udpErr := error(nil)
+			if !bgDisabled() {
+				udpErr = server.udpGossip.Start(context.Background())
+			}
+			if errUdp := udpErr; errUdp == nil {
 				fmt.Printf("[Gossip] Started UDP P2P memory sync on port %d\n", udpPort)
 				server.udpGossip.OnMessage(func(msg mesh.GossipMessage) {
 					if content, ok := msg.Payload["content"]; ok {
@@ -701,6 +744,9 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 
 			// Start periodic peer registration from discovery
 			go func() {
+				if bgDisabled() {
+					return
+				}
 				ticker := time.NewTicker(10 * time.Second)
 				for range ticker.C {
 					for _, p := range discovery.Peers() {
@@ -783,8 +829,17 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.repoGraph = repograph.NewRepoGraphService(cfg.WorkspaceRoot)
 	tools.GlobalRepoGraph = server.repoGraph
 
+	// Warm the bundled ONNX embedder in the background so the first memory
+	// write/search isn't slow (model load + first inference ~1s+).
+	if !bgDisabled() {
+		go memorystore.PreloadEmbedder()
+	}
+
 	// Pre-build repo graph in background so codebase_search is instant on first call
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(5 * time.Second) // Let the server settle
 		buildCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
@@ -810,11 +865,23 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 	server.workflowEngine.Register(workflow.LifecycleWorkflow(cfg.WorkspaceRoot, server.toolsRegistry))
 
 	// Start background prompt evolution loop
-	skillregistry.StartPromptEvolutionLoop(context.Background(), memoryVS.DB(), 12*time.Hour)
+	if !bgDisabled() {
+		skillregistry.StartPromptEvolutionLoop(context.Background(), memoryVS.DB(), 12*time.Hour)
+	}
 
 	server.StartWSBroker()
 	server.registerRoutes()
 	return server
+}
+
+// bgDisabled reports whether heavy background loops must exit immediately.
+// The httpapi test suite sets HYPERNEXUS_DISABLE_BACKGROUND_SERVICES=1 in
+// TestMain: every New() used to leak mesh/gossip/maintenance goroutines
+// (~45k accumulated per run until the suite outgrew go-test timeouts).
+// Object construction still runs so handlers always see non-nil collaborators;
+// only the long-running loops are skipped.
+func bgDisabled() bool {
+	return os.Getenv("HYPERNEXUS_DISABLE_BACKGROUND_SERVICES") != ""
 }
 
 func (s *Server) Close() error {
@@ -873,6 +940,9 @@ func (s *Server) PreWarmCaches() {
 		}
 	}()
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		// Sync registered native tools into catalog.db on startup
 		time.Sleep(5 * time.Second)
 		if err := catalogingestor.SyncRegisteredToolsToCatalog(s.cfg.WorkspaceRoot, s.toolsRegistry.List()); err != nil {
@@ -882,6 +952,9 @@ func (s *Server) PreWarmCaches() {
 		}
 	}()
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		// Glama/Smithery registry auto-sync: initial sync after startup delay, then periodic re-syncs
 		time.Sleep(bobbyBookmarksSyncDelay)
 		dbPath := filepath.Join(s.cfg.WorkspaceRoot, "catalog.db")
@@ -917,6 +990,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Session auto-import: background worker for periodic scanning and import
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(30 * time.Second)
 		homeDir, _ := os.UserHomeDir()
 
@@ -955,6 +1031,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Transcript maintenance: periodic archive and retention cleanup
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(5 * time.Minute) // Wait for initial import to settle
 		store := sessionimport.NewImportedSessionStore(s.cfg.WorkspaceRoot)
 
@@ -985,6 +1064,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Memory maintenance: periodic decay, consolidation, cold archive, and dream cycle
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(2 * time.Minute) // Wait for server to settle
 		vs := tools.GlobalVectorStore
 		if vs == nil {
@@ -1045,6 +1127,9 @@ func (s *Server) PreWarmCaches() {
 
 	// Project .memdb sync: scan workspace and import all project memories into global index
 	go func() {
+		if bgDisabled() {
+			return
+		}
 		time.Sleep(10 * time.Second) // Wait for server to fully initialize
 		vs := tools.GlobalVectorStore
 		if vs == nil {
@@ -1085,7 +1170,7 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 
 	httpServer := &http.Server{
 		Addr:              s.cfg.Host + ":" + jsonNumber(s.cfg.Port),
-		Handler:           corsMiddleware(handler),
+		Handler:           recoverMiddleware(corsMiddleware(handler)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -1658,6 +1743,8 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/skills/create", s.handleSkillsCreate)
 	s.mux.HandleFunc("/api/skills/save", s.handleSkillsSave)
 	s.mux.HandleFunc("/api/skills/assimilate", s.handleSkillsAssimilate)
+	s.mux.HandleFunc("/api/enterprise/authorize", s.handleEnterpriseAuthorize)
+	s.mux.HandleFunc("/api/enterprise/audit/log", s.handleEnterpriseAuditLog)
 	s.mux.HandleFunc("/api/workflows", s.handleWorkflowList)
 	s.mux.HandleFunc("/api/workflows/graph", s.handleWorkflowGraph)
 	s.mux.HandleFunc("/api/workflows/start", s.handleWorkflowStart)
@@ -1777,6 +1864,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/submodules/enable", s.handleSubmoduleEnable)
 	s.mux.HandleFunc("/api/submodules/capabilities", s.handleSubmoduleCapabilities)
 	s.mux.HandleFunc("/api/suggestions", s.handleSuggestionsList)
+	s.mux.HandleFunc("/api/mcp/tool-suggestions", s.handleToolSuggestions)
 	s.mux.HandleFunc("/api/suggestions/resolve", s.handleSuggestionsResolve)
 	s.mux.HandleFunc("/api/suggestions/clear", s.handleSuggestionsClear)
 	s.mux.HandleFunc("/api/plan/mode", s.handlePlanMode)
@@ -3966,7 +4054,7 @@ func (s *Server) probeDownstreamServer(ctx context.Context, serverName, operatio
 	servers := s.mcpConfig.GetServers()
 	cfg, ok := servers[serverName]
 	if !ok {
-		return nil, fmt.Errorf("downstream server '%s' is not configured", serverName)
+		return nil, fmt.Errorf("downstream server '%s' is not configured as a probeable MCP connection (installed harnesses appear in mcp_list_servers with kind=harness but cannot be probed)", serverName)
 	}
 
 	if cfg.Command == "" {
@@ -4304,7 +4392,39 @@ func (s *Server) handleMCPUnloadTool(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleMemoryContextSave(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "memory.saveContext")
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "memory.saveContext", payload, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data":    result,
+			"bridge":  map[string]any{"upstreamBase": upstreamBase, "procedure": "memory.saveContext"},
+		})
+		return
+	}
+	saved, localErr := s.localUpsertMemoryContext(payload)
+	if localErr != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": localErr.Error(), "detail": localErr.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    saved,
+		"bridge": map[string]any{
+			"fallback":  "go-local-memory",
+			"procedure": "memory.saveContext",
+			"reason":    "upstream unavailable; saved memory context to the local persisted store",
+		},
+	})
 }
 
 func (s *Server) handleMemoryContextGet(w http.ResponseWriter, r *http.Request) {
@@ -6931,8 +7051,9 @@ func (s *Server) handleSettingsUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.update", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.update"}})
+	var upstreamData1 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.update", payload, &upstreamData1); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData1, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.update"}})
 		return
 	}
 	configPath := filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "config.json")
@@ -6986,8 +7107,9 @@ func (s *Server) handleSettingsTestConnection(w http.ResponseWriter, r *http.Req
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.testConnection", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.testConnection"}})
+	var upstreamData2 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.testConnection", payload, &upstreamData2); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData2, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.testConnection"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -7065,8 +7187,9 @@ func (s *Server) handleSettingsProviderKey(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.updateProviderKey", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.updateProviderKey"}})
+	var upstreamData3 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "settings.updateProviderKey", payload, &upstreamData3); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData3, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "settings.updateProviderKey"}})
 		return
 	}
 	provider := fmt.Sprint(payload["provider"])
@@ -8111,8 +8234,9 @@ func (s *Server) handleWorkflowStart(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.start", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.start"}})
+	var upstreamData4 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.start", payload, &upstreamData4); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData4, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.start"}})
 		return
 	}
 	id := strings.TrimSpace(fmt.Sprint(payload["id"]))
@@ -8227,8 +8351,9 @@ func (s *Server) handleWorkflowHistory(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleWorkflowResume(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.resume", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.resume"}})
+	var upstreamData5 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.resume", payload, &upstreamData5); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData5, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.resume"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -8241,8 +8366,9 @@ func (s *Server) handleWorkflowResume(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleWorkflowPause(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.pause", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.pause"}})
+	var upstreamData6 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "workflow.pause", payload, &upstreamData6); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData6, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "workflow.pause"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -8574,8 +8700,9 @@ func (s *Server) handleAPIKeysCreate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.create", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.create"}})
+	var upstreamData7 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.create", payload, &upstreamData7); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData7, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.create"}})
 		return
 	}
 	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
@@ -8602,8 +8729,9 @@ func (s *Server) handleAPIKeysUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.update", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.update"}})
+	var upstreamData8 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.update", payload, &upstreamData8); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData8, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.update"}})
 		return
 	}
 	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
@@ -8625,8 +8753,9 @@ func (s *Server) handleAPIKeysUpdate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAPIKeysDelete(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.delete", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.delete"}})
+	var upstreamData9 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.delete", payload, &upstreamData9); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData9, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.delete"}})
 		return
 	}
 	db, err := database.Open("sqlite", s.localHyperNexusDBPath())
@@ -8647,8 +8776,9 @@ func (s *Server) handleAPIKeysDelete(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAPIKeysValidate(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.validate", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.validate"}})
+	var upstreamData10 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "apiKeys.validate", payload, &upstreamData10); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData10, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "apiKeys.validate"}})
 		return
 	}
 	key := fmt.Sprint(payload["key"])
@@ -10673,8 +10803,9 @@ func (s *Server) localCodeModeSet(enabled bool) {
 func (s *Server) handleCodeModeEnable(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.enable", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.enable"}})
+	var upstreamData11 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.enable", payload, &upstreamData11); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData11, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.enable"}})
 		return
 	}
 	s.localCodeModeSet(true)
@@ -10688,8 +10819,9 @@ func (s *Server) handleCodeModeEnable(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCodeModeDisable(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.disable", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.disable"}})
+	var upstreamData12 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.disable", payload, &upstreamData12); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData12, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.disable"}})
 		return
 	}
 	s.localCodeModeSet(false)
@@ -10706,8 +10838,9 @@ func (s *Server) handleCodeModeExecute(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.execute", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.execute"}})
+	var upstreamData13 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "codeMode.execute", payload, &upstreamData13); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData13, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "codeMode.execute"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -10929,8 +11062,9 @@ func (s *Server) handlePlanMode(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.setMode", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.setMode"}})
+	var upstreamData14 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.setMode", payload, &upstreamData14); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData14, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.setMode"}})
 		return
 	}
 	mode := fmt.Sprint(payload["mode"])
@@ -10974,8 +11108,9 @@ func (s *Server) handlePlanApproveDiff(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.approveDiff", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.approveDiff"}})
+	var upstreamData15 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.approveDiff", payload, &upstreamData15); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData15, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.approveDiff"}})
 		return
 	}
 	id := fmt.Sprint(payload["id"])
@@ -10993,8 +11128,9 @@ func (s *Server) handlePlanRejectDiff(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rejectDiff", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rejectDiff"}})
+	var upstreamData16 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rejectDiff", payload, &upstreamData16); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData16, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rejectDiff"}})
 		return
 	}
 	id := fmt.Sprint(payload["id"])
@@ -11009,8 +11145,9 @@ func (s *Server) handlePlanRejectDiff(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePlanApplyAll(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.applyAll", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.applyAll"}})
+	var upstreamData17 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.applyAll", payload, &upstreamData17); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData17, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.applyAll"}})
 		return
 	}
 	count := s.localPlanSetAllStatus("pending", "applied")
@@ -11079,8 +11216,9 @@ func (s *Server) handlePlanCreateCheckpoint(w http.ResponseWriter, r *http.Reque
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.createCheckpoint", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.createCheckpoint"}})
+	var upstreamData18 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.createCheckpoint", payload, &upstreamData18); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData18, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.createCheckpoint"}})
 		return
 	}
 	cp := s.localPlanCreateCheckpoint(payload)
@@ -11094,8 +11232,9 @@ func (s *Server) handlePlanCreateCheckpoint(w http.ResponseWriter, r *http.Reque
 func (s *Server) handlePlanRollback(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rollback", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rollback"}})
+	var upstreamData19 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.rollback", payload, &upstreamData19); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData19, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.rollback"}})
 		return
 	}
 	count := s.localPlanSetAllStatus("applied", "pending")
@@ -11109,8 +11248,9 @@ func (s *Server) handlePlanRollback(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePlanClear(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.clear", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.clear"}})
+	var upstreamData20 any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "plan.clear", payload, &upstreamData20); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": upstreamData20, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "plan.clear"}})
 		return
 	}
 	s.localPlanClear()
@@ -11186,7 +11326,47 @@ func (s *Server) handleKnowledgeStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleKnowledgeIngest(w http.ResponseWriter, r *http.Request) {
-	s.handleTRPCBridgeBodyCall(w, r, "knowledge.ingest")
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{"success": false, "error": "method not allowed"})
+		return
+	}
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
+		return
+	}
+	if payload == nil {
+		payload = map[string]any{}
+	}
+	var result any
+	upstreamBase, err := s.callUpstreamJSON(r.Context(), "knowledge.ingest", payload, &result)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
+			"data":    result,
+			"bridge":  map[string]any{"upstreamBase": upstreamBase, "procedure": "knowledge.ingest"},
+		})
+		return
+	}
+	if metadata, ok := payload["metadata"].(map[string]any); ok {
+		metadata["memoryKind"] = "knowledge"
+	} else {
+		payload["metadata"] = map[string]any{"memoryKind": "knowledge"}
+	}
+	saved, localErr := s.localUpsertMemoryContext(payload)
+	if localErr != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"success": false, "error": localErr.Error(), "detail": localErr.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"data":    map[string]any{"id": saved["id"], "ingested": true},
+		"bridge": map[string]any{
+			"fallback":  "go-local-knowledge",
+			"procedure": "knowledge.ingest",
+			"reason":    "upstream unavailable; stored the knowledge payload in the local persisted store",
+		},
+	})
 }
 
 func (s *Server) handleKnowledgeResources(w http.ResponseWriter, r *http.Request) {
@@ -12213,11 +12393,11 @@ func (s *Server) handleRuntimeStatus(w http.ResponseWriter, r *http.Request) {
 				RunningCount: runningLocks,
 			},
 			Config: ConfigRuntimeSummary{
-				WorkspaceRootAvailable:         configStatus.WorkspaceRoot.Exists,
-				ConfigDirAvailable:             configStatus.ConfigDir.Exists,
-				MainConfigDirAvailable:         configStatus.MainConfigDir.Exists,
-				RepoConfigAvailable:            configStatus.HyperNexusConfigFile.Exists,
-				MCPConfigAvailable:             configStatus.MCPConfigFile.Exists,
+				WorkspaceRootAvailable:       configStatus.WorkspaceRoot.Exists,
+				ConfigDirAvailable:           configStatus.ConfigDir.Exists,
+				MainConfigDirAvailable:       configStatus.MainConfigDir.Exists,
+				RepoConfigAvailable:          configStatus.HyperNexusConfigFile.Exists,
+				MCPConfigAvailable:           configStatus.MCPConfigFile.Exists,
 				HyperNexusSubmoduleAvailable: configStatus.HyperNexusSubmodule.Exists,
 			},
 			CLI: CLIRuntimeSummary{
@@ -16059,13 +16239,115 @@ func (s *Server) localDBToolSearch(query string, limit int) ([]map[string]any, e
 	}
 	queryLower := strings.ToLower(strings.TrimSpace(query))
 	results := make([]map[string]any, 0)
+	seen := map[string]struct{}{}
 	for _, tool := range tools {
 		name := strings.ToLower(stringValue(tool["name"]))
 		description := strings.ToLower(stringValue(tool["description"]))
 		server := strings.ToLower(stringValue(tool["server"]))
 		if strings.Contains(name, queryLower) || strings.Contains(description, queryLower) || strings.Contains(server, queryLower) {
 			results = append(results, tool)
+			seen[stringValue(tool["uuid"])] = struct{}{}
 			if limit > 0 && len(results) >= limit {
+				return results, nil
+			}
+		}
+	}
+	// The hypernexus.db tools table is often empty (schema is created lazily),
+	// while catalog.db holds the full published MCP server/skill library the
+	// suggestion monitor is meant to draw from. Merge catalog hits so tool
+	// search never returns empty when the catalog has matches.
+	catalogHits, catErr := s.localCatalogSearch(query, limit)
+	if catErr != nil {
+		return results, nil
+	}
+	for _, hit := range catalogHits {
+		id := stringValue(hit["uuid"])
+		if id != "" {
+			if _, dup := seen[id]; dup {
+				continue
+			}
+			seen[id] = struct{}{}
+		}
+		results = append(results, hit)
+		if limit > 0 && len(results) >= limit {
+			break
+		}
+	}
+	return results, nil
+}
+
+// localCatalogSearch searches catalog.db published_mcp_servers and
+// published_skills — the "massive library" backing the local-LLM tool
+// suggestion monitor. Results are normalized to the tool shape used by
+// /api/tools/search so the dashboard can render them uniformly.
+func (s *Server) localCatalogSearch(query string, limit int) ([]map[string]any, error) {
+	dbPath := filepath.Join(s.cfg.WorkspaceRoot, "catalog.db")
+	db, err := database.Open("sqlite", dbPath)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	queryLower := strings.ToLower(strings.TrimSpace(query))
+	like := "%" + queryLower + "%"
+	results := make([]map[string]any, 0)
+	if limit <= 0 {
+		limit = 30
+	}
+
+	rows, err := db.Query(`
+		SELECT uuid, canonical_id, display_name, description, transport, install_method, status
+		FROM published_mcp_servers
+		WHERE lower(display_name) LIKE ? OR lower(description) LIKE ? OR lower(canonical_id) LIKE ?
+		ORDER BY display_name
+		LIMIT ?
+	`, like, like, like, limit)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var uuid, canonicalID, displayName, description, transport, installMethod, status string
+			if err := rows.Scan(&uuid, &canonicalID, &displayName, &description, &transport, &installMethod, &status); err != nil {
+				continue
+			}
+			results = append(results, map[string]any{
+				"uuid":        uuid,
+				"name":        displayName,
+				"description": description,
+				"server":      canonicalID,
+				"kind":        "mcp_server",
+				"transport":   transport,
+				"install":     installMethod,
+				"status":      status,
+				"source":      "catalog.db",
+			})
+			if len(results) >= limit {
+				return results, nil
+			}
+		}
+	}
+
+	skillRows, err := db.Query(`
+		SELECT id, name, description
+		FROM published_skills
+		WHERE is_retired = 0 AND (lower(name) LIKE ? OR lower(description) LIKE ?)
+		ORDER BY use_count DESC, name
+		LIMIT ?
+	`, like, like, limit)
+	if err == nil {
+		defer skillRows.Close()
+		for skillRows.Next() {
+			var id, name, description string
+			if err := skillRows.Scan(&id, &name, &description); err != nil {
+				continue
+			}
+			results = append(results, map[string]any{
+				"uuid":        id,
+				"name":        name,
+				"description": description,
+				"kind":        "skill",
+				"source":      "catalog.db",
+			})
+			if len(results) >= limit {
 				break
 			}
 		}
@@ -17584,7 +17866,14 @@ func (s *Server) localAgentMemories() ([]localAgentMemoryRecord, error) {
 
 	var snapshot localAgentMemorySnapshot
 	if err := json.Unmarshal(raw, &snapshot); err != nil {
-		return nil, err
+		// Self-heal: a torn write or legacy corruption must not 503 the whole
+		// memory subsystem. Salvage every balanced top-level JSON document in
+		// the file and merge their memories (first occurrence of each id wins).
+		salvaged, salvageErr := salvageAgentMemorySnapshot(raw)
+		if salvageErr != nil || len(salvaged.Memories) == 0 {
+			return nil, err
+		}
+		snapshot = salvaged
 	}
 
 	now := time.Now()
@@ -18840,22 +19129,34 @@ func (s *Server) localCreateSkill(payload map[string]any) (map[string]any, error
 	id, _ := payload["id"].(string)
 	name, _ := payload["name"].(string)
 	description, _ := payload["description"].(string)
+	rawContent, _ := payload["content"].(string)
+	// Accept 'name' as a fallback for 'id' so callers that only send {name, content}
+	// (like the pi extension) can still create skills.
+	if strings.TrimSpace(id) == "" {
+		id = name
+	}
 	if strings.TrimSpace(id) == "" {
 		return nil, errors.New("missing skill id")
 	}
 	if strings.TrimSpace(name) == "" {
 		name = id
 	}
+	if strings.TrimSpace(description) == "" && strings.TrimSpace(rawContent) == "" {
+		description = name
+	}
 	skillDir := filepath.Join(s.localSkillRoots()[1], id)
 	if err := os.MkdirAll(skillDir, 0o755); err != nil {
 		return nil, err
 	}
 	skillFile := filepath.Join(skillDir, "SKILL.md")
-	body := strings.TrimSpace(description)
-	if body == "" {
-		body = name
+	content := strings.TrimSpace(rawContent)
+	if content == "" {
+		body := strings.TrimSpace(description)
+		if body == "" {
+			body = name
+		}
+		content = "---\nname: " + name + "\ndescription: " + description + "\n---\n\n# " + name + "\n\n" + body + "\n\n## Instructions\n1. ...\n"
 	}
-	content := "---\nname: " + name + "\ndescription: " + description + "\n---\n\n# " + name + "\n\n" + body + "\n\n## Instructions\n1. ...\n"
 	if err := os.WriteFile(skillFile, []byte(content), 0o644); err != nil {
 		return nil, err
 	}
@@ -18906,10 +19207,20 @@ func (s *Server) localSaveSkill(payload map[string]any) (map[string]any, error) 
 }
 
 func (s *Server) localSkillRoots() []string {
-	return []string{
+	roots := []string{
 		filepath.Join(s.cfg.WorkspaceRoot, "packages", "core", "src", "skills"),
 		filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "skills"),
 	}
+	// Also scan the pi agent skill directory so the HyperNexus skill registry
+	// surfaces skills installed alongside the coding agent (e.g. hypernexus,
+	// hypernexus-ops, hypernexus-workflows).
+	if home, err := os.UserHomeDir(); err == nil {
+		piSkills := filepath.Join(home, ".pi", "agent", "skills")
+		if info, statErr := os.Stat(piSkills); statErr == nil && info.IsDir() {
+			roots = append(roots, piSkills)
+		}
+	}
+	return roots
 }
 
 type localSkillRecord struct {
@@ -19955,9 +20266,17 @@ func (s *Server) loadArchivedImportedSessionRecords() ([]ImportedSessionRecord, 
 	}
 
 	records := make([]ImportedSessionRecord, 0, 32)
+	// Bound the cold-cache archive walk so this endpoint can never block for
+	// minutes on thousands of gzipped meta files. Once the budget elapses we
+	// return whatever was collected (and cache it for the next 5 minutes).
+	walkCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	err := filepath.WalkDir(archiveRoot, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
+		}
+		if walkCtx.Err() != nil {
+			return filepath.SkipAll
 		}
 		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(path), ".meta.json.gz") {
 			return nil

@@ -58,7 +58,10 @@ type AdvertiseConfig struct {
 
 func DefaultAdvertiseConfig() AdvertiseConfig {
 	return AdvertiseConfig{
-		MinScore:      15.0,
+		// 5.0 lets a single name match (weight=10) through, while still
+		// filtering out pure noise. Was 15.0 which required 2+ name matches
+		// and made the advertiser return empty for most conversations.
+		MinScore:      5.0,
 		MaxAds:        5,
 		Cooldown:      30 * time.Second,
 		HistoryWindow: 5 * time.Minute,
@@ -86,6 +89,11 @@ func NewPreemptiveAdvertiser(ds *DecisionSystem, cfg AdvertiseConfig) *Preemptiv
 
 // OnMessage is called when a new conversation message arrives.
 func (pa *PreemptiveAdvertiser) OnMessage(msg ConversationMessage) {
+	// Defensive: a zero timestamp would be trimmed below instantly and the
+	// message silently lost. Default it so callers cannot disable the feed.
+	if msg.Timestamp.IsZero() {
+		msg.Timestamp = time.Now()
+	}
 	pa.mu.Lock()
 	defer pa.mu.Unlock()
 
@@ -104,6 +112,11 @@ func (pa *PreemptiveAdvertiser) OnMessage(msg ConversationMessage) {
 
 // GetAdvertisements analyzes recent conversation and returns tool suggestions.
 func (pa *PreemptiveAdvertiser) GetAdvertisements(ctx context.Context) []ToolAdvertisement {
+	defer func() {
+		if rec := recover(); rec != nil {
+			// swallow panics from topic extraction / ranking
+		}
+	}()
 	pa.mu.Lock()
 	topics := pa.extractTopics()
 	history := pa.history
@@ -141,33 +154,38 @@ func (pa *PreemptiveAdvertiser) GetAdvertisements(ctx context.Context) []ToolAdv
 		}
 	}
 
-	// Filter out recently injected tools
+	// Filter out recently injected tools. Reads of pa.injected MUST hold pa.mu:
+	// an unlocked map read racing a locked write is still a fatal
+	// "concurrent map read and map write" (it killed the kernel under battery
+	// load whenever parallel tool-suggestion GETs overlapped).
 	now := time.Now()
-	var ads []ToolAdvertisement
+	var result []ToolAdvertisement
+	pa.mu.Lock()
 	for _, ad := range candidateMap {
 		if lastInjected, ok := pa.injected[ad.ToolName]; ok {
 			if now.Sub(lastInjected) < pa.cfg.Cooldown {
 				continue
 			}
 		}
-		ads = append(ads, *ad)
+		result = append(result, *ad)
 	}
+	pa.mu.Unlock()
 
 	// Sort by score descending and limit
-	sortAdvertisements(ads)
+	sortAdvertisements(result)
 
-	if len(ads) > pa.cfg.MaxAds {
-		ads = ads[:pa.cfg.MaxAds]
+	if len(result) > pa.cfg.MaxAds {
+		result = result[:pa.cfg.MaxAds]
 	}
 
 	// Mark as injected
 	pa.mu.Lock()
-	for _, ad := range ads {
+	for _, ad := range result {
 		pa.injected[ad.ToolName] = now
 	}
 	pa.mu.Unlock()
 
-	return ads
+	return result
 }
 
 // extractTopics extracts key topics from the recent conversation history.

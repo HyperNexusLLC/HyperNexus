@@ -76,7 +76,12 @@ func DefaultMainConfigDir() string {
 }
 
 func DefaultWorkspaceRoot() string {
-	if configured := os.Getenv("HYPERNEXUS_WORKSPACE_ROOT"); configured != "" {
+	configured := os.Getenv("HYPERNEXUS_WORKSPACE_ROOT")
+	if configured == "" {
+		// Backward-compat: some installs (older MiMoCode configs) set the legacy name.
+		configured = os.Getenv("TORMENTNEXUS_WORKSPACE_ROOT")
+	}
+	if configured != "" {
 		return configured
 	}
 
