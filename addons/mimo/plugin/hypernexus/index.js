@@ -739,6 +739,56 @@ export const server = async (input, options = {}) => {
           return { output: JSON.stringify({ error: "Provide action=list or action=run with name" }) };
         },
       }),
+
+      hypernexus_orchestrate: tool({
+        description: "Autonomously chain HyperNexus tools to run the RECALL → DISCOVER → EXECUTE → PERSIST loop for a task in one call.",
+        args: {
+          task: z.string().describe("The task to orchestrate"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Orchestrate: ${args.task.slice(0, 40)}` }); } catch { /* ignore */ }
+          const task = args.task.trim();
+          if (!task) return { output: JSON.stringify({ error: "Provide a task" }) };
+          const steps = [];
+          // RECALL: search memory for context
+          try {
+            const mem = await hnFetch(`/api/memory/fts-search?q=${encodeURIComponent(task.replace(/[^a-zA-Z0-9\s_-]/g, " ").slice(0, 60))}&limit=3`, { budget: FAST_BUDGET });
+            const memItems = mem.ok && mem.data?.data ? mem.data.data : [];
+            steps.push(`RECALL: ${memItems.length} memories found`);
+          } catch (e) { steps.push(`RECALL failed: ${String(e).slice(0, 80)}`); }
+          // DISCOVER: search tool catalog
+          try {
+            const tools = await hnFetch(`/api/tools/search?query=${encodeURIComponent(task.slice(0, 60))}`, { budget: FAST_BUDGET });
+            const toolItems = tools.ok && tools.data?.data ? tools.data.data : [];
+            steps.push(`DISCOVER: ${toolItems.length} tools found`);
+          } catch (e) { steps.push(`DISCOVER failed: ${String(e).slice(0, 80)}`); }
+          // PERSIST: store orchestration record
+          try {
+            await hnPostRetry("/api/memory/facts/add", { title: "orchestrated", content: `[ORCHESTRATED] ${task}`, tags: ["orchestrated"], namespace: "project" });
+            steps.push("PERSIST: orchestration record stored");
+          } catch (e) { steps.push(`PERSIST failed: ${String(e).slice(0, 80)}`); }
+          steps.push("EXECUTE: the model performs the task using the discovered tools above.");
+          return { output: JSON.stringify({ ok: true, task, steps }, null, 2) };
+        },
+      }),
+
+      hypernexus_browser: tool({
+        description: "Browser automation: scrape a URL or check browser-service status. Degrades gracefully if the browser service isn't running.",
+        args: {
+          action: z.enum(["status", "scrape"]).describe("Action"),
+          url: z.string().optional().describe("URL to scrape (for action=scrape)"),
+        },
+        async execute(args, context) {
+          try { if (context && context.metadata) context.metadata({ title: `Browser ${args.action}` }); } catch { /* ignore */ }
+          if (args.action === "scrape" && args.url) {
+            const r = await hnFetch("/api/browser/scrape", { method: "POST", body: { url: args.url }, budget: SLOW_BUDGET });
+            if (!r.ok) return { output: JSON.stringify({ error: `Browser scrape unavailable (HTTP ${r.status}) — the browser service may not be running.` }) };
+            return { output: JSON.stringify(summarize(r, "browser scrape"), null, 2) };
+          }
+          const r = await hnFetch("/api/browser/status", { budget: FAST_BUDGET });
+          return { output: JSON.stringify(summarize(r, "browser status"), null, 2) };
+        },
+      }),
     },
 
     // 2. CONVERSATION MONITOR — non-blocking tool suggestions on each message.

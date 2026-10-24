@@ -1067,6 +1067,94 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+=  // 9f-2. hypernexus_memory_delete
+  pi.registerTool({
+    name: "hypernexus_memory_delete",
+    label: "TN Memory Delete",
+    description: "Delete an L2 memory by ID. Use to remove stale or incorrect entries.",
+    promptSnippet: "Delete a memory by ID",
+    promptGuidelines: ["Use after memory search/list to clean up stale or wrong entries."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), deleted: Type.Optional(Type.String()) }),
+    parameters: Type.Object({ id: Type.String({ description: "Memory ID to delete" }) }),
+    async execute(_toolCallId, params, signal) {
+      const ok = await tnOk("/api/memory/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: params.id }) }, signal);
+      return ok
+        ? { content: [{ type: "text", text: "Memory " + params.id + " deleted." }], structuredContent: { ok: true, deleted: params.id } }
+        : { content: [{ type: "text", text: "Delete failed." }], isError: true, structuredContent: { ok: false } };
+    },
+  });
+
+  // 9f-3. hypernexus_memory_update
+  pi.registerTool({
+    name: "hypernexus_memory_update",
+    label: "TN Memory Update",
+    description: "Update an existing L2 memory's content or tags.",
+    promptSnippet: "Update a memory's content or tags",
+    promptGuidelines: ["Use to correct or refine a stored fact."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), id: Type.String() }),
+    parameters: Type.Object({
+      id: Type.String({ description: "Memory ID" }),
+      content: Type.Optional(Type.String({ description: "New content" })),
+      tags: Type.Optional(Type.Array(Type.String(), { description: "New tags" })),
+      title: Type.Optional(Type.String({ description: "New title" })),
+    }),
+    async execute(_toolCallId, params, signal) {
+      const body: any = { id: params.id };
+      if (params.content !== undefined) body.content = params.content;
+      if (params.tags !== undefined) body.tags = params.tags;
+      if (params.title !== undefined) body.title = params.title;
+      const ok = await tnOk("/api/memory/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }, signal);
+      return ok
+        ? { content: [{ type: "text", text: "Memory " + params.id + " updated." }], structuredContent: { ok: true, id: params.id } }
+        : { content: [{ type: "text", text: "Update failed." }], isError: true, structuredContent: { ok: false, id: params.id } };
+    },
+  });
+
+  // 9f-4. hypernexus_session_list
+  pi.registerTool({
+    name: "hypernexus_session_list",
+    label: "TN Session List",
+    description: "List active and recent HyperNexus sessions with status and metadata.",
+    promptSnippet: "List active/recent sessions",
+    promptGuidelines: ["Use to discover other agents or sessions working on related tasks."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ count: Type.Number(), sessions: Type.Array(Type.Any()) }),
+    parameters: Type.Object({ limit: Type.Optional(Type.Number({ description: "Max sessions (default 10)" })) }),
+    async execute(_toolCallId, params, signal) {
+      const body = await tnJson("/api/sessions/summary?limit=" + (params.limit ?? 10), {}, signal).catch(() => null);
+      return { content: [{ type: "text", text: JSON.stringify((body as any)?.data ?? body).slice(0, 2000) }], structuredContent: { count: 0, sessions: [] } };
+    },
+  });
+
+  // 9f-5. hypernexus_kernel_routes
+  pi.registerTool({
+    name: "hypernexus_kernel_routes",
+    label: "TN Kernel Routes",
+    description: "List all registered kernel API routes with categories and descriptions.",
+    promptSnippet: "Discover kernel API endpoints",
+    promptGuidelines: ["Use to find kernel endpoints beyond the typed tools."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ count: Type.Number(), routes: Type.Array(Type.Any()) }),
+    parameters: Type.Object({ category: Type.Optional(Type.String({ description: "Filter by category" })) }),
+    async execute(_toolCallId, params, signal) {
+      const body = await tnJson("/api/routes", {}, signal).catch(() => null);
+      const routes = (body as any)?.data ?? (body as any)?.routes ?? [];
+      const filtered = params.category ? routes.filter((r: any) => (r.category ?? r.Category) === params.category) : routes;
+      const list = filtered.slice(0, 20).map((r: any) => "  " + (r.path ?? r.Path ?? "?") + " [" + (r.category ?? r.Category ?? "?") + "]").join("\n");
+      return { content: [{ type: "text", text: filtered.length + " routes:\n" + list }], structuredContent: { count: filtered.length, routes: filtered.slice(0, 50) } };
+    },
+  });
+
   // 9g. hypernexus_repomap — repository map
   pi.registerTool({
     name: "hypernexus_repomap",
