@@ -114,7 +114,9 @@ build-go-darwin:
 
 build-dashboard:
   stage: build
-  image: node:20-alpine
+  # Node 24: apps/tormentnexus-extension requires engines.node >=22.12; node:20
+  # fails with ERR_PNPM_UNSUPPORTED_ENGINE. Node 24 matches the local dev toolchain.
+  image: node:24-alpine
   before_script:
     - npm install -g pnpm
   script:
