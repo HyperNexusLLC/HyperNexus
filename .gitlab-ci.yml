@@ -163,8 +163,10 @@ package-windows-installer:
     # Create ZIP archive
     - cd dist/windows
     - zip -r ../../hypernexus-windows-${VERSION}.zip .
-    # Also create standalone .exe (just the binary for direct download)
-    - cp bin/hypernexus.exe hypernexus-${VERSION}.exe
+    # Also create standalone .exe (just the binary for direct download).
+    # NOTE: we are already inside dist/windows, so use the local hypernexus.exe
+    # (copied above) — not bin/hypernexus.exe (which no longer resolves here).
+    - cp hypernexus.exe hypernexus-${VERSION}.exe
   artifacts:
     paths:
       - hypernexus-windows-${VERSION}.zip

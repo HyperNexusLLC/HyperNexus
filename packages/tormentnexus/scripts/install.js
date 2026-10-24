@@ -158,13 +158,16 @@ async function install() {
 		console.log("  Dashboard: http://localhost:7778");
 		console.log("");
 	} catch (error) {
+		// Non-fatal: this postinstall fetches a prebuilt convenience binary that the
+		// dashboard/CI build does NOT need (CI compiles its own binaries, and the
+		// GitHub release may not exist yet). Warn and exit 0 so `pnpm install` /
+		// `next build` are not blocked by an unrelated download failure.
 		console.error("");
-		console.error("  ❌ Installation failed:", error.message);
-		console.error("");
-		console.error("  Please download manually from:");
+		console.error("  [warn] Binary download skipped:", error.message);
+		console.error("  The prebuilt binary is optional — you can build from source or download it manually:");
 		console.error(`  https://github.com/${REPO}/releases`);
 		console.error("");
-		process.exit(1);
+		process.exit(0);
 	}
 }
 
