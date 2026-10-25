@@ -1,0 +1,16 @@
+#!/bin/sh
+# HyperNexus pre-commit: parse-check every extension/plugin before allowing a
+# commit. A stray character (the 2026-10-24 '= //' that broke the pi extension)
+# is caught here, at the source, instead of at harness load time.
+# Install: git config core.hooksPath .githooks
+echo "[pre-commit] syntax gate (extensions + plugins)..."
+node bin/test-syntax.mjs
+status=$?
+if [ $status -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] BLOCKED: an extension/plugin has a syntax error (see above)."
+  echo "[pre-commit] Fix it before committing (or commit with --no-verify if intentional)."
+  exit 1
+fi
+echo "[pre-commit] syntax OK — proceeding."
+exit 0
