@@ -28,6 +28,9 @@ const LOG_DIR = path.join(root, "bin", "_verify-logs");
 mkdirSync(LOG_DIR, { recursive: true });
 
 const batteries = [
+  // Syntax gate FIRST: a stray character in an extension (the 2026-10-24 '= //'
+  // that broke the pi extension) must fail the gauntlet before it reaches a harness.
+  { id: "syntax", cmd: "node", args: ["bin/test-syntax.mjs"] },
   { id: "ext", cmd: "node", args: ["bin/test-opencode-ext.mjs"] },
   { id: "e2e", cmd: "node", args: ["bin/test-opencode-e2e.mjs"], slow: true },
   { id: "reality", cmd: "node", args: ["bin/test-reality.mjs"] },

@@ -1,0 +1,10 @@
+import { execSync } from "child_process";
+const remote = execSync("git remote get-url gitlab").toString().trim();
+const token = remote.match(/oauth2:([^@]+)@/)?.[1] ?? "";
+const P = "HyperNexusLLC%2FHyperNexus";
+const H = { "PRIVATE-TOKEN": token };
+const pid = process.argv[2] || "2983711696";
+const p = JSON.parse(await (await fetch(`https://gitlab.com/api/v4/projects/${P}/pipelines/${pid}`, { headers: H })).text());
+console.log("pipeline", pid, "status:", p.status);
+const jobs = JSON.parse(await (await fetch(`https://gitlab.com/api/v4/projects/${P}/pipelines/${pid}/jobs?per_page=30`, { headers: H })).text());
+for (const j of jobs) console.log(`  [${j.status}] ${j.stage}/${j.name} runner=${j.runner?.description ?? "none"} dur=${Math.round(j.duration ?? 0)}s`);

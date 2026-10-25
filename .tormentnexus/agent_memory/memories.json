@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-10-23T17:34:59.753691+00:00",
+  "savedAt": "2026-10-24T03:05:55.584019+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -259,6 +259,29 @@
       },
       "createdAt": "2026-10-23T17:34:59.753691+00:00",
       "accessedAt": "2026-10-23T17:34:59.753691+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "4b5e72bc60c52fea",
+      "content": "Kernel stubs faked side effects (jira/confluence/cloud) - now front-labeled [NOT CREATED]/[SIMULATED DEMO OUTPUT]. bin/test-reality.mjs: LIVE run() execution + verified side effects + 14 edge cases + stub probes (33/33). Gauntlet 10/10. Team consolidated onto main branch.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "opencode",
+          "kernel",
+          "v1.0.21",
+          "session-summary",
+          "honesty",
+          "reality-battery"
+        ],
+        "title": "Session 11 reality + honesty"
+      },
+      "createdAt": "2026-10-24T03:05:55.583020+00:00",
+      "accessedAt": "2026-10-24T03:05:55.583020+00:00",
       "accessCount": 0,
       "ttl": null
     }
