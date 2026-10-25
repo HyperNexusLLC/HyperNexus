@@ -1067,7 +1067,7 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-=  // 9f-2. hypernexus_memory_delete
+  // 9f-2. hypernexus_memory_delete
   pi.registerTool({
     name: "hypernexus_memory_delete",
     label: "TN Memory Delete",
