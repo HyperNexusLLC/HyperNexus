@@ -316,6 +316,13 @@ func (p *LMStudioProvider) GenerateText(ctx context.Context, model string, messa
 	if p.BaseURL == "" {
 		p.BaseURL = "http://localhost:1234/v1/chat/completions"
 	}
+	// Auto-detect the loaded model when none is named (or a placeholder is given):
+	// LM Studio has no fixed "local-model" id, so use whatever is loaded (e.g.
+	// gemma-4-e4b-it-qat-heretic_decensored). This keeps 'all LLM calls' on the
+	// local model without hardcoding a name.
+	if model == "" || model == "local-model" {
+		if m := lmstudioLoadedModel(p.BaseURL); m != "" { model = m }
+	}
 	oai := &OpenAIProvider{
 		APIKey:  "lm-studio",
 		BaseURL: p.BaseURL,
@@ -326,6 +333,24 @@ func (p *LMStudioProvider) GenerateText(ctx context.Context, model string, messa
 	}
 	resp.Provider = "lmstudio"
 	return resp, nil
+}
+
+// lmstudioLoadedModel returns the first model LM Studio is currently serving.
+func lmstudioLoadedModel(chatURL string) string {
+	modelsURL := strings.Replace(chatURL, "/chat/completions", "/models", 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "GET", modelsURL, nil)
+	if err != nil { return "" }
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil { return "" }
+	defer resp.Body.Close()
+	var payload struct {
+		Data []struct{ ID string `json:"id"` } `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil { return "" }
+	if len(payload.Data) > 0 { return payload.Data[0].ID }
+	return ""
 }
 
 type OllamaProvider struct {
@@ -417,7 +442,42 @@ func resolveProviderSelection() (providerSelection, bool) {
 			}, true
 		}
 	}
+	// Fallback: keyless LOCAL providers (LM Studio, then Ollama). This lets a
+	// local model (e.g. gemma-4-e4b loaded in LM Studio) serve all LLM calls with
+	// no cloud API key. We ping each in turn and return the first that is up.
+	for _, entry := range ProviderPriority {
+		if entry.EnvVar != "" { continue }
+		if !localProviderUp(entry.ProviderName) { continue }
+		return providerSelection{
+			EnvVar:       entry.EnvVar,
+			ProviderName: entry.ProviderName,
+			DefaultModel: entry.DefaultModel,
+			Factory:      entry.Factory,
+			APIKey:       "",
+		}, true
+	}
 	return providerSelection{}, false
+}
+
+// localProviderUp does a fast reachability ping against a keyless local provider.
+func localProviderUp(name string) bool {
+	var url string
+	switch name {
+	case "lmstudio":
+		url = "http://localhost:1234/v1/models"
+	case "ollama":
+		url = "http://localhost:11434/api/tags"
+	default:
+		return false
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil { return false }
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil { return false }
+	defer resp.Body.Close()
+	return resp.StatusCode == 200
 }
 
 func AutoRoute(ctx context.Context, messages []Message) (*LLMResponse, error) {
