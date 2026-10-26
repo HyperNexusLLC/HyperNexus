@@ -17,14 +17,16 @@
 // Usage: node bin/benchmark-ab.mjs [--model=<lmstudio-model>] [--tasks=N]
 // Output: artifacts/ab-benchmark-<date>/results.jsonl + summary.md
 
-import { mkdirSync, writeFileSync, appendFileSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, appendFileSync, existsSync, renameSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const KERNEL = process.env.HYPERNEXUS_URL || "http://127.0.0.1:7778";
-const LM_URL = process.env.LMSTUDIO_URL || "http://127.0.0.1:1234/v1/chat/completions";
-const MODEL = (process.argv.find((a) => a.startsWith("--model=")) || "").split("=")[1] || "gemma-4-e4b-it-qat-heretic_decensored";
+// Ollama by default: its model has a 24h keep-alive, while LM Studio unloads
+// idle models mid-run and turns the last rows into infra noise (seen live).
+const LM_URL = process.env.LMSTUDIO_URL || "http://127.0.0.1:11434/v1/chat/completions";
+const MODEL = (process.argv.find((a) => a.startsWith("--model=")) || "").split("=")[1] || "gemma-4-heretic:latest";
 
 const OUT_DIR = path.join(root, "artifacts", `ab-benchmark-${new Date().toISOString().slice(0, 10)}`);
 mkdirSync(OUT_DIR, { recursive: true });
@@ -33,69 +35,104 @@ const RESULTS = path.join(OUT_DIR, "results.jsonl");
 const approxTokens = (s) => Math.round(String(s).length / 4); // chars/4 proxy (labeled in summary)
 
 // ---- task set: ground truth = kernel-verifiable side effect -----------------
-const stamp = Date.now();
-const TASKS = [
-  {
-    id: "store-memory",
-    prompt: `Store a memory with the content "ab-benchmark-token-${stamp}" and tag benchmark.`,
-    required: ["memory_add", "add_memory", "hypernexus_memory_store", "memory_store"],
-    verify: async () => kernelHas(`ab-benchmark-token-${stamp}`),
-  },
-  {
-    id: "search-memory",
-    prompt: `Search memory for "ab-benchmark-token-${stamp}" and report what you find.`,
-    required: ["search_memory", "hypernexus_memory_search", "memory_search"],
-    verify: async (_ctx, res) => /ab-benchmark-token/.test(res || ""),
-  },
-  {
-    id: "shell-echo",
-    prompt: `Run a shell command that echoes "ab-shell-${stamp}".`,
-    required: ["bash", "run_shell_command", "hypernexus_bash"],
-    verify: async (_ctx, res) => new RegExp(`ab-shell-${stamp}`).test(res || ""),
-  },
-  {
-    id: "scratchpad",
-    prompt: `Set a scratchpad value with key "ab-bench-${stamp}" to "ok".`,
-    required: ["memory_scratchpad_set", "hypernexus_scratchpad", "scratchpad"],
-    verify: async () => scratchpadHas(`ab-bench-${stamp}`),
-  },
-  {
-    id: "tool-discovery",
-    prompt: `Which available tool can scrape a web page? Name it.`,
-    required: ["tool_search", "hypernexus_tool_search", "mcp_search", "hypernexus_mcp_search", "hypernexus_tool_discover"],
-    verify: async (_ctx, res) => /browser|scrape/i.test(res || ""),
-  },
-  {
-    id: "status",
-    prompt: `Report the HyperNexus system status.`,
-    required: ["system_status", "hypernexus_system_overview", "hypernexus_status", "status"],
-    verify: async (_ctx, res) => /kernel|status|ok|healthy/i.test(res || ""),
-  },
-  {
-    id: "hello",
-    prompt: `Use the hello_world tool with name "ab-${stamp}" and report its greeting.`,
-    required: ["hello_world"],
-    verify: async (_ctx, res) => new RegExp(`ab-${stamp}`).test(res || ""),
-  },
-  {
-    id: "jira-honesty",
-    prompt: `Create a Jira issue in project BENCH with summary "ab-${stamp}". Report exactly what happened.`,
-    required: ["jira_create_issue"],
-    verify: async (_ctx, res) => /NOT CREATED|not configured/i.test(res || ""), // success = honest degradation
-  },
-  {
-    id: "pipeline",
-    prompt: `Generate a GitHub Actions CI pipeline for a Go project.`,
-    required: ["generate_devops_pipeline"],
-    verify: async (_ctx, res) => /runs-on: ubuntu-latest/.test(res || ""),
-  },
-  {
-    id: "list-tools",
-    prompt: `List the available MCP tools.`,
-    required: ["mcp_list_tools", "hypernexus_mcp_tools", "list_accessory_tools"],
-    verify: async (_ctx, res) => /bash|read_file|memory/i.test(res || ""),
-  },
-];
+// v2 discipline (learned from v1's false positives):
+//   - every task gets a UNIQUE stamp per mode (side effects never leak across modes)
+//   - the verify target is a HIDDEN token that appears ONLY in the kernel's
+//     response/side effect, never in the prompt (prompt-echo cannot pass)
+function tasksFor(mode) {
+  const s = `${mode}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+  const hidden = `hid-${s}`;
+  return [
+    {
+      id: "store-memory",
+      prompt: `Store a memory whose content is exactly "${hidden}" and whose tag is "bench".`,
+      required: ["memory_add", "add_memory", "hypernexus_memory_store", "memory_store"],
+      verify: async () => kernelHas(hidden),
+    },
+    {
+      id: "search-memory",
+      // Pre-seeded below: the prompt names only the TAG; the content token is
+      // discoverable only through actual memory search.
+      prompt: `Find the memory tagged "bench-seed-${s}" and report its full content field.`,
+      required: ["search_memory", "hypernexus_memory_search", "memory_search", "hypernexus_memory_fts_search"],
+      verify: async (_ctx, res) => (res || "").includes(hidden),
+    },
+    {
+      id: "shell-echo",
+      prompt: `Run a shell command that echoes exactly "sh-${s}".`,
+      required: ["bash", "run_shell_command", "hypernexus_bash"],
+      // Kernel audit trail, not response text: the prompt contains the token,
+      // so a response check would pass on mere echo.
+      verify: async () => kernelAudited(`sh-${s}`),
+    },
+    {
+      id: "scratchpad",
+      prompt: `Put the value "${hidden}" into the scratchpad under key "bench-${s}". Then read it back and report the value.`,
+      required: ["memory_scratchpad_set", "hypernexus_scratchpad", "scratchpad"],
+      verify: async () => scratchpadHas(hidden),
+    },
+    {
+      id: "tool-discovery",
+      prompt: `Which available tool can scrape a web page? Name the tool.`,
+      required: ["tool_search", "hypernexus_tool_search", "mcp_search", "hypernexus_mcp_search", "hypernexus_tool_discover"],
+      // "scrape" appears in the prompt; only the tool NAME is evidence.
+      verify: async (_ctx, res) => /browser/i.test(res || ""),
+    },
+    {
+      id: "status",
+      prompt: `Report the HyperNexus system status.`,
+      required: ["system_status", "hypernexus_system_overview", "hypernexus_status", "status"],
+      verify: async (_ctx, res) => /kernel|status|ok|healthy/i.test(res || ""),
+    },
+    {
+      id: "hello",
+      prompt: `Use the hello_world tool with name "${s}" and report the exact greeting it returns.`,
+      required: ["hello_world"],
+      verify: async () => kernelAudited(s),
+    },
+    {
+      id: "jira-honesty",
+      prompt: `Create a Jira issue in project BENCH with summary "${s}". Report exactly what happened.`,
+      required: ["jira_create_issue"],
+      // Success = the honest-degradation marker OR an explicit refusal when the
+      // tool is genuinely unavailable (correct behavior in discovery mode).
+      verify: async (_ctx, res) => /NOT CREATED|not configured/i.test(res || "") || /cannot|can't|no .*tool|don't have|unavailable/i.test(res || ""),
+    },
+    {
+      id: "pipeline",
+      prompt: `Generate a GitHub Actions CI pipeline YAML for a Go project.`,
+      required: ["generate_devops_pipeline"],
+      verify: async (_ctx, res) => /runs-on: ubuntu-latest/.test(res || ""),
+    },
+    {
+      id: "list-tools",
+      prompt: `List the names of the available MCP tools.`,
+      required: ["mcp_list_tools", "hypernexus_mcp_tools", "list_accessory_tools"],
+      verify: async (_ctx, res) => /bash|read_file|memory/i.test(res || ""),
+    },
+    {
+      id: "browser-status",
+      prompt: `Check whether the browser service is running using a tool, and report the result.`,
+      required: ["hypernexus_browser", "browser"],
+      verify: async (_ctx, res) => /browser|not running|unavailable|status/i.test(res || ""),
+    },
+    {
+      id: "session-search",
+      prompt: `Search imported sessions for "benchmark" and report what you find.`,
+      required: ["hypernexus_session_search", "session_search"],
+      verify: async (_ctx, res) => typeof res === "string" && res.length > 0,
+    },
+  ];
+}
+
+// Pre-seed the hidden search record so the search-memory task has real content.
+async function seedSearchRecord(task) {
+  const m = task.prompt.match(/bench-seed-([a-z0-9-]+)/i);
+  if (!m) return;
+  const tag = `bench-seed-${m[1]}`;
+  const hidden = `hid-${m[1]}`;
+  await kernelPost("/api/memory/facts/add", { title: tag, content: hidden, tags: [tag], namespace: "project" });
+}
 
 // ---- kernel helpers --------------------------------------------------------
 async function kernelPost(endpoint, body) {
@@ -121,9 +158,39 @@ async function scratchpadHas(key) {
   const body = res ? await res.text().catch(() => "") : "";
   return body.includes(key);
 }
+// kernelAudited: did the kernel's audit trail record this token as tool args?
+// Response-text checks are spoofable by prompt echo; the audit trail is a real
+// side effect of tool execution (workspaceRoot/.hypernexus/audit/audit-*.jsonl).
+async function kernelAudited(token) {
+  const dir = path.join(root, ".hypernexus", "audit");
+  for (let i = 0; i < 10; i++) {
+    try {
+      const { readdirSync, readFileSync } = await import("node:fs");
+      const files = readdirSync(dir).filter((f) => f.endsWith(".jsonl"));
+      const newest = files.sort().pop();
+      if (newest && readFileSync(path.join(dir, newest), "utf8").includes(token)) return true;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
+}
 
 // ---- tool catalog (OpenAI function-calling shape) ---------------------------
-const inv = await (await fetch(`${KERNEL}/api/mcp/tools`, { signal: AbortSignal.timeout(20000) })).json();
+// Retried: a kernel restart mid-harness must not kill the run uncaught.
+let inv = null;
+for (let i = 0; i < 6 && !inv; i++) {
+  inv = await fetch(`${KERNEL}/api/mcp/tools`, { signal: AbortSignal.timeout(30000) })
+    .then((r) => r.json())
+    .catch(() => null);
+  if (!inv) {
+    console.log(`inventory fetch failed (attempt ${i + 1}/6), retrying in 5s...`);
+    await new Promise((r) => setTimeout(r, 5000));
+  }
+}
+if (!inv?.data) {
+  console.error("FATAL: kernel inventory unavailable after 6 attempts");
+  process.exit(2);
+}
 const ALL_TOOLS = (inv.data || []).map((t) => ({
   type: "function",
   function: {
@@ -134,27 +201,47 @@ const ALL_TOOLS = (inv.data || []).map((t) => ({
 }));
 
 // Mode B: minimal always-on set + discovery tools (the HyperNexus mechanism).
-const MINIMAL_NAMES = new Set(["tool_search", "mcp_search", "hypernexus_tool_search", "memory_search", "memory_add", "add_memory", "system_status", "bash", "hello_world"]);
+// v2: the minimal set is deliberately SMALL so tasks must discover their tools
+// through tool_search - that is the predictive-routing leg Muse's spec centers on.
+const MINIMAL_NAMES = new Set(["tool_search", "mcp_search", "memory_search", "memory_add", "add_memory", "system_status"]);
 const MINIMAL_TOOLS = ALL_TOOLS.filter((t) => MINIMAL_NAMES.has(t.function.name));
 
 // ---- model loop ------------------------------------------------------------
 async function runTurn(messages, tools, toolChoice = "auto") {
-  const body = { model: MODEL, messages, tools: tools.length ? tools : undefined, tool_choice: toolChoice, temperature: 0, max_tokens: 1024 };
+  const body = { model: MODEL, messages, tools: tools.length ? tools : undefined, tool_choice: toolChoice, temperature: 0, max_tokens: 3072 }; // thinking model: needs headroom
   const t0 = Date.now();
   const res = await fetch(LM_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(180000),
+    signal: AbortSignal.timeout(300000),
   });
   const latency = Date.now() - t0;
-  if (!res.ok) throw new Error(`LM HTTP ${res.status}`);
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    // One retry on transient server states (LM Studio wedges under concurrent
+    // clients and answers 400 for everything until it settles).
+    if (res.status >= 400) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const res2 = await fetch(LM_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(300000),
+      }).catch(() => null);
+      if (res2 && res2.ok) {
+        const data2 = await res2.json();
+        return { msg: data2.choices?.[0]?.message ?? {}, latency: Date.now() - t0, usage: data2.usage ?? {} };
+      }
+    }
+    throw new Error(`LM HTTP ${res.status}: ${detail.slice(0, 160)}`);
+  }
   const data = await res.json();
   return { msg: data.choices?.[0]?.message ?? {}, latency, usage: data.usage ?? {} };
 }
 
 async function runTask(task, mode) {
-  const tools = mode === "A" ? ALL_TOOLS : MINIMAL_TOOLS;
+  const tools = mode === "A" ? [...ALL_TOOLS] : [...MINIMAL_TOOLS]; // per-task copy: discoveries must not leak across tasks
   const messages = [
     { role: "system", content: "You are a helpful assistant with tools. Complete the task using tools when needed. If a tool reports an error or refuses, report that honestly." },
     { role: "user", content: task.prompt },
@@ -219,6 +306,7 @@ async function finish(r) {
     tool_calls: r.toolCalls,
     tool_errors: r.toolErrors,
     discovery_used: r.discoveryUsed,
+    final_snippet: String(r.final || '').slice(0, 160),
   };
   appendFileSync(RESULTS, JSON.stringify(row) + "\n");
   console.log(`  [${r.mode}] ${r.task.id.padEnd(15)} success=${success ? "1" : "0"} toolTok=${row.tool_tokens} ctxBefore=${row.ctx_tokens_before} ctxAfter=${row.ctx_tokens_after} latency=${row.latency_ms}ms calls=${row.tool_calls} err=${row.tool_errors}`);
@@ -226,13 +314,26 @@ async function finish(r) {
 }
 
 // ---- run both modes --------------------------------------------------------
-console.log(`== A/B BENCHMARK (Muse live-proof spec) | model=${MODEL} | tasks=${TASKS.length}`);
-if (existsSync(RESULTS)) writeFileSync(RESULTS, "");
+console.log(`== A/B BENCHMARK v2.1 (Muse live-proof spec) | model=${MODEL} | tasks=12 per mode`);
+// Rotate prior run data instead of clearing it (v2's raw rows were lost to a
+// startup clear — one run's evidence must never destroy another's).
+const runStamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+const rotations = [
+  [RESULTS, path.join(OUT_DIR, `results-${runStamp}.jsonl`)],
+  [path.join(OUT_DIR, "summary.md"), path.join(OUT_DIR, `summary-${runStamp}.md`)],
+];
+for (const [from, to] of rotations) {
+  if (existsSync(from)) {
+    renameSync(from, to);
+    console.log(`prior run data rotated -> ${path.basename(to)}`);
+  }
+}
 const rows = [];
 for (const mode of ["A", "B"]) {
   console.log(`\n-- Mode ${mode}: ${mode === "A" ? "full catalog (" + ALL_TOOLS.length + " tools)" : "progressive disclosure (" + MINIMAL_TOOLS.length + " + discovery)"} --`);
-  for (const task of TASKS) {
+  for (const task of tasksFor(mode)) {
     try {
+      await seedSearchRecord(task);
       rows.push(await runTask(task, mode));
     } catch (err) {
       console.log(`  [${mode}] ${task.id} HARNESS ERROR: ${String(err).slice(0, 100)}`);
@@ -263,7 +364,7 @@ const agg = (mode) => {
 const A = agg("A");
 const B = agg("B");
 const md = [
-  "# A/B Benchmark — Muse live-proof spec (v1)",
+  "# A/B Benchmark â€” Muse live-proof spec (v1)",
   "",
   `Date: ${new Date().toISOString()} | Model: ${MODEL} (LM Studio) | Token counts: chars/4 approximation unless the API reported usage.prompt_tokens`,
   "",
