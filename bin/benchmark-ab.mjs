@@ -208,13 +208,13 @@ const MINIMAL_TOOLS = ALL_TOOLS.filter((t) => MINIMAL_NAMES.has(t.function.name)
 
 // ---- model loop ------------------------------------------------------------
 async function runTurn(messages, tools, toolChoice = "auto") {
-  const body = { model: MODEL, messages, tools: tools.length ? tools : undefined, tool_choice: toolChoice, temperature: 0, max_tokens: 3072 }; // thinking model: needs headroom
+  const body = { model: MODEL, messages, tools: tools.length ? tools : undefined, tool_choice: toolChoice, temperature: 0, max_tokens: 768 }; // CPU laptop: measured 267s/catalog turn at ~1.5 tok/s; 768 gives thinking headroom without the runaway tail
   const t0 = Date.now();
   const res = await fetch(LM_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(300000),
+    signal: AbortSignal.timeout(900000),
   });
   const latency = Date.now() - t0;
   if (!res.ok) {
@@ -227,7 +227,7 @@ async function runTurn(messages, tools, toolChoice = "auto") {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(300000),
+        signal: AbortSignal.timeout(900000),
       }).catch(() => null);
       if (res2 && res2.ok) {
         const data2 = await res2.json();
