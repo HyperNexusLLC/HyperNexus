@@ -1129,16 +1129,32 @@ export const server = async (input, options = {}) => {
       } catch { /* ignore */ }
     },
 
-    // 19. COMPACTION CONTEXT — inject HyperNexus memory availability into the
+    // 19. COMPACTION CONTEXT — inject HyperNexus memory + session goal into the
     //     compaction prompt so condensed summaries retain cross-session pointers.
     "experimental.session.compacting": async (input, output) => {
       try {
         if (output && Array.isArray(output.context)) {
+          // Core guidance: preserve memory facts and key decisions.
           output.context.push(
             "HyperNexus L2 memory vault holds cross-session project knowledge. " +
               "Preserve any hypernexus_memory_store facts, key file paths, and decisions in the summary. " +
               "Call hypernexus_memory_search to recover dropped details later."
           );
+          // Inject session goal (if set) so compaction doesn't lose the objective.
+          try {
+            const goalR = await hnFetch("/api/sessions/context", { budget: HOOK_BUDGET });
+            const goal = goalR && goalR.ok && goalR.data && (goalR.data.data?.goal || goalR.data.goal);
+            if (goal) output.context.push(`Session goal (preserve in summary): ${String(goal).slice(0, 200)}`);
+          } catch { /* ignore */ }
+          // Inject top fresh memories so the summary retains cross-session pointers.
+          try {
+            if (lastMemories.items.length && Date.now() - lastMemories.at < 300_000) {
+              const memLines = lastMemories.items.slice(0, 3)
+                .map((m) => `- ${m.title || "memory"}: ${String(m.content || "").slice(0, 100)}`)
+                .join("\n");
+              if (memLines) output.context.push(`Recent cross-session memories (retain references):\n${memLines}`);
+            }
+          } catch { /* ignore */ }
         }
       } catch { /* ignore */ }
     },
