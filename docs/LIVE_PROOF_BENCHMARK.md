@@ -1,4 +1,4 @@
-# HyperNexus Live-Proof Benchmark Harness — Spec (v1.1)
+# HyperNexus Live-Proof Benchmark Harness — Spec (v1.2)
 
 > **DRAFT for Robert + Muse review.** Preparation, not execution. **Do not run** until Ollama's
 > engine is restored (elevated reinstall) **and** Robert directs it. Pi-posted numbers are **not**
@@ -74,11 +74,14 @@ Proof requires **all** of:
   "harness_name","harness_version","harness_commit","machine",
   "context_tokens_before","context_tokens_after","tool_schema_tokens","tool_call_tokens",
   "tool_tokens_before","tool_tokens_after",
-  "tools_selected","tools_expected","acceptable_alternatives","selection_correct","miss",
+  "tools_selected","expected","equivalents_selected","partials_selected",
+  "per_tool_scores","mean_score","selection_correct","miss",
   "latency_total_ms","latency_routing_ms","latency_generation_ms",
   "error_type","task_success" }
 ```
-Plus `report.md` with aggregate deltas **and variance** (arm B vs arm A) per metric.
+Schema is in sync with `tasks.json` v1.1 (`expected` / `equivalents` / `partials`, per-tool scores
++ mean score per the multi-tool rule). Plus `report.md` with aggregate deltas **and variance**
+(arm B vs arm A) per metric.
 
 ## 12. Reproducibility + scope (pin in every log)
 - **Model (canonical):** `gemma-4-heretic` = gemma-4-E2B-it-ultra-uncensored-heretic, Q4_K_M.
