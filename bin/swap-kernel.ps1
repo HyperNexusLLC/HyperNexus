@@ -101,7 +101,21 @@ try {
     }
     Write-Step "all hypernexus processes gone"
 
-    # --- 4. copy + verify ----------------------------------------------------
+    # --- 4. content verification on the STAGED binary, BEFORE copying --------
+    # Lesson learned live (2026-10-26): verifying after the copy leaves a bad
+    # binary in place when the gate trips. The gate must run on the staged file
+    # first: abort BEFORE the live exe is touched.
+    if ($Expect -ne "") {
+        $bytes = [System.IO.File]::ReadAllBytes((Join-Path $root $Staged))
+        $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
+        if (-not $ascii.Contains($Expect)) {
+            Write-Step "ERROR: staged exe does NOT contain expected marker '$Expect' -- wrong/stale source state was built. Live exe untouched, staged binary left in place."
+            exit 1
+        }
+        Write-Step "content verified on staged: marker '$Expect' present"
+    }
+
+    # --- 5. copy + verify ----------------------------------------------------
     # Move-Item -Force cannot overwrite an existing exe on Windows; use copy.
     cmd /c copy /Y "$Staged" "$Live" | Out-Null
     $liveSize = (Get-Item $Live).Length
@@ -111,23 +125,7 @@ try {
     }
     Write-Step "copied + verified (size match: $liveSize)"
 
-    # --- 4b. stale-binary content verification ------------------------------
-    # Lesson learned live (2026-10-21): a swap once deployed a PRE-commit
-    # build that reported the right version but lacked a fresh fix. Size
-    # cannot tell that apart; a fix-unique byte string can. Pass -Expect with
-    # a string only present in the intended source state (e.g. a new function
-    # name) and the swap aborts if the live exe does not contain it.
-    if ($Expect -ne "") {
-        $bytes = [System.IO.File]::ReadAllBytes((Join-Path $root $Live))
-        $ascii = [System.Text.Encoding]::ASCII.GetString($bytes)
-        if (-not $ascii.Contains($Expect)) {
-            Write-Step "ERROR: live exe does NOT contain expected marker '$Expect' -- wrong/stale source state was built. Staged binary left in place."
-            exit 1
-        }
-        Write-Step "content verified: marker '$Expect' present in live exe"
-    }
-
-    # --- 5. only now delete staged -----------------------------------------
+    # --- 6. only now delete staged -----------------------------------------
     Remove-Item $Staged -Force
     Write-Step "staged binary removed -- SWAP COMPLETE"
 

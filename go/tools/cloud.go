@@ -13,8 +13,9 @@ func (r *Registry) registerCloudTools() {
 			resourceID, _ := args["resource_id"].(string)
 			errorLog, _ := args["error_log"].(string)
 
-			// Simulate log analysis and cloud diagnostics
-			diagnostic := fmt.Sprintf("Diagnostic for %s:\nAnalyzed log: %s\nPotential Root Cause: IAM permissions misconfiguration or network boundary issue.\nSuggested Fix: Review security group inbound rules.", resourceID, errorLog)
+			// Generic template output -- labeled so it cannot be mistaken for
+			// findings from live cloud telemetry.
+			diagnostic := fmt.Sprintf("[SIMULATED DEMO OUTPUT — no live cloud connection configured; template only, verify against real telemetry]\nDiagnostic for %s:\nAnalyzed log: %s\nPotential Root Cause: IAM permissions misconfiguration or network boundary issue.\nSuggested Fix: Review security group inbound rules.", resourceID, errorLog)
 			return diagnostic, nil
 		},
 	})

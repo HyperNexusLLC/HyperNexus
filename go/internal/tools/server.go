@@ -357,11 +357,14 @@ func HandleAddBookmark(ctx context.Context, args map[string]interface{}) (ToolRe
 	return ok(fmt.Sprintf("Bookmark '%s' saved", title))
 }
 
-// HandleCloudTroubleshoot diagnoses cloud infrastructure issues.
+// HandleCloudTroubleshoot returns a heuristic diagnostic TEMPLATE.
 func HandleCloudTroubleshoot(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	resourceID, _ := getString(args, "resource_id")
 	errorLog, _ := getString(args, "error_log")
-	diagnostic := fmt.Sprintf("Diagnostic for %s:\nAnalyzed log: %s\nPotential Root Cause: IAM permissions misconfiguration or network boundary issue.\nSuggested Fix: Review security group inbound rules.", resourceID, errorLog)
+	// The root causes below are GENERIC TEMPLATES, not findings from live cloud
+	// telemetry. Labeling is load-bearing: a model must not cite invented
+	// diagnoses as real analysis.
+	diagnostic := fmt.Sprintf("[SIMULATED DEMO OUTPUT — no live cloud connection configured; template only, verify against real telemetry]\nDiagnostic for %s:\nAnalyzed log: %s\nPotential Root Cause: IAM permissions misconfiguration or network boundary issue.\nSuggested Fix: Review security group inbound rules.", resourceID, errorLog)
 	return ok(diagnostic)
 }
 
@@ -376,18 +379,20 @@ func HandleGenerateDevopsPipeline(ctx context.Context, args map[string]interface
 	return ok("Pipeline generation supported for GitHub Actions, GitLab CI, and Jenkins.")
 }
 
-// HandleJiraCreateIssue creates a Jira issue (stub).
+// HandleJiraCreateIssue honestly reports that Jira is not connected. It must
+// NEVER claim an issue was created: a fake success makes the model (and user)
+// believe a ticket exists when nothing happened.
 func HandleJiraCreateIssue(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	projectKey, _ := getString(args, "project_key")
 	summary, _ := getString(args, "summary")
-	description, _ := getString(args, "description")
-	return ok(fmt.Sprintf("Created issue in %s: %s\nDescription: %s", projectKey, summary, description))
+	return ok(fmt.Sprintf("[NOT CREATED — Jira is not configured; simulated demo output] Issue '%s' for project '%s' was NOT created. Connect a Jira integration to enable real issue creation.", summary, projectKey))
 }
 
-// HandleConfluenceSearch searches Confluence (stub).
+// HandleConfluenceSearch reports honestly that Confluence is not connected.
+// Simulated results lead with the marker so truncation cannot hide it.
 func HandleConfluenceSearch(ctx context.Context, args map[string]interface{}) (ToolResponse, error) {
 	query, _ := getString(args, "query")
-	return ok(fmt.Sprintf("Found 3 documents matching '%s'. (Simulated Confluence search results)", query))
+	return ok(fmt.Sprintf("[SIMULATED DEMO OUTPUT — no Confluence connection configured] Found 3 documents matching '%s'. These are fabricated placeholders, not real documentation.", query))
 }
 
 // HandleDownloadLlamafile downloads a standalone model binary.
