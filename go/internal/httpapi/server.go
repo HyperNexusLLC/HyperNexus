@@ -10365,7 +10365,6 @@ func (s *Server) handlePulseProviders(w http.ResponseWriter, r *http.Request) {
 		"deepseek":   false,
 		"xai":        false,
 		"ollama":     false,
-		"ollama":    false,
 	}
 	for _, status := range statuses {
 		if _, ok := data[status.Provider]; ok {
