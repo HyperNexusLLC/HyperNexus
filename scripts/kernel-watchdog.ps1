@@ -121,6 +121,30 @@ function Stop-Kernel {
 }
 
 # Main watchdog loop
+# ── LLM Process Priority (keep inference from starving audio) ──────────────
+# LLM inference processes (llama-server, ollama, LMS, etc.) run at BelowNormal
+# so they never cause audio stutter or system unresponsiveness. This is
+# re-enforced every watchdog cycle because new processes spawn at Normal.
+$llmProcNames = @("llama-server", "ollama", "ollama-runner", "LMS", "lmstudio", "lmstudio-headless")
+$llmExclude = @("mimo", "hypernexus-kernel", "hypernexus", "powershell", "pwsh", "cmd")
+$llmPriority = 16384  # BelowNormal
+
+function Set-LLMProcessPriorities {
+    $n = 0
+    foreach ($name in $llmProcNames) {
+        $procs = Get-Process -Name $name -ErrorAction SilentlyContinue
+        if (-not $procs) { continue }
+        foreach ($p in $procs) {
+            if ($llmExclude -contains $p.ProcessName) { continue }
+            try {
+                $null = & wmic process where "ProcessId=$($p.Id)" call setpriority $llmPriority 2>&1
+                $n++
+            } catch {}
+        }
+    }
+    return $n
+}
+
 # ── Dashboard (Next.js :7779) health + restart ─────────────────────────────
 # The dashboard is a core UI component; keep it alive like the kernel.
 $script:WebDir = Join-Path (Split-Path (Split-Path $KernelPath -Parent) -Parent) "apps\web"
@@ -202,6 +226,8 @@ while ($true) {
             }
         }
     }
+    # Keep LLM inference processes at BelowNormal so they never starve audio.
+    $null = Set-LLMProcessPriorities
     # Keep the dashboard (Next.js :7779) alive independently of the kernel.
     if (-not (Test-DashboardHealth)) {
         Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Dashboard down, restarting..."
