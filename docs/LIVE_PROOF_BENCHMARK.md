@@ -10,15 +10,19 @@ Measure whether HyperNexus routing (progressive tool disclosure + predictive rou
 tool-token bloat and preserves/improves tool selection versus a no-routing baseline.
 
 ## 2. Task definition
-- **N = 20 tasks** (stated up front), each requiring tool selection from a catalog to reach a goal.
-- Tasks must be **real MCP tool-selection work**, not toy prompts — drawn from realistic agent
-  workflows (memory recall, tool discovery, code search, knowledge ingest, status checks).
-- **Diversity**: cover at least 5 tool domains, with single-tool, multi-tool, and ambiguous cases.
-- **Per-task ground truth** is fixed in a `tasks.json` before running:
-  - `expected_tools` (the correct tool or tools),
-  - `acceptable_alternatives` (equivalent tools that also count as correct),
-  - `partial_credit` rule (e.g. 1.0 all-correct, 0.5 for a subset, 0 for miss).
-  Without this, selection accuracy and miss rate are subjective.
+- **N = 20 tasks** (in `docs/benchmark/tasks.json`), each requiring tool selection from a catalog.
+- Tasks must be **real MCP tool-selection work**, not toy prompts — realistic agent workflows.
+- **Per-task ground truth** (in `tasks.json`) uses a per-expected-tool schema:
+  - `expected` — the tool(s) the prompt actually requires (match the prompt's actions: "find" ≠ "call").
+  - `equivalents` — per-tool map of tools that **fully replace** the expected tool → score **1.0**.
+  - `partials` — per-tool map of tools that **partly substitute** (narrower/weaker) → score **0.5**.
+  - **Multi-tool rule:** score = mean over expected tools; each expected tool scores 1.0 (it or an
+    equivalent), else 0.5 (a partial), else 0.
+- **Pre-run validation (required):** before running, verify **every** `expected`/`equivalents`/
+  `partials` tool name **exists in the tool-catalog version used at runtime**, else ground truth
+  goes stale. Fail fast on any missing name.
+- **Report accuracy per domain**, and **with and without the ambiguous tasks** (they are noisier;
+  note single-task domains like `sessions`, `skills`).
 
 ## 3. Two arms — same task set, same harness
 | Arm | Configuration |
@@ -88,6 +92,12 @@ Plus `report.md` with aggregate deltas **and variance** (arm B vs arm A) per met
 ## 13. Cost language
 Local Ollama gemma ⇒ **LLM cost ≈ 0**, so token savings do **not** equal dollar savings. Report
 **tokens, latency, accuracy** — **not dollars** — unless a paid-model arm is added (not in scope).
+
+## 13b. Scope limitation (state in the report)
+All 20 prompts are **HyperNexus-centric** (pricing, Stripe webhook, AutoRoute, LMStudioProvider,
+etc.). That is realistic HyperNexus-user work and satisfies "real MCP work," but it proves routing
+for the **HyperNexus toolset only** — **not universal MCP routing**. The report must state this and
+must not generalize beyond it.
 
 ## 14. Abort criteria + privacy
 - **Abort** (report nothing) if: generate fails, or AutoRoute's log does not show the **model name**
