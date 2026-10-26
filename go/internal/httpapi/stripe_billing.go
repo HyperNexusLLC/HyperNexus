@@ -38,15 +38,15 @@ func stripeWebhookSecret() string {
 }
 
 func stripePriceID(plan string) string {
-	switch plan {
-	case "basic":
-		return os.Getenv("STRIPE_PRICE_ID_BASIC")
-	case "pro":
-		return os.Getenv("STRIPE_PRICE_ID_PRO")
-	case "commercial":
-		return os.Getenv("STRIPE_PRICE_ID_COMMERCIAL")
+	switch strings.ToLower(plan) {
+	case "trial", "":
+		return os.Getenv("STRIPE_PRICE_ID_TRIAL") // $1.99, 14-day trial (one-time)
+	case "subscription", "sub", "monthly", "pro":
+		return os.Getenv("STRIPE_PRICE_ID_SUB") // $5/seat/month
+	case "founding", "founder", "founders":
+		return os.Getenv("STRIPE_PRICE_ID_FOUNDING") // $200 one-time, per team
 	}
-	return os.Getenv("STRIPE_PRICE_ID_COMMERCIAL")
+	return os.Getenv("STRIPE_PRICE_ID_SUB")
 }
 
 func dashboardURL() string {
@@ -78,31 +78,31 @@ type StripePlan struct {
 func availablePlans() []StripePlan {
 	return []StripePlan{
 		{
-			ID:          "basic",
-			Name:        "Basic",
-			Description: "For individuals and small teams",
-			Price:       29.00,
-			Interval:    "month",
-			PriceID:     stripePriceID("basic"),
-			Features:    []string{"1 user", "100K tokens/month", "Basic support", "Community access"},
+			ID:          "trial",
+			Name:        "Trial",
+			Description: "14-day full-product trial, card required",
+			Price:       1.99,
+			Interval:    "one-time",
+			PriceID:     stripePriceID("trial"),
+			Features:    []string{"Full product for 14 days", "Card required", "Auto-converts to $5/month unless cancelled", "Clear self-serve cancel"},
 		},
 		{
-			ID:          "pro",
-			Name:        "Pro",
-			Description: "For professional developers",
-			Price:       99.00,
+			ID:          "subscription",
+			Name:        "Subscription",
+			Description: "Per-seat monthly subscription",
+			Price:       5.00,
 			Interval:    "month",
-			PriceID:     stripePriceID("pro"),
-			Features:    []string{"5 users", "1M tokens/month", "Priority support", "API access", "Custom models"},
+			PriceID:     stripePriceID("subscription"),
+			Features:    []string{"$5 per seat / month", "L2 memory + MCP tool routing", "Local gemma inference (~$0 LLM cost)", "Cancel anytime"},
 		},
 		{
-			ID:          "commercial",
-			Name:        "Commercial Cloud SaaS",
-			Description: "For organizations with advanced needs",
-			Price:       499.00,
-			Interval:    "month",
-			PriceID:     stripePriceID("commercial"),
-			Features:    []string{"Unlimited users", "Unlimited tokens", "24/7 support", "SSO/SAML", "Dedicated infrastructure", "SLA guarantees"},
+			ID:          "founding",
+			Name:        "Founding Membership",
+			Description: "One-time founding fee, per team (founding window only)",
+			Price:       200.00,
+			Interval:    "one-time",
+			PriceID:     stripePriceID("founding"),
+			Features:    []string{"Per team, not per seat", "Locks $5/seat rate for 12 months", "Feedback sessions + feature voting (no roadmap veto)", "Named case-study credit after proof"},
 		},
 	}
 }
