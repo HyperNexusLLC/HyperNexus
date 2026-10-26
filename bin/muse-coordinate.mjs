@@ -14,8 +14,8 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, writeFileSync } from 'node:fs';
 
 const LOG = new URL('./_muse-coord.log', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-const LM_URL = process.env.LMSTUDIO_URL || 'http://localhost:1234/v1/chat/completions';
-const MODEL = process.env.LMSTUDIO_MODEL || 'gemma-4-e4b-it-qat-heretic_decensored';
+const LM_URL = process.env.LLM_URL || 'http://localhost:11434/v1/chat/completions'; // Ollama (OpenAI-compatible)
+const MODEL = process.env.LLM_MODEL || 'gemma-4-heretic'; // gemma-4-E2B-it-ultra-uncensored-heretic
 
 const GOAL = process.argv[2] ||
 	'Agree with Muse (Bobbi) on the HyperNexus outreach pivot: use the finalized pricing ' +

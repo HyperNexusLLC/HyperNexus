@@ -311,7 +311,7 @@ export default function DirectorConfig() {
                         onChange={(v) => handleChange('lmStudioTimeoutMs', v)}
                         min={5000} max={120000} step={5000}
                         unit="ms"
-                        tooltip="Max/Timeout to wait for a response from the LLM (LMStudio) before aborting."
+                        tooltip="Max/Timeout to wait for a response from the LLM (Ollama) before aborting."
                     />
 
                     <div className="flex items-center justify-between bg-gray-800/50 p-3 rounded border border-gray-700/50">
@@ -340,10 +340,10 @@ export default function DirectorConfig() {
                     <h3 className="text-gray-400 font-medium border-b border-gray-800 pb-2">Diagnostics</h3>
                     <div className="flex gap-4">
                         <button
-                            onClick={() => window.open('http://localhost:1234', '_blank')}
+                            onClick={() => window.open('http://localhost:11434', '_blank')}
                             className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-xs text-white rounded border border-zinc-700"
                         >
-                            Open LMStudio Web UI
+                            Open Ollama
                         </button>
                         <button
                             onClick={handleTestEndpoint}
