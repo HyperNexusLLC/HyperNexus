@@ -239,6 +239,7 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_scratchpad",
+        "mimo": "hypernexus_scratchpad",
         "opencode": "hypernexus_scratchpad",
         "jcode": "mcp__hypernexus__memory_scratchpad_get",
         "codewhale": "mcp__hypernexus__memory_scratchpad_get"
@@ -324,6 +325,7 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_session_search",
+        "mimo": "hypernexus_session_search",
         "opencode": "hypernexus_session_search"
       }
     },
@@ -340,6 +342,7 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_skill_manage",
+        "mimo": "hypernexus_skill_manage",
         "opencode": "hypernexus_skill_manage"
       }
     },
@@ -356,6 +359,7 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_code_search",
+        "mimo": "hypernexus_code_search",
         "opencode": "hypernexus_code_search",
         "jcode": "mcp__hypernexus__codebase_search",
         "codewhale": "mcp__hypernexus__codebase_search"
@@ -378,6 +382,7 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_subagent",
+        "mimo": "hypernexus_subagent",
         "opencode": "hypernexus_subagent"
       }
     },
@@ -398,6 +403,274 @@
         "opencode": "hypernexus_system_overview",
         "jcode": "mcp__hypernexus__system_status",
         "codewhale": "mcp__hypernexus__system_status"
+      }
+    },
+    {
+      "id": "memory_delete",
+      "name": "Delete memory",
+      "category": "memory",
+      "description": "Remove a stored L2 memory entry by ID.",
+      "kernel": {
+        "method": "DELETE",
+        "path": "/api/memory/delete?id=<id>"
+      },
+      "readOnly": false,
+      "budgetMs": 2500,
+      "harness": {
+        "pi": "hypernexus_memory_delete",
+        "mimo": "hypernexus_memory_delete"
+      }
+    },
+    {
+      "id": "memory_update",
+      "name": "Update memory",
+      "category": "memory",
+      "description": "Update an existing L2 memory entry (content, tags, category).",
+      "kernel": {
+        "method": "POST",
+        "path": "/api/memory/update"
+      },
+      "readOnly": false,
+      "budgetMs": 2500,
+      "harness": {
+        "pi": "hypernexus_memory_update",
+        "mimo": "hypernexus_memory_update"
+      }
+    },
+    {
+      "id": "memory_stats",
+      "name": "Memory statistics",
+      "category": "memory",
+      "description": "Counts across L2 vault / scratchpad / relation tiers.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/memory/stats"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "mimo": "hypernexus_memory_stats",
+        "jcode": "mcp__hypernexus__memory_stats",
+        "codewhale": "mcp__hypernexus__memory_stats"
+      }
+    },
+    {
+      "id": "memory_handoff",
+      "name": "Session handoff",
+      "category": "memory",
+      "description": "Write or read cross-session handoff notes.",
+      "kernel": {
+        "method": "GET|POST",
+        "path": "/api/memory/handoff"
+      },
+      "readOnly": false,
+      "budgetMs": 2500,
+      "harness": {
+        "mimo": "hypernexus_memory_handoff"
+      }
+    },
+    {
+      "id": "session_list",
+      "name": "List sessions",
+      "category": "sessions",
+      "description": "List active/recent sessions.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/sessions/summary"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "pi": "hypernexus_session_list",
+        "mimo": "hypernexus_session_list"
+      }
+    },
+    {
+      "id": "session_context",
+      "name": "Session context",
+      "category": "sessions",
+      "description": "Get structured context for a session (goal, files, decisions).",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/sessions/context?id=<id>"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "pi": "hypernexus_session_context",
+        "mimo": "hypernexus_session_context"
+      }
+    },
+    {
+      "id": "kernel_routes",
+      "name": "Kernel route map",
+      "category": "ops",
+      "description": "Enumerate all registered kernel API routes.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/routes"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "pi": "hypernexus_kernel_routes",
+        "mimo": "hypernexus_kernel_routes"
+      }
+    },
+    {
+      "id": "mcp_status",
+      "name": "MCP status",
+      "category": "discovery",
+      "description": "MCP bridge status: active upstream, fallback reason, connected servers.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/mcp/status"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "mimo": "hypernexus_mcp_status"
+      }
+    },
+    {
+      "id": "mcp_servers",
+      "name": "List MCP servers",
+      "category": "discovery",
+      "description": "List registered MCP servers and connection state.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/mcp/servers"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "mimo": "hypernexus_mcp_servers"
+      }
+    },
+    {
+      "id": "mcp_tools",
+      "name": "List MCP tools",
+      "category": "discovery",
+      "description": "List tools exposed by connected MCP servers.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/mcp/tools"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "mimo": "hypernexus_mcp_tools"
+      }
+    },
+    {
+      "id": "skills_search",
+      "name": "Search skills",
+      "category": "skills",
+      "description": "Search the skill catalog for reusable modules.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/skills/search?q=<query>"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "mimo": "hypernexus_skills_search"
+      }
+    },
+    {
+      "id": "system_overview",
+      "name": "System overview",
+      "category": "ops",
+      "description": "Unified overview: kernel health, MCP bridge, memory, sessions, providers, runtime status.",
+      "kernel": {
+        "method": "GET",
+        "path": "/api/system/overview"
+      },
+      "readOnly": true,
+      "budgetMs": 2500,
+      "harness": {
+        "mimo": "hypernexus_system_overview",
+        "opencode": "hypernexus_system_overview"
+      }
+    },
+    {
+      "id": "repomap",
+      "name": "Repository map",
+      "category": "code",
+      "description": "Generate a ranked repository map with symbol summaries.",
+      "kernel": {
+        "method": "POST",
+        "path": "/api/code/repomap"
+      },
+      "readOnly": true,
+      "budgetMs": 8000,
+      "harness": {
+        "pi": "hypernexus_repomap",
+        "mimo": "hypernexus_repomap"
+      }
+    },
+    {
+      "id": "knowledge_graph",
+      "name": "Knowledge graph",
+      "category": "memory",
+      "description": "Extract entities/relations from text or batch-extract across L2 vault.",
+      "kernel": {
+        "method": "POST",
+        "path": "/api/memory/extract-relations"
+      },
+      "readOnly": false,
+      "budgetMs": 8000,
+      "harness": {
+        "pi": "hypernexus_knowledge_graph",
+        "mimo": "hypernexus_knowledge_graph"
+      }
+    },
+    {
+      "id": "workflow",
+      "name": "Workflow runner",
+      "category": "orchestration",
+      "description": "List or run HyperNexus engineering workflows.",
+      "kernel": {
+        "method": "GET|POST",
+        "path": "/api/workflows"
+      },
+      "readOnly": false,
+      "budgetMs": 8000,
+      "harness": {
+        "pi": "hypernexus_workflow",
+        "mimo": "hypernexus_workflow"
+      }
+    },
+    {
+      "id": "orchestrate",
+      "name": "Multi-agent orchestration",
+      "category": "orchestration",
+      "description": "Dispatch and coordinate multiple agents on a complex task.",
+      "kernel": {
+        "method": "POST",
+        "path": "/api/agent/orchestrate"
+      },
+      "readOnly": false,
+      "budgetMs": 8000,
+      "harness": {
+        "pi": "hypernexus_orchestrate",
+        "mimo": "hypernexus_orchestrate"
+      }
+    },
+    {
+      "id": "browser",
+      "name": "Browser automation",
+      "category": "ops",
+      "description": "Web automation via CDP (navigate, read, interact).",
+      "kernel": {
+        "method": "POST",
+        "path": "/api/browser/action"
+      },
+      "readOnly": false,
+      "budgetMs": 8000,
+      "harness": {
+        "pi": "hypernexus_browser",
+        "mimo": "hypernexus_browser"
       }
     }
   ],
