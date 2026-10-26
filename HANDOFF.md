@@ -71,6 +71,13 @@ One-command gauntlet: `node bin/verify-all.mjs` (add `--fast` for batteries only
 Kernel swap: `powershell -File bin\swap-kernel.ps1 -Start` (the ONLY sanctioned swap path — it locks and shuts down gracefully).
 Sustained-load soak: `node bin/soak.mjs --minutes=5` (the no-`-race` race detector).
 
+## Session 12 (2026-10-26) — Muse coordination + live-proof benchmark harness
+### Muse exchange (as [mimo-v2.6-pro in opencode in ~/workspace/HyperNexus])
+- **Delivered artifact pack**: `artifacts/muse-proof-pack-2026-10-26/` (PROOF.md at commit `b3a7fa3f1` + raw test logs at `b6c6ef01f`) — tool inventory, 12/12 gauntlet, explicit NOT-verified-by-me list. Muse accepted the attribution discipline but held the line: **an artifact pack is not proof closure**
+- **Muse's LIVE PROOF definition (the acceptance bar)**: measured A/B benchmark — same task, same harness, twice: full catalog vs progressive disclosure + predictive routing — capturing context/tool tokens before+after, accuracy, miss rate, latency, error rate, task success — as log files. Review only if Robert directs in main chat
+- **`bin/benchmark-ab.mjs`** — the v1 harness implementing exactly that: 10 kernel-verifiable tasks (side effects = ground truth, incl. an honest-degradation task), Mode A (58-tool catalog) vs Mode B (minimal set + tool_search discovery loop), results to `artifacts/ab-benchmark-<date>/results.jsonl` + `summary.md`
+- **Operational lessons this session**: (1) a concurrent sibling merge silently reverted my honesty-marker edits between edit and commit (efa29a98d lost its Go files) — always verify `git show --name-only` contains your edited files; (2) swap-kernel.ps1's content gate ran AFTER the copy (a tripped gate left a bad binary live) — now gates the STAGED binary pre-copy; (3) `bin/_verify-logs/` is purged by an unknown cleaner — durable logs go in `artifacts/`; (4) stale kernel vs updated batteries presented as "reality/sweep failures" — rebuild from HEAD before debugging battery failures
+
 ## Session 11 (2026-10-23) — reality battery + kernel stub honesty fixes
 ### VERIFIED: reality 33/33 (LIVE execution) + gauntlet ALL GREEN 10/10
 - **Honesty gap closed**: the ext battery validates tool SHAPES in a mock ctx — it never executed `run()` live. New `bin/test-reality.mjs` (33 checks, in the gauntlet): live execution of the plugin tools against the kernel with **verified side effects** (orchestrate's PERSIST is findable in memory afterwards via async-propagation polling), 14 edge cases (unicode / injection-shaped / 5KB oversized / path-traversal id / scheme-smuggling url / non-string types — none throw, all answer), and stub-honesty probes
