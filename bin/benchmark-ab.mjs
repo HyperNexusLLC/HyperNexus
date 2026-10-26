@@ -207,8 +207,11 @@ const MINIMAL_NAMES = new Set(["tool_search", "mcp_search", "memory_search", "me
 const MINIMAL_TOOLS = ALL_TOOLS.filter((t) => MINIMAL_NAMES.has(t.function.name));
 
 // ---- model loop ------------------------------------------------------------
-async function runTurn(messages, tools, toolChoice = "auto") {
-  const body = { model: MODEL, messages, tools: tools.length ? tools : undefined, tool_choice: toolChoice, temperature: 0, max_tokens: 768 }; // CPU laptop: measured 267s/catalog turn at ~1.5 tok/s; 768 gives thinking headroom without the runaway tail
+// STREAMING is required: non-streamed responses die at exactly 300s (measured —
+// an idle-connection killer fires because no bytes flow during generation, and
+// the CPU laptop needs ~270s+ per catalog turn). SSE chunks keep it alive.
+async function runTurnOnce(messages, tools, toolChoice) {
+  const body = { model: MODEL, messages, tools: tools.length ? tools : undefined, tool_choice: toolChoice, temperature: 0, max_tokens: 768, stream: true, stream_options: { include_usage: true } }; // stream_options needed for usage counts; streaming needed to survive the 300s idle-connection kill
   const t0 = Date.now();
   const res = await fetch(LM_URL, {
     method: "POST",
@@ -216,28 +219,54 @@ async function runTurn(messages, tools, toolChoice = "auto") {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(900000),
   });
-  const latency = Date.now() - t0;
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    // One retry on transient server states (LM Studio wedges under concurrent
-    // clients and answers 400 for everything until it settles).
-    if (res.status >= 400) {
-      await new Promise((r) => setTimeout(r, 3000));
-      const res2 = await fetch(LM_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(900000),
-      }).catch(() => null);
-      if (res2 && res2.ok) {
-        const data2 = await res2.json();
-        return { msg: data2.choices?.[0]?.message ?? {}, latency: Date.now() - t0, usage: data2.usage ?? {} };
-      }
-    }
     throw new Error(`LM HTTP ${res.status}: ${detail.slice(0, 160)}`);
   }
-  const data = await res.json();
-  return { msg: data.choices?.[0]?.message ?? {}, latency, usage: data.usage ?? {} };
+  const msg = { role: "assistant", content: "", tool_calls: [] };
+  const callMap = new Map();
+  let usage = {};
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      let chunk;
+      try { chunk = JSON.parse(payload); } catch { continue; }
+      if (chunk.usage) usage = chunk.usage;
+      const d = chunk.choices?.[0]?.delta || {};
+      if (d.content) msg.content += d.content;
+      for (const tc of d.tool_calls || []) {
+        const i = tc.index ?? 0;
+        if (!callMap.has(i)) callMap.set(i, { id: "", function: { name: "", arguments: "" } });
+        const c = callMap.get(i);
+        if (tc.id) c.id = tc.id;
+        if (tc.function?.name) c.function.name += tc.function.name;
+        if (tc.function?.arguments) c.function.arguments += tc.function.arguments;
+      }
+    }
+  }
+  if (callMap.size) msg.tool_calls = [...callMap.entries()].sort((a, b) => a[0] - b[0]).map(([_, c]) => c);
+  return { msg, latency: Date.now() - t0, usage };
+}
+
+async function runTurn(messages, tools, toolChoice = "auto") {
+  // One retry on ANY failure — network-level kills ("fetch failed") included.
+  try {
+    return await runTurnOnce(messages, tools, toolChoice);
+  } catch (err) {
+    await new Promise((r) => setTimeout(r, 15000)); // 15s: covers model teardown/cold-reload windows ("Stopping..." refuses connections)
+    return await runTurnOnce(messages, tools, toolChoice);
+  }
 }
 
 async function runTask(task, mode) {
