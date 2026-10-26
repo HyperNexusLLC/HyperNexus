@@ -1129,13 +1129,19 @@ export const server = async (input, options = {}) => {
       } catch { /* ignore */ }
     },
 
-    // 19. COMPACTION CONTEXT — inject HyperNexus memory + session goal into the
-    //     compaction prompt so condensed summaries retain cross-session pointers.
+    // 19. COMPACTION CONTEXT — inject HyperNexus memory + session goal + task state
+    //     into the compaction prompt so condensed summaries retain cross-session pointers.
+    //     Deduplicates against existing context to avoid redundancy.
     "experimental.session.compacting": async (input, output) => {
       try {
         if (output && Array.isArray(output.context)) {
+          const existing = output.context.join("\n").toLowerCase();
+          const injectOnce = (text) => {
+            const key = text.toLowerCase().slice(0, 60);
+            if (!existing.includes(key)) output.context.push(text);
+          };
           // Core guidance: preserve memory facts and key decisions.
-          output.context.push(
+          injectOnce(
             "HyperNexus L2 memory vault holds cross-session project knowledge. " +
               "Preserve any hypernexus_memory_store facts, key file paths, and decisions in the summary. " +
               "Call hypernexus_memory_search to recover dropped details later."
@@ -1144,15 +1150,30 @@ export const server = async (input, options = {}) => {
           try {
             const goalR = await hnFetch("/api/sessions/context", { budget: HOOK_BUDGET });
             const goal = goalR && goalR.ok && goalR.data && (goalR.data.data?.goal || goalR.data.goal);
-            if (goal) output.context.push(`Session goal (preserve in summary): ${String(goal).slice(0, 200)}`);
+            if (goal) injectOnce(`Session goal (preserve in summary): ${String(goal).slice(0, 200)}`);
+          } catch { /* ignore */ }
+          // Inject L1 scratchpad goal as fallback.
+          try {
+            const spR = await hnFetch("/api/memory/scratchpad/get?key=goal", { budget: HOOK_BUDGET });
+            const spGoal = spR && spR.ok && spR.data && (spR.data.value || spR.data.data?.value);
+            if (spGoal && typeof spGoal === "string") injectOnce(`Scratchpad goal: ${spGoal.slice(0, 200)}`);
           } catch { /* ignore */ }
           // Inject top fresh memories so the summary retains cross-session pointers.
           try {
             if (lastMemories.items.length && Date.now() - lastMemories.at < 300_000) {
-              const memLines = lastMemories.items.slice(0, 3)
-                .map((m) => `- ${m.title || "memory"}: ${String(m.content || "").slice(0, 100)}`)
+              const memLines = lastMemories.items.slice(0, 5)
+                .map((m) => `- ${m.title || "memory"}: ${String(m.content || "").slice(0, 120)}`)
                 .join("\n");
-              if (memLines) output.context.push(`Recent cross-session memories (retain references):\n${memLines}`);
+              if (memLines) injectOnce(`Recent cross-session memories (retain references):\n${memLines}`);
+            }
+          } catch { /* ignore */ }
+          // Inject open task list so the summary preserves task state.
+          try {
+            const tasksR = await hnFetch("/api/tasks?status=open,in_progress", { budget: HOOK_BUDGET });
+            const tasks = tasksR && tasksR.ok && tasksR.data && (tasksR.data.data || tasksR.data);
+            if (Array.isArray(tasks) && tasks.length) {
+              const taskLines = tasks.slice(0, 8).map((t) => `- [${t.status || "open"}] ${t.summary || t.title || t.id}`).join("\n");
+              if (taskLines) injectOnce(`Open tasks (preserve status in summary):\n${taskLines}`);
             }
           } catch { /* ignore */ }
         }
