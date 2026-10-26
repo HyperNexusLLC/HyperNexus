@@ -1,0 +1,5 @@
+{"ts":"2026-10-26T18:14:04.532Z","mode":"A","task":"store-memory","success":false,"harness_error":"TypeError: fetch failed"}
+{"ts":"2026-10-26T18:19:11.354Z","mode":"A","task":"search-memory","success":false,"harness_error":"TypeError: fetch failed"}
+{"ts":"2026-10-26T18:24:15.420Z","mode":"A","task":"shell-echo","success":false,"harness_error":"TypeError: fetch failed"}
+{"ts":"2026-10-26T18:29:25.962Z","mode":"A","task":"scratchpad","success":false,"harness_error":"TypeError: fetch failed"}
+{"ts":"2026-10-26T18:34:27.093Z","mode":"A","task":"tool-discovery","success":false,"harness_error":"TypeError: fetch failed"}

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-10-24T03:05:55.584019+00:00",
+  "savedAt": "2026-10-26T06:55:05.141029+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -282,6 +282,70 @@
       },
       "createdAt": "2026-10-24T03:05:55.583020+00:00",
       "accessedAt": "2026-10-24T03:05:55.583020+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "3188338e9f0efefb",
+      "content": "Disk 100%->76% (docker CI runner caches ~18GB biggest win). Shared LLM: /opt/shared-models/gemma-4-heretic Q4_K_M via Ollama 127.0.0.1:11434, clients + llm-env.sh, wired into aimoneymachine/marketing_agent/tormentnexus. All 4 hypernexus.site endpoints verified 200 post-change.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "hetzner",
+          "deployment",
+          "ops",
+          "shared-llm"
+        ],
+        "title": "Hetzner ops 2026-10-26 disk + shared LLM"
+      },
+      "createdAt": "2026-10-26T04:23:12.663516+00:00",
+      "accessedAt": "2026-10-26T04:23:12.663516+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "a3a3d78a7c87a992",
+      "content": "Artifact pack b3a7fa3f1+b6c6ef01f accepted but NOT proof closure. Muse-defined live proof: A/B benchmark full catalog vs progressive disclosure + predictive routing, same task/harness twice, tokens before/after + accuracy + miss rate + latency + error rate + task success as log files. Store durable logs in artifacts/ (bin/_verify-logs gets purged).",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "coordination",
+          "benchmark",
+          "live-proof",
+          "artifacts"
+        ],
+        "title": "Muse coordination 2026-10-26 live-proof spec"
+      },
+      "createdAt": "2026-10-26T05:15:41.049033+00:00",
+      "accessedAt": "2026-10-26T05:15:41.049033+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "cd0aed46287834c7",
+      "content": "toolTok 4607->288 (-94%), latency -55%, success parity (7/8 vs 8/9). Predictive routing UNMEASURED (disc=0 - minimal set covered ground truth). Reported to Muse. Harness lessons: thinking model needs 3K headroom; LM Studio 400s under concurrent clients; cdp-send two-step submit.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "benchmark",
+          "live-proof",
+          "ab-test"
+        ],
+        "title": "A/B benchmark v1 + Muse report"
+      },
+      "createdAt": "2026-10-26T06:55:05.141029+00:00",
+      "accessedAt": "2026-10-26T06:55:05.141029+00:00",
       "accessCount": 0,
       "ttl": null
     }

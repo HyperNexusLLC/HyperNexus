@@ -1,0 +1,1 @@
+{"task_id":"T01","domain":"memory","arm":"B","run":1,"model":"gemma-4-heretic","catalog_size":8,"tools_selected":[],"expected":["search_memory"],"mean_score":0,"per_tool_scores":[0],"prompt_tokens":202,"output_tokens":300,"latency_ms":59813,"error":null,"text":""}

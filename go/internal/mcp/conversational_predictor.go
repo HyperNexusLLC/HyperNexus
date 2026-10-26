@@ -28,6 +28,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -213,7 +214,7 @@ func (p *ConversationalPredictor) callOllama(ctx context.Context, system, user s
 	}
 	model := os.Getenv("HYPERNEXUS_LOCAL_PREDICT_MODEL")
 	if model == "" {
-		model = "gemma4"
+		model = "gemma-4-heretic"
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
@@ -225,11 +226,17 @@ func (p *ConversationalPredictor) callOllama(ctx context.Context, system, user s
 		},
 		"options": map[string]any{
 			"temperature": 0.1,
-			"num_predict": 128,
+			"num_predict": 1500, // gemma-4-heretic is a thinking model; 128 was all reasoning
 		},
 	})
 
-	ctxTimeout, cancel := context.WithTimeout(ctx, 8*time.Second)
+	// The local model is a CPU thinking model (tens of seconds per turn), so the
+	// timeout must be generous or the call dies before the model answers.
+	timeoutSec := 120
+	if v := os.Getenv("HYPERNEXUS_PREDICT_TIMEOUT_SEC"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 { timeoutSec = n }
+	}
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(timeoutSec)*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctxTimeout, http.MethodPost, ollamaURL+"/api/chat", bytes.NewReader(reqBody))

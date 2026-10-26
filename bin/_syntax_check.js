@@ -1165,6 +1165,125 @@ ${steps.join("\n\n")}` }], structuredContent: { ok: true, steps } };
       return { content: [{ type: "text", text: msg }], structuredContent: { ok: res.ok, result: msg } };
     }
   });
+  pi.registerTool({
+    name: "hypernexus_mcp_status",
+    label: "TN MCP Status",
+    description: "MCP bridge status: active upstream, fallback reason, connected servers.",
+    promptSnippet: "Check MCP bridge status",
+    promptGuidelines: ["Use to diagnose MCP connectivity issues."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), status: Type.Optional(Type.Any()) }),
+    parameters: Type.Object({}),
+    async execute(_toolCallId, _params, signal) {
+      const body = await tnJson("/api/mcp/status", {}, signal).catch(() => null);
+      return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 2e3) }], structuredContent: { ok: !!body, status: body } };
+    }
+  });
+  pi.registerTool({
+    name: "hypernexus_mcp_servers",
+    label: "TN MCP Servers",
+    description: "List registered MCP servers and their connection state.",
+    promptSnippet: "List MCP servers",
+    promptGuidelines: ["Use to see which MCP servers are connected."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), servers: Type.Optional(Type.Array(Type.Any())) }),
+    parameters: Type.Object({}),
+    async execute(_toolCallId, _params, signal) {
+      const body = await tnJson("/api/mcp/servers", {}, signal).catch(() => null);
+      const servers = body?.servers ?? body?.data ?? [];
+      return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 2e3) }], structuredContent: { ok: !!body, servers: Array.isArray(servers) ? servers : [] } };
+    }
+  });
+  pi.registerTool({
+    name: "hypernexus_mcp_tools",
+    label: "TN MCP Tools",
+    description: "List tools exposed by connected MCP servers.",
+    promptSnippet: "List MCP tools",
+    promptGuidelines: ["Use to discover available MCP tools."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), tools: Type.Optional(Type.Array(Type.Any())) }),
+    parameters: Type.Object({ limit: Type.Optional(Type.Number({ description: "Max tools to return (default 50)" })) }),
+    async execute(_toolCallId, params, signal) {
+      const body = await tnJson(`/api/mcp/tools?limit=${params.limit ?? 50}`, {}, signal).catch(() => null);
+      const tools = body?.tools ?? body?.data ?? [];
+      return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3e3) }], structuredContent: { ok: !!body, tools: Array.isArray(tools) ? tools : [] } };
+    }
+  });
+  pi.registerTool({
+    name: "hypernexus_memory_stats",
+    label: "TN Memory Stats",
+    description: "Counts across L2 vault / scratchpad / relation tiers.",
+    promptSnippet: "Memory statistics",
+    promptGuidelines: ["Use to gauge memory capacity before bulk writes."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), stats: Type.Optional(Type.Any()) }),
+    parameters: Type.Object({}),
+    async execute(_toolCallId, _params, signal) {
+      const body = await tnJson("/api/memory/stats", {}, signal).catch(() => null);
+      return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 2e3) }], structuredContent: { ok: !!body, stats: body } };
+    }
+  });
+  pi.registerTool({
+    name: "hypernexus_memory_handoff",
+    label: "TN Memory Handoff",
+    description: "Write or read cross-session handoff notes.",
+    promptSnippet: "Session handoff",
+    promptGuidelines: ["Write a handoff at session end; read one to resume."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "deferred",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), handoff: Type.Optional(Type.Any()) }),
+    parameters: Type.Object({ summary: Type.Optional(Type.String({ description: "Summary to write (omit to read latest handoff)" })), pickup: Type.Optional(Type.Boolean({ description: "Read the last handoff instead of writing" })) }),
+    async execute(_toolCallId, params, signal) {
+      if (params.pickup) {
+        const body = await tnJson("/api/memory/handoff?pickup=true", {}, signal).catch(() => null);
+        return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3e3) }], structuredContent: { ok: !!body, handoff: body } };
+      }
+      const ok = await tnOk("/api/memory/handoff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: params.summary || "" }) }, signal);
+      return ok ? { content: [{ type: "text", text: "Handoff written." }], structuredContent: { ok: true } } : { content: [{ type: "text", text: "Handoff write failed." }], isError: true, structuredContent: { ok: false } };
+    }
+  });
+  pi.registerTool({
+    name: "hypernexus_skills_search",
+    label: "TN Skills Search",
+    description: "Search the skill catalog for reusable modules.",
+    promptSnippet: "Search skills",
+    promptGuidelines: ["Use to find skill modules before writing new ones."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), skills: Type.Optional(Type.Array(Type.Any())) }),
+    parameters: Type.Object({ query: Type.String({ description: "Search query" }), limit: Type.Optional(Type.Number({ description: "Max results (default 10)" })) }),
+    async execute(_toolCallId, params, signal) {
+      const body = await tnJson(`/api/skills/search?q=${encodeURIComponent(params.query)}&limit=${params.limit ?? 10}`, {}, signal).catch(() => null);
+      const skills = body?.skills ?? body?.data ?? [];
+      return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3e3) }], structuredContent: { ok: !!body, skills: Array.isArray(skills) ? skills : [] } };
+    }
+  });
+  pi.registerTool({
+    name: "hypernexus_system_overview",
+    label: "TN System Overview",
+    description: "Unified overview: kernel health, MCP bridge, memory, sessions, providers, runtime status.",
+    promptSnippet: "System overview",
+    promptGuidelines: ["Use for a single-call health check before production changes."],
+    namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
+    exposure: "codemode",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    outputSchema: Type.Object({ ok: Type.Boolean(), overview: Type.Optional(Type.Any()) }),
+    parameters: Type.Object({}),
+    async execute(_toolCallId, _params, signal) {
+      const body = await tnJson("/api/system/overview", {}, signal).catch(() => null);
+      return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3e3) }], structuredContent: { ok: !!body, overview: body } };
+    }
+  });
   pi.registerCommand("tn-store", {
     description: "Store a memory in TN L2 vault with structured form (optional per-project .memdb)",
     handler: async (args, ctx) => {

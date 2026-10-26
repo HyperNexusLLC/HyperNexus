@@ -13,7 +13,7 @@ function check(name, ok, detail = "") {
 }
 async function http(path, opts = {}) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
+  const t = setTimeout(() => ctrl.abort(), 15000);
   try {
     const r = await fetch(BASE + path, { ...opts, signal: ctrl.signal });
     const text = await r.text();

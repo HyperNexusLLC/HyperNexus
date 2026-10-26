@@ -315,6 +315,31 @@ export const tui = async (api, options = {}, meta = {}) => {
         }
       },
     },
+    {
+      title: "HyperNexus: Verify Surfaces",
+      value: "hn-verify",
+      description: "Quick health check of kernel + MCP + memory",
+      category: "HyperNexus",
+      slash: { name: "hn-verify", aliases: ["hnv"] },
+      onSelect: async () => {
+        toast(api, "info", "HyperNexus", "Verifying surfaces…");
+        const [health, mcp, mem] = await Promise.all([
+          get("/health", 4000),
+          get("/api/mcp/status", 4000),
+          get("/api/memory/stats", 4000),
+        ]);
+        const hOk = health && (health.ok || health.status === 200);
+        const mOk = mcp && (mcp.ok || mcp.data?.connected || mcp.success);
+        const memOk = mem && (mem.ok || mem.data || mem.success);
+        const status = hOk && mOk ? (memOk ? "success" : "warning") : "error";
+        const lines = [
+          `Kernel: ${hOk ? "online" : "DOWN"}`,
+          `MCP: ${mOk ? "connected" : "degraded"}`,
+          `Memory: ${memOk ? "available" : "unavailable"}`,
+        ];
+        toast(api, status, `Verify: ${hOk && mOk ? "GREEN" : hOk ? "YELLOW" : "RED"}`, lines.join("\n"));
+      },
+    },
   ]);
 
   // === Deep-wiring: remaining TuiPluginApi surfaces (keybind, kv, route, event) ===
