@@ -296,6 +296,25 @@ export const tui = async (api, options = {}, meta = {}) => {
         }
       },
     },
+    {
+      title: "HyperNexus: Workflows",
+      value: "hn-workflow",
+      description: "List available HyperNexus workflows",
+      category: "HyperNexus",
+      slash: { name: "hn-workflow", aliases: ["hnwf"] },
+      onSelect: async () => {
+        toast(api, "info", "HyperNexus", "Listing workflows…");
+        const r = await get("/api/workflows", 4000);
+        const wf = r && (Array.isArray(r.data) ? r.data : r.data?.workflows || r.workflows) || [];
+        if (wf.length) {
+          toast(api, "success", `${wf.length} workflows`, wf.map((w) => `• ${w.name || w.id}: ${w.description || ""}`.slice(0, 80)).join("\n").slice(0, 400));
+        } else {
+          // Show locally known workflows even if kernel has none registered
+          const local = ["hypernexus-context", "hypernexus-research", "hypernexus-handoff", "hypernexus-audit"];
+          toast(api, "info", `${local.length} local workflows`, local.map((w) => `• ${w}`).join("\n"));
+        }
+      },
+    },
   ]);
 
   // === Deep-wiring: remaining TuiPluginApi surfaces (keybind, kv, route, event) ===

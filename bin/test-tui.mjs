@@ -72,7 +72,7 @@ try {
   check("tui(mockApi) returns hook object", hooks && typeof hooks === "object");
   const names = registered.map((s) => (s.slash && s.slash.name) || s.value || s.title);
   console.log(`    registered commands: ${JSON.stringify(names)}`);
-  check("9 commands registered", registered.length === 9, `count=${registered.length}`);
+  check("10 commands registered", registered.length === 10, `count=${registered.length}`);
   const expect = ["hn-status", "hn-search", "hn-suggest", "hn-memory", "hn-harvest"];
   for (const want of expect) {
     const found = registered.some((s) => (s.slash && s.slash.name) === want || s.value === want);
