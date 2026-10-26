@@ -1,7 +1,15 @@
-# Kill hung serve PID 43132 (port-holder only), clear lock, restart, verify.
+# Kill hung kernel serve (port-holder), clear lock, restart, verify.
+# v2 (2026-10-26): PID is now auto-detected from the port instead of hardcoded,
+# so this works for any future wedge without editing.
 $ErrorActionPreference = "Continue"
 $bin = "C:\Users\hyper\workspace\HyperNexus\bin"
 $lock = "C:\Users\hyper\.hypernexus\lock"
+
+Write-Output "=== 0. detect port-holding PID ==="
+$portHolder = $null
+try { $portHolder = @(Get-NetTCPConnection -LocalPort 7778 -State Listen -ErrorAction SilentlyContinue)[0].OwningProcess } catch {}
+if (-not $portHolder) { Write-Output "nothing listening on 7778"; }
+else { Write-Output "port 7778 held by PID $portHolder" }
 
 Write-Output "=== 1. try graceful shutdown (2s budget - it's hung) ==="
 try {
@@ -12,7 +20,8 @@ try {
 Start-Sleep -Seconds 1
 
 Write-Output "=== 2. kill ONLY the port-holding serve PID ==="
-foreach ($procId in @(43132)) {
+foreach ($procId in @($portHolder)) {
+  if (-not $procId) { continue }
   $p = Get-Process -Id $procId -ErrorAction SilentlyContinue
   if ($p) {
     try {
