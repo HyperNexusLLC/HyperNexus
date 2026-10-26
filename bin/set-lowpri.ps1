@@ -29,7 +29,9 @@ function Set-LowPriority($proc, $mask) {
     }
 }
 
-# Affinity mask: all cores minus the reserved ones (reserve the LOW-numbered cores).
+# Affinity mask: workers keep the low-numbered cores (all but the reserved count).
+# The high-numbered cores stay free for audio/UI. (Core numbering is cosmetic —
+# what matters is N cores are guaranteed free of LLM work.)
 $mask = 0
 if ($LeaveCores -gt 0) {
     $total = [Environment]::ProcessorCount
