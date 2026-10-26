@@ -651,7 +651,7 @@ func New(cfg config.Config, detector controlplane.ToolProvider) *Server {
 		&ai.GeminiProvider{APIKey: os.Getenv("GOOGLE_API_KEY")},
 		&ai.DeepSeekProvider{APIKey: os.Getenv("DEEPSEEK_API_KEY")},
 		&ai.OpenRouterProvider{APIKey: os.Getenv("OPENROUTER_API_KEY")},
-		&ai.LMStudioProvider{BaseURL: "http://127.0.0.1:1234"},
+		&ai.OllamaProvider{BaseURL: "http://127.0.0.1:11434"},
 	)
 	server.highValueIngestor = hsync.NewHighValueIngestor(filepath.Join(cfg.MainConfigDir, "hypernexus.db"), server.skillStore, server.mcpConfig)
 	server.supervisorManager.SetPredictor(server.mcpPredictor)
@@ -10365,7 +10365,7 @@ func (s *Server) handlePulseProviders(w http.ResponseWriter, r *http.Request) {
 		"deepseek":   false,
 		"xai":        false,
 		"ollama":     false,
-		"lmstudio":   false,
+		"ollama":    false,
 	}
 	for _, status := range statuses {
 		if _, ok := data[status.Provider]; ok {
