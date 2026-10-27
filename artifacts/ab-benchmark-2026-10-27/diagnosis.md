@@ -24,8 +24,10 @@ latency 341s → 239s (−30%). `discovery_used=0` both modes.
   tool is unavailable — but never calls `tool_search` to discover it.
 - **shell-echo**: 1 call + 1 tool error; audit-trail verify failed.
 - **scratchpad**: model claims success with the right key/value, but kernel-side
-  verify failed → **verify-instrumentation suspect**, not necessarily model
-  failure. Needs a check of the scratchpad GET shape.
+  verify failed → CORRECTION (2026-10-27 probe): the GET-shape instrumentation
+  is sound (probe set→get round-trips, value present in body). The miss stands
+  as model behavior — claimed success without a verified side effect
+  (called the wrong tool or hallucinated the confirmation).
 
 ## Consequence for the "forced discovery" design (v2 intent)
 

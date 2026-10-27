@@ -271,8 +271,13 @@ async function runTurn(messages, tools, toolChoice = "auto") {
 
 async function runTask(task, mode) {
   const tools = mode === "A" ? [...ALL_TOOLS] : [...MINIMAL_TOOLS]; // per-task copy: discoveries must not leak across tasks
+  // v4: Mode B carries a one-line discovery instruction as part of the
+  // progressive-disclosure arm (v3 showed the model reports unavailability
+  // instead of searching — without the hint the routing leg is untestable).
+  // Noted honestly in the summary: the arms differ by disclosure + hint.
+  const sysExtra = mode === "B" ? " If a task needs a tool that is not in your list, call tool_search (or mcp_search) first to discover it — never report a tool as unavailable without searching." : "";
   const messages = [
-    { role: "system", content: "You are a helpful assistant with tools. Complete the task using tools when needed. If a tool reports an error or refuses, report that honestly." },
+    { role: "system", content: "You are a helpful assistant with tools. Complete the task using tools when needed. If a tool reports an error or refuses, report that honestly." + sysExtra },
     { role: "user", content: task.prompt },
   ];
   let toolTokens = approxTokens(JSON.stringify(tools));
