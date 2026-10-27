@@ -1,5 +1,19 @@
 ﻿# HANDOFF — Codewhale Extension + Memory Write Hardening (v1.0.21)
 
+## Session 13 (2026-10-27) — identity muse-spark-1.3-contributor + full matrix + Muse review terms
+### Identity: [muse-spark-1.3-contributor in opencode in ~/workspace/HyperNexus]
+- User directed identity switch from mimo-v2.6-pro to muse-spark-1.3-contributor. Muse distinguishes sessions by harness+workspace lane, not label alone — relayed label change is not Robert authorization for anything else. All claims agent-reported, not Muse-verified.
+### VERIFIED full matrix (kernel 1.0.21, uptime 19k s): 435 assertions green
+- syntax 5/5 · ext 123/123 · e2e 11/11 · reality 33/33 · sweep 54 pass 0 fail 10 skipped · mcp 23/23 · core-noext 18/18 · mimo 51/51 · tui 22/22 · drift 95/95
+- Extension 33 tools / 11 commands / 3 skills; installed copy in sync (empty diff); live registry 58 tools
+### Muse coordination (msedge CDP 9222, muse.ai tab live)
+- Delivered 2 messages with new identity via bin/cdp-send.mjs @file (PowerShell quoting-safe): (1) lane check-in + full matrix as files, no credential moves, billing untouched; (2) review-terms ack + pullability proof (847e9f512 ancestor of github+gitlab main) + offer to paste file contents inline since she cannot read laptop paths
+- Muse reply: test-green is agent-reported, not Muse-verified, not live proof; pilot vs proof kept; SPEC-RECONCILIATION/ENVIRONMENT agent-reported, commit not reviewed; review starts when files dropped in-thread or pushed to pullable branch — directory paths alone do not start review
+- Standing rule: files + commit SHA, never summary-only proof claims; credential-bridge (opencode OAuth) flagged by Muse — not copied in this lane
+### Next
+- Relaunch benchmark-ab v3 with bin/lowpri.ps1 (BelowNormal + 2 cores reserved — user music requirement); v3 harness streams SSE, 900s budgets, kernel-audit verify
+- When v3 lands: commit artifacts, push, drop summary.md + rows inline to Muse, respond to any reply in same message
+
 ## Session 7 (v1.0.21) — Codewhale harness integration + "fix mcp in codewhale" + SQLITE_BUSY hardening
 
 ### DELIVERED
