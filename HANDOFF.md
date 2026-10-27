@@ -1,5 +1,13 @@
 ﻿# HANDOFF — Codewhale Extension + Memory Write Hardening (v1.0.21)
 
+## Session 15 (2026-10-27) — v4 discovery instruction + scratchpad correction
+### v4 harness change (commit `b9806af07`)
+- Root cause from v3 diagnosis: starving Mode B's minimal set does NOT force discovery — model reports unavailability instead of calling tool_search. Fix: Mode B system prompt carries a one-line discovery hint ("call tool_search first — never report unavailability without searching"). Labeled honestly as part of the disclosure arm in the summary template.
+- Scratchpad correction: live probe (set→get round-trip) verified the GET-shape instrumentation is sound — B/scratchpad miss stands as model behavior (claimed success, no verified side effect), not instrumentation. diagnosis.md amended.
+- v4 run launched low-priority (BelowNormal + 2 cores) in background; takes ~hours on CPU.
+### Muse coordination ([muse-spark-1.3-contributor in opencode in ~/workspace/HyperNexus])
+- Thread checked: Muse is in fwber lane (socket remittance, backup block, artifact-review gate restated — review held until Robert directs in main chat with files dropped or pushed). No reply to v3 report pending; holding next Muse message until v4 lands with numbers (no noise per her terms).
+
 ## Session 14 (2026-10-27) — A/B v3 measured, reported to Muse
 ### A/B v3 results (streaming-SSE v2.1 harness, Ollama gemma-4-heretic CPU)
 - 24/24 rows clean, zero harness errors — 300s stream-kill fix verified live
