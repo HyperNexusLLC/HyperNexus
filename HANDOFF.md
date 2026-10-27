@@ -1,5 +1,11 @@
 ﻿# HANDOFF — Codewhale Extension + Memory Write Hardening (v1.0.21)
 
+## Session 16 (2026-10-27) — opencode parity audit + 3 new tools (36-tool surface)
+### Cross-harness audit (subagent surveys: pi 33 / mimo 33+16+11 / codewhale 58 MCP+8 cmds / jcode config+skills / prime-agent python skill)
+- Pi `memory_update`, `kernel_routes`, `memory_stats` bind DEAD endpoints (`/api/memory/update`, `/api/routes`, `/api/memory/stats` all 404 live) — documented, NOT copied. Opencode binds the live `/api/agent-memory/stats` instead (better than pi's stale binding).
+- Commit `cfe2ea0b6`: +`memory_stats` (tier counts), +`session_list` (`/api/sessions/summary`, verified 200), +`repomap` (via `/api/agent/tool`, verified real output). rpc TOOL+KERNEL+CAPABILITY + manifest (notes said 28 tools — doubly stale; now 36). Test counts 33→36.
+### Verification (methodical, all live): syntax 5/5, ext 126/126, reality 33/33, drift 103/103 (+8 auto-pickup), core 18/18, e2e 11/11, sweep 54/54+10skip, mcp 23/23, mimo 51/51, tui 22/22 = 446 green. One 124/126 flake (memory-search propagation timing), clean re-run. All 3 new tools exercised live via own session with real data.
+
 ## Session 15 (2026-10-27) — v4 discovery instruction + scratchpad correction
 ### v4 harness change (commit `b9806af07`)
 - Root cause from v3 diagnosis: starving Mode B's minimal set does NOT force discovery — model reports unavailability instead of calling tool_search. Fix: Mode B system prompt carries a one-line discovery hint ("call tool_search first — never report unavailability without searching"). Labeled honestly as part of the disclosure arm in the summary template.
