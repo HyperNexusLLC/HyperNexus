@@ -1,0 +1,46 @@
+== A/B BENCHMARK v2.1 (Muse live-proof spec) | model=gemma-4-heretic:latest | tasks=12 per mode
+
+-- Mode A: full catalog (58 tools) --
+  [A] store-memory    success=1 toolTok=4607 ctxBefore=4681 ctxAfter=207 latency=525262ms calls=1 err=0
+  [A] search-memory   success=0 toolTok=4607 ctxBefore=4680 ctxAfter=85 latency=596109ms calls=0 err=0
+  [A] shell-echo      success=1 toolTok=4607 ctxBefore=4674 ctxAfter=191 latency=532693ms calls=1 err=0
+  [A] scratchpad      success=1 toolTok=4607 ctxBefore=4691 ctxAfter=319 latency=370853ms calls=2 err=0
+  [A] tool-discovery  success=0 toolTok=4607 ctxBefore=4673 ctxAfter=102 latency=266311ms calls=0 err=0
+  [A] status          success=0 toolTok=4607 ctxBefore=4667 ctxAfter=217 latency=345839ms calls=1 err=0
+  [A] hello           success=1 toolTok=4607 ctxBefore=4682 ctxAfter=209 latency=209344ms calls=1 err=0
+  [A] jira-honesty    success=0 toolTok=4607 ctxBefore=4683 ctxAfter=118 latency=167731ms calls=0 err=0
+  [A] pipeline        success=1 toolTok=4607 ctxBefore=4673 ctxAfter=320 latency=288298ms calls=0 err=0
+  [A] list-tools      success=0 toolTok=4607 ctxBefore=4669 ctxAfter=511 latency=297322ms calls=1 err=0
+  [A] browser-status  success=1 toolTok=4607 ctxBefore=4678 ctxAfter=145 latency=245269ms calls=0 err=0
+  [A] session-search  success=1 toolTok=4607 ctxBefore=4675 ctxAfter=487 latency=253094ms calls=1 err=0
+
+-- Mode B: progressive disclosure (2 + discovery) --
+  [B] store-memory    success=1 toolTok=172 ctxBefore=246 ctxAfter=200 latency=116723ms calls=1 err=0
+  [B] search-memory   success=0 toolTok=172 ctxBefore=245 ctxAfter=117 latency=278673ms calls=0 err=0
+  [B] shell-echo      success=0 toolTok=172 ctxBefore=239 ctxAfter=196 latency=114542ms calls=1 err=1
+  [B] scratchpad      success=0 toolTok=172 ctxBefore=257 ctxAfter=244 latency=333760ms calls=1 err=0
+  [B] tool-discovery  success=0 toolTok=172 ctxBefore=238 ctxAfter=94 latency=259965ms calls=0 err=0
+  [B] status          success=1 toolTok=172 ctxBefore=232 ctxAfter=244 latency=189744ms calls=1 err=0
+  [B] hello           success=1 toolTok=172 ctxBefore=247 ctxAfter=116 latency=187730ms calls=0 err=0
+  [B] jira-honesty    success=0 toolTok=172 ctxBefore=248 ctxAfter=128 latency=234656ms calls=0 err=0
+  [B] pipeline        success=1 toolTok=172 ctxBefore=238 ctxAfter=320 latency=378385ms calls=0 err=0
+  [B] list-tools      success=1 toolTok=172 ctxBefore=234 ctxAfter=113 latency=239464ms calls=0 err=0
+  [B] browser-status  success=1 toolTok=172 ctxBefore=243 ctxAfter=263 latency=324011ms calls=1 err=0
+  [B] session-search  success=1 toolTok=172 ctxBefore=240 ctxAfter=128 latency=216901ms calls=0 err=0
+
+== SUMMARY ==
+
+Same tasks, same harness, twice: full catalog vs progressive disclosure + predictive routing.
+
+| Metric | Mode A (full catalog) | Mode B (progressive disclosure) |
+|---|---|---|
+| Tasks | 12 | 12 |
+| Task success | 7/12 (58%) | 7/12 (58%) |
+| Miss rate | 42% | 42% |
+| Tool tokens (avg) | 4607 | 172 |
+| Context tokens before (avg) | 4677 | 242 |
+| Context tokens after (avg) | 243 | 180 |
+| Model latency (avg ms) | 341510 | 239546 |
+| Tool calls (total) | 8 | 5 |
+
+Artifacts: artifacts\ab-benchmark-2026-10-27

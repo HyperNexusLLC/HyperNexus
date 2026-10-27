@@ -395,7 +395,7 @@ const B = agg("B");
 const md = [
   "# A/B Benchmark â€” Muse live-proof spec (v1)",
   "",
-  `Date: ${new Date().toISOString()} | Model: ${MODEL} (LM Studio) | Token counts: chars/4 approximation unless the API reported usage.prompt_tokens`,
+  `Date: ${new Date().toISOString()} | Model: ${MODEL} (${LM_URL.includes("11434") ? "Ollama" : "LM Studio"}) | Token counts: chars/4 approximation unless the API reported usage.prompt_tokens`,
   "",
   "Same tasks, same harness, twice: full catalog vs progressive disclosure + predictive routing.",
   "",
@@ -414,7 +414,7 @@ const md = [
   "",
   "Per-task rows: `results.jsonl`.",
   "",
-  "Known v1 limitations (honest): small task set (10); one local model; token counts mostly approximated; tasks are kernel-verifiable but narrow. Ready for Muse review criteria to be applied against these files.",
+  "Known limitations (honest): 12-task exploratory set, one local CPU model; tool/context tokens mostly approximated (chars/4); discovery_used=0 means the predictive-routing leg is UNMEASURED whenever the minimal set covers ground truth or the model answers without discovering. Exploratory pilot data only — NOT the spec v1.2 / tasks v1.1 track.",
 ];
 writeFileSync(path.join(OUT_DIR, "summary.md"), md.join("\n"));
 console.log(`\n== SUMMARY ==\n${md.slice(3, 16).join("\n")}`);
