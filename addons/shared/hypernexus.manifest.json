@@ -69,7 +69,7 @@
         "events",
         "agent"
       ],
-      "notes": "28 tools + 10 /hn-* commands + 3 skills; auto-registers `hypernexus mcp` stdio server; hot-path FTS context injection; @memory:key prompt expansion; RBAC modes via HYPERNEXUS_RBAC."
+      "notes": "36 tools + 11 /hn-* commands + 3 skills; auto-registers `hypernexus mcp` stdio server; hot-path FTS context injection; @memory:key prompt expansion; RBAC via HYPERNEXUS_RBAC."
     },
     "jcode": {
       "status": "active",
@@ -450,6 +450,7 @@
       "budgetMs": 2500,
       "harness": {
         "mimo": "hypernexus_memory_stats",
+        "opencode": "hypernexus_memory_stats",
         "jcode": "mcp__hypernexus__memory_stats",
         "codewhale": "mcp__hypernexus__memory_stats"
       }
@@ -482,7 +483,8 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_session_list",
-        "mimo": "hypernexus_session_list"
+        "mimo": "hypernexus_session_list",
+        "opencode": "hypernexus_session_list"
       }
     },
     {
@@ -606,7 +608,8 @@
       "budgetMs": 8000,
       "harness": {
         "pi": "hypernexus_repomap",
-        "mimo": "hypernexus_repomap"
+        "mimo": "hypernexus_repomap",
+        "opencode": "hypernexus_repomap"
       }
     },
     {
