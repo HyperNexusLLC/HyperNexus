@@ -23,6 +23,9 @@ HyperNexus is a local AI control plane running a Go kernel on port 7778 (dashboa
 | `hypernexus_memory_vector_search` | Semantic recall incl. L3 cold archive |
 | `hypernexus_memory_list` | List recent memories |
 | `hypernexus_memory_store` | Store a fact / decision |
+| `hypernexus_memory_delete` | Delete by id or tag fan-out |
+| `hypernexus_memory_relate` | Link memories in the knowledge graph |
+| `hypernexus_memory_stats` | Tier counts: vault / scratchpad / relations |
 | `hypernexus_record_observation` | Record a structured observation (discovery/decision/progress/warning/fix) |
 | `hypernexus_knowledge_graph` | Entities/relations graph |
 | `hypernexus_context_harvest` | Pull relevant L2 context for a task |
@@ -30,12 +33,17 @@ HyperNexus is a local AI control plane running a Go kernel on port 7778 (dashboa
 | `hypernexus_session_search` | Search imported sessions |
 | `hypernexus_session_context` | Session bootstrap: goal & cross-session links |
 | `hypernexus_session_handoff` | Write/pick up handoff artifacts |
+| `hypernexus_session_list` | List recent sessions across harnesses |
 | `hypernexus_mcp_search` | Search live MCP tool inventory |
+| `hypernexus_mcp_status` / `hypernexus_mcp_servers` / `hypernexus_mcp_tools` | MCP bridge status / servers / tools |
 | `hypernexus_tool_search` | Semantic tool discovery (26k+ catalog) |
 | `hypernexus_tool_discover` | Native router discovery (L1+L2+L3) |
 | `hypernexus_suggest_tools` | Proactive tool suggestions from conversation |
 | `hypernexus_mcp_call` | Route a call to a downstream MCP tool |
 | `hypernexus_code_search` | symbols / definitions / references / files |
+| `hypernexus_repomap` | Ranked repo map with symbol summaries |
+| `hypernexus_workflow` / `hypernexus_orchestrate` | Engineering workflows / orchestration loop |
+| `hypernexus_browser` | Scrape URL or check browser-service status |
 | `hypernexus_skill_search` / `hypernexus_skill_manage` | Skill registry |
 | `hypernexus_status` / `hypernexus_system_overview` | Kernel + memory + MCP health |
 | `hypernexus_billing_status` | Provider quotas, depletion, fallback chain |
@@ -68,7 +76,7 @@ curl -s http://localhost:7778/api/billing/status
 - `/hn-search` — search memory · `/hn-tools` — discover tools
 - `/hn-session` — resume from imported sessions · `/hn-context` — harvest context
 - `/hn-plan` — store a plan · `/hn-summary` — summarize session to L2
-- `/hn-status` — kernel status · `/hn-purge` — purge by tag
+- `/hn-restore` — pick up last handoff · `/hn-status` — kernel status · `/hn-purge` — purge by tag
 
 ## Inline recall
 
