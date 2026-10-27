@@ -1517,6 +1517,9 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/autonomy/set-level", s.handleAutonomySetLevel)
 	s.mux.HandleFunc("/api/autonomy/activate-full", s.handleAutonomyActivateFull)
 	s.mux.HandleFunc("/api/llm/generate", s.handleLLMGenerate)
+	// Anthropic Messages API compatibility (Claude Code -> Meta subscriber model).
+	s.mux.HandleFunc("/v1/messages", s.handleAnthropicMessages)
+	s.mux.HandleFunc("/v1/models", s.handleAnthropicModels)
 	s.mux.HandleFunc("/api/director/memorize", s.handleDirectorMemorize)
 	s.mux.HandleFunc("/api/director/chat", s.handleDirectorChat)
 	s.mux.HandleFunc("/api/director/status", s.handleDirectorStatus)

@@ -3,7 +3,13 @@
     "hypernexus@hypernexus-marketplace": {
       "source": {
         "source": "local",
-        "path": "C:\\Users\\hyper\\workspace\\hypernexus\\.claude\\plugins\\cache\\hypernexus"
+        "path": "C:\\Users\\hyper\\workspace\\HyperNexus\\plugins\\hypernexus"
+      }
+    },
+    "hypernexus": {
+      "source": {
+        "source": "local",
+        "path": "C:\\Users\\hyper\\workspace\\HyperNexus\\plugins\\hypernexus"
       }
     }
   }
