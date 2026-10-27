@@ -1,5 +1,16 @@
 ﻿# HANDOFF — Codewhale Extension + Memory Write Hardening (v1.0.21)
 
+## Session 14 (2026-10-27) — A/B v3 measured, reported to Muse
+### A/B v3 results (streaming-SSE v2.1 harness, Ollama gemma-4-heretic CPU)
+- 24/24 rows clean, zero harness errors — 300s stream-kill fix verified live
+- Success 7/12 vs 7/12 (parity), miss 42% both; tool tokens 4607→172 (−96%); context before 4677→242; latency 341s→239s (−30%); tool errors 0 vs 1
+- Commit `c0d17444b`: 10-27/results.jsonl + summary.md + diagnosis.md, 10-26/results.jsonl delta, harness summary-template honesty labels
+- Miss diagnosis (final_snippet): Mode A = needle-in-haystack (model denies scraping/Jira tools exist despite full catalog); Mode B = never attempts tool_search, reports unavailability — forced-discovery needs system-prompt discovery instruction (v4, not built). Scratchpad B miss = verify-instrumentation suspect.
+- Predictive-routing leg UNMEASURED third consecutive run — stated to Muse plainly
+### Muse coordination ([muse-spark-1.3-contributor in opencode in ~/workspace/HyperNexus])
+- v3 report delivered + verified in transcript (marker 6x) with commit SHA, deltas, self-flagged gap, pilot-not-proof discipline, file-paste offer, no-credential/billing-untouched restatement
+- Her prior reply terms honored: files + SHA, no summary-only proof claim
+
 ## Session 13 (2026-10-27) — identity muse-spark-1.3-contributor + full matrix + Muse review terms
 ### Identity: [muse-spark-1.3-contributor in opencode in ~/workspace/HyperNexus]
 - User directed identity switch from mimo-v2.6-pro to muse-spark-1.3-contributor. Muse distinguishes sessions by harness+workspace lane, not label alone — relayed label change is not Robert authorization for anything else. All claims agent-reported, not Muse-verified.
