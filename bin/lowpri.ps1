@@ -15,7 +15,7 @@ $exe = $Command[0]
 $args = @()
 if ($Command.Count -gt 1) { $args = $Command[1..($Command.Count - 1)] }
 
-$p = Start-Process -FilePath $exe -ArgumentList $args -PassThru -WindowStyle Hidden
+$p = Start-Process -FilePath $exe -ArgumentList $args -PassThru -WindowStyle Hidden -WorkingDirectory (Get-Location) -RedirectStandardOutput (Join-Path (Get-Location) "artifacts\ab-benchmark-2026-10-26\run-v3.log") -RedirectStandardError (Join-Path (Get-Location) "artifacts\ab-benchmark-2026-10-26\run-v3.err.log")
 $p.PriorityClass = 'BelowNormal'
 if ($LeaveCores -gt 0) {
     $total = [Environment]::ProcessorCount
