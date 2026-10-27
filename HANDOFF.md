@@ -1,5 +1,13 @@
 ﻿# HANDOFF — Codewhale Extension + Memory Write Hardening (v1.0.21)
 
+## Session 17 (2026-10-27) — fullest-extent audit: API coverage + skill docs + 446 green
+### API coverage verdict (15 ctx.* integration points, all live)
+- tools/commands/skills/session-hooks(prompt/context/compaction/model.request/retry)/tool-hooks(before/after+RBAC+autostore)/permission/shell/mcp-transform/worktree/skill-transform/storage/generate/session-context/model.read/event-stream/V1-shim — every verified OpenCode primitive in use. Foreign-tool hint enrichment (mimo-style) investigated: editor API for mutating non-HN tools unverified locally — NOT implemented blindly.
+- MCP config confirmed patched (opencode.jsonc: hypernexus stdio, correct command/env/45s timeout); install --check PASSED; installed copy in sync.
+### Skill docs completed (commit `bc941dea5`)
+- SKILL.md tool table was missing 11 tools + hn-restore command — now documents all 36. Reinstalled + verified in sync.
+### Verification: 5+126+33+103+18+11+54+23+51+22 = 446 green (one @memory flake, clean re-run)
+
 ## Session 16 (2026-10-27) — opencode parity audit + 3 new tools (36-tool surface)
 ### Cross-harness audit (subagent surveys: pi 33 / mimo 33+16+11 / codewhale 58 MCP+8 cmds / jcode config+skills / prime-agent python skill)
 - Pi `memory_update`, `kernel_routes`, `memory_stats` bind DEAD endpoints (`/api/memory/update`, `/api/routes`, `/api/memory/stats` all 404 live) — documented, NOT copied. Opencode binds the live `/api/agent-memory/stats` instead (better than pi's stale binding).
