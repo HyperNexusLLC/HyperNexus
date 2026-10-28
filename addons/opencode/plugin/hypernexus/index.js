@@ -7,8 +7,8 @@
  *
  * Surfaces
  * --------
- *  - 28 typed tools (namespace `hypernexus`) bound to kernel APIs
- *  - 10 slash commands (/hn-*)
+ *  - 36 typed tools (namespace `hypernexus`) bound to kernel APIs
+ *  - 11 slash commands (/hn-*)
  *  - 3 registered skills (memory discipline, ops, workflows)
  *  - Session hooks: prompt admission (@memory:key expansion + suggestion feed),
  *    context injection (fast FTS harvest + status + proactive tool suggestions),

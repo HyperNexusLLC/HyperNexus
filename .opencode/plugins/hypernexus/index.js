@@ -7,8 +7,8 @@
  *
  * Surfaces
  * --------
- *  - 28 typed tools (namespace `hypernexus`) bound to kernel APIs
- *  - 10 slash commands (/hn-*)
+ *  - 36 typed tools (namespace `hypernexus`) bound to kernel APIs
+ *  - 11 slash commands (/hn-*)
  *  - 3 registered skills (memory discipline, ops, workflows)
  *  - Session hooks: prompt admission (@memory:key expansion + suggestion feed),
  *    context injection (fast FTS harvest + status + proactive tool suggestions),
@@ -1390,6 +1390,49 @@ const TOOLS = [
           : `Browser service not running (${res.error ?? `HTTP ${res.status}`}). Start it to enable scraping.`,
         metadata: { ok: res.ok },
       };
+    },
+  },
+  {
+    name: "memory_stats",
+    description: "Memory tier statistics: counts across L2 vault, scratchpad, and relation tiers.",
+    input: { type: "object", properties: {}, additionalProperties: false },
+    async run() {
+      const res = await kernel("/api/agent-memory/stats", { budget: FAST_BUDGET });
+      if (!res.ok) return { content: `[hypernexus] memory_stats failed: ${res.error}`, metadata: { ok: false } };
+      return { content: JSON.stringify(unwrap(res) ?? res.data, null, 2).slice(0, 1200), metadata: { ok: true } };
+    },
+  },
+  {
+    name: "session_list",
+    description: "List recent sessions across harnesses (who ran what, where) with per-CLI-type counts.",
+    input: {
+      type: "object",
+      properties: { limit: int("Max sessions", 10) },
+      additionalProperties: false,
+    },
+    async run({ limit }) {
+      const n = Math.min(50, Number(limit) || 10);
+      const res = await kernel(`/api/sessions/summary?limit=${n}`, { budget: FAST_BUDGET });
+      if (!res.ok) return { content: `[hypernexus] session_list failed: ${res.error}`, metadata: { ok: false } };
+      return { content: JSON.stringify(unwrap(res) ?? res.data, null, 2).slice(0, 2000), metadata: { ok: true } };
+    },
+  },
+  {
+    name: "repomap",
+    description: "Generate a ranked repository map with symbol summaries for a directory (code navigation starting point).",
+    input: {
+      type: "object",
+      properties: { dir: str("Directory to map (default workspace root).") },
+      additionalProperties: false,
+    },
+    async run({ dir }) {
+      const res = await kernel("/api/agent/tool", {
+        method: "POST",
+        body: { name: "repomap", args: { dir: String(dir ?? "") } },
+        budget: CALL_BUDGET,
+      });
+      if (!res.ok) return { content: `[hypernexus] repomap failed: ${res.error}`, metadata: { ok: false } };
+      return { content: JSON.stringify(unwrap(res) ?? res.data, null, 2).slice(0, 3000), metadata: { ok: true } };
     },
   },
 ];
