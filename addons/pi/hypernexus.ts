@@ -178,7 +178,7 @@ export default function (pi: ExtensionAPI) {
       }),
     });
 
-    ctx.ui.setStatus("tn", "TN active • L2 mem • tools • skills");
+    safeUi(ctx)?.setStatus?.("tn", "TN active • L2 mem • tools • skills");
 
     // Refresh stats widget
     refreshWidget(ctx);
@@ -390,7 +390,7 @@ export default function (pi: ExtensionAPI) {
         }),
       }),
     });
-    ctx.ui.setStatus("tn", `TN • ${event.model.id}`);
+    safeUi(ctx)?.setStatus?.("tn", `TN • ${event.model.id}`);
   });
 
   // ══════════════════════════════════════════════
@@ -1782,7 +1782,15 @@ export default function (pi: ExtensionAPI) {
   // LIVE STATS WIDGET
   // ══════════════════════════════════════════════
 
+  // Safe UI accessor: ctx.ui throws in headless modes (print/JSON/RPC without UI).
+  // All status-bar/widget writes must go through this so the extension can never
+  // crash a non-interactive run. Interactive commands/shortcuts use ctx.ui directly.
+  function safeUi(ctx: any): any | null {
+    try { return ctx?.hasUI ? (ctx.ui ?? null) : null; } catch { return null; }
+  }
+
   async function refreshWidget(ctx: any) {
+    if (!safeUi(ctx)) return;
     try {
       const [mem, cold, mesh] = await Promise.all([
         tnFetchWithTimeout("/api/memory/list?limit=1", 4000).then((r: any) => r.ok ? r.json() : {}).catch(() => ({})),
@@ -1810,17 +1818,21 @@ export default function (pi: ExtensionAPI) {
 //       ctx.ui.setTitle?.("MiMoCode × HyperNexus");
     } catch { /* optional UI hooks */ }
     // Surface kernel reachability in the status bar so users see it immediately.
+    // Headless-safe: skip entirely when there is no UI (print/JSON modes).
+    const __ui = safeUi(ctx);
+    if (__ui) {
     try {
       const health = await tnFetchWithTimeout("/health", 600);
       if (health.ok) {
         const h: any = await health.json().catch(() => ({}));
-        ctx.ui.setStatus("tn", `HyperNexus v${h.version ?? "?"}`);
-        ctx.ui.setWorkingMessage("HyperNexus ready");
+        __ui.setStatus("tn", `HyperNexus v${h.version ?? "?"}`);
+        __ui.setWorkingMessage("HyperNexus ready");
       } else {
-        ctx.ui.setStatus("tn", "HyperNexus degraded");
+        __ui.setStatus("tn", "HyperNexus degraded");
       }
     } catch {
-      ctx.ui.setStatus("tn", "HyperNexus offline");
+      __ui.setStatus("tn", "HyperNexus offline");
+    }
     }
     refreshWidget(ctx);
     if (!widgetInterval) {
@@ -1843,6 +1855,58 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_shutdown", () => {
     if (widgetInterval) { clearInterval(widgetInterval); widgetInterval = null; }
+  });
+
+  // 8. /tn-tools — semantic tool discovery across all MCP servers
+  pi.registerCommand("tn-tools", {
+    description: "Discover tools across all connected MCP servers (semantic search)",
+    handler: async (args, ctx) => {
+      const query = await ctx.ui.input("Tool search query:", args || "");
+      if (!query) return;
+      const body = await tnJson(`/api/mcp/native/search?query=${encodeURIComponent(query)}`);
+      const results = body.results ?? (Array.isArray(body) ? body : []);
+      if (!Array.isArray(results) || results.length === 0) { ctx.ui.notify("No tools found", "warning"); return; }
+      const lines = results.slice(0, 8).map((r: any, i: number) => `${i + 1}. ${r.originalName ?? r.name ?? "?"} (${r.server ?? "?"})`);
+      ctx.ui.notify(`🔧 ${results.length} tools:\n${lines.join("\n")}`, "info");
+    },
+  });
+
+  // 9. /tn-session — session context summary
+  pi.registerCommand("tn-session", {
+    description: "Show current session context (goal, recent turns, active skills)",
+    handler: async (_args, ctx) => {
+      const body = await tnJson("/api/agent/session/context").catch(() => null);
+      const text = body ? JSON.stringify(body).slice(0, 1500) : "Session context unavailable (kernel offline?).";
+      ctx.ui.notify(`🗂️ Session context:\n${text}`, "info");
+    },
+  });
+
+  // 10. /tn-context — manual context harvest from L2
+  pi.registerCommand("tn-context", {
+    description: "Manually harvest relevant L2 context for the current task",
+    handler: async (args, ctx) => {
+      const topic = await ctx.ui.input("Harvest topic:", args || "");
+      if (!topic) return;
+      const body = await tnJson(`/api/memory/search?q=${encodeURIComponent(topic)}&limit=8`);
+      const memories = body.data ?? (Array.isArray(body) ? body : []);
+      if (!Array.isArray(memories) || memories.length === 0) { ctx.ui.notify("No relevant context found", "warning"); return; }
+      const lines = memories.map((m: any, i: number) => `${i + 1}. ${(m.content ?? m.text ?? JSON.stringify(m)).slice(0, 140)}`);
+      ctx.ui.notify(`🌾 Harvested ${memories.length} items:\n${lines.join("\n")}`, "info");
+    },
+  });
+
+  // 11. /tn-remember — quick single-shot memory store (no form)
+  pi.registerCommand("tn-remember", {
+    description: "Quick-store one fact to L2 memory (args become the content)",
+    handler: async (args, ctx) => {
+      const content = args?.trim() || await ctx.ui.input("Remember:", "");
+      if (!content) return;
+      const ok = await tnOk("/api/memory/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: JSON.stringify({ content, tags: ["quick"], category: "general", timestamp: now() }) }),
+      });
+      ctx.ui.notify(ok ? "✅ Remembered" : "Failed to store", ok ? "info" : "error");
+    },
   });
 
   // ══════════════════════════════════════════════
