@@ -27,4 +27,4 @@ ws.onmessage = (ev) => {
   const d = JSON.parse(ev.data);
   if (d.id === 1) { console.log("send result:", d.result?.result?.value ?? d.result?.exceptionDetails?.text); ws.close(); process.exit(0); }
 };
-setTimeout(() => { console.error("timeout"); process.exit(1); }, 15000);
+setTimeout(() => { console.error("timeout"); process.exit(1); }, 60000);
