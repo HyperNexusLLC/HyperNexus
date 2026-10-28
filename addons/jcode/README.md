@@ -10,7 +10,9 @@ extension touches is also available over plain HTTP on the kernel (port 7778).
 | Surface | Where | Purpose |
 |---|---|---|
 | **MCP server `hypernexus`** | `.jcode/mcp.json` (project) or `~/.jcode/mcp.json` (global) | 58 tools: L2 memory (add/search/delete/stats), L1 scratchpad, knowledge-graph relation extraction, MCP discovery + call routing, code search, kernel health/billing |
-| **3 skills** | `.jcode/skills/` | `hypernexus` (tool map + discipline), `hypernexus-ops` (verify loop + degradation), `hypernexus-workflows` (MEM-FIRST / DISCOVER / HARVEST / HANDOFF / OPS) |
+| **4 skills** | `.jcode/skills/` | `hypernexus` (tool map + discipline), `hypernexus-ops` (verify loop + degradation), `hypernexus-workflows` (MEM-FIRST / DISCOVER / HARVEST / HANDOFF / OPS), `hypernexus-sessions` (continuity + agent dispatch) |
+| **8 slash-commands** | `.jcode/skills/hn-*/` (from `addons/jcode/commands/`) | `/hn-status` `/hn-store` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-summary` `/hn-purge` (jcode exposes every skill as a `/command`) |
+| **Lifecycle hooks** | `.jcode/hooks/` + `[hooks]` block in `~/.jcode/config.toml` | `hn-observe.mjs` (session/turn/tool observers → kernel facts + observations), `hn-pre-tool.mjs` (fail-open allow-gate) |
 | **Prompt overlay** | `.jcode/prompt-overlay.md` | RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY discipline + memory tiers |
 | **Preferred tools** | `.jcode/preferred-tools.md` | Routes memory/discovery/ops intents to `mcp__hypernexus__*` without displacing Jcode-native tools |
 | **Swarm prompt block** | `~/.jcode/swarm-prompt.md` (global install) | Workers persist findings to L2 (append-only, safe to retry) |
@@ -87,6 +89,42 @@ curl -X POST http://127.0.0.1:7778/api/agent/tool -H 'Content-Type: application/
 ```
 
 `bin/test-core-noext.mjs` asserts this surface stays green with no extension installed.
+
+## Lifecycle hooks
+
+`node addons/jcode/install.mjs` copies `hooks/hn-observe.mjs` and
+`hooks/hn-pre-tool.mjs` into `.jcode/hooks/` (or `~/.jcode/hooks/` with
+`--global`) and prints the exact `[hooks]` block to merge into
+`~/.jcode/config.toml`. The installer never edits `config.toml` itself.
+
+- `hn-observe.mjs` — observer for `session_start` / `session_end` / `turn_end` /
+  `post_tool`. Session boundaries log to `POST /api/memory/facts/add` (tags
+  arrays like `["jcode","session","session-start"]`) **and**
+  `POST /api/memory/observations/record`; turn ends log compact facts;
+  `post_tool` logs failures only. Always exits 0 with `{"continue":true}`.
+- `hn-pre-tool.mjs` — `pre_tool` gate. Allows everything (exit 0 +
+  `{"continue":true}`), performs no network I/O to stay within the hot-path
+  budget. Add targeted `exit 2` denials here if you need a policy boundary.
+
+Validate without secrets:
+
+```powershell
+$env:JCODE_HOOK_EVENT = 'session_start'; $env:JCODE_HOOK_SESSION_ID = 'smoke'
+node addons/jcode/hooks/hn-observe.mjs   # exit 0 + {"continue":true}
+'{"command":"t"}' | node addons/jcode/hooks/hn-pre-tool.mjs  # needs stdin JSON
+```
+
+## Meta model (muse-spark-1.3-contributor)
+
+`meta-model.jcode.toml` is a drop-in `[providers.meta]` snippet (env-var
+reference `api_key_env = "META_MUSE_API_KEY"` — no token inside).
+`use-meta-model.ps1` only presence-checks that variable name, then launches
+jcode with the profile. You set the value in your own shell; nothing stores it:
+
+```powershell
+$env:META_MUSE_API_KEY = '<paste-your-token-here>'  # one live shell only
+.\addons\jcode\use-meta-model.ps1 "hello"
+```
 
 ## Degradation contract
 

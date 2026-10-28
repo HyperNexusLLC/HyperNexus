@@ -42,6 +42,9 @@ export const TOOL = Object.freeze({
   WORKFLOW: "hypernexus_workflow",
   ORCHESTRATE: "hypernexus_orchestrate",
   BROWSER: "hypernexus_browser",
+  MEMORY_STATS: "hypernexus_memory_stats",
+  SESSION_LIST: "hypernexus_session_list",
+  REPOMAP: "hypernexus_repomap",
 });
 
 export const COMMAND = Object.freeze({
@@ -74,6 +77,9 @@ export const CAPABILITY = Object.freeze({
   code_search: TOOL.CODE_SEARCH,
   subagent: TOOL.SUBAGENT,
   system_status: TOOL.SYSTEM_OVERVIEW,
+  memory_stats: TOOL.MEMORY_STATS,
+  session_list: TOOL.SESSION_LIST,
+  repomap: TOOL.REPOMAP,
 });
 
 /** Kernel bindings used by the adapter (single source of truth for tests). */
@@ -116,6 +122,8 @@ export const KERNEL = Object.freeze({
   billingFallback: "/api/billing/fallback-chain",
   billingDepleted: "/api/billing/depleted-models",
   memoryAddGeneric: "/api/memory/add",
+  agentMemoryStats: "/api/agent-memory/stats",
+  sessionsSummary: "/api/sessions/summary",
   agentMemoryDelete: "/api/agent-memory/delete",
 });
 
