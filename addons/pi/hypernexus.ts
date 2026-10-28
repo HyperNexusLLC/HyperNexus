@@ -166,13 +166,9 @@ export default function (pi: ExtensionAPI) {
       pi.setSessionName(`TN • ${shortId}`);
     } catch { /* skip */ }
 
-    // Self-diagnose: warn (headless-safe) if the mcp.json "hypernexus" entry is missing.
-    try {
-      const servers = (pi as any).getMcpServers?.() ?? {};
-      if (!servers.hypernexus && !servers["hypernexus-kernel"]) {
-        safeUi(ctx)?.notify?.("HyperNexus MCP server missing from mcp.json — MCP tools unavailable", "warning");
-      }
-    } catch { /* diagnostics never break startup */ }
+    // NOTE: no MCP presence check here — pi.getMcpServers() does not include
+    // mcp.json servers yet at session_start, so any check would false-positive.
+    // MCP health is proven by use (mcp__hypernexus tools resolve once connected).
 
     // Store session start
     tnOk("/api/memory/add", {
