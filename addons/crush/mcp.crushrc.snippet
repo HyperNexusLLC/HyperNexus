@@ -1,0 +1,46 @@
+# HyperNexus — MCP server wiring for Crush (REFERENCE SNIPPET).
+# ================================================================
+# Registers the HyperNexus Go-kernel stdio MCP server (58 tools) as `hypernexus`.
+# This exact fragment is what `node addons/crush/install.mjs --global` manages.
+#
+# WINDOWS GOTCHA (this is what breaks naive configs): backslash command paths
+# such as "C:\Users\...\hypernexus.exe" are mangled by Crush's shell expansion
+# (invalid \U / \w escapes), so the MCP handshake dies with
+# "connection closed: ... invalid character 'C' ...". ALWAYS use forward slashes
+# in the --command path. The running kernel on 127.0.0.1:7778 is the transport;
+# stdio is only the local handshake.
+
+# --- HyperNexus MCP: full control-plane tool access (58 tools) ---
+# NOTE: forward slashes are REQUIRED — backslash paths break the MCP handshake.
+mcp add hypernexus \
+  --command "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe" \
+  --args mcp \
+  --env HYPERNEXUS_WORKSPACE_ROOT "C:/Users/hyper/workspace/HyperNexus" \
+  --env HYPERNEXUS_URL "http://127.0.0.1:7778" \
+  --timeout 30
+  --command "$HOME/.config/crush/hooks/hn-pre-tool.cmd" \
+  --command "$HOME/.config/crush/hooks/hn-session.cmd" \
+
+# --- Skills on the path (default skill dirs load automatically, explicit is safer) ---
+option skill-path "$HOME/.config/crush/skills"
+
+# --- Hooks: full lifecycle (PreToolUse gates + SessionStart bootstrap) ---
+hook add PreToolUse \
+  --name "hypernexus-gate" \
+  --command "$HOME/.config/crush/hooks/hn-pre-tool.cmd" \
+  --matcher ".*" \
+  --timeout 15
+
+hook add PreToolUse \
+  --name "hypernexus-rbac" \
+  --command "$HOME/.config/crush/hooks/hn-rbac.cmd" \
+  --matcher "^(bash|run_shell_command)$" \
+  --timeout 15
+
+hook add SessionStart \
+  --name "hypernexus-boot" \
+  --command "$HOME/.config/crush/hooks/hn-session.cmd" \
+  --timeout 15
+
+# --- Permissions: read + edit auto-approved, everything else prompts ---
+permissions allow view ls grep edit bash read write
