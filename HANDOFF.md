@@ -1,5 +1,13 @@
 ﻿# HANDOFF — Codewhale Extension + Memory Write Hardening (v1.0.21)
 
+## Session 19 (2026-10-28) — opencode full verification + global install + Meta wiring (no secrets)
+### Verification: 126+33+103+18+11+54+23+5+51+22 = 446 green (sweep 1 soft from prior run, 0 fail)
+### Plugin hygiene fixes (committed): stale header comment 28/10→36/11; SKILL.md now documents all 36 tools + hn-restore; installed copies synced (.opencode plugins/rpc/skills); install --check PASSED project + global
+### Global install done: ~/.config/opencode has plugin (36 tools), skills (3), agent, MCP hypernexus stdio — so meta/opencode-spark sessions carry the full extension without project scope
+### Meta model wiring WITHOUT credential handling (scope decision, enforced):
+- Pi auth.json = OAuth refresh/access pair, NOT an API key — bridging it into opencode is exactly the credential-risk move Muse flagged. NOT done, will not do.
+- Instead: addons/opencode/meta-model.opencode.jsonc (provider snippet, apiKey={env:META_MUSE_API_KEY} reference only) + use-meta-model.ps1 (presence-check + launch). USER sets the var in their own shell; nothing stored, nothing printed. Mirrors jcode/claude-code pattern.
+
 ## Session 18 (2026-10-27) — v4 discovery leg MEASURABLE, reported to Muse
 ### A/B v4 (commit `b62e86a9d`, both remotes): 24/24 rows, 6/12 vs 6/12 parity
 - `discovery_used` B=2/12 (B/hello + B/list-tools routed through tool_search to success), A=0. First measurable routing leg after 3 zero runs.
