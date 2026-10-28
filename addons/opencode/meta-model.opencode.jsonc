@@ -1,0 +1,34 @@
+// HyperNexus — Meta model wiring for OpenCode (DROP-IN SNIPPET, no secrets inside).
+// =============================================================================
+// Model: muse-spark-1.3-contributor via Meta's OpenAI-compatible endpoint.
+// Auth is an ENV-VAR REFERENCE ONLY ("{env:META_MUSE_API_KEY}") — this file
+// never contains a token. Set the variable in your own shell before launching.
+//
+// USER-RUN ACTIVATION (PowerShell — you type this, nothing is stored):
+//   $env:META_MUSE_API_KEY = '<paste-your-token-here>'   # one live shell only
+//   opencode run --model meta/muse-spark-1.3-contributor "hello"
+//   # ...or add the "provider" block below to opencode.json(c) and pick the
+//   # model in the TUI with /models, or run: .\use-meta-model.ps1
+//
+// Merge the "provider" object into your opencode.json / opencode.jsonc
+// (project .opencode/opencode.json or ~/.config/opencode/opencode.json).
+// To make it the default, also merge the top-level "model" key.
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "meta": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Meta (muse-spark)",
+      "options": {
+        "baseURL": "https://api.meta.ai/v1",
+        "apiKey": "{env:META_MUSE_API_KEY}"
+      },
+      "models": {
+        "muse-spark-1.3-contributor": {
+          "name": "Muse Spark 1.3 Contributor"
+        }
+      }
+    }
+  },
+  "model": "meta/muse-spark-1.3-contributor"
+}
