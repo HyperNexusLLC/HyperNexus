@@ -166,6 +166,14 @@ export default function (pi: ExtensionAPI) {
       pi.setSessionName(`TN • ${shortId}`);
     } catch { /* skip */ }
 
+    // Self-diagnose: warn (headless-safe) if the mcp.json "hypernexus" entry is missing.
+    try {
+      const servers = (pi as any).getMcpServers?.() ?? {};
+      if (!servers.hypernexus && !servers["hypernexus-kernel"]) {
+        safeUi(ctx)?.notify?.("HyperNexus MCP server missing from mcp.json — MCP tools unavailable", "warning");
+      }
+    } catch { /* diagnostics never break startup */ }
+
     // Store session start
     tnOk("/api/memory/add", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -184,31 +192,16 @@ export default function (pi: ExtensionAPI) {
     refreshWidget(ctx);
   });
 
-  // Register HyperNexus kernel as an MCP server so Pi can discover its tools natively.
-  // Use the stdio transport (the kernel serves MCP via `hypernexus.exe mcp`, NOT over
-  // HTTP) — the previous http://127.0.0.1:7778/mcp URL returned 404 because no such
-  // HTTP endpoint exists. exposure "deferred" keeps tools reachable via tool_search +
-  // codemode without declaring all 58 up front (progressive routing).
-  try {
-    pi.registerMcpServer("hypernexus-kernel", {
-      command: "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe",
-      args: ["mcp"],
-      env: { HYPERNEXUS_WORKSPACE_ROOT: "C:/Users/hyper/workspace" },
-      exposure: "deferred",
-    } as any);
-  } catch { /* already registered or MCP extension not active */ }
+  // MCP single source of truth is ~/.pi/agent/mcp.json ("hypernexus", stdio,
+  // exposure direct). The extension does NOT register a second server: a
+  // duplicate deferred registration triggers pi's "MCP tools are only reachable
+  // from codemode/tool_search" warning and shadows nothing. Instead we
+  // self-diagnose on session start and warn if the mcp.json entry is missing.
 
-  // Advertise HyperNexus skill paths so Pi discovers them on session start
-  pi.on("resources_discover", async (_event, _ctx) => {
-    return {
-      skillPaths: [
-        ".codex/plugins/hypernexus/skills",
-        ".codewhale/plugins/hypernexus/skills",
-        "engine-config/skills",
-      ],
-      promptPaths: [".codex/prompts"],
-    };
-  });
+  // NOTE: skill discovery needs no help — ~/.pi/agent/skills auto-loads and wins.
+  // We deliberately do NOT advertise other harnesses' skill dirs here: identical
+  // skill names produce collision warnings, and missing dirs produce
+  // "skill path does not exist" warnings. Single canonical source = no noise.
 
   // Auto-trust the HyperNexus workspace for project-scoped operations
   pi.on("project_trust", async (event, _ctx) => {
