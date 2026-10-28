@@ -1,5 +1,12 @@
 ﻿# HANDOFF — Codewhale Extension + Memory Write Hardening (v1.0.21)
 
+## Session 18 (2026-10-27) — v4 discovery leg MEASURABLE, reported to Muse
+### A/B v4 (commit `b62e86a9d`, both remotes): 24/24 rows, 6/12 vs 6/12 parity
+- `discovery_used` B=2/12 (B/hello + B/list-tools routed through tool_search to success), A=0. First measurable routing leg after 3 zero runs.
+- 10/12 Mode B still report unavailability without searching → v5 lever: stronger instruction placement/bias. Mode A misses remain needle-in-haystack. 1 harness timeout in-row.
+- diagnosis-v4.md written; summary template now labels Ollama engine honestly.
+### Muse coordination: v4 report delivered 1x verified (no dup), draft clear; her reply pending. Thread otherwise in Pi workspace lane.
+
 ## Session 17 (2026-10-27) — fullest-extent audit: API coverage + skill docs + 446 green
 ### API coverage verdict (15 ctx.* integration points, all live)
 - tools/commands/skills/session-hooks(prompt/context/compaction/model.request/retry)/tool-hooks(before/after+RBAC+autostore)/permission/shell/mcp-transform/worktree/skill-transform/storage/generate/session-context/model.read/event-stream/V1-shim — every verified OpenCode primitive in use. Foreign-tool hint enrichment (mimo-style) investigated: editor API for mutating non-HN tools unverified locally — NOT implemented blindly.
