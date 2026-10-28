@@ -142,6 +142,25 @@
       ],
       "notes": "58 tools via hypernexus mcp stdio server (FORWARD-SLASH exe path required; backslashes break the MCP handshake). 8 hn commands + 3 user-invocable skills. PreToolUse allow-gate (destructive-pattern deny) + SessionStart FTS bootstrap (fail-open, no python required). Meta meta/muse-spark-1.3-contributor via pi-OAuth live-read (pi owns refresh). Core works without the MCP server over HTTP http://127.0.0.1:7778."
     },
+    "freebuff": {
+      "status": "active",
+      "api": "Freebuff/Codebuff platform (.agents/mcp.json stdio + .agents/skills SKILL.md + AGENTS.md overlay; no provider/hook API)",
+      "adapter": "addons/freebuff/",
+      "install": "<project>/.agents/ or ~/.agents/ (global) — mcp.json merge, 14 skills, HYPERNEXUS.md, AGENTS.md managed block",
+      "installer": "addons/freebuff/install.mjs",
+      "surfaces": [
+        "mcp",
+        "skills",
+        "command-skills",
+        "agent",
+        "hooks",
+        "prompt-overlay",
+        "preferred-tools",
+        "swarm-prompt",
+        "meta-model"
+      ],
+      "notes": "58 tools via hypernexus mcp stdio server registered in .agents/mcp.json (standard mcpServers format; freebuff reads projectDir/parents, trust via prompt or --trust-agents). 3 core skills + 2 agents (orchestrator + researcher) + 11 hn command-skills (all /skill:<name>). 3 hooks (hn-session/hn-rbac/hn-pre-tool) shipped in addons/freebuff/hooks and installed to .agents/hooks by-convention (freebuff has no hook API). AGENTS.md managed discipline block (freebuff reads AGENTS.md at chat start, falls back to CLAUDE.md). Meta muse-spark-1.3-contributor: /model picker ships it natively (paid-plan locked without a plan); subscription/OAuth path mints a Model API key live from pi auth.json via bin/meta-muse-key.mjs (pi owns refresh, nothing stored) + use-meta-model.ps1 launcher + BYOK openai-compatible connection (~/.config/freebuff/byok/connections.json, credentialRef env:META_MUSE_API_KEY, default-selected in manicode settings.json). Core works without the MCP server over HTTP http://127.0.0.1:7778."
+    },
     "reasonix": {
       "status": "active",
       "api": "Reasonix Extension Protocol v2 (NDJSON JSON-RPC 2.0 stdio sidecar)",
@@ -159,6 +178,112 @@
         "prompt-overlay"
       ],
       "notes": "36 ext__hypernexus__* runtime tools + 10 intercepts + 3 skills + 11 /hypernexus: commands + 1 orchestrator agent; native SessionStart/PostToolUse/PreToolUse hooks + SessionStart/PreCompact context files; MCP via contributes.mcpServers + config.toml [[plugins]] + .mcp.json. Meta muse-spark-1.3-contributor via META_MUSE_API_KEY env ref (pi owns OAuth refresh; scripts/sync-meta-oauth-reasonix.ps1). Core works without the extension over HTTP."
+    },
+    "muse-code": {
+      "status": "active",
+      "api": "muse settings.json (provider/model)",
+      "adapter": "addons/muse-code/",
+      "install": "~/.config/muse/settings.json",
+      "installer": "addons/muse-code/install.mjs",
+      "surfaces": [
+        "model",
+        "skills"
+      ],
+      "notes": "Meta muse-spark-1.3-contributor via pi-OAuth live-read."
+    },
+    "codex-cli": {
+      "status": "active",
+      "api": "codex config.toml",
+      "adapter": "addons/codex-cli/",
+      "install": "~/.codex/config.toml",
+      "installer": "addons/codex-cli/install.mjs",
+      "surfaces": [
+        "model",
+        "mcp"
+      ],
+      "notes": "Key via MODEL_API_KEY env."
+    },
+    "mini-swe-agent": {
+      "status": "active",
+      "api": "dotenv .env + litellm",
+      "adapter": "addons/mini-swe-agent/",
+      "install": "mini-swe-agent .env",
+      "installer": "addons/mini-swe-agent/install.mjs",
+      "surfaces": [
+        "model"
+      ],
+      "notes": "Proof MINISWEA-META-OK via scripts/mini-swe-agent-meta-test.py."
+    },
+    "maki": {
+      "status": "active",
+      "api": "maki live store + kernel route",
+      "adapter": "addons/maki/",
+      "install": "live store (providers.toml managed by maki)",
+      "installer": "addons/maki/install.mjs",
+      "surfaces": [
+        "model",
+        "mcp"
+      ],
+      "notes": "Proofs MAKI-META-OK + MAKI2."
+    },
+    "harness2": {
+      "status": "active",
+      "api": "HARNESS2_* env",
+      "adapter": "addons/harness2/",
+      "install": "persistent user env",
+      "installer": "addons/harness2/install.mjs",
+      "surfaces": [
+        "model"
+      ],
+      "notes": "~/workspace/harness2; jb/oc Ready."
+    },
+    "atom": {
+      "status": "active",
+      "api": "atomcode config.toml",
+      "adapter": "addons/atom/",
+      "install": "~/.atomcode/config.toml + mcp.json + skills/",
+      "installer": "addons/atom/install.mjs",
+      "surfaces": [
+        "model",
+        "mcp",
+        "skills"
+      ],
+      "notes": "Proof ATOM-META-OK."
+    },
+    "agy": {
+      "status": "active",
+      "api": "agy mcp add",
+      "adapter": "addons/agy/",
+      "install": "agy MCP store",
+      "installer": "addons/agy/install.mjs",
+      "surfaces": [
+        "mcp"
+      ],
+      "notes": "Models need interactive sign-in."
+    },
+    "copilot-cli": {
+      "status": "active",
+      "api": "mcp-config.json + skills/",
+      "adapter": "addons/copilot-cli/",
+      "install": "~/.copilot/mcp-config.json + skills",
+      "installer": "addons/copilot-cli/install.mjs",
+      "surfaces": [
+        "mcp",
+        "skills"
+      ],
+      "notes": "Login interactive; models GitHub-side."
+    },
+    "open-interpreter": {
+      "status": "active",
+      "api": "config.toml + mcp add",
+      "adapter": "addons/open-interpreter/",
+      "install": "~/.openinterpreter/config.toml",
+      "installer": "addons/open-interpreter/install.mjs",
+      "surfaces": [
+        "model",
+        "mcp"
+      ],
+      "notes": "Mirrors codex schema."
     }
   },
   "contract": {

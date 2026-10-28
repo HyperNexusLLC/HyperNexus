@@ -122,6 +122,35 @@ if exist "%~dp0..\..\addons\mimo\install.js" (
 echo.
 
 :: Add to PATH
+echo  [5.6/6] Installing harness addons (19 harnesses: meta wiring + HN MCP/skills)...
+where node >nul 2>&1
+if %errorlevel% equ 0 (
+    for %%A in (pi opencode muse-code codex-cli claude-code mini-swe-agent jcode maki freebuff harness2 crush droid hax atom codewhale agy reasonix copilot-cli open-interpreter) do (
+        if exist "%~dp0..\..\addons\%%A\install.mjs" (
+            node "%~dp0..\..\addons\%%A\install.mjs" --global >nul 2>&1
+            if !errorlevel! equ 0 ( echo        OK - %%A ) else ( echo        WARN - %%A ^(may need interactive login^) )
+        ) else (
+            if exist "%~dp0..\..\addons\%%A\install.py" (
+                python "%~dp0..\..\addons\%%A\install.py" >nul 2>&1
+                if !errorlevel! equ 0 ( echo        OK - %%A ) else ( echo        WARN - %%A )
+            ) else ( echo        SKIP - %%A ^(no installer yet^) )
+        )
+    )
+) else (
+    echo        SKIP - node not found (harness addons need node)
+)
+echo.
+
+:: Sync Meta OAuth model wiring from pi (pi owns refresh)
+echo  [5.7/6] Syncing Meta model wiring from pi auth...
+if exist "%~dp0..\..\scripts\sync-meta-harness.ps1" (
+    powershell -ExecutionPolicy Bypass -File "%~dp0..\..\scripts\sync-meta-harness.ps1" >nul 2>&1
+    if !errorlevel! equ 0 ( echo        OK - meta wiring synced ) else ( echo        WARN - meta sync had errors ^(run scripts\sync-meta-harness.ps1 manually^) )
+) else (
+    echo        SKIP - scripts\sync-meta-harness.ps1 not found
+)
+echo.
+
 echo  [5/6] Adding to system PATH...
 setx PATH "%PATH%;%INSTALL_DIR%" /M >nul 2>&1
 echo        OK - Added to PATH

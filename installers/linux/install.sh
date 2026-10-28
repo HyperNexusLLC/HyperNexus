@@ -125,6 +125,32 @@ else
 fi
 echo ""
 
+# Install all harness addons (meta model wiring + HyperNexus MCP/skills per harness; pi owns OAuth)
+echo "  [5.6/6] Installing harness addons (19 harnesses)..."
+if command -v node >/dev/null 2>&1; then
+	for ADDON in pi opencode muse-code codex-cli claude-code mini-swe-agent jcode maki prime-agent freebuff harness2 crush factory-droid hax atom codewhale agy reasonix copilot-cli open-interpreter; do
+		case "$ADDON" in factory-droid) ADDON_DIR="droid";; *) ADDON_DIR="$ADDON";; esac
+		if [ -f "$SCRIPT_DIR/../../addons/$ADDON_DIR/install.mjs" ]; then
+			if node "$SCRIPT_DIR/../../addons/$ADDON_DIR/install.mjs" --global >/dev/null 2>&1; then
+				echo -e "        ${GREEN}OK${NC} - $ADDON"
+			else
+				echo -e "        ${YELLOW}WARN${NC} - $ADDON (see output above; often needs interactive login)"
+			fi
+		elif [ -f "$SCRIPT_DIR/../../addons/$ADDON_DIR/install.py" ]; then
+			if python3 "$SCRIPT_DIR/../../addons/$ADDON_DIR/install.py" >/dev/null 2>&1; then
+				echo -e "        ${GREEN}OK${NC} - $ADDON"
+			else
+				echo -e "        ${YELLOW}WARN${NC} - $ADDON"
+			fi
+		else
+			echo -e "        ${YELLOW}SKIP${NC} - $ADDON (no installer yet)"
+		fi
+	done
+else
+	echo -e "        ${YELLOW}SKIP${NC} - node not found (harness addons need node)"
+fi
+echo ""
+
 # Create systemd service
 echo "  [6/6] Creating systemd service..."
 SERVICE_FILE="$HOME/.config/systemd/user/hypernexus.service"
