@@ -210,12 +210,18 @@ deploy-artifacts/
 # === Vendor ===
 vendor/
 
+# === Generated Droid marketplace copy (rebuilt by addons/droid/install.mjs) ===
+addons/droid/marketplace/
+
 # === Build artifacts ===
 bin/hypernexus-linux-amd64*
 bin/hypernexus.exe
 
 # === Vendor ===
 vendor/
+
+# === Generated Droid marketplace copy (rebuilt by addons/droid/install.mjs) ===
+addons/droid/marketplace/
 bin/*.bak*
 bin/*.exe.bak*
 .hypernexus/memory/

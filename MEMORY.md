@@ -1,6 +1,19 @@
-﻿# MEMORY.md â€” Multi-Agent Insights
+# MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
+@'
+### Droid (Factory HARNESS) Meta OAuth + Full Plugin (2026-10-28)
+
+**Native Meta OAuth in Droid:** pi auth.json meta credential is an OAuth pair (refresh = identity token, access = ~24h minted key); pi re-mints via POST https://api.meta.ai/muse-code/key (identity NOT renewable - 401/403 from mint means /login meta again). Droid BYOK only knows static apiKey or apiKeyHelper, so addons/droid/bin/meta-muse-key.mjs replays pi's mint (refresh to key, stdout only) and ~/.factory/settings.json uses apiKeyHelper - auto-refresh on TTL + after 401. Never put the minted key in settings (dies in ~24h). Model id custom:Meta-Muse-Spark-1.3-Contributor-0, provider generic-chat-completion-api, base https://api.meta.ai/v1, context 1M.
+
+**Droid plugin surface (max possible):** plugin bundle (plugin.json + mcp.json stdio hypernexus mcp + 8 hooks.json events) + 3 skills + 11 /hn-* commands + 2 droids (mcpServers scoping) + 1 output style; marketplace/ is GENERATED (gitignored, rebuilt by install.mjs). Installed user-scope as hypernexus@marketplace; droid mcp list shows 58 tools connected.
+
+**Windows hook runtime:** this box has NO bash (WSL has no distros) - hooks are dependency-free Node scripts (node hook .mjs, shared hn-hook-lib.mjs); node --check is the syntax gate, not bash -n.
+
+**Stale-endpoint trap (recurring):** shared-manifest docs still cite /api/memory/stats, /api/routes, /api/memory/update, /api/memory/delete, /api/code/repomap - none published; real memory-stats route is /api/agent-memory/stats. Always verify against the live kernel before baking a route into a new harness adapter.
+
+**Droid CLI quirks:** droid exec without --auto refuses MCP-write turns (needs --auto high here); plugin marketplace add prints a spurious ENOENT log error yet registers fine (marketplace list is ground truth); droid --version/--help hang under load - use plugin list / mcp list instead.
+
 
 ### Jcode Harness Integration + MCP Stdio Resilience (2026-10-20)
 
@@ -176,6 +189,14 @@ Memories should be stored both:
   - A tool can therefore work over stdio MCP yet 503 over the router. `go/internal/tools/kernel_bridge.go` is the fix pattern: thin self-proxies onto the kernel's own HTTP API. Added mcp_status/mcp_list_servers/mcp_list_tools/mcp_call_tool/mcp_server_test/inspect_window_ui (v1.0.14).
 - **Test hygiene**: assert on the router envelope (`r.success !== false && !r.error`), never regex payload content — stored memories legitimately contain strings like "Error: fetch failed" and flip `/error.*failed/i` checks (bit test-mcp-tools.mjs search_memory once).
 - **Windows binary swap**: `Move-Item -Force` does NOT overwrite an existing exe; use `cmd.exe /c copy /Y`. A running `hypernexus.exe` locks the file — kill processes first (there may be a stale multi-day-old pid; check `Get-NetTCPConnection -LocalPort 7778` for the real owner). The kernel has a single-instance guard that refuses to double-bind 7778 and says so on stderr.
+
+## 2026-10-28 — hax harness integration session (v1.0.21+unreleased)
+
+- **hax has no MCP/extension/plugin/hook runtime — by design** (verified by binary string audit of hax v0.6.1: providers/presets/skills/AGENTS/subagents/subprocesses only; `MCP`/`plugin`/`hook` match memcpy noise only). hax docs/philosophy.md confirms: composition via `hax -p` + skills + AGENTS.md. So the hax integration binds providers/skills/AGENTS.md/CLI — the maximum the SDK surface allows.
+- **Meta OAuth for hax = api_key_env bridge, no key storage**: hax `/login` manages codex only; pi's meta OAuth (device flow -> `https://api.meta.ai/muse-code/key`, access `LLM|...` 48 chars, `openai-responses` dialect at `https://api.meta.ai/v1`) is bridged by `addons/hax/scripts/meta-env.sh` (validates, exports `HAX_META_API_KEY`) + custom provider `meta` with `api_key_env`. Key never touches config.json. Verified live: preset/flags/effort round-trips + model driving hn.mjs via overlay.
+- **Stale-endpoint audit (kernel ground truth, live-probed)**: `/api/memory/stats`, `/api/routes`, `/api/memory/update`, `/api/memory/delete`, `/api/code/repomap` are NOT published by this kernel build (404) — pi extension references several of them too. hax driver uses true paths: `/api/agent-memory/stats`, MCP inventory fallback, `repomap` via `/api/agent/tool`, delete+re-store update, `delete_memory` via dispatcher.
+- **Memory write/read asymmetry (root-caused)**: `/api/memory/add` appends to the in-memory gossip mirror (visible via `list`, invisible to `search`/`fts`); `/api/memory/facts/add` writes agent-memory store + vector dual-write (searchable immediately, verified <2s). Driver store/observe/update use facts/add.
+- **Battery pattern**: `bin/test-hax-ext.mjs` (70 checks) mirrors the codewhale-battery shape (H-sections, readiness gate, doc-accuracy scan) adapted to hax substrates: provider/preset checks via config.json reads, 5 live `hax -p` runs, browser-503 degraded-shape assertion (service down is infra state, not test failure).
 
 ## 2026-10-21 — v1.0.21 Codewhale Extension Session Observations
 

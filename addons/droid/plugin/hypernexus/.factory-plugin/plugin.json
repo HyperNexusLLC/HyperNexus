@@ -1,0 +1,12 @@
+{
+  "name": "hypernexus",
+  "description": "HyperNexus AI control plane: persistent multi-tier memory (L1 scratchpad, L2 vector, L3 cold archive), semantic MCP tool discovery, knowledge graph, session management, skills registry, code search, repomap, billing, audit, orchestration.",
+  "version": "1.2.0",
+  "author": {
+    "name": "HyperNexus"
+  },
+  "homepage": "https://hypernexus.site",
+  "repository": "https://github.com/robertpelloni/HyperNexus",
+  "license": "MIT",
+  "keywords": ["hypernexus", "memory", "mcp", "control-plane", "orchestration"]
+}

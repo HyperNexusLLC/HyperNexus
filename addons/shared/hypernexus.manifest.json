@@ -86,6 +86,23 @@
       ],
       "notes": "58 tools via `hypernexus mcp` stdio server registered in .jcode/mcp.json (toolNamespace mcp__hypernexus). 3 skills + discipline overlay + tool routing + swarm persistence block. Core works without the extension over HTTP. Stdio server serves last-good inventory on slow kernel (15s TTL cache + retry) and dispatches requests concurrently."
     },
+    "droid": {
+      "status": "active",
+      "api": "Factory Droid plugin (.factory-plugin/plugin.json) + MCP stdio + hooks + skills/commands/droids/output-styles",
+      "adapter": "addons/droid/plugin/hypernexus/",
+      "install": "addons/droid/marketplace/ via `node addons/droid/install.mjs` then `droid plugin marketplace add <dir>` + `droid plugin install hypernexus@marketplace --scope user`",
+      "installer": "addons/droid/install.mjs",
+      "surfaces": [
+        "mcp",
+        "plugin-bundle",
+        "commands",
+        "skills",
+        "hooks",
+        "droids",
+        "output-style"
+      ],
+      "notes": "58 tools via `hypernexus mcp` stdio server registered in plugin mcp.json (~/.factory/mcp.json). 3 skills + 11 /hn-* commands + 2 droids + 1 output style. 8 lifecycle hooks (SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop/SessionEnd/PreCompact/SubagentStop) as Node scripts (no bash dependency on Windows); hot-path FTS recall; @memory:key expansion; RBAC via HYPERNEXUS_RBAC (audit/ask/deny). Meta muse-spark-1.3-contributor runs natively via apiKeyHelper (addons/droid/bin/meta-muse-key.mjs mints Model API key from pi auth.json identity)."
+    },
     "_template": {
       "status": "template",
       "api": "<harness plugin/extension API>",
@@ -107,6 +124,41 @@
         "prompt-overlay"
       ],
       "notes": "58 tools via hypernexus mcp stdio server registered in .codewhale/mcp.json (toolNamespace mcp__hypernexus). Agent Plugins v1.0.0 bundle adds 8 /hn-* commands + 3 skills (activate via /plugin validate/show/trust/enable). Skills mirrored to skills/ for direct discovery. Version stamped from /VERSION at install. Core works without the extension over HTTP."
+    },
+    "crush": {
+      "status": "active",
+      "api": "Crush crushrc (Bash config) + MCP stdio + skills + PreToolUse/SessionStart hooks",
+      "adapter": "addons/crush/",
+      "install": "~/.config/crush/ (global) or <project>/.crush/ — crushrc managed block, skills/, commands/, hooks/, prompt-overlay.md, preferred-tools.md",
+      "installer": "addons/crush/install.mjs",
+      "surfaces": [
+        "mcp",
+        "commands",
+        "skills",
+        "hooks",
+        "prompt-overlay",
+        "preferred-tools",
+        "swarm-prompt"
+      ],
+      "notes": "58 tools via hypernexus mcp stdio server (FORWARD-SLASH exe path required; backslashes break the MCP handshake). 8 hn commands + 3 user-invocable skills. PreToolUse allow-gate (destructive-pattern deny) + SessionStart FTS bootstrap (fail-open, no python required). Meta meta/muse-spark-1.3-contributor via pi-OAuth live-read (pi owns refresh). Core works without the MCP server over HTTP http://127.0.0.1:7778."
+    },
+    "reasonix": {
+      "status": "active",
+      "api": "Reasonix Extension Protocol v2 (NDJSON JSON-RPC 2.0 stdio sidecar)",
+      "adapter": "addons/reasonix/",
+      "install": "reasonix plugin install <repo>/addons/reasonix --link + global config.toml [[plugins]] + global settings.json hooks + .mcp.json",
+      "installer": "addons/reasonix/install.mjs",
+      "surfaces": [
+        "tools",
+        "interceptors",
+        "skills",
+        "commands",
+        "agents",
+        "hooks",
+        "mcp",
+        "prompt-overlay"
+      ],
+      "notes": "36 ext__hypernexus__* runtime tools + 10 intercepts + 3 skills + 11 /hypernexus: commands + 1 orchestrator agent; native SessionStart/PostToolUse/PreToolUse hooks + SessionStart/PreCompact context files; MCP via contributes.mcpServers + config.toml [[plugins]] + .mcp.json. Meta muse-spark-1.3-contributor via META_MUSE_API_KEY env ref (pi owns OAuth refresh; scripts/sync-meta-oauth-reasonix.ps1). Core works without the extension over HTTP."
     }
   },
   "contract": {
@@ -142,7 +194,9 @@
         "mimo": "hypernexus_memory_store",
         "opencode": "hypernexus_memory_store",
         "jcode": "mcp__hypernexus__add_memory",
-        "codewhale": "mcp__hypernexus__add_memory"
+        "codewhale": "mcp__hypernexus__add_memory",
+        "reasonix": "ext__hypernexus__memory_store",
+        "crush": "add_memory"
       }
     },
     {
@@ -166,7 +220,9 @@
         "mimo": "hypernexus_memory_search",
         "opencode": "hypernexus_memory_search",
         "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory"
+        "codewhale": "mcp__hypernexus__search_memory",
+        "reasonix": "ext__hypernexus__memory_search",
+        "crush": "search_memory"
       }
     },
     {
@@ -185,7 +241,9 @@
         "mimo": "hypernexus_memory_vector_search",
         "opencode": "hypernexus_memory_vector_search",
         "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory"
+        "codewhale": "mcp__hypernexus__search_memory",
+        "reasonix": "ext__hypernexus__memory_vector_search",
+        "crush": "search_memory"
       }
     },
     {
@@ -204,7 +262,9 @@
         "mimo": "hypernexus_memory_list",
         "opencode": "hypernexus_memory_list",
         "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory"
+        "codewhale": "mcp__hypernexus__search_memory",
+        "reasonix": "ext__hypernexus__memory_list",
+        "crush": "search_memory"
       }
     },
     {
@@ -223,7 +283,9 @@
         "mimo": "hypernexus_context_harvest",
         "opencode": "hypernexus_context_harvest",
         "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory"
+        "codewhale": "mcp__hypernexus__search_memory",
+        "reasonix": "ext__hypernexus__context_harvest",
+        "crush": "search_memory + memory_scratchpad_get"
       }
     },
     {
@@ -242,7 +304,9 @@
         "mimo": "hypernexus_scratchpad",
         "opencode": "hypernexus_scratchpad",
         "jcode": "mcp__hypernexus__memory_scratchpad_get",
-        "codewhale": "mcp__hypernexus__memory_scratchpad_get"
+        "codewhale": "mcp__hypernexus__memory_scratchpad_get",
+        "reasonix": "ext__hypernexus__scratchpad",
+        "crush": "memory_scratchpad_get/set/append"
       }
     },
     {
@@ -261,7 +325,9 @@
         "mimo": "hypernexus_search_tools",
         "opencode": "hypernexus_tool_search",
         "jcode": "mcp__hypernexus__mcp_list_tools",
-        "codewhale": "mcp__hypernexus__mcp_list_tools"
+        "codewhale": "mcp__hypernexus__mcp_list_tools",
+        "reasonix": "ext__hypernexus__tool_search",
+        "crush": "mcp_list_tools + /api/mcp/tools/search"
       }
     },
     {
@@ -287,7 +353,9 @@
       "harness": {
         "pi": "hypernexus_suggest_tools",
         "mimo": "hypernexus_suggest_tools",
-        "opencode": "hypernexus_suggest_tools"
+        "opencode": "hypernexus_suggest_tools",
+        "reasonix": "ext__hypernexus__suggest_tools",
+        "crush": "mcp_list_tools (suggest via conversation scan)"
       }
     },
     {
@@ -309,7 +377,9 @@
         "mimo": "hypernexus_mcp_call",
         "opencode": "hypernexus_mcp_call",
         "jcode": "mcp__hypernexus__mcp_call_tool",
-        "codewhale": "mcp__hypernexus__mcp_call_tool"
+        "codewhale": "mcp__hypernexus__mcp_call_tool",
+        "reasonix": "ext__hypernexus__mcp_call",
+        "crush": "mcp_call_tool"
       }
     },
     {
@@ -326,7 +396,9 @@
       "harness": {
         "pi": "hypernexus_session_search",
         "mimo": "hypernexus_session_search",
-        "opencode": "hypernexus_session_search"
+        "opencode": "hypernexus_session_search",
+        "reasonix": "ext__hypernexus__session_search",
+        "crush": "search_memory (session-scoped) + /api/sessions/summary"
       }
     },
     {
@@ -343,7 +415,9 @@
       "harness": {
         "pi": "hypernexus_skill_manage",
         "mimo": "hypernexus_skill_manage",
-        "opencode": "hypernexus_skill_manage"
+        "opencode": "hypernexus_skill_manage",
+        "reasonix": "ext__hypernexus__skill_manage",
+        "crush": "/api/skills registry + ~/.config/crush/skills/"
       }
     },
     {
@@ -362,7 +436,9 @@
         "mimo": "hypernexus_code_search",
         "opencode": "hypernexus_code_search",
         "jcode": "mcp__hypernexus__codebase_search",
-        "codewhale": "mcp__hypernexus__codebase_search"
+        "codewhale": "mcp__hypernexus__codebase_search",
+        "reasonix": "ext__hypernexus__code_search",
+        "crush": "codebase_search"
       }
     },
     {
@@ -383,7 +459,9 @@
       "harness": {
         "pi": "hypernexus_subagent",
         "mimo": "hypernexus_subagent",
-        "opencode": "hypernexus_subagent"
+        "opencode": "hypernexus_subagent",
+        "reasonix": "ext__hypernexus__subagent",
+        "crush": "add_memory ([SUBAGENT TASK]) + crush run -s"
       }
     },
     {
@@ -402,7 +480,9 @@
         "mimo": "hypernexus_status",
         "opencode": "hypernexus_system_overview",
         "jcode": "mcp__hypernexus__system_status",
-        "codewhale": "mcp__hypernexus__system_status"
+        "codewhale": "mcp__hypernexus__system_status",
+        "reasonix": "ext__hypernexus__system_overview",
+        "crush": "system_status + /health"
       }
     },
     {
@@ -418,7 +498,9 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_memory_delete",
-        "mimo": "hypernexus_memory_delete"
+        "mimo": "hypernexus_memory_delete",
+        "reasonix": "ext__hypernexus__memory_delete",
+        "crush": "delete_memory"
       }
     },
     {
@@ -434,7 +516,8 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_memory_update",
-        "mimo": "hypernexus_memory_update"
+        "mimo": "hypernexus_memory_update",
+        "crush": "delete_memory + add_memory (rewrite)"
       }
     },
     {
@@ -452,7 +535,9 @@
         "mimo": "hypernexus_memory_stats",
         "opencode": "hypernexus_memory_stats",
         "jcode": "mcp__hypernexus__memory_stats",
-        "codewhale": "mcp__hypernexus__memory_stats"
+        "codewhale": "mcp__hypernexus__memory_stats",
+        "reasonix": "ext__hypernexus__memory_stats",
+        "crush": "memory_stats"
       }
     },
     {
@@ -467,7 +552,9 @@
       "readOnly": false,
       "budgetMs": 2500,
       "harness": {
-        "mimo": "hypernexus_memory_handoff"
+        "mimo": "hypernexus_memory_handoff",
+        "reasonix": "ext__hypernexus__session_handoff",
+        "crush": "memory_scratchpad_set(goal) + add_memory(session,summary)"
       }
     },
     {
@@ -484,7 +571,9 @@
       "harness": {
         "pi": "hypernexus_session_list",
         "mimo": "hypernexus_session_list",
-        "opencode": "hypernexus_session_list"
+        "opencode": "hypernexus_session_list",
+        "reasonix": "ext__hypernexus__session_list",
+        "crush": "/api/sessions/summary"
       }
     },
     {
@@ -500,7 +589,9 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_session_context",
-        "mimo": "hypernexus_session_context"
+        "mimo": "hypernexus_session_context",
+        "reasonix": "ext__hypernexus__session_context",
+        "crush": "memory_scratchpad_get(goal) + search_memory"
       }
     },
     {
@@ -516,7 +607,8 @@
       "budgetMs": 2500,
       "harness": {
         "pi": "hypernexus_kernel_routes",
-        "mimo": "hypernexus_kernel_routes"
+        "mimo": "hypernexus_kernel_routes",
+        "crush": "/api/routes + mcp_list_servers"
       }
     },
     {
@@ -531,7 +623,9 @@
       "readOnly": true,
       "budgetMs": 2500,
       "harness": {
-        "mimo": "hypernexus_mcp_status"
+        "mimo": "hypernexus_mcp_status",
+        "reasonix": "ext__hypernexus__mcp_status",
+        "crush": "mcp_status"
       }
     },
     {
@@ -546,7 +640,9 @@
       "readOnly": true,
       "budgetMs": 2500,
       "harness": {
-        "mimo": "hypernexus_mcp_servers"
+        "mimo": "hypernexus_mcp_servers",
+        "reasonix": "ext__hypernexus__mcp_servers",
+        "crush": "mcp_list_servers"
       }
     },
     {
@@ -561,7 +657,9 @@
       "readOnly": true,
       "budgetMs": 2500,
       "harness": {
-        "mimo": "hypernexus_mcp_tools"
+        "mimo": "hypernexus_mcp_tools",
+        "reasonix": "ext__hypernexus__mcp_tools",
+        "crush": "mcp_list_tools"
       }
     },
     {
@@ -576,7 +674,9 @@
       "readOnly": true,
       "budgetMs": 2500,
       "harness": {
-        "mimo": "hypernexus_skills_search"
+        "mimo": "hypernexus_skills_search",
+        "reasonix": "ext__hypernexus__skill_search",
+        "crush": "/api/skills/search + skills/ dir"
       }
     },
     {
@@ -592,7 +692,9 @@
       "budgetMs": 2500,
       "harness": {
         "mimo": "hypernexus_system_overview",
-        "opencode": "hypernexus_system_overview"
+        "opencode": "hypernexus_system_overview",
+        "reasonix": "ext__hypernexus__system_overview",
+        "crush": "system_status + mcp_status + billing_status"
       }
     },
     {
@@ -609,7 +711,9 @@
       "harness": {
         "pi": "hypernexus_repomap",
         "mimo": "hypernexus_repomap",
-        "opencode": "hypernexus_repomap"
+        "opencode": "hypernexus_repomap",
+        "reasonix": "ext__hypernexus__repomap",
+        "crush": "repomap"
       }
     },
     {
@@ -625,7 +729,9 @@
       "budgetMs": 8000,
       "harness": {
         "pi": "hypernexus_knowledge_graph",
-        "mimo": "hypernexus_knowledge_graph"
+        "mimo": "hypernexus_knowledge_graph",
+        "reasonix": "ext__hypernexus__knowledge_graph",
+        "crush": "memory_extract_relations(+_batch)"
       }
     },
     {
@@ -641,7 +747,9 @@
       "budgetMs": 8000,
       "harness": {
         "pi": "hypernexus_workflow",
-        "mimo": "hypernexus_workflow"
+        "mimo": "hypernexus_workflow",
+        "reasonix": "ext__hypernexus__workflow",
+        "crush": "commands/hn-* + skills hypernexus-workflows"
       }
     },
     {
@@ -657,7 +765,9 @@
       "budgetMs": 8000,
       "harness": {
         "pi": "hypernexus_orchestrate",
-        "mimo": "hypernexus_orchestrate"
+        "mimo": "hypernexus_orchestrate",
+        "reasonix": "ext__hypernexus__orchestrate",
+        "crush": "add_memory orchestration loop + crush run subagents"
       }
     },
     {
@@ -673,7 +783,9 @@
       "budgetMs": 8000,
       "harness": {
         "pi": "hypernexus_browser",
-        "mimo": "hypernexus_browser"
+        "mimo": "hypernexus_browser",
+        "reasonix": "ext__hypernexus__browser",
+        "crush": "launch_webview + /api/browser/action"
       }
     }
   ],

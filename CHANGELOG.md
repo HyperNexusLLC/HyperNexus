@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Droid (Factory HARNESS) full integration (`addons/droid/`)** — Meta `meta/muse-spark-1.3-contributor` runs NATIVELY in Droid via BYOK `apiKeyHelper` (`addons/droid/bin/meta-muse-key.mjs` mints a ~24h Model API key from the pi `~/.pi/agent/auth.json` OAuth identity via `POST https://api.meta.ai/muse-code/key`, mirroring pi-ai's own Meta OAuth flow; static `apiKey` removed from `~/.factory/settings.json`, session default stays `custom:Meta-Muse-Spark-1.3-Contributor-0`). Full HyperNexus plugin v1.2.0 installed + enabled (`hypernexus@marketplace`, user scope): stdio MCP server (58 tools, `droid mcp list` = connected), 3 skills, 11 `/hn-*` commands, 8 lifecycle hooks (SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop/SessionEnd/PreCompact/SubagentStop) as dependency-free Node scripts (no bash on Windows), 2 droids (orchestrator + read-only researcher), 1 output style. RBAC via `HYPERNEXUS_RBAC` (audit/ask/deny) on destructive `Execute` patterns
+- **`addons/droid/bin/test-droid-ext.mjs` battery (76 checks, 0 fail)** — plugin layout, hooks.json 8 events, `node --check` all hooks, plugin + user mcp.json, kernel surface (`/health` v1.0.21, fts/vector/list, `agent-memory/stats`, system overview, mcp status, billing, scratchpad get/set, facts/add + search round-trip, observations), mint `--check` OK, custom-model `apiKeyHelper` wiring, session default. Live verification: all 8 hooks executed, RBAC deny/ask, `droid exec --auto high` native-model proof (MCP add_memory + search_memory round-trip, L2-confirmed), CDP coordination to muse.ai delivered
+- **Shared manifest `droid` harness entry** — capability map bound to `mcp__hypernexus__*` tool names + apiKeyHelper note
+- **`bin/test-hax-ext.mjs` battery (70 checks)** — provider wiring, presets, installer idempotence, skill byte-identity + frontmatter, overlay presence, all 33 driver verbs incl. store→search→update→delete round-trip (via searchable `facts/add` write path), turn scripts, 5 live hax runs on meta/muse-spark-1.3-contributor (preset, flags, effort, overlay-driven tool use), doc accuracy, kernel-down degradation
+- **Shared manifest `hax` harness entry** — capability map bound to exact `hn.mjs` verbs
+
+### Fixed
+- **Stale endpoint references remapped in hax driver** — `/api/memory/stats` -> `/api/agent-memory/stats`, `/api/routes` -> MCP tool inventory fallback, `/api/code/repomap` -> `repomap` via `/api/agent/tool`, `/api/memory/update` -> delete + re-store (no in-place route published), `/api/memory/delete` -> `delete_memory` via dispatcher (mirrors pi tn-purge). Same staleness exists in the pi extension paths; hax driver uses the true published endpoints
+- **Memory-write visibility gap** — `/api/memory/add` appends to the gossip mirror only (visible via `list`, invisible to `search`/`fts`); driver `store`/`observe`/`update` now write via searchable `/api/memory/facts/add` (agent-memory store + vector dual-write), so stored items are recallable immediately
+
 ## [1.0.21] - 2026-10-21
 
 ### Added
