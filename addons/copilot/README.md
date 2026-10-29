@@ -12,19 +12,20 @@ Install or refresh the local plugin:
 node addons/copilot/install.mjs
 ```
 
-Launch Copilot against Meta's model with a compatible API credential:
+Launch Copilot against Meta's model using the HyperNexus kernel proxy:
 
 ```powershell
 .\addons\copilot\use-meta-model.ps1
 ```
 
-The launcher sets Copilot CLI's documented BYOK Responses API variables only
-for that process. Meta OAuth keys minted from Pi's `auth.json` are restricted
-to Muse Code requests and are rejected for Copilot's built-in tool declarations
-(HTTP 403). Meta directs other clients to use a pay-as-you-go API key. To use
-Copilot BYOK, set `COPILOT_PROVIDER_API_KEY` to that key before launching; the
-launcher does not reuse Pi's OAuth subscription or persist credentials. A
-supported `COPILOT_PROVIDER_BEARER_TOKEN` can also be used.
+The launcher sets Copilot CLI's documented BYOK Responses API variables while
+it runs and restores the previous environment afterward. Requests go to
+`http://127.0.0.1:7778/v1`; the kernel reads the current Meta credential from
+Pi's `auth.json` per request, so the real OAuth-derived credential is never
+copied into Copilot configuration. The placeholder API key is local to the
+Copilot process and is not sent upstream as the Meta credential. The kernel
+proxy currently identifies its upstream client as `pi/1.4.0`; its normal
+API error is returned to Copilot if the kernel is unavailable.
 
 ```powershell
 node addons/copilot/install.mjs --check
@@ -38,7 +39,9 @@ Copilot CLI has no Pi-style in-process `ExtensionAPI`; plugins, MCP, skills,
 commands, agents, rules, hooks, and LSP servers are its supported extension
 surfaces. The integration uses the surfaces applicable to HyperNexus.
 
-The Meta OAuth subscription cannot currently power Copilot CLI's native agent
-tool loop. Do not impersonate Muse Code or forge its built-in tool declarations;
-use Muse Code itself for that subscription, or use a Meta pay-as-you-go key
-with Copilot.
+Direct requests from Copilot to Meta's endpoint were rejected when they carried
+Copilot's function-tool declarations. The project's kernel proxy successfully
+completed the same Copilot Responses request using the Pi OAuth identity. This
+is a proxy-backed provider, not a built-in Copilot Meta OAuth provider; the
+kernel remains responsible for OAuth credential retrieval and upstream
+request headers.

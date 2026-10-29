@@ -37,6 +37,7 @@ const hookConfig = json(path.join(ROOT, ".github", "hooks", "hypernexus.json"));
 check("Agent Plugins v1 manifest", () => {
   assert.equal(manifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
   assert.equal(manifest.name, "hypernexus");
+  assert.equal(manifest.version, fs.readFileSync(path.join(ROOT, "VERSION"), "utf8").trim());
 });
 check("stdio MCP exposes all tools", () => {
   const server = mcp.mcpServers.hypernexus;
@@ -70,15 +71,20 @@ check("two custom agents are packaged", () => {
 check("Copilot-specific operating rule is packaged", () => {
   assert.ok(fs.existsSync(path.join(PLUGIN, "com.github.copilot", "rules", "hypernexus.md")));
 });
-check("Meta launcher requires a compatible API credential and uses Responses API", () => {
+check("Meta launcher uses the live Pi OAuth kernel proxy and Responses API", () => {
   const launcher = fs.readFileSync(path.join(ROOT, "addons", "copilot", "use-meta-model.ps1"), "utf8");
-  assert.match(launcher, /COPILOT_PROVIDER_API_KEY/);
-  assert.match(launcher, /COPILOT_PROVIDER_BEARER_TOKEN/);
+  assert.match(launcher, /\$KernelUrl = 'http:\/\/127\.0\.0\.1:7778'/);
+  assert.match(launcher, /\$env:COPILOT_PROVIDER_BASE_URL = "\$KernelUrl\/v1"/);
+  assert.match(launcher, /COPILOT_PROVIDER_API_KEY = 'hypernexus-local'/);
   assert.match(launcher, /COPILOT_PROVIDER_WIRE_API = 'responses'/);
-  assert.match(launcher, /Muse Code requests/);
+  const docs = fs.readFileSync(path.join(ROOT, "addons", "copilot", "README.md"), "utf8");
+  assert.match(docs, /Pi's `auth\.json`/);
+  assert.match(docs, /pi\/1\.4\.0/);
   assert.doesNotMatch(launcher, /meta-muse-key\.mjs/);
+  assert.doesNotMatch(launcher, /api\.meta\.ai/);
   assert.match(launcher, /meta\/muse-spark-1\.3-contributor/);
   assert.match(launcher, /--plugin-dir/);
+  assert.match(launcher, /\[Environment\]::SetEnvironmentVariable/);
 });
 check("native hooks cover memory, RBAC, failures, and subagents", () => {
   for (const name of ["sessionStart", "userPromptTransformed", "preToolUse", "permissionRequest", "postToolUseFailure", "subagentStart"]) {

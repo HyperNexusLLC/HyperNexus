@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "hypernexus",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "HyperNexus memory, MCP discovery, orchestration, and kernel operations for GitHub Copilot CLI.",
   "author": {
     "name": "HyperNexus"
