@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "exec": "node",
+        "args": [
+          "addons/copilot/hooks/hypernexus-hook.mjs",
+          "sessionStart"
+        ],
+        "cwd": ".",
+        "timeoutSec": 3
+      }
+    ],
+    "userPromptTransformed": [
+      {
+        "type": "command",
+        "exec": "node",
+        "args": [
+          "addons/copilot/hooks/hypernexus-hook.mjs",
+          "userPromptTransformed"
+        ],
+        "cwd": ".",
+        "timeoutSec": 5
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "exec": "node",
+        "args": [
+          "addons/copilot/hooks/hypernexus-hook.mjs",
+          "preToolUse"
+        ],
+        "cwd": ".",
+        "timeoutSec": 3
+      }
+    ],
+    "permissionRequest": [
+      {
+        "type": "command",
+        "exec": "node",
+        "args": [
+          "addons/copilot/hooks/hypernexus-hook.mjs",
+          "permissionRequest"
+        ],
+        "cwd": ".",
+        "timeoutSec": 3
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "type": "command",
+        "exec": "node",
+        "args": [
+          "addons/copilot/hooks/hypernexus-hook.mjs",
+          "postToolUseFailure"
+        ],
+        "cwd": ".",
+        "timeoutSec": 3
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "exec": "node",
+        "args": [
+          "addons/copilot/hooks/hypernexus-hook.mjs",
+          "subagentStart"
+        ],
+        "cwd": ".",
+        "timeoutSec": 3
+      }
+    ]
+  }
+}
