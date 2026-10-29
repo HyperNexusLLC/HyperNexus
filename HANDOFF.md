@@ -1,3 +1,16 @@
+# HANDOFF - OpenCode HARNESS max-extent + native Meta OAuth (v1.0.22)
+
+## Session O (2026-10-29) - opencode lane [muse-spark-1.3-contributor in "opencode" in ~/workspace/HyperNexus]
+### Built + verified + committed (2c5f2e37, pushed github+gitlab main, in sync)
+- Meta: V2 `providers.meta` (openai-compatible to api.meta.ai/v1, env key only), minter `addons/opencode/bin/meta-muse-key.mjs`, `use-meta-model.ps1` live-mint, `hypernexus_meta_auth` tool, `hn-auth`/`hn-models`, provider+integration+agent+reference+websearch surfaces, 401/403 cache-clear hook. Global `~/.config/opencode/opencode.json` baseURL fixed (was kernel URL). Key VALID HTTP 200 live.
+- Plugin: 37 tools + 13 commands + 4 skills + all hooks/transforms/MCP/worktree/events + V1 shim. Installer V1-to-V2 migration + minter ship + 4-skill check. README/manifest updated. Battery 146/146 on kernel 1.0.21.
+- Live on 1.0.22: memory store/FTS/list/relate, scratchpad round-trip, repomap, audit, orchestrate RECALL, skill list, sessions (50), workflows, billing, mcp_call positive path, browser-degrade message, handoff pickup. Known kernel-side limits: facts/add write stalls (observations fine), fresh empty vault, empty skill registry, mcp routing gaps (adapter degrades correctly).
+### Pending (kernel 7778 DOWN at handoff — ECONNREFUSED)
+- Re-run `node bin/test-opencode-ext.mjs` when kernel recovers; re-run `node bin/test-opencode-e2e.mjs` (truncated by an earlier restart).
+- MEMORY.md opencode entry added (uncommitted); commit it with the next opencode change.
+### Next agent
+- Scope: `addons/opencode/`, `bin/test-opencode-ext.mjs`, `.opencode/` project config, `addons/shared/hypernexus.manifest.json` opencode entry. Do NOT touch sibling harness dirs or runtime DBs.
+
 # HANDOFF - Claude Code HARNESS max-extent + kernel shim Responses migration (v1.0.22+unreleased)
 
 ## Session CC (2026-10-29) - claude lane [muse-spark-1.3-contributor in "claude" in ~/workspace/HyperNexus], battery 85/85 green, kernel finding + staged fix

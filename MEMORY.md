@@ -1,6 +1,12 @@
 # MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
+### OpenCode HARNESS max-extent: native Meta OAuth + full HyperNexus surfaces (2026-10-29)
+
+**Meta OAuth in OpenCode (V2 config):** OpenCode V2 uses plural `providers` + package `env` (V1 singular `provider` is rejected by schema validation). `meta` provider: `@opencode/ai/providers/openai-compatible` to `https://api.meta.ai/v1`, `env: ["META_MUSE_API_KEY"]`, model `muse-spark-1.3-contributor` (ctx 1048576/out 131072). Key supply: `addons/opencode/bin/meta-muse-key.mjs` (pi refresh to key, stdout only) + `use-meta-model.ps1` live-mint launcher + `hypernexus_meta_auth` tool + `hn-auth`/`hn-models` commands + native `provider.transform` + pi-OAuth integration method + Meta 401/403 cache-clear hook. NEVER persist the key (process env only). Live proof: `meta_auth check` HTTP 200 from `api.meta.ai/v1/models`.
+
+**OpenCode plugin surface:** 37 tools + 13 commands + 4 skills + all hooks/transforms/MCP/worktree/events + V1 shim. Battery 146/146 on kernel 1.0.21. Traps: transient write races after restarts (poll, don't single-check); `mcp_call` routing failures are upstream (verify positive path); `memory_delete` timeouts can still delete (verify by re-list); kernel 1.0.22 runs a fresh empty vault; empty skills registry on fresh builds is correct; verify with `node --check` BEFORE structural edits.
+
 ### Codewhale HARNESS max-extent: kernel-proxy OAuth + full plugin bundle (2026-10-29)
 
 **Meta OAuth in Codewhale (no native pi-credential support):** Codewhale 0.10.2 ships a native `meta` provider route but `auth external-consent` reports no supported pi credential source — it cannot read pi's `auth.json`. Two live paths: (1) **kernel proxy (primary)** — `providers.meta.base_url = http://127.0.0.1:7778/v1`, kernel re-reads pi's `.meta.access` per request (access first, key fallback — NOT `.refresh`), zero stale copies; (2) **secret-store fast lane** — `scripts/sync-meta-oauth-codewhale.ps1` (idempotent). The access token is NOT the minter's minted Model API key. Live proofs: repeated exact-reply `codewhale exec --provider meta` round-trips.
