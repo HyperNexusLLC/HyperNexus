@@ -1520,6 +1520,10 @@ func (s *Server) registerRoutes() {
 	// Anthropic Messages API compatibility (Claude Code -> Meta subscriber model).
 	s.mux.HandleFunc("/v1/messages", s.handleAnthropicMessages)
 	s.mux.HandleFunc("/v1/models", s.handleAnthropicModels)
+	// OpenAI API compatibility (any OpenAI client -> Meta subscriber model,
+	// Bearer re-read from pi OAuth per request so refreshes flow through).
+	s.mux.HandleFunc("/v1/chat/completions", s.handleOpenAIChatCompletions)
+	s.mux.HandleFunc("/v1/responses", s.handleOpenAIResponses)
 	s.mux.HandleFunc("/api/director/memorize", s.handleDirectorMemorize)
 	s.mux.HandleFunc("/api/director/chat", s.handleDirectorChat)
 	s.mux.HandleFunc("/api/director/status", s.handleDirectorStatus)

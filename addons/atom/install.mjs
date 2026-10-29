@@ -18,7 +18,7 @@ const HN_SKILLS = ["hypernexus-memory", "hypernexus-ops", "hypernexus-tools", "h
 function exe() { return "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe"; }
 function install() {
   if (!read(CFG)) {
-    write(CFG, `default_provider = "meta"\ndefault_model = "muse-spark-1.3-contributor"\n\n[providers.meta]\ntype = "openai-compatible"\nmodel = "muse-spark-1.3-contributor"\napi_key = "\${META_MUSE_API_KEY}"\nbase_url = "https://api.meta.ai/v1"\n`);
+    write(CFG, `default_provider = "meta"\ndefault_model = "muse-spark-1.3-contributor"\n\n[providers.meta]\ntype = "openai-compatible"\nmodel = "muse-spark-1.3-contributor"\napi_key = "\${META_MUSE_API_KEY}"\nbase_url = "http://127.0.0.1:7778/v1"\n`);
     log(`meta provider written to ${CFG}.`);
   } else log(`${CFG} exists, left in place.`);
   let mcp = {};

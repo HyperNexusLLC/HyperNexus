@@ -19,7 +19,7 @@ function setLine(s, k, v) {
 function install() {
   let s = read(ENVF) ?? "# mini-swe-agent global config\n";
   s = setLine(s, "MSWEA_MODEL_NAME", "openai/muse-spark-1.3-contributor");
-  s = setLine(s, "OPENAI_API_BASE", "https://api.meta.ai/v1");
+  s = setLine(s, "OPENAI_API_BASE", "http://127.0.0.1:7778/v1");
   const tok = piMetaToken();
   if (tok) s = setLine(s, "OPENAI_API_KEY", tok);
   else log("WARNING: no pi meta token found; key left as-is (run again after pi login).");
@@ -33,7 +33,7 @@ function check() {
   if (!raw) gaps.push(`missing ${ENVF}`);
   else {
     if (!/^MSWEA_MODEL_NAME=openai\/muse-spark-1\.3-contributor/m.test(raw)) gaps.push("model not set");
-    if (!/^OPENAI_API_BASE=https:\/\/api\.meta\.ai\/v1/m.test(raw)) gaps.push("base not meta");
+    if (!/^OPENAI_API_BASE=(http:\/\/127\.0\.0\.1:7778\/v1|https:\/\/api\.meta\.ai\/v1)/m.test(raw)) gaps.push("base not meta (want kernel http://127.0.0.1:7778/v1 or direct api.meta.ai/v1)");
   }
   if (gaps.length) { console.log(`${TAG} CHECK FAILED:\n  - ${gaps.join("\n  - ")}`); process.exit(1); }
   console.log(`${TAG} CHECK OK: meta endpoint + model.`);

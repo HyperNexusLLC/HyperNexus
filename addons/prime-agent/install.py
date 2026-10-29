@@ -29,8 +29,33 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SRC_SKILL = HERE / "skills" / "hypernexus"
+SRC_SKILLS = HERE / "skills"
+SRC_COMMANDS = HERE / "commands"
+SRC_HOOKS = HERE / "hooks"
 SKILL_NAME = "hypernexus"
+# Base skill plus one focused skill per capability family.
+SKILL_DIRS = [
+    "hypernexus",
+    "hypernexus-memory",
+    "hypernexus-l2",
+    "hypernexus-mcp-routing",
+    "hypernexus-agents",
+    "hypernexus-status-billing",
+    "hypernexus-sessions",
+    "hypernexus-ops",
+    "hypernexus-workflows",
+]
+COMMAND_FILES = [
+    "hn-status.md",
+    "hn-search.md",
+    "hn-store.md",
+    "hn-session.md",
+    "hn-context.md",
+    "hn-summary.md",
+    "hn-tools.md",
+    "hn-purge.md",
+]
+HOOK_FILES = ["hn-observe.py", "hn-gate.py"]
 MCP_SERVER = "hypernexus"
 
 # Files copied from the source skill (everything except caches).
@@ -52,6 +77,22 @@ def skill_dest(global_mode: bool, project: Path) -> Path:
     if global_mode:
         return agent_dir() / "skills" / SKILL_NAME
     return project / ".prime" / "agent" / "skills" / SKILL_NAME
+
+
+def skills_root(global_mode: bool, project: Path) -> Path:
+    if global_mode:
+        return agent_dir() / "skills"
+    return project / ".prime" / "agent" / "skills"
+
+
+def commands_dest(global_mode: bool, project: Path) -> Path:
+    base = agent_dir() if global_mode else project / ".prime" / "agent"
+    return base / "hypernexus-commands"
+
+
+def hooks_dest(global_mode: bool, project: Path) -> Path:
+    base = agent_dir() if global_mode else project / ".prime" / "agent"
+    return base / "hypernexus-hooks"
 
 
 def find_cli() -> str | None:
@@ -80,7 +121,7 @@ def copy_skill(dest: Path) -> None:
         shutil.rmtree(dest)
     def ignore(_dir: str, names: list[str]) -> list[str]:
         return [n for n in names if n in SKIP_NAMES]
-    shutil.copytree(SRC_SKILL, dest, ignore=ignore)
+    shutil.copytree(SRC_SKILLS / dest.name, dest, ignore=ignore)
     log(f"skill installed -> {dest}")
 
 
@@ -90,6 +131,93 @@ def remove_skill(dest: Path) -> None:
         log(f"skill removed -> {dest}")
     else:
         log(f"skill not present at {dest}")
+
+
+def install_skills(root: Path) -> None:
+    for name in SKILL_DIRS:
+        copy_skill(root / name)
+
+
+def remove_skills(root: Path) -> None:
+    for name in SKILL_DIRS:
+        remove_skill(root / name)
+
+
+def install_commands(dest: Path) -> None:
+    dest.mkdir(parents=True, exist_ok=True)
+    for name in COMMAND_FILES:
+        src = SRC_COMMANDS / name
+        if src.exists():
+            shutil.copy2(src, dest / name)
+    log(f"commands installed -> {dest} (load with --prompt-template <file>)")
+
+
+def remove_commands(dest: Path) -> None:
+    if dest.exists():
+        shutil.rmtree(dest)
+        log(f"commands removed -> {dest}")
+    else:
+        log(f"commands not present at {dest}")
+
+
+def install_hooks(dest: Path) -> None:
+    dest.mkdir(parents=True, exist_ok=True)
+    for name in HOOK_FILES:
+        src = SRC_HOOKS / name
+        if src.exists():
+            shutil.copy2(src, dest / name)
+    log(f"hooks installed -> {dest} (no native hook API; run explicitly or from a scheduled prompt)")
+
+
+def remove_hooks(dest: Path) -> None:
+    if dest.exists():
+        shutil.rmtree(dest)
+        log(f"hooks removed -> {dest}")
+    else:
+        log(f"hooks not present at {dest}")
+
+
+def check_file_surface() -> bool:
+    ok = True
+    for name in COMMAND_FILES:
+        if not (SRC_COMMANDS / name).exists():
+            log(f"MISSING command: {SRC_COMMANDS / name}")
+            ok = False
+    for name in HOOK_FILES:
+        if not (SRC_HOOKS / name).exists():
+            log(f"MISSING hook: {SRC_HOOKS / name}")
+            ok = False
+    for extra in ["mcp.json", "meta-model.prime.json", "use-meta-model.ps1",
+                  "agents/hypernexus-dispatcher.md", "schedules/hn-standup.txt"]:
+        if not (HERE / extra).exists():
+            log(f"MISSING: {HERE / extra}")
+            ok = False
+    for name in SKILL_DIRS:
+        if not (SRC_SKILLS / name / "SKILL.md").exists():
+            log(f"MISSING skill: {SRC_SKILLS / name / 'SKILL.md'}")
+            ok = False
+    if ok:
+        log("file surface complete (9 skills, 8 commands, 2 hooks, mcp.json, meta wiring, agent brief, schedule)")
+    return ok
+
+
+def check_installed_surface(root: Path, commands: Path, hooks: Path) -> bool:
+    ok = True
+    for name in SKILL_DIRS:
+        if not (root / name / "SKILL.md").exists():
+            log(f"MISSING: {root / name / 'SKILL.md'}")
+            ok = False
+    for name in COMMAND_FILES:
+        if not (commands / name).exists():
+            log(f"MISSING: {commands / name}")
+            ok = False
+    for name in HOOK_FILES:
+        if not (hooks / name).exists():
+            log(f"MISSING: {hooks / name}")
+            ok = False
+    if ok:
+        log(f"installed surface complete at {root}, {commands}, {hooks}")
+    return ok
 
 
 def register_mcp(exe: str, cli: str | None) -> None:
@@ -112,7 +240,9 @@ def write_settings_entry(exe: str) -> None:
     if settings.exists():
         data = json.loads(settings.read_text(encoding="utf-8"))
     servers = data.get("mcpServers") or {}
-    servers[MCP_SERVER] = {"type": "stdio", "command": exe, "args": ["mcp"]}
+    servers[MCP_SERVER] = {"type": "stdio", "command": exe, "args": ["mcp"],
+                           "env": {"HYPERNEXUS_WORKSPACE_ROOT": {"env": "HYPERNEXUS_WORKSPACE_ROOT"},
+                                   "HYPERNEXUS_URL": {"env": "HYPERNEXUS_URL"}}}
     data["mcpServers"] = servers
     backup = settings.with_suffix(".json.hypernexus-bak")
     if settings.exists() and not backup.exists():
@@ -172,25 +302,38 @@ def main() -> int:
     args = ap.parse_args()
 
     project = Path(args.project).resolve() if args.project else Path.cwd()
+    use_global = args.global_mode or not args.project
+    skills = skills_root(use_global, project)
+    commands = commands_dest(use_global, project)
+    hooks = hooks_dest(use_global, project)
     dest = skill_dest(args.global_mode or not args.project, project)
     cli = find_cli()
 
     if args.check:
-        return check(dest, cli)
+        rc = check(dest, cli)
+        if not check_file_surface():
+            rc = 1
+        if not check_installed_surface(skills, commands, hooks):
+            rc = 1
+        return rc
     if args.uninstall:
-        remove_skill(dest)
+        remove_skills(skills)
+        remove_commands(commands)
+        remove_hooks(hooks)
         if not args.no_mcp:
             deregister_mcp(cli)
         return 0
 
-    copy_skill(dest)
+    install_skills(skills)
+    install_commands(commands)
+    install_hooks(hooks)
     if not args.no_mcp:
         exe = find_kernel_exe(args.exe)
         if exe:
             register_mcp(exe, cli)
         else:
             log("hypernexus kernel binary not found; skipped MCP registration (use --exe)")
-    log("done. Start a new Prime Agent session so the kernel installs the skill.")
+    log("done. Start a new Prime Agent session so the kernel installs the skills. Commands load via --prompt-template from hypernexus-commands/; hooks run explicitly or from a scheduled prompt; schedule template in schedules/hn-standup.txt; Meta model via use-meta-model.ps1 (user-run, env reference only).")
     return 0
 
 

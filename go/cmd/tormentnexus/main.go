@@ -78,7 +78,11 @@ func installCrashCapture() {
 		return
 	}
 	debug.SetCrashOutput(f, debug.CrashOptions{})
-	fmt.Printf("[CrashCapture] kernel fatals -> %s\n", path)
+	// MCP stdio mode: stdout is JSON-RPC — never write the banner there.
+	// The general run() path uses log (stderr), so this is also stderr.
+	if len(os.Args) <= 1 || os.Args[1] != "mcp" {
+		fmt.Fprintf(os.Stderr, "[CrashCapture] kernel fatals -> %s\n", path)
+	}
 }
 
 func run(args []string) int {

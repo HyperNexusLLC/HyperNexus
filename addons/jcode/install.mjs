@@ -15,10 +15,27 @@
  *
  * What it installs (project mode → .jcode/, global mode → ~/.jcode/):
  *   mcp.json              MCP server registration (command: <root>/bin/hypernexus.exe mcp)
- *   skills/<name>/SKILL.md  3 skills: hypernexus, hypernexus-ops, hypernexus-workflows
+ *   skills/<name>/SKILL.md  4 skills: hypernexus, hypernexus-ops,
+ *                           hypernexus-workflows, hypernexus-sessions
+ *   skills/[hn-*]/SKILL.md  13 slash-commands (from commands sources;
+ *                           jcode exposes skills as /commands automatically)
+ *   hooks/*.mjs           4 lifecycle hooks covering all 8 jcode events:
+ *                           hn-observe.mjs (session_start/end, turn_start/end,
+ *                           post_tool → kernel facts + observations),
+ *                           hn-pre-tool.mjs (RBAC gate: audit/ask/deny),
+ *                           hn-post-feedback.mjs (post_tool_feedback trap note),
+ *                           hn-pre-transform.mjs (pre_tool_transform hyphen repair)
  *   prompt-overlay.md     discipline loop + tool map (managed block)
  *   preferred-tools.md    tool routing preferences (managed block)
  *   (global only) swarm-prompt-block.md → ~/.jcode/swarm-prompt.md (managed block)
+ *
+ * Hooks are copied but NOT auto-wired: jcode reads hook commands from
+ * ~/.jcode/config.toml [hooks], which the installer never edits (it is user
+ * config). After install, paste the printed [hooks] block into config.toml.
+ * Meta model wiring (meta-model.jcode.toml + use-meta-model.ps1 +
+ * bin/meta-muse-key.mjs) documents both routes — native muse-subscription
+ * OAuth primary, pi-OAuth live-mint bridge fallback — and is reference-only,
+ * never installed automatically.
  *
  * After install: restart the Jcode session (or run the `mcp` tool with
  * action "reload") so the MCP server connects.
@@ -147,13 +164,42 @@ function removeMcpConfig(filePath) {
   }
 }
 
-const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
+const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows", "hypernexus-sessions"];
+// Slash-commands, authored in commands/ and installed as skills (jcode
+// exposes every skill as a /command automatically).
+const COMMANDS = ["hn-status", "hn-store", "hn-remember", "hn-search", "hn-tools", "hn-session", "hn-context", "hn-plan", "hn-summary", "hn-restore", "hn-purge", "hn-auth", "hn-models"];
+const HOOKS = ["hn-observe.mjs", "hn-pre-tool.mjs", "hn-post-feedback.mjs", "hn-pre-transform.mjs"];
 
 function skillsStatus() {
   return SKILLS.map((name) => {
     const p = path.join(TARGET, "skills", name, "SKILL.md");
     return { name, p, ok: fs.existsSync(p) };
   });
+}
+
+function commandsStatus() {
+  return COMMANDS.map((name) => {
+    const p = path.join(TARGET, "skills", name, "SKILL.md");
+    const src = path.join(__dirname, "commands", `${name}.md`);
+    return { name, p, src, ok: fs.existsSync(p) };
+  });
+}
+
+function hooksStatus() {
+  return HOOKS.map((name) => {
+    const p = path.join(TARGET, "hooks", name);
+    const src = path.join(__dirname, "hooks", name);
+    return { name, p, src, ok: fs.existsSync(p) };
+  });
+}
+
+function hooksTomlBlock() {
+  const q = (p) => `"${process.execPath} \\"${p}\\""`;
+  const obs = path.join(TARGET, "hooks", "hn-observe.mjs");
+  const gate = path.join(TARGET, "hooks", "hn-pre-tool.mjs");
+  const fb = path.join(TARGET, "hooks", "hn-post-feedback.mjs");
+  const tr = path.join(TARGET, "hooks", "hn-pre-transform.mjs");
+  return `[hooks]\nsession_start = [${q(obs)}]\nsession_end = [${q(obs)}]\nturn_start = [${q(obs)}]\nturn_end = [${q(obs)}]\npost_tool = [${q(obs)}]\npost_tool_feedback = [${q(fb)}]\npre_tool = [${q(gate)}]\npre_tool_transform = [${q(tr)}]`;
 }
 
 // ── modes ────────────────────────────────────────────────────────────────
@@ -177,6 +223,28 @@ if (MODE === "install") {
     }
   }
 
+  for (const name of COMMANDS) {
+    const src = path.join(__dirname, "commands", `${name}.md`);
+    const dst = path.join(TARGET, "skills", name, "SKILL.md");
+    const body = fs.readFileSync(src, "utf8");
+    if (readIfExists(dst) !== body) {
+      fs.mkdirSync(path.dirname(dst), { recursive: true });
+      fs.writeFileSync(dst, body, "utf8");
+      changed.push(`skills/${name}/SKILL.md (command)`);
+    }
+  }
+
+  for (const name of HOOKS) {
+    const src = path.join(__dirname, "hooks", name);
+    const dst = path.join(TARGET, "hooks", name);
+    const body = fs.readFileSync(src, "utf8");
+    if (readIfExists(dst) !== body) {
+      fs.mkdirSync(path.dirname(dst), { recursive: true });
+      fs.writeFileSync(dst, body, "utf8");
+      changed.push(`hooks/${name}`);
+    }
+  }
+
   if (upsertManagedBlock(path.join(TARGET, "prompt-overlay.md"), fs.readFileSync(path.join(__dirname, "prompt-overlay.md"), "utf8")))
     changed.push("prompt-overlay.md");
   if (upsertManagedBlock(path.join(TARGET, "preferred-tools.md"), fs.readFileSync(path.join(__dirname, "preferred-tools.md"), "utf8")))
@@ -189,6 +257,12 @@ if (MODE === "install") {
 
   console.log(changed.length ? `  updated: ${changed.join(", ")}` : "  already up to date");
   console.log("\nNext: restart the Jcode session, or in-session run the `mcp` tool with {\"action\":\"reload\"}.");
+  console.log("\nHooks are NOT auto-wired (this installer never edits config.toml).");
+  console.log("To enable HyperNexus lifecycle hooks, merge this block into ~/.jcode/config.toml:");
+  console.log("");
+  console.log(hooksTomlBlock());
+  console.log("\nMeta model (muse-spark-1.3-contributor): see addons/jcode/meta-model.jcode.toml");
+  console.log("and run addons/jcode/use-meta-model.ps1 after setting $env:META_MUSE_API_KEY yourself.");
 } else if (MODE === "check") {
   console.log(`HyperNexus → Jcode check (${TARGET})`);
   let gaps = 0;
@@ -212,6 +286,16 @@ if (MODE === "install") {
     console.log(`  ${s.ok ? "ok " : "GAP"} skills/${s.name}/SKILL.md`);
     if (!s.ok) gaps++;
   }
+  for (const s of commandsStatus()) {
+    const same = s.ok && readIfExists(s.p) === fs.readFileSync(s.src, "utf8");
+    console.log(`  ${same ? "ok " : "GAP"} skills/${s.name}/SKILL.md (command)`);
+    if (!same) gaps++;
+  }
+  for (const s of hooksStatus()) {
+    const same = s.ok && readIfExists(s.p) === fs.readFileSync(s.src, "utf8");
+    console.log(`  ${same ? "ok " : "GAP"} hooks/${s.name}`);
+    if (!same) gaps++;
+  }
   for (const f of ["prompt-overlay.md", "preferred-tools.md"]) {
     const body = readIfExists(path.join(TARGET, f)) ?? "";
     const ok = body.includes(BEGIN);
@@ -229,10 +313,23 @@ if (MODE === "install") {
   console.log(`HyperNexus → Jcode uninstall (${TARGET})`);
   const removed = [];
   if (removeMcpConfig(path.join(TARGET, "mcp.json"))) removed.push("mcp.json");
-  for (const s of skillsStatus()) {
+  for (const s of [...skillsStatus(), ...commandsStatus()]) {
+    // Only remove installed copies still byte-identical to ours — never
+    // destroy user edits.
     if (s.ok) {
-      fs.rmSync(path.dirname(s.p), { recursive: true, force: true });
-      removed.push(`skills/${s.name}/`);
+      const src = s.src ?? path.join(__dirname, "skills", s.name, "SKILL.md");
+      if (readIfExists(s.p) === fs.readFileSync(src, "utf8")) {
+        fs.rmSync(path.dirname(s.p), { recursive: true, force: true });
+        removed.push(`skills/${s.name}/`);
+      } else {
+        console.log(`  ! skills/${s.name}/SKILL.md was modified — leaving in place`);
+      }
+    }
+  }
+  for (const s of hooksStatus()) {
+    if (s.ok && readIfExists(s.p) === fs.readFileSync(s.src, "utf8")) {
+      fs.rmSync(s.p, { force: true });
+      removed.push(`hooks/${s.name}`);
     }
   }
   for (const f of ["prompt-overlay.md", "preferred-tools.md"]) {

@@ -1,1 +1,1 @@
-channels solid: copy+node-write both work
+channels solid: copy plus node-write both work

@@ -1,0 +1,35 @@
+# HyperNexus — Meta model wiring for Claude Code (REFERENCE SNIPPET, no secrets inside).
+# =============================================================================
+# Model: muse-spark-1.3-contributor via the HyperNexus kernel's Anthropic shim
+# (go/internal/httpapi/anthropic_compat.go: POST /v1/messages, GET /v1/models).
+#
+# NATIVE PATH (no minting, no key handling): the kernel reads the pi Meta OAuth
+# identity ITSELF per request (~/.pi/agent/auth.json -> meta.refresh/access) and
+# forwards to https://api.meta.ai/v1/chat/completions. Pi owns OAuth refresh,
+# so the identity auto-renews; nothing is stored anywhere in Claude config.
+#
+#   ~/.claude/settings.json:
+#     { "env": {
++#         "ANTHROPIC_BASE_URL": "http://127.0.0.1:7778",
++#         "ANTHROPIC_API_KEY": "hypernexus-local",
++#         "ANTHROPIC_MODEL": "muse-spark-1.3-contributor" } }
++#
++# Then:  claude --plugin-dir <path-to>/plugin/hypernexus "your prompt"
++# or:    .\use-meta-model.ps1 "your prompt"   (mints a fresh override key per run)
++#
++# OVERRIDE PATH (optional): META_MUSE_API_KEY env — when set, the kernel uses it
++# instead of the pi identity. Minted fresh per run via bin/meta-muse-key.mjs
++# (pi identity .meta.refresh -> POST https://api.meta.ai/muse-code/key).
++# Mint helper probe: node bin/meta-muse-key.mjs --check   (expect: mint OK)
++#
++# WHY NOT .meta.access directly: auth.json .meta.access is a SHORT-LIVED token
++# (minutes). The durable pattern mints a Model API key from the identity
++# .meta.refresh (same as Droid apiKeyHelper + crush startup mint) — or skips
++# minting entirely and lets the kernel read pi's store per request.
++#
++# VERIFY: node bin/meta-muse-key.mjs --check
++#         curl -s http://127.0.0.1:7778/v1/models
++#         claude --plugin-dir plugin/hypernexus -p --model muse-spark-1.3-contributor "reply with exactly: CLAUDE_META_OK"
++#
++# SECURITY: never paste a minted key into settings.json (dies in ~24h) and never
++# commit one. Pi owns refresh; this file carries no credential.

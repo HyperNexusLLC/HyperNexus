@@ -55,7 +55,7 @@ if (Test-Path $pm) {
     param($o)
     if (-not $o.providers.PSObject.Properties['meta']) {
       $o.providers | Add-Member -NotePropertyName 'meta' -NotePropertyValue ([pscustomobject]@{
-        baseUrl = 'https://api.meta.ai/v1'; api = 'openai-completions'
+        baseUrl = 'http://127.0.0.1:7778/v1'; api = 'openai-completions'
         models = @([pscustomobject]@{ id='muse-spark-1.3-contributor'; name='Muse Spark 1.3 Contributor'; api='openai-completions'; reasoning=$true; input=@('text','image'); contextWindow=1048576; maxTokens=131072 })
       })
     }
@@ -107,7 +107,7 @@ if (Test-Path $me) {
   Backup-File $me
   $t = Get-Content $me -Raw
   $t2 = $t -replace '(?m)^MSWEA_MODEL_NAME=.*', 'MSWEA_MODEL_NAME=openai/muse-spark-1.3-contributor'
-  $t2 = $t2 -replace '(?m)^OPENAI_API_BASE=.*', 'OPENAI_API_BASE=https://api.meta.ai/v1'
+  $t2 = $t2 -replace '(?m)^OPENAI_API_BASE=.*', 'OPENAI_API_BASE=http://127.0.0.1:7778/v1'
   $t2 = $t2 -replace '(?m)^OPENAI_API_KEY=.*', ("OPENAI_API_KEY=" + $metaToken)
   Set-Content $me $t2 -Encoding UTF8
   Rec 'mini-swe-agent' '.env' 'OK' '(meta endpoint + pi token)'
@@ -124,7 +124,7 @@ if (Test-Path $oc) {
   Backup-File $oc
   $t = Get-Content $oc -Raw
   if ($t -notmatch 'model_provider = "meta"') {
-    $t += "`nmodel = `"muse-spark-1.3-contributor`"`nmodel_provider = `"meta`"`nmodel_reasoning_effort = `"high`"`n`n[model_providers.meta]`nname = `"Meta Model API`"`nbase_url = `"https://api.meta.ai/v1`"`nenv_key = `"OPENAI_API_KEY`"`nwire_api = `"responses`"`n"
+    $t += "`nmodel = `"muse-spark-1.3-contributor`"`nmodel_provider = `"meta`"`nmodel_reasoning_effort = `"high`"`n`n[model_providers.meta]`nname = `"Meta Model API`"`nbase_url = `"http://127.0.0.1:7778/v1`"`nenv_key = `"OPENAI_API_KEY`"`nwire_api = `"responses`"`n"
     Set-Content $oc $t -Encoding UTF8
   }
   Rec 'open-interpreter' 'config model' 'OK' '(meta/muse-spark-1.3-contributor)'
@@ -132,21 +132,25 @@ if (Test-Path $oc) {
 
 # 8. opencode global config: meta provider + hypernexus MCP
 $op = "$HOME_DIR\.config\opencode\opencode.json"
-$opObj = [pscustomobject]@{
-  model = 'meta/muse-spark-1.3-contributor'
-  provider = [pscustomobject]@{ meta = [pscustomobject]@{
-    npm = '@ai-sdk/openai-compatible'; name = 'Meta (pi OAuth, live key via env)'
-    options = [pscustomobject]@{ baseURL = 'https://api.meta.ai/v1'; apiKey = '{env:META_MUSE_API_KEY}' }
-    models = [pscustomobject]@{ 'muse-spark-1.3-contributor' = [pscustomobject]@{ name = 'Muse Spark 1.3 Contributor'; limit = [pscustomobject]@{ context = 1048576; output = 131072 } } }
-  } }
-  mcp = [pscustomobject]@{ hypernexus = [pscustomobject]@{
-    type = 'local'; command = @($HN_EXE, 'mcp')
-    environment = [pscustomobject]@{ HYPERNEXUS_URL = 'http://127.0.0.1:7778'; HYPERNEXUS_WORKSPACE_ROOT = "$HOME_DIR\workspace\HyperNexus" }
-  } }
-}
-Backup-File $op
-$opObj | ConvertTo-Json -Depth 12 | Set-Content $op -Encoding UTF8
-Rec 'opencode' 'global opencode.json' 'OK' '(meta provider + hypernexus MCP)'
+# Update-in-place (preserves V2 plugin/skill config managed by addons/opencode/install.mjs).
+Patch-Json $op {
+  param($o)
+  if (-not $o.providers) { $o | Add-Member -NotePropertyName 'providers' -NotePropertyValue ([pscustomobject]@{}) }
+  if (-not $o.providers.PSObject.Properties['meta']) {
+    $o.providers | Add-Member -NotePropertyName 'meta' -NotePropertyValue ([pscustomobject]@{
+      name = 'Meta (HyperNexus kernel proxy; live pi-OAuth token, no stale copies)'
+      env = @('META_MUSE_API_KEY'); npm = '@ai-sdk/openai-compatible'
+      options = [pscustomobject]@{ baseURL = 'http://127.0.0.1:7778/v1'; apiKey = '{env:META_MUSE_API_KEY}' }
+      models = [pscustomobject]@{ 'muse-spark-1.3-contributor' = [pscustomobject]@{ name = 'Muse Spark 1.3 Contributor'; limit = [pscustomobject]@{ context = 1048576; output = 131072 } } }
+    })
+  } else {
+    if (-not $o.providers.meta.options) { $o.providers.meta | Add-Member -NotePropertyName 'options' -NotePropertyValue ([pscustomobject]@{}) }
+    $o.providers.meta.options.baseURL = 'http://127.0.0.1:7778/v1'
+  }
+  if (-not $o.model) { $o | Add-Member -NotePropertyName 'model' -NotePropertyValue 'meta/muse-spark-1.3-contributor' } else { $o.model = 'meta/muse-spark-1.3-contributor' }
+  $true
+} | Out-Null
+Rec 'opencode' 'global opencode.json' 'OK' '(providers.meta baseURL -> kernel, in place)'
 
 # 9. interpreter MCP hypernexus (codex-family CLI)
 $mcpList = (& interpreter mcp list 2>&1) -join "`n"
@@ -178,7 +182,7 @@ default_model = "muse-spark-1.3-contributor"
 type = "openai-compatible"
 model = "muse-spark-1.3-contributor"
 api_key = "${META_MUSE_API_KEY}"
-base_url = "https://api.meta.ai/v1"
+base_url = "http://127.0.0.1:7778/v1"
 '@ | Set-Content $ac -Encoding UTF8
   $b = [IO.File]::ReadAllBytes($ac)
   if ($b[0] -eq 0xEF) { [IO.File]::WriteAllBytes($ac, $b[3..($b.Length-1)]) }
@@ -190,7 +194,7 @@ Rec 'atom' 'config ensure' 'OK' ''
 [Environment]::SetEnvironmentVariable('HARNESS2_IMPROVER_MODEL', 'meta/muse-spark-1.3-contributor', 'User')
 [Environment]::SetEnvironmentVariable('HARNESS2_CODEX_MODEL', 'muse-spark-1.3-contributor', 'User')
 [Environment]::SetEnvironmentVariable('HARNESS2_JUDGE_MODEL', 'meta/muse-spark-1.3-contributor', 'User')
-[Environment]::SetEnvironmentVariable('HARNESS2_JUDGE_BASE_URL', 'https://api.meta.ai/v1', 'User')
+[Environment]::SetEnvironmentVariable('HARNESS2_JUDGE_BASE_URL', 'http://127.0.0.1:7778/v1', 'User')
 [Environment]::SetEnvironmentVariable('HARNESS2_JUDGE_API_KEY', $metaToken, 'User')
 Rec 'harness2' 'model env' 'OK' ''
 
@@ -201,7 +205,7 @@ if (-not (Test-Path "$fbByokDir\connections.json")) {
   New-Item -ItemType Directory -Force -Path $fbByokDir | Out-Null
   $fbId = [guid]::NewGuid().ToString()
   $fbNow = (Get-Date).ToUniversalTime().ToString("o")
-  $fbConn = @(@{ id=$fbId; revision=1; name="Meta Muse Spark 1.3 (pi OAuth, live env)"; provider="openai-compatible"; model="muse-spark-1.3-contributor"; baseUrl="https://api.meta.ai/v1"; contextWindow=1048576; maxOutputTokens=131072; credentialRef="env:META_MUSE_API_KEY"; createdAt=$fbNow; updatedAt=$fbNow })
+  $fbConn = @(@{ id=$fbId; revision=1; name="Meta Muse Spark 1.3 (pi OAuth, live env)"; provider="openai-compatible"; model="muse-spark-1.3-contributor"; baseUrl="http://127.0.0.1:7778/v1"; contextWindow=1048576; maxOutputTokens=131072; credentialRef="env:META_MUSE_API_KEY"; createdAt=$fbNow; updatedAt=$fbNow })
   $fbConn | ConvertTo-Json -Depth 5 | Set-Content "$fbByokDir\connections.json" -Encoding UTF8
   $fbB = [IO.File]::ReadAllBytes("$fbByokDir\connections.json"); if ($fbB[0] -eq 0xEF) { [IO.File]::WriteAllBytes("$fbByokDir\connections.json", $fbB[3..($fbB.Length-1)]) }
   @{ byokConnection = @{ id=$fbId; revision=1; provider="openai-compatible"; model="muse-spark-1.3-contributor" } } | ConvertTo-Json -Depth 5 | Set-Content "$HOME_DIR\.config\manicode\settings.json" -Encoding UTF8

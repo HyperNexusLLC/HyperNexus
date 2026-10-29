@@ -11,7 +11,7 @@ const VARS = {
   HARNESS2_IMPROVER_MODEL: "meta/muse-spark-1.3-contributor",
   HARNESS2_CODEX_MODEL: "muse-spark-1.3-contributor",
   HARNESS2_JUDGE_MODEL: "meta/muse-spark-1.3-contributor",
-  HARNESS2_JUDGE_BASE_URL: "https://api.meta.ai/v1",
+  HARNESS2_JUDGE_BASE_URL: "http://127.0.0.1:7778/v1",
 };
 function setx(k, v) {
   try { execFileSync("setx", [k, v], { stdio: "ignore" }); } catch { /* non-Windows or setx missing: process env only */ }

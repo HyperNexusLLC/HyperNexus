@@ -1,1 +1,1 @@
-step1 channels ok
+line one line two mini HARNESS ok append-ok

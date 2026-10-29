@@ -11,8 +11,8 @@ extension touches is also available over plain HTTP on the kernel (port 7778).
 |---|---|---|
 | **MCP server `hypernexus`** | `.jcode/mcp.json` (project) or `~/.jcode/mcp.json` (global) | 58 tools: L2 memory (add/search/delete/stats), L1 scratchpad, knowledge-graph relation extraction, MCP discovery + call routing, code search, kernel health/billing |
 | **4 skills** | `.jcode/skills/` | `hypernexus` (tool map + discipline), `hypernexus-ops` (verify loop + degradation), `hypernexus-workflows` (MEM-FIRST / DISCOVER / HARVEST / HANDOFF / OPS), `hypernexus-sessions` (continuity + agent dispatch) |
-| **8 slash-commands** | `.jcode/skills/hn-*/` (from `addons/jcode/commands/`) | `/hn-status` `/hn-store` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-summary` `/hn-purge` (jcode exposes every skill as a `/command`) |
-| **Lifecycle hooks** | `.jcode/hooks/` + `[hooks]` block in `~/.jcode/config.toml` | `hn-observe.mjs` (session/turn/tool observers → kernel facts + observations), `hn-pre-tool.mjs` (fail-open allow-gate) |
+| **13 slash-commands** | `.jcode/skills/hn-*/` (from `addons/jcode/commands/`) | `/hn-status` `/hn-store` `/hn-remember` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-plan` `/hn-summary` `/hn-restore` `/hn-purge` `/hn-auth` `/hn-models` (jcode exposes every skill as a `/command`) |
+| **Lifecycle hooks** | `.jcode/hooks/` + `[hooks]` block in `~/.jcode/config.toml` | `hn-observe.mjs` (session_start/end, turn_start/end, post_tool observers → kernel facts + observations), `hn-pre-tool.mjs` (RBAC gate: audit/ask/deny), `hn-post-feedback.mjs` (hyphen-token trap note), `hn-pre-transform.mjs` (hyphen-query repair) — all 8 hook events covered |
 | **Prompt overlay** | `.jcode/prompt-overlay.md` | RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY discipline + memory tiers |
 | **Preferred tools** | `.jcode/preferred-tools.md` | Routes memory/discovery/ops intents to `mcp__hypernexus__*` without displacing Jcode-native tools |
 | **Swarm prompt block** | `~/.jcode/swarm-prompt.md` (global install) | Workers persist findings to L2 (append-only, safe to retry) |
@@ -92,19 +92,27 @@ curl -X POST http://127.0.0.1:7778/api/agent/tool -H 'Content-Type: application/
 
 ## Lifecycle hooks
 
-`node addons/jcode/install.mjs` copies `hooks/hn-observe.mjs` and
-`hooks/hn-pre-tool.mjs` into `.jcode/hooks/` (or `~/.jcode/hooks/` with
-`--global`) and prints the exact `[hooks]` block to merge into
-`~/.jcode/config.toml`. The installer never edits `config.toml` itself.
+`node addons/jcode/install.mjs` copies 4 hook scripts into `.jcode/hooks/`
+(or `~/.jcode/hooks/` with `--global`) and prints the exact `[hooks]` block to
+merge into `~/.jcode/config.toml`. The installer never edits `config.toml`
+itself. All 8 jcode hook events are covered:
 
-- `hn-observe.mjs` — observer for `session_start` / `session_end` / `turn_end` /
-  `post_tool`. Session boundaries log to `POST /api/memory/facts/add` (tags
-  arrays like `["jcode","session","session-start"]`) **and**
-  `POST /api/memory/observations/record`; turn ends log compact facts;
-  `post_tool` logs failures only. Always exits 0 with `{"continue":true}`.
-- `hn-pre-tool.mjs` — `pre_tool` gate. Allows everything (exit 0 +
-  `{"continue":true}`), performs no network I/O to stay within the hot-path
-  budget. Add targeted `exit 2` denials here if you need a policy boundary.
+- `hn-observe.mjs` — observer for `session_start` / `session_end` /
+  `turn_start` / `turn_end` / `post_tool`. Session boundaries log to
+  `POST /api/memory/facts/add` (tags arrays like
+  `["jcode","session","session-start"]`) **and**
+  `POST /api/memory/observations/record`; turn ends log compact facts with
+  full provider token accounting when reported; `post_tool` logs failures +
+  touched-path observations (`JCODE_HOOK_TOUCHED_PATHS`). Always exits 0.
+- `hn-pre-tool.mjs` — `pre_tool` gate with `HYPERNEXUS_RBAC` policy:
+  `audit` (default, allow + audit-mirror), `ask` (allow + flag sensitive for
+  review), `deny` (block destructive shell + sensitive-path writes, exit 2).
+  Fail-open on any internal error. Audit mirror is detached (no hot-path I/O).
+- `hn-post-feedback.mjs` — `post_tool_feedback`: silent except the known
+  hyphenated-token search trap (one-line retry hint, no recall fetch).
+- `hn-pre-transform.mjs` — `pre_tool_transform`: rewrites single-hyphenated
+  `search_memory` queries to spaced form (`foo-bar` → `foo bar`) so the call
+  succeeds; everything else passes through byte-identical.
 
 Validate without secrets:
 
@@ -116,15 +124,32 @@ node addons/jcode/hooks/hn-observe.mjs   # exit 0 + {"continue":true}
 
 ## Meta model (muse-spark-1.3-contributor)
 
-`meta-model.jcode.toml` is a drop-in `[providers.meta]` snippet (env-var
-reference `api_key_env = "META_MUSE_API_KEY"` — no token inside).
-`use-meta-model.ps1` only presence-checks that variable name, then launches
-jcode with the profile. You set the value in your own shell; nothing stores it:
+Two routes, native first. Neither stores a secret. jcode ships a built-in
+`meta-muse` provider (Model API key path, reads `META_MUSE_API_KEY`),
+distinct from the `muse-subscription` native route — `jcode auth status`
+confirms both.
+
+**Route 1 (primary — native jcode OAuth):**
 
 ```powershell
-$env:META_MUSE_API_KEY = '<paste-your-token-here>'  # one live shell only
-.\addons\jcode\use-meta-model.ps1 "hello"
+$env:JCODE_EXPERIMENTAL_MUSE_SUBSCRIPTION = '1'
+jcode login --provider muse-subscription     # one-time device flow, jcode-owned ~/.jcode/muse_subscription.json
+.\addons\jcode\use-meta-model.ps1 "hello"   # runs on the native subscription
 ```
+
+**Route 2 (bridge — pi OAuth session, per-shell mint into the BUILT-IN provider):**
+
+```powershell
+.\addons\jcode\use-meta-model.ps1 -Bridge "hello"   # mints via addons/jcode/bin/meta-muse-key.mjs, exports META_MUSE_API_KEY shell-local ~24h, runs jcode run -p meta-muse -m muse-spark-1.3-contributor
+```
+
+Verified live this session: `BRIDGE-OK` one-shot inference turn on
+`meta-muse/muse-spark-1.3-contributor` (exact reply + token report). No custom
+`[providers.meta]` profile needed — `meta-model.jcode.toml` is a
+legacy/optional snippet only.
+`/hn-auth` reports all three readiness lines (native credential, bridge mint,
+provider wiring) and `/hn-models` lists the live catalog. A passing turn is
+never claimed as billing proof.
 
 ## Degradation contract
 
@@ -143,3 +168,7 @@ node bin/test-mcp-tools.mjs     # MCP router tools
 node bin/test-mcp-sweep.mjs     # every MCP tool invoked + stdio transport + parity
 node bin/test-core-noext.mjs    # kernel endpoints without any extension
 ```
+
+## Meta model: two routes (both live)
+- `meta-muse` (default): built-in provider, key from `META_MUSE_API_KEY` env + `~/.config/jcode/meta-muse.env`. Verified: `jcode -p meta-muse run '...'` (JCODE-META-OK).
+- `meta-kernel` profile: `jcode provider add meta-kernel --base-url http://127.0.0.1:7778/v1 --model muse-spark-1.3-contributor`, then `jcode --provider-profile meta-kernel ...` (JCODE-KERNEL-OK). Immune to pi's 24h token rotation (kernel re-reads pi auth.json per request). NOTE: `auth-test` for this profile reports FAIL on model discovery (probe goes direct-to-Meta per its model catalog); `run` works — that FAIL is a probe quirk, not a functional failure.

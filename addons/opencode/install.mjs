@@ -30,6 +30,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC_PLUGIN = path.join(HERE, "plugin", "hypernexus");
 const SRC_SKILLS = path.join(HERE, "skills");
 const SRC_AGENT = path.join(HERE, "agent", "hypernexus-orchestrator.md");
+const SRC_BIN = path.join(HERE, "bin", "meta-muse-key.mjs");
 
 const args = process.argv.slice(2);
 const has = (flag) => args.includes(flag);
@@ -186,12 +187,58 @@ function install() {
     copyUtf8(SRC_AGENT, AGENT_DEST);
     log(`agent → ${AGENT_DEST}`);
   }
+  if (fs.existsSync(SRC_BIN)) {
+    copyUtf8(SRC_BIN, path.join(PLUGIN_DEST, "meta-muse-key.mjs"));
+    log(`meta key minter → ${PLUGIN_DEST}`);
+  }
+  // V1→V2 config migration: singular "provider" is retired; plural "providers"
+  // with package "env" is the V2 shape (see meta-model.opencode.jsonc).
+  migrateV1Provider(findConfigFile());
   if (!noMcp) registerMcpConfig();
   log("done. Restart OpenCode (or run `opencode service restart`) to load the plugin.");
 }
 
+/**
+ * Rewrite a retired V1 `provider.meta` block (npm/options/apiKey) into the V2
+ * `providers.meta` shape (package/env/settings) without touching secrets —
+ * the apiKey value is replaced by the {env:META_MUSE_API_KEY} reference.
+ * No-op when no V1 block exists. Returns true when the file was rewritten.
+ */
+function migrateV1Provider(file) {
+  let config = {};
+  if (fs.existsSync(file)) {
+    try {
+      config = JSON.parse(stripJsonc(fs.readFileSync(file, "utf8")));
+    } catch (err) {
+      log(`WARNING: could not parse ${file}: ${err.message}. Skipping provider migration.`);
+      return false;
+    }
+  } else {
+    return false;
+  }
+  const v1 = config?.provider?.meta;
+  if (!v1 || typeof v1 !== "object") return false; // nothing to migrate
+  const models = v1?.options?.models || v1?.models || {
+    "muse-spark-1.3-contributor": { name: "Muse Spark 1.3 Contributor", limit: { context: 1048576, output: 131072 } },
+  };
+  config.providers = config.providers || {};
+  if (!config.providers.meta) {
+    config.providers.meta = {
+      name: v1?.name || "Meta (muse-spark)",
+      env: ["META_MUSE_API_KEY"],
+      package: "@opencode/ai/providers/openai-compatible",
+      options: { baseURL: v1?.options?.baseURL || "http://127.0.0.1:7778/v1" },
+      models,
+    };
+  }
+  delete config.provider; // V1 singular key is rejected by V2 schema validation
+  writeUtf8(file, JSON.stringify(config, null, 2) + "\n");
+  log(`migrated V1 provider.meta → V2 providers.meta in ${file} (apiKey now {env:META_MUSE_API_KEY}).`);
+  return true;
+}
+
 function uninstallAll() {
-  for (const target of [PLUGIN_DEST, AGENT_DEST, path.join(SKILLS_DEST, "hypernexus"), path.join(SKILLS_DEST, "hypernexus-ops"), path.join(SKILLS_DEST, "hypernexus-workflows")]) {
+  for (const target of [PLUGIN_DEST, AGENT_DEST, path.join(SKILLS_DEST, "hypernexus"), path.join(SKILLS_DEST, "hypernexus-ops"), path.join(SKILLS_DEST, "hypernexus-workflows"), path.join(SKILLS_DEST, "hypernexus-orchestrator")]) {
     try {
       fs.rmSync(target, { recursive: true, force: true });
       log(`removed ${target}`);
@@ -221,20 +268,37 @@ function checkAll() {
     ok = same(path.join(SRC_PLUGIN, f), path.join(PLUGIN_DEST, f)) && ok;
   }
   ok = same(SRC_AGENT, AGENT_DEST) && ok;
-  for (const skill of ["hypernexus", "hypernexus-ops", "hypernexus-workflows"]) {
-    ok = same(path.join(SRC_SKILLS, skill, "SKILL.md"), path.join(SKILLS_DEST, skill, "SKILL.md")) && ok;
+  for (const skill of ["hypernexus", "hypernexus-ops", "hypernexus-workflows", "hypernexus-orchestrator"]) {
+    const skillSrc = path.join(SRC_SKILLS, skill, "SKILL.md");
+    if (fs.existsSync(skillSrc)) {
+      ok = same(skillSrc, path.join(SKILLS_DEST, skill, "SKILL.md")) && ok;
+    } else {
+      log(`NOTE: skill source missing (plugin falls back to inline content): ${skillSrc}`);
+    }
+  }
+  if (fs.existsSync(SRC_BIN)) {
+    ok = same(SRC_BIN, path.join(PLUGIN_DEST, "meta-muse-key.mjs")) && ok;
   }
   const file = findConfigFile();
   let mcpOk = false;
+  let metaOk = false;
   if (fs.existsSync(file)) {
     try {
       const cfg = JSON.parse(stripJsonc(fs.readFileSync(file, "utf8")));
       mcpOk = !!cfg?.mcp?.servers?.hypernexus;
+      const meta = cfg?.providers?.meta;
+      metaOk = !!meta && (meta?.options?.baseURL === "http://127.0.0.1:7778/v1" || meta?.options?.baseURL === "https://api.meta.ai/v1") &&
+        Array.isArray(meta?.env) && meta.env.includes("META_MUSE_API_KEY") &&
+        !!meta?.models?.["muse-spark-1.3-contributor"];
+      if (cfg?.provider) {
+        log(`NOTE: retired V1 singular "provider" key still present in ${file} — run install (no flags) to migrate to plural "providers".`);
+      }
     } catch {
       mcpOk = false;
     }
   }
   if (!mcpOk) log(`NOTE: MCP server 'hypernexus' not present in ${file} (register with: node install.mjs${globalMode ? " --global" : ""})`);
+  if (!metaOk) log(`NOTE: V2 providers.meta (muse-spark-1.3-contributor, env META_MUSE_API_KEY) not present in ${file} (see meta-model.opencode.jsonc)`);
   log(ok ? "CHECK PASSED" : "CHECK FAILED");
   process.exit(ok ? 0 : 1);
 }

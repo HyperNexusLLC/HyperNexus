@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "hypernexus": {
+      "type": "stdio",
+      "command": "__HYPERNEXUS_BIN__",
+      "args": ["mcp"],
+      "env": {
+        "HYPERNEXUS_WORKSPACE_ROOT": "__HYPERNEXUS_ROOT__",
+        "HYPERNEXUS_URL": "http://127.0.0.1:7778"
+      }
+    }
+  }
+}

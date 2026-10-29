@@ -18,7 +18,7 @@ function ensureToml(t) {
   else s = s.replace(/^model\s*=.*$/m, `model = "muse-spark-1.3-contributor"`);
   if (!/^model_provider\s*=/m.test(s)) s = s.replace(/^model\s*=.*$/m, (m) => `${m}\nmodel_provider = "meta"`);
   else s = s.replace(/^model_provider\s*=.*$/m, `model_provider = "meta"`);
-  need(/\[model_providers\.meta\]/, `\n[model_providers.meta]\nname = "Meta Model API"\nbase_url = "https://api.meta.ai/v1"\nenv_key = "MODEL_API_KEY"\nwire_api = "responses"\n`);
+  need(/\[model_providers\.meta\]/, `\n[model_providers.meta]\nname = "Meta Model API (via HyperNexus kernel: live pi-OAuth token, no stale copies)"\nbase_url = "http://127.0.0.1:7778/v1"\nenv_key = "MODEL_API_KEY"\nwire_api = "responses"\n`);
   need(/\[mcp_servers\.hypernexus\]/, `\n[mcp_servers.hypernexus]\ncommand = '${exe()}'\nargs = ["mcp"]\n\n[mcp_servers.hypernexus.env]\nHYPERNEXUS_URL = "http://127.0.0.1:7778"\nHYPERNEXUS_WORKSPACE_ROOT = 'C:/Users/hyper/workspace/HyperNexus'\n`);
   return s;
 }

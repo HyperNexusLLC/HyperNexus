@@ -214,19 +214,20 @@ func (p *ConversationalPredictor) callOllama(ctx context.Context, system, user s
 	}
 	model := os.Getenv("HYPERNEXUS_LOCAL_PREDICT_MODEL")
 	if model == "" {
-		model = "gemma-4-heretic"
+		model = "qwen3:1.7b" // HYBRID stage-1 router: small + fast (think:false). Generation stays gemma-4-heretic.
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
 		"model":  model,
 		"stream": false,
+		"think":  false, // disable reasoning for the router; it must be real-time
 		"messages": []map[string]string{
 			{"role": "system", "content": system},
 			{"role": "user", "content": user},
 		},
 		"options": map[string]any{
 			"temperature": 0.1,
-			"num_predict": 1500, // gemma-4-heretic is a thinking model; 128 was all reasoning
+			"num_predict": 80, // router output is a short JSON array of tool names
 		},
 	})
 
