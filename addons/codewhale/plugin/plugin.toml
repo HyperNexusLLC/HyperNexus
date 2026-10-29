@@ -20,5 +20,8 @@ path = "commands"
 [extensions."net.codewhale".skills]
 path = "skills"
 
+[extensions."net.codewhale".agents]
+path = "agents"
+
 [mcp]
 path = "mcp.json"

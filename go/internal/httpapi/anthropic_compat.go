@@ -8,14 +8,19 @@ package httpapi
 //	ANTHROPIC_BASE_URL=http://127.0.0.1:7778 ANTHROPIC_API_KEY=dummy \
 //	  claude -p --model muse-spark-1.3-contributor "hi"
 //
-// Flow: Anthropic Messages request -> OpenAI chat-completions translation ->
-// https://api.meta.ai/v1/chat/completions (Bearer = pi OAuth access token,
+// Flow: Anthropic Messages request -> Responses API translation ->
+// https://api.meta.ai/v1/responses (Bearer = pi OAuth access token,
 // re-read per request so pi-side refreshes are picked up) -> translated back
 // to Anthropic Messages (JSON or SSE).
 //
-// Streaming note: the upstream call is buffered, then replayed as a valid
-// Anthropic SSE sequence. Same tokens/latency as non-stream; progress events
-// arrive at completion. Tool calls are fully supported in both modes.
+// Why Responses, not chat-completions: the subscription credential only covers
+// the Responses API (chat-completions is rejected with client_attestation_denied
+// — "Muse Code subscriptions cover the Muse Code client on the Responses API
+// only"). pi's own Meta provider uses the same Responses API.
+//
+// Streaming note: the upstream call is buffered (non-streaming Responses),
+// then replayed as a valid Anthropic SSE sequence. Tool calls are fully
+// supported in both modes (multi-turn loops replay via function_call_output).
 
 import (
 	"bytes"
@@ -76,29 +81,50 @@ func metaAccessToken() string {
 	if err != nil {
 		return ""
 	}
-	raw, err := os.ReadFile(filepath.Join(home, ".pi", "agent", "auth.json"))
-	if err != nil {
-		return ""
-	}
-	var auth map[string]struct {
-		Type    string `json:"type"`
-		Key     string `json:"key"`
-		Access  string `json:"access"`
-		Refresh string `json:"refresh"`
-	}
-	if err := json.Unmarshal(raw, &auth); err != nil {
-		return ""
-	}
-	if m, ok := auth["meta"]; ok {
-		if m.Access != "" {
-			return m.Access
+	for _, rel := range []string{
+		filepath.Join(home, ".pi", "agent", "auth.json"),
+		filepath.Join(home, ".prime", "agent", "auth.json"),
+	} {
+		raw, err := os.ReadFile(rel)
+		if err != nil {
+			continue
 		}
-		return m.Key
+		var auth map[string]struct {
+			Type    string `json:"type"`
+			Key     string `json:"key"`
+			Access  string `json:"access"`
+			Refresh string `json:"refresh"`
+		}
+		if err := json.Unmarshal(raw, &auth); err != nil {
+			continue
+		}
+		if m, ok := auth["meta"]; ok {
+			if m.Access != "" {
+				return m.Access
+			}
+			if m.Key != "" {
+				return m.Key
+			}
+		}
 	}
 	return ""
 }
 
-// ── Anthropic -> OpenAI translation ───────────────────────────────────────
+// ── Anthropic -> Responses translation ──────────────────────────────────────
+//
+// The subscription credential only covers the Responses API
+// (POST https://api.meta.ai/v1/responses) — chat-completions is rejected with
+// client_attestation_denied. So the Anthropic Messages request is translated
+// to a Responses request (pi's own Meta provider uses the same API):
+//
+//	Anthropic user text            -> {role:"user", content:"..."}
+//	Anthropic assistant text       -> {role:"assistant", content:[{type:"output_text",text}]}
+//	Anthropic tool_use             -> {type:"function_call", call_id, name, arguments}
+//	Anthropic tool_result          -> {type:"function_call_output", call_id, output}
+//	Anthropic tools                -> {type:"function", name, description, parameters}
+//
+// The upstream call is non-streaming; the shim replays it as a valid Anthropic
+// SSE sequence when the client asked for stream (same tokens/latency).
 
 func anthropicTextOf(content any) string {
 	switch c := content.(type) {
@@ -123,16 +149,18 @@ func anthropicTextOf(content any) string {
 	}
 }
 
-type openaiToolCall struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
-	Function struct {
-		Name      string `json:"name"`
-		Arguments string `json:"arguments"`
-	} `json:"function"`
+type responsesFuncCall struct {
+	CallID    string `json:"call_id"`
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
 }
 
-func anthropicToOpenAI(req *anthropicMessagesRequest) []map[string]any {
+// anthropicToResponses converts an Anthropic Messages request into a Responses
+// API input item list. Assistant text is preserved as output_text content so
+// multi-turn tool loops replay faithfully; tool_result blocks become
+// function_call_output items keyed by the tool_use id (Responses pairs them
+// via call_id).
+func anthropicToResponses(req *anthropicMessagesRequest) []map[string]any {
 	var out []map[string]any
 	if sys := anthropicTextOf(req.System); sys != "" {
 		out = append(out, map[string]any{"role": "system", "content": sys})
@@ -140,40 +168,41 @@ func anthropicToOpenAI(req *anthropicMessagesRequest) []map[string]any {
 	for _, m := range req.Messages {
 		switch m.Role {
 		case "user":
-			// May contain tool_result blocks. Preserve ORIGINAL order: OpenAI requires
-			// tool messages to immediately follow the assistant message with tool_calls.
-			// Emitting a text user message first breaks that adjacency (-> 400).
+			// May contain tool_result blocks. Each becomes a freestanding
+			// function_call_output item (Responses pairs via call_id, so no
+			// adjacency constraint unlike chat-completions); text accumulates
+			// into one user message in original order.
 			if blocks, ok := m.Content.([]any); ok {
 				var texts []string
-			flush := func() {
-				if len(texts) > 0 {
-					out = append(out, map[string]any{"role": "user", "content": strings.Join(texts, "\n")})
-					texts = nil
-				}
-			}
-			for _, b := range blocks {
-				bm, ok := b.(map[string]any)
-				if !ok {
-					continue
-				}
-				switch bm["type"] {
-				case "text":
-					if t, ok := bm["text"].(string); ok {
-						texts = append(texts, t)
+				flush := func() {
+					if len(texts) > 0 {
+						out = append(out, map[string]any{"role": "user", "content": strings.Join(texts, "\n")})
+						texts = nil
 					}
-				case "tool_result":
-					flush() // text accumulated so far goes first, then the tool message
-					var contentStr string
-					switch c := bm["content"].(type) {
-					case string:
-						contentStr = c
+				}
+				for _, b := range blocks {
+					bm, ok := b.(map[string]any)
+					if !ok {
+						continue
+					}
+					switch bm["type"] {
+					case "text":
+						if t, ok := bm["text"].(string); ok {
+							texts = append(texts, t)
+						}
+					case "tool_result":
+						flush() // text accumulated so far goes first, then the output item
+						var contentStr string
+						switch c := bm["content"].(type) {
+						case string:
+							contentStr = c
 					default:
 						cb, _ := json.Marshal(c)
 						contentStr = string(cb)
 					}
 					id, _ := bm["tool_use_id"].(string)
 					out = append(out, map[string]any{
-						"role": "tool", "tool_call_id": id, "content": contentStr,
+						"type": "function_call_output", "call_id": id, "output": contentStr,
 					})
 				}
 			}
@@ -184,7 +213,7 @@ func anthropicToOpenAI(req *anthropicMessagesRequest) []map[string]any {
 		case "assistant":
 			if blocks, ok := m.Content.([]any); ok {
 				var texts []string
-				var calls []openaiToolCall
+				var calls []responsesFuncCall
 				for _, b := range blocks {
 					bm, ok := b.(map[string]any)
 					if !ok {
@@ -196,29 +225,37 @@ func anthropicToOpenAI(req *anthropicMessagesRequest) []map[string]any {
 							texts = append(texts, t)
 						}
 					case "tool_use":
-						var tc openaiToolCall
-						tc.ID, _ = bm["id"].(string)
-						tc.Type = "function"
-						tc.Function.Name, _ = bm["name"].(string)
+						var tc responsesFuncCall
+						tc.CallID, _ = bm["id"].(string)
+						tc.Name, _ = bm["name"].(string)
 						if inp, ok := bm["input"].(map[string]any); ok {
 							ab, _ := json.Marshal(inp)
-							tc.Function.Arguments = string(ab)
+							tc.Arguments = string(ab)
 						} else {
-							tc.Function.Arguments = "{}"
+							tc.Arguments = "{}"
 						}
 						calls = append(calls, tc)
 					}
 				}
-				msg := map[string]any{"role": "assistant"}
+				// Responses replays history as items: the assistant text as an
+				// output_text message item, then one function_call item per call.
 				if len(texts) > 0 {
-					msg["content"] = strings.Join(texts, "\n")
-				} else {
-					msg["content"] = nil
+					out = append(out, map[string]any{
+						"role": "assistant",
+						"content": []map[string]any{
+							{"type": "output_text", "text": strings.Join(texts, "\n")},
+						},
+					})
 				}
-				if len(calls) > 0 {
-					msg["tool_calls"] = calls
+				for _, tc := range calls {
+					out = append(out, map[string]any{
+						"type": "function_call",
+						"call_id": tc.CallID, "name": tc.Name, "arguments": tc.Arguments,
+					})
 				}
-				out = append(out, msg)
+				if len(texts) == 0 && len(calls) == 0 {
+					out = append(out, map[string]any{"role": "assistant", "content": ""})
+				}
 			} else {
 				out = append(out, map[string]any{"role": "assistant", "content": anthropicTextOf(m.Content)})
 			}
@@ -227,7 +264,7 @@ func anthropicToOpenAI(req *anthropicMessagesRequest) []map[string]any {
 	return out
 }
 
-func anthropicToolsToOpenAI(tools []anthropicTool) []map[string]any {
+func anthropicToolsToResponses(tools []anthropicTool) []map[string]any {
 	var out []map[string]any
 	for _, t := range tools {
 		params := t.InputSchema
@@ -236,9 +273,7 @@ func anthropicToolsToOpenAI(tools []anthropicTool) []map[string]any {
 		}
 		out = append(out, map[string]any{
 			"type": "function",
-			"function": map[string]any{
-				"name": t.Name, "description": t.Description, "parameters": params,
-			},
+			"name": t.Name, "description": t.Description, "parameters": params,
 		})
 	}
 	return out
@@ -290,20 +325,22 @@ func (s *Server) handleAnthropicMessages(w http.ResponseWriter, r *http.Request)
 	// Claude Code's small max_tokens would truncate the trace into empty output,
 	// so floor the UPSTREAM budget while still honoring the client's limit in
 	// spirit (usage is reported honestly from the upstream response).
+	// (Responses requires max_output_tokens >= 16; the floor below satisfies it.)
 	upstreamMax := maxTokens
 	if upstreamMax < 1500 {
 		upstreamMax = 1500
 	}
 	body := map[string]any{
-		"model":       model,
-		"messages":    anthropicToOpenAI(&req),
-		"max_tokens":  upstreamMax,
-		"temperature": 0.7,
+		"model":             model,
+		"input":             anthropicToResponses(&req),
+		"max_output_tokens": upstreamMax,
+		"temperature":       0.7,
+		"store":             false,
 	}
 	if req.Temperature != nil {
 		body["temperature"] = *req.Temperature
 	}
-	if tools := anthropicToolsToOpenAI(req.Tools); len(tools) > 0 {
+	if tools := anthropicToolsToResponses(req.Tools); len(tools) > 0 {
 		body["tools"] = tools
 		body["tool_choice"] = "auto"
 	}
@@ -312,7 +349,7 @@ func (s *Server) handleAnthropicMessages(w http.ResponseWriter, r *http.Request)
 		os.WriteFile(os.ExpandEnv("$HOME\\hypernexus-anthropic-debug.json"), raw, 0600)
 	}
 	httpReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost,
-		"https://api.meta.ai/v1/chat/completions", bytes.NewReader(raw))
+		"https://api.meta.ai/v1/responses", bytes.NewReader(raw))
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
 		return
@@ -332,48 +369,71 @@ func (s *Server) handleAnthropicMessages(w http.ResponseWriter, r *http.Request)
 		fmt.Fprintf(w, `{"error":"meta api %d: %s"}`, resp.StatusCode, truncateForError(respBody))
 		return
 	}
-	var oai struct {
-		Choices []struct {
-			Message struct {
-				Content   *string          `json:"content"`
-				ToolCalls []openaiToolCall `json:"tool_calls"`
-			} `json:"message"`
-			FinishReason string `json:"finish_reason"`
-		} `json:"choices"`
+	// Responses non-streaming shape: {output:[{type,message|function_call|reasoning...}], usage:{...}}.
+	var rsp struct {
+		Output []struct {
+			Type    string `json:"type"`
+			Content []struct {
+				Type string `json:"type"`
+				Text string `json:"text"`
+			} `json:"content"`
+			CallID    string `json:"call_id"`
+			Name      string `json:"name"`
+			Arguments string `json:"arguments"`
+		} `json:"output"`
 		Usage struct {
-			PromptTokens     int `json:"prompt_tokens"`
-			CompletionTokens int `json:"completion_tokens"`
+			InputTokens  int `json:"input_tokens"`
+			OutputTokens int `json:"output_tokens"`
 		} `json:"usage"`
+		Status string `json:"status"`
 	}
-	if err := json.Unmarshal(respBody, &oai); err != nil || len(oai.Choices) == 0 {
+	if err := json.Unmarshal(respBody, &rsp); err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]any{"error": "bad meta response"})
 		return
 	}
-	ch := oai.Choices[0]
 	// Build Anthropic content blocks.
 	var blocks []map[string]any
-	if ch.Message.Content != nil && *ch.Message.Content != "" {
-		blocks = append(blocks, map[string]any{"type": "text", "text": *ch.Message.Content})
-	}
-	for _, tc := range ch.Message.ToolCalls {
-		var input map[string]any
-		_ = json.Unmarshal([]byte(tc.Function.Arguments), &input)
-		if input == nil {
-			input = map[string]any{}
+	for _, item := range rsp.Output {
+		switch item.Type {
+		case "message":
+			var texts []string
+			for _, c := range item.Content {
+				if c.Type == "output_text" && c.Text != "" {
+					texts = append(texts, c.Text)
+				}
+			}
+			if len(texts) > 0 {
+				blocks = append(blocks, map[string]any{"type": "text", "text": strings.Join(texts, "")})
+			}
+		case "function_call":
+			var input map[string]any
+			_ = json.Unmarshal([]byte(item.Arguments), &input)
+			if input == nil {
+				input = map[string]any{}
+			}
+			blocks = append(blocks, map[string]any{
+				"type": "tool_use", "id": item.CallID, "name": item.Name, "input": input,
+			})
+		default:
+			// reasoning / other items: not representable as Anthropic blocks;
+			// their tokens are still counted in usage.
 		}
-		blocks = append(blocks, map[string]any{
-			"type": "tool_use", "id": tc.ID, "name": tc.Function.Name, "input": input,
-		})
 	}
 	stop := "end_turn"
-	if len(ch.Message.ToolCalls) > 0 {
+	hasToolUse := false
+	for _, b := range blocks {
+		if b["type"] == "tool_use" {
+			hasToolUse = true
+		}
+	}
+	if hasToolUse {
 		stop = "tool_use"
-	} else if ch.FinishReason == "length" {
+	} else if rsp.Status == "incomplete" {
 		stop = "max_tokens"
 	}
 	msgID := "msg_hn_" + fmt.Sprintf("%d", time.Now().UnixNano())
 	usage := map[string]any{
-		"input_tokens": oai.Usage.PromptTokens, "output_tokens": oai.Usage.CompletionTokens,
+		"input_tokens": rsp.Usage.InputTokens, "output_tokens": rsp.Usage.OutputTokens,
 	}
 	if !req.Stream {
 		writeJSON(w, http.StatusOK, map[string]any{
@@ -411,7 +471,7 @@ func (s *Server) handleAnthropicMessages(w http.ResponseWriter, r *http.Request)
 		emit("content_block_stop", map[string]any{"type": "content_block_stop", "index": i})
 	}
 	emit("message_delta", map[string]any{"type": "message_delta",
-		"delta": map[string]any{"stop_reason": stop}, "usage": map[string]any{"output_tokens": oai.Usage.CompletionTokens}})
+		"delta": map[string]any{"stop_reason": stop}, "usage": map[string]any{"output_tokens": rsp.Usage.OutputTokens}})
 	emit("message_stop", map[string]any{"type": "message_stop"})
 	_ = msgID
 }

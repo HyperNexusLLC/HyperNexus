@@ -148,14 +148,16 @@ console.log("=== T4: plugin bundle manifest validity ===");
       if (fm) cmdOk++;
       else check(`${scope} commands/${f} frontmatter (description+usage)`, false);
     }
-    check(`${scope} 8 commands with valid frontmatter`, cmdOk === 8, `${cmdOk}/8`);
+    check(`${scope} 11 commands with valid frontmatter`, cmdOk === 11, `${cmdOk}/11`);
   }
 }
 
 console.log("=== T5: prompt overlay (AGENTS.md managed block) ===");
 {
   const body = fs.readFileSync(path.join(REPO_ROOT, "AGENTS.md"), "utf8");
-  const begins = (body.match(/<!-- hypernexus:begin/g) ?? []).length;
+  // Namespaced blocks (hypernexus:begin:freebuff, :codex, ...) share the
+  // hypernexus:begin prefix — count only exact managed-block markers.
+  const begins = (body.match(/<!-- hypernexus:begin( |-->)/g) ?? []).length;
   const ends = (body.match(/<!-- hypernexus:end -->/g) ?? []).length;
   check("AGENTS.md managed block balanced", begins === 1 && ends === 1, `begin=${begins} end=${ends}`);
   check("AGENTS.md block carries the discipline loop", body.includes("RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY"));

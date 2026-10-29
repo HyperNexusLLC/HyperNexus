@@ -69,7 +69,7 @@
     "events",
     "agent"
    ],
-   "notes": "36 tools + 11 /hn-* commands + 3 skills; auto-registers `hypernexus mcp` stdio server; hot-path FTS context injection; @memory:key prompt expansion; RBAC via HYPERNEXUS_RBAC."
+   "notes": "37 tools (incl hypernexus_meta_auth: pi-OAuth status/mint/check) + 13 /hn-* commands (incl hn-auth, hn-models) + 4 skills (incl hypernexus-orchestrator); native meta/muse-spark-1.3-contributor provider registration + pi-OAuth integration method; session hooks prompt/context/compaction/generate/title/model.request/http.request/http.response/retry; tool/permission/shell hooks; auto-registers hypernexus mcp stdio server; hot-path FTS context injection; @memory:key prompt expansion; RBAC via HYPERNEXUS_RBAC."
   },
   "jcode": {
    "status": "active",

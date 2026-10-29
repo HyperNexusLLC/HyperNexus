@@ -2336,7 +2336,7 @@ async function setup(ctx) {
   } catch (err) {
     console.error(`[hypernexus] session hooks skipped: ${String(err?.message || err)}`);
   }
-  // ── Native provider registration: meta/muse-spark-1.3-contributor (pi OAuth, zero secrets) ──
+  // ── Native provider registration (runs outside the hooks gate) ──
   try {
     if (enabled.meta !== false && ctx.provider && typeof ctx.provider.transform === "function") {
       track(
@@ -2417,9 +2417,9 @@ async function setup(ctx) {
   }
 
   try {
-  if (enabled.hooks) {
-    // generate/title auxiliary-request parity hooks (context-hook parity, kind-guarded)
-    for (const auxKind of ["generate", "title"]) {
+    if (enabled.hooks) {
+      // generate/title auxiliary-request parity hooks (context-hook parity, kind-guarded)
+      for (const auxKind of ["generate", "title"]) {
       track(
         await ctx.session.hook(auxKind, async (event) => {
           try {
@@ -2476,97 +2476,93 @@ async function setup(ctx) {
     console.error(`[hypernexus] auxiliary/http hooks skipped: ${String(err?.message || err)}`);
   }
   try {
-  if (enabled.hooks) {
-    track(
-      await ctx.tool.hook("execute.before", (event) => {
-        try {
-          const hit = dangerousMatch(`${event.tool} ${JSON.stringify(event.input ?? {})}`);
-          if (hit && rbacMode() !== "audit") {
-            audit({ type: "warning", title: `rbac-${rbacMode()}:${event.tool}`, content: `dangerous pattern: ${hit}`, toolName: event.tool });
+    if (enabled.hooks) {
+      track(
+        await ctx.tool.hook("execute.before", (event) => {
+          try {
+            const hit = dangerousMatch(`${event.tool} ${JSON.stringify(event.input ?? {})}`);
+            if (hit && rbacMode() !== "audit") {
+              audit({ type: "warning", title: `rbac-${rbacMode()}:${event.tool}`, content: `dangerous pattern: ${hit}`, toolName: event.tool });
+            }
+          } catch {
+            /* ignore */
           }
-        } catch {
-          /* ignore */
-        }
-      })
-    );
+        })
+      );
 
-    track(
-      await ctx.tool.hook("execute.after", (event) => {
-        try {
-          const toolName = String(event.tool || "");
-          if (toolName.startsWith("hypernexus_")) return;
-          const captured = event.status === "completed" && captureFileObservation(toolName, event.input);
-          if (!captured) {
-            audit({
-              type: "progress",
-              title: `tool:${toolName}`,
-              content: `${toolName} ${event.status}`,
-              toolName,
-              metadata: { status: event.status },
-            });
+      track(
+        await ctx.tool.hook("execute.after", (event) => {
+          try {
+            const toolName = String(event.tool || "");
+            if (toolName.startsWith("hypernexus_")) return;
+            const captured = event.status === "completed" && captureFileObservation(toolName, event.input);
+            if (!captured) {
+              audit({
+                type: "progress",
+                title: `tool:${toolName}`,
+                content: `${toolName} ${event.status}`,
+                toolName,
+                metadata: { status: event.status },
+              });
+            }
+            if (enabled.autoStore && event.status === "completed") {
+              const text =
+                typeof event.result?.content === "string"
+                  ? event.result.content
+                  : JSON.stringify(event.result?.content ?? event.result ?? "");
+              autoStoreResult(toolName, event.input, text);
+            }
+          } catch {
+            /* ignore */
           }
-          if (enabled.autoStore && event.status === "completed") {
-            const text =
-              typeof event.result?.content === "string"
-                ? event.result.content
-                : JSON.stringify(event.result?.content ?? event.result ?? "");
-            autoStoreResult(toolName, event.input, text);
-          }
-        } catch {
-          /* ignore */
-        }
-      })
-    );
-  }
+        })
+      );
+    }
 
   // Ã¢â€â‚¬Ã¢â€â‚¬ Permission hook: kernel-aware RBAC Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   } catch (err) {
     console.error(`[hypernexus] tool hooks skipped: ${String(err?.message || err)}`);
   }
   try {
-  if (enabled.hooks) {
-    track(
-      await ctx.permission.hook("evaluate", (event) => {
-        try {
-          const mode = rbacMode();
-          if (mode === "audit") return;
-          const hit = dangerousMatch(`${event.action} ${(event.resources || []).join(" ")}`);
-          if (!hit) return;
-          audit({
-            type: "warning",
-            title: `rbac-${mode}:${event.action}`,
-            content: `dangerous action ${event.action} on ${clamp((event.resources || []).join(", "), 200)} (pattern ${hit})`,
-            toolName: "opencode.permission",
-          });
-          event.effect = mode === "deny" ? "deny" : "ask";
-          event.message = `HyperNexus RBAC (${mode}): destructive pattern matched (${hit}).`;
-        } catch {
-          /* never break permission flow */
-        }
-      })
-    );
-  }
-
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Shell hook: env injection Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    if (enabled.hooks) {
+      track(
+        await ctx.permission.hook("evaluate", (event) => {
+          try {
+            const mode = rbacMode();
+            if (mode === "audit") return;
+            const hit = dangerousMatch(`${event.action} ${(event.resources || []).join(" ")}`);
+            if (!hit) return;
+            audit({
+              type: "warning",
+              title: `rbac-${mode}:${event.action}`,
+              content: `dangerous action ${event.action} on ${clamp((event.resources || []).join(", "), 200)} (pattern ${hit})`,
+              toolName: "opencode.permission",
+            });
+            event.effect = mode === "deny" ? "deny" : "ask";
+            event.message = `HyperNexus RBAC (${mode}): destructive pattern matched (${hit}).`;
+          } catch {
+            /* never break permission flow */
+          }
+        })
+      );
+    }
   } catch (err) {
     console.error(`[hypernexus] permission hook skipped: ${String(err?.message || err)}`);
   }
   try {
-  if (enabled.hooks && enabled.env) {
-    track(
-      await ctx.shell.hook("create.before", (event) => {
-        try {
-          event.env = event.env || {};
-          event.env.HYPERNEXUS_URL = base;
-          event.env.HYPERNEXUS_CLIENT = `opencode/${PLUGIN_VERSION}`;
-        } catch {
-          /* ignore */
-        }
-      })
-    );
-  }
-
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Event stream: turn observation (fire-and-forget) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    if (enabled.hooks && enabled.env) {
+      track(
+        await ctx.shell.hook("create.before", (event) => {
+          try {
+            event.env = event.env || {};
+            event.env.HYPERNEXUS_URL = base;
+            event.env.HYPERNEXUS_CLIENT = `opencode/${PLUGIN_VERSION}`;
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+    }
   } catch (err) {
     console.error(`[hypernexus] shell hook skipped: ${String(err?.message || err)}`);
   }

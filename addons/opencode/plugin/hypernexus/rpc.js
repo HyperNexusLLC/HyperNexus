@@ -125,9 +125,6 @@ export const KERNEL = Object.freeze({
   billingFallback: "/api/billing/fallback-chain",
   billingDepleted: "/api/billing/depleted-models",
   memoryAddGeneric: "/api/memory/add",
-  agentMemoryStats: "/api/agent-memory/stats",
-  sessionsSummary: "/api/sessions/summary",
-  agentMemoryDelete: "/api/agent-memory/delete",
 });
 
 /** Budget contract (ms) — mirrors addons/shared/hypernexus.manifest.json. */

@@ -16,8 +16,9 @@
  * What it installs (project → .codewhale/, global → ~/.codewhale/):
  *   mcp.json                       MCP server registration (mcpServers.hypernexus, stdio)
  *   plugins/hypernexus/            plugin bundle (Agent Plugins v1.0.0 plugin.json +
- *                                  legacy plugin.toml, mcp.json, commands/*.md, skills/)
- *   skills/<name>/SKILL.md         3 skills mirrored for direct (unqualified) discovery
+ *                                  legacy plugin.toml, mcp.json, commands/*.md, skills/,
+ *                                  agents/*.md, hooks/*)
+ *   skills/<name>/SKILL.md         4 skills mirrored for direct (unqualified) discovery
  *   (project only) AGENTS.md       managed prompt-overlay block
  *
  * Version stamping: plugin.json/plugin.toml are stamped from /VERSION at install
@@ -47,8 +48,10 @@ const BUNDLE = path.join(TARGET, "plugins", "hypernexus");
 
 const BEGIN = "<!-- hypernexus:begin";
 const END = "<!-- hypernexus:end -->";
-const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
-const COMMANDS = ["hn-status", "hn-store", "hn-search", "hn-tools", "hn-session", "hn-context", "hn-summary", "hn-purge"];
+const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows", "hypernexus-orchestrator"];
+const COMMANDS = ["hn-status", "hn-store", "hn-search", "hn-tools", "hn-session", "hn-context", "hn-summary", "hn-purge", "hn-plan", "hn-remember", "hn-restore"];
+const AGENTS = ["hypernexus-orchestrator", "hypernexus-researcher"];
+const HOOKS = ["hn-session.mjs", "hn-rbac.mjs", "hn-pre-tool.mjs"];
 
 // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -185,6 +188,13 @@ function bundleFileMap(exe, version) {
   for (const s of SKILLS) {
     files.push([`skills/${s}/SKILL.md`, fs.readFileSync(path.join(__dirname, "skills", s, "SKILL.md"), "utf8")]);
   }
+  for (const a of AGENTS) {
+    files.push([`agents/${a}.md`, fs.readFileSync(path.join(__dirname, "plugin", "agents", `${a}.md`), "utf8")]);
+  }
+  for (const h of HOOKS) {
+    files.push([`hooks/${h}`, fs.readFileSync(path.join(__dirname, "hooks", h), "utf8")]);
+  }
+  files.push(["hooks/README.md", fs.readFileSync(path.join(__dirname, "hooks", "README.md"), "utf8")]);
   files.push(["README.md", fs.readFileSync(path.join(__dirname, "plugin", "README.md"), "utf8")]);
   return files;
 }

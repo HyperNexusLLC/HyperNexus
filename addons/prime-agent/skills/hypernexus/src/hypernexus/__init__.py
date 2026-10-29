@@ -208,8 +208,11 @@ async def memory_graph(limit: int = 30) -> Any:
 
 
 async def memory_relate(source: str, target: str, relation: str = "related_to", metadata: dict | None = None) -> Any:
-    """Add a knowledge-graph edge between two entities."""
-    body: dict[str, Any] = {"source": source, "target": target, "relation": relation}
+    """Add a knowledge-graph edge between two entities.
+
+    The kernel requires source_id/target_id/relation_type field names.
+    """
+    body: dict[str, Any] = {"source_id": source, "target_id": target, "relation_type": relation}
     if metadata:
         body["metadata"] = metadata
     return await _request("POST", "/api/memory/relations/add", json=body)
