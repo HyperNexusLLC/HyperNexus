@@ -1,0 +1,6 @@
+interface:
+  display_name: "HyperNexus Workflows"
+  short_description: "Memory-first orchestration workflows"
+  default_prompt: "Use $hypernexus-workflows to run memory-first orchestration loops."
+policy:
+  allow_implicit_invocation: true

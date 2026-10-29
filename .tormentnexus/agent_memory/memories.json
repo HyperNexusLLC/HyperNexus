@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-10-26T06:55:05.141029+00:00",
+  "savedAt": "2026-10-28T07:34:26.275604+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -346,6 +346,191 @@
       },
       "createdAt": "2026-10-26T06:55:05.141029+00:00",
       "accessedAt": "2026-10-26T06:55:05.141029+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "89c1ef40086a8719",
+      "content": "Priority class inherits to children - BelowNormal on ollama/kernel/harnesses covers runners + tool spawns. llama-server is the CPU hog; ollama is foreign-account (needs UAC via bin/set-lowpri-ollama.ps1). PS gotcha: $pid is read-only.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "windows",
+          "priority",
+          "audio",
+          "ollama"
+        ],
+        "title": "Low-priority LLM workers for smooth audio"
+      },
+      "createdAt": "2026-10-26T19:28:02.765808+00:00",
+      "accessedAt": "2026-10-26T19:28:02.765808+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "c4725c407d916d4e",
+      "content": "Identity now [muse-spark-1.3-contributor in opencode in ~/workspace/HyperNexus]. Full matrix: syntax5 ext123 e2e11 reality33 sweep54 mcp23 core18 mimo51 tui22 drift95 = 435 green. Kernel 1.0.21. Muse: agent-reported not verified, test-green != proof, review starts on file-drop or pullable commit not path naming. 847e9f512 verified ancestor of both remotes.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "session-summary",
+          "verification",
+          "identity"
+        ],
+        "title": "Session13 muse-spark identity + full matrix 435 green + Muse review terms"
+      },
+      "createdAt": "2026-10-27T00:09:36.282802+00:00",
+      "accessedAt": "2026-10-27T00:09:36.282802+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "f531bcbceb0d5afe",
+      "content": "24/24 clean rows (streaming fix verified). Parity 7/12 vs 7/12, tokens 4607->172 (-96%), latency -30%. Predictive routing UNMEASURED 3rd run (disc=0): Mode A misses are needle-in-haystack, Mode B never attempts tool_search. v4 needs system-prompt discovery instruction. Reported to Muse at c0d17444b.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "benchmark",
+          "live-proof",
+          "session-summary"
+        ],
+        "title": "A/B v3 results + Muse report (2026-10-27)"
+      },
+      "createdAt": "2026-10-27T05:58:16.385186+00:00",
+      "accessedAt": "2026-10-27T05:58:16.385186+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "da7a2868eb7460fd",
+      "content": "Mode B system prompt now carries discovery hint (v3: model reported unavailability instead of searching). Scratchpad instrumentation verified sound via live probe - B miss is model behavior. v4 running low-priority PID 22196.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "benchmark",
+          "session-summary"
+        ],
+        "title": "v4 discovery instruction + scratchpad correction"
+      },
+      "createdAt": "2026-10-27T09:33:54.281690+00:00",
+      "accessedAt": "2026-10-27T09:33:54.281690+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "2412c93da814e539",
+      "content": "Added memory_stats, session_list, repomap (live endpoints verified). Pi memory_update/kernel_routes/stats bind dead 404s - not copied. Gauntlet 446 green. Muse parity note delivered 1x, draft cleared.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "opencode",
+          "parity",
+          "session-summary"
+        ],
+        "title": "opencode 36-tool surface + 446 green + Muse parity note"
+      },
+      "createdAt": "2026-10-27T10:25:43.640646+00:00",
+      "accessedAt": "2026-10-27T10:25:43.640646+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "139f8de4b4148c1c",
+      "content": "15 ctx primitives all live; skill table now 36 tools; 446 green; Muse acked status as agent-reported (counts need file evidence - fair, files are pushed). v4 running.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "opencode",
+          "session-summary"
+        ],
+        "title": "fullest-extent audit + skill docs + Muse ack"
+      },
+      "createdAt": "2026-10-27T11:36:33.000201+00:00",
+      "accessedAt": "2026-10-27T11:36:33.000201+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "3e29e3dd23d5f40c",
+      "content": "B disc=2/12 both succeed (hello, list-tools via tool_search). Parity 6/12. 10/12 still no-search. Reported to Muse at b62e86a9d, 1x verified no dup.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "benchmark",
+          "live-proof",
+          "session-summary"
+        ],
+        "title": "v4 discovery leg MEASURABLE + Muse report"
+      },
+      "createdAt": "2026-10-28T02:59:44.256347+00:00",
+      "accessedAt": "2026-10-28T02:59:44.256347+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "80b1c34fb3f7114c",
+      "content": "Edge CDP relaunched (fresh profile, muse.ai on marketing page, logged out, no textarea). Scoped status message (446 green, global install, Meta wiring no-secrets) drafted to temp file - send when login restored.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "coordination",
+          "session-summary"
+        ],
+        "title": "Muse channel needs login - message queued"
+      },
+      "createdAt": "2026-10-28T05:46:56.822596+00:00",
+      "accessedAt": "2026-10-28T05:46:56.822596+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "52f5089ca205d8f8",
+      "content": "Sibling moved AGENTS.md managed block codewhale->hax (installer-owned, checks pass both). Opencode 36-tool surface untouched + re-verified 446 green. Pi auth has live OAuth (not bridged - Muse hold on wiring). Hax battery needs HAX_META_API_KEY - not run (no secret handling). Next Muse message held until measurable.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "muse",
+          "hax",
+          "session-summary"
+        ],
+        "title": "Session 20: hax block switch verified, 446 green, wiring hold"
+      },
+      "createdAt": "2026-10-28T07:34:26.274606+00:00",
+      "accessedAt": "2026-10-28T07:34:26.274606+00:00",
       "accessCount": 0,
       "ttl": null
     }

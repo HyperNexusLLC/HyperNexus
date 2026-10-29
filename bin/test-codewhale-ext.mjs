@@ -109,7 +109,7 @@ for (const [scope, dir] of [["project", path.join(REPO_ROOT, ".codewhale")], ["g
       let detail = dst;
       try {
         const body = fs.readFileSync(dst, "utf8");
-        const front = body.match(/^---\nname:\s*(\S+)\ndescription:/);
+        const front = body.match(/^---\r?\nname:\s*(\S+)\r?\ndescription:/);
         ok = body === src && front?.[1] === name;
         if (!ok) detail = front ? "differs from source" : "bad frontmatter";
       } catch {
@@ -144,7 +144,7 @@ console.log("=== T4: plugin bundle manifest validity ===");
     let cmdOk = 0;
     for (const f of fs.existsSync(cmdDir) ? fs.readdirSync(cmdDir) : []) {
       const body = fs.readFileSync(path.join(cmdDir, f), "utf8");
-      const fm = body.match(/^---\ndescription:.*\nusage:.*\n---/);
+      const fm = body.match(/^---\r?\ndescription:.*\r?\nusage:.*\r?\n---/);
       if (fm) cmdOk++;
       else check(`${scope} commands/${f} frontmatter (description+usage)`, false);
     }

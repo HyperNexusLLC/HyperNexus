@@ -1,0 +1,6 @@
+interface:
+  display_name: "HyperNexus Ops"
+  short_description: "Kernel health, billing and deploy checks"
+  default_prompt: "Use $hypernexus-ops to verify kernel health, billing, and deployments."
+policy:
+  allow_implicit_invocation: true

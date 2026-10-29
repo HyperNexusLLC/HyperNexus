@@ -1,5 +1,9 @@
-{
-  "tags": null,
-  "title": "sweep-probe",
-  "url": "https://example.invalid"
-}
+[
+  {
+    "title": "probe",
+    "url": "https://example.com",
+    "tags": [
+      "probe"
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+# HyperNexus Codex MCP configuration (canonical form).
+# Installed by scripts/install.bat / install.sh into ~/.codex/config.toml
+# under [mcp_servers.hypernexus]. The installer rewrites `command` and
+# HYPERNEXUS_WORKSPACE_ROOT to the absolute repo root at install time.
+# Transport is stdio (`hypernexus.exe mcp`); port 7778 is authoritative.
+# Port 8080 is stale and has no Go listener — do not use it.
+
+[mcp_servers.hypernexus]
+command = "C:\\Users\\hyper\\workspace\\HyperNexus\\bin\\hypernexus.exe"
+args = ["mcp"]
+
+[mcp_servers.hypernexus.env]
+HYPERNEXUS_WORKSPACE_ROOT = "C:\\Users\\hyper\\workspace\\HyperNexus"
+HYPERNEXUS_URL = "http://127.0.0.1:7778"

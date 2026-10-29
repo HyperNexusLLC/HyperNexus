@@ -75,6 +75,84 @@ function makeMockCtx({ directory, baseUrl } = {}) {
       remove: async (k) => void state.storage.delete(k),
       scan: async () => ({ entries: [] }),
     },
+    provider: {
+      transform: async (cb) => {
+        const records = new Map();
+        state.providers = records;
+        cb({
+          add: (rec) => records.set(rec?.info?.id ?? rec?.info?.providerID ?? "unknown", rec),
+          get: (id) => records.get(id),
+          update: () => {},
+          remove: (id) => records.delete(id),
+          models: { set: () => {}, update: () => {}, remove: () => {} },
+          list: () => [...records.values()],
+        });
+        return { dispose: async () => {} };
+      },
+      list: async () => [...(state.providers?.values?.() ?? [])],
+      get: async () => undefined,
+      reload: async () => {},
+    },
+    integration: {
+      transform: async (cb) => {
+        const methods = new Map();
+        state.integrations = methods;
+        cb({
+          list: () => [],
+          get: () => undefined,
+          update: () => {},
+          remove: () => {},
+          method: {
+            list: () => [...methods.values()],
+            update: (reg) => methods.set(`${reg?.integrationID}:${reg?.method?.id}`, reg),
+            remove: () => {},
+          },
+        });
+        return { dispose: async () => {} };
+      },
+      list: async () => [],
+      reload: async () => {},
+    },
+    agent: {
+      transform: async (cb) => {
+        const agents = new Map();
+        state.agents = agents;
+        cb({
+          add: (a) => agents.set(a?.id ?? a?.agentID ?? "unknown", a),
+          get: (id) => agents.get(id),
+          update: () => {},
+          remove: (id) => agents.delete(id),
+          list: () => [...agents.values()],
+          default: () => {},
+        });
+        return { dispose: async () => {} };
+      },
+      list: async () => [],
+      reload: async () => {},
+    },
+    websearch: {
+      transform: async (cb) => {
+        state.websearch = [];
+        cb({ add: (p) => state.websearch.push(p), default: { get: () => undefined, set: () => {} } });
+        return { dispose: async () => {} };
+      },
+      reload: async () => {},
+    },
+    reference: {
+      transform: async (cb) => {
+        const refs = new Map();
+        state.references = refs;
+        cb({
+          add: (name, src) => refs.set(name, src),
+          get: (name) => refs.get(name),
+          remove: (name) => refs.delete(name),
+          list: () => [...refs.entries()],
+        });
+        return { dispose: async () => {} };
+      },
+      list: async () => [],
+      reload: async () => {},
+    },
     tool: {
       transform: async (cb) => {
         cb(editorTool);
@@ -175,9 +253,9 @@ check("default export exists", !!plugin);
 check("plugin id is 'hypernexus'", plugin?.id === "hypernexus", `got ${plugin?.id}`);
 check("setup is a function", typeof plugin?.setup === "function");
 check("V1 server() shim is a function", typeof plugin?.server === "function");
-check("exports TOOLS (36)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 36, `got ${mod.TOOLS?.length}`);
-check("exports COMMANDS (11)", Array.isArray(mod.COMMANDS) && mod.COMMANDS.length === 11, `got ${mod.COMMANDS?.length}`);
-check("exports SKILLS (3)", Array.isArray(mod.SKILLS) && mod.SKILLS.length === 3, `got ${mod.SKILLS?.length}`);
+check("exports TOOLS (37)", Array.isArray(mod.TOOLS) && mod.TOOLS.length === 37, `got ${mod.TOOLS?.length}`);
+check("exports COMMANDS (13)", Array.isArray(mod.COMMANDS) && mod.COMMANDS.length === 13, `got ${mod.COMMANDS?.length}`);
+check("exports SKILLS (4)", Array.isArray(mod.SKILLS) && mod.SKILLS.length === 4, `got ${mod.SKILLS?.length}`);
 
 // rpc contract consistency
 const rpc = await import(pathToFileURL(path.join(path.dirname(PLUGIN), "rpc.js")).href);
@@ -199,10 +277,13 @@ const cleanup = await plugin.setup(ctx);
 section("3. Registration surface");
 check("setup returns cleanup function", typeof cleanup === "function");
 check("namespace registered", state.namespaces.length === 1 && state.namespaces[0].name === "hypernexus");
-check("36 tools registered", state.tools.size === 36, `got ${state.tools.size}`);
+check("37 tools registered", state.tools.size === 37, `got ${state.tools.size}`);
 check("tool names match rpc contract", [...state.tools.keys()].every((k) => rpcNames.includes(k)));
-check("11 commands registered", state.commands.size === 11, `got ${state.commands.size}`);
-check("3 skills registered with path", state.skills.size === 3 && [...state.skills.values()].every((s) => typeof s.path === "string" && s.path.length > 0));
+check("13 commands registered", state.commands.size === 13, `got ${[...state.commands.keys()].join(",")}`);
+check("hn-auth command registered", state.commands.has("hn-auth"));
+check("hn-models command registered", state.commands.has("hn-models"));
+check("4 skills registered with path", state.skills.size === 4 && [...state.skills.values()].every((s) => typeof s.path === "string" && s.path.length > 0));
+check("hypernexus-orchestrator skill registered", state.skills.has("hypernexus-orchestrator"));
 check("skill SKILL.md files materialized", [...state.skills.values()].every((s) => fs.existsSync(s.path)));
 check("MCP server 'hypernexus' registered", state.mcp.has("hypernexus"));
 const mcpCfg = state.mcp.get("hypernexus");
@@ -211,6 +292,8 @@ check("MCP env passes kernel URL", typeof mcpCfg?.environment?.HYPERNEXUS_URL ==
 check("MCP startup timeout set", typeof mcpCfg?.timeout?.startup === "number");
 check("worktree strategy registered", state.worktrees.length === 1 && typeof state.worktrees[0].create === "function");
 check("session hooks registered (prompt/context/compaction/model.request/retry)", ["prompt", "context", "compaction", "model.request", "retry"].every((h) => state.hooks.session.has(h)));
+check("aux hooks registered (generate/title/http.request/http.response)", ["generate", "title", "http.request", "http.response"].every((h) => state.hooks.session.has(h)));
+check("meta provider registered via provider.transform", [...(state.providers?.keys?.() ?? [])].some((k) => String(k).includes("meta")));
 check("tool hooks registered (execute.before/execute.after)", ["execute.before", "execute.after"].every((h) => state.hooks.tool.has(h)));
 check("permission hook registered (evaluate)", state.hooks.permission.has("evaluate"));
 check("shell hook registered (create.before)", state.hooks.shell.has("create.before"));
@@ -267,6 +350,7 @@ for (const t of mod.TOOLS) {
   if (t.name === "knowledge_graph") input.focus = "memory";
   if (t.name === "memory_list") input.limit = 3;
   if (t.name === "mcp_tools") input.limit = 3;
+  if (t.name === "meta_auth") input.action = "status";
   const out = await runTool(t.name, input);
   results[t.name] = out;
   const text = typeof out?.content === "string" ? out.content : JSON.stringify(out);
@@ -353,6 +437,18 @@ check("report commands produced synthetic output", state.synthetic.length >= 5, 
 check("context commands produced prompts", state.prompts.length >= 3, `got ${state.prompts.length}`);
 
 section("7. Hooks");
+// Seed a matching memory first so the @memory: probe has something to expand
+// (the vault may have been pruned between runs; lack of content is not a hook bug).
+// Writes propagate asynchronously, so poll until the seed is FTS-visible before
+// running the prompt hook — same pattern as the relations/observation probes.
+await runTool("memory_store", { content: "battery architecture probe: layered control plane with kernel 7778", tags: ["battery", "architecture"] });
+await pollFor(async () => {
+  const j = await fetch(`http://127.0.0.1:7778/api/memory/fts-search?q=${encodeURIComponent("battery architecture probe")}&limit=3`)
+    .then((r) => r.json())
+    .catch(() => null);
+  const txt = JSON.stringify(j);
+  return /battery architecture probe/.test(txt) ? true : null;
+}, 14, 700);
 const promptHook = state.hooks.session.get("prompt");
 const promptEvent = {
   sessionID: "ses_hook",
@@ -436,12 +532,41 @@ await state.hooks.shell.get("create.before")(shellEvent);
 check("shell hook injects HYPERNEXUS_URL", typeof shellEvent.env.HYPERNEXUS_URL === "string");
 check("shell hook injects HYPERNEXUS_CLIENT", shellEvent.env.HYPERNEXUS_CLIENT?.startsWith("opencode/"));
 
+section("7b. Meta auth + aux hooks + new surfaces");
+const metaAuthTool = state.tools.get("hypernexus_meta_auth");
+check("meta_auth tool registered", !!metaAuthTool);
+const metaStatus = await metaAuthTool.execute({ action: "status" }, { progress: async () => {} });
+check("meta_auth status redacts keys", typeof metaStatus?.content === "string" && !/sk-[A-Za-z0-9]{8,}/.test(metaStatus.content) && /muse-spark-1.3-contributor/.test(metaStatus.content), (metaStatus?.content ?? "").slice(0, 120));
+const hnAuth = state.commands.get("hn-auth");
+check("hn-auth command executes", typeof hnAuth?.execute === "function");
+await hnAuth.execute({ sessionID: "ses_battery", prompt: { text: "status" }, delivery: "steer" });
+check("hn-auth produced synthetic output", state.synthetic.length > 0);
+const hnModels = state.commands.get("hn-models");
+await hnModels.execute({ sessionID: "ses_battery", prompt: { text: "" }, delivery: "steer" }, ctx);
+check("hn-models command executes (graceful without model ctx)", true);
+const genHook = state.hooks.session.get("generate");
+const genEvent = { sessionID: "ses_hook", kind: "primary", system: [], messages: [], tools: {}, options: {} };
+await genHook(genEvent);
+check("generate hook is non-throwing", true);
+const titleEvent = { sessionID: "ses_hook", kind: "title", system: [], messages: [], options: {} };
+await state.hooks.session.get("title")(titleEvent);
+check("title hook adds convention guidance", titleEvent.system.length === 1);
+const httpReq = { sessionID: "ses_hook", kind: "primary", request: { headers: {} } };
+await state.hooks.session.get("http.request")(httpReq);
+check("http.request hook sets client header", httpReq.request.headers["x-hypernexus-client"]?.startsWith("opencode/"));
+const httpRes = { sessionID: "ses_hook", kind: "primary", model: { providerID: "meta", id: "muse-spark-1.3-contributor" }, response: { status: 200 } };
+await state.hooks.session.get("http.response")(httpRes);
+check("http.response hook is non-throwing on 200", true);
+check("agent orchestrator registered", state.agents?.has?.("hypernexus-orchestrator"));
+check("integration pi-oauth method registered", [...(state.integrations?.values?.() ?? [])].some((r) => String(r?.integrationID ?? "").includes("meta")));
+check("reference hypernexus-skills registered", state.references?.has?.("hypernexus-skills"));
+
 section("8. V1 compatibility shim");
 const v1 = await plugin.server({}, {});
 check("V1 server() returns hook map", typeof v1 === "object" && typeof v1["tool.execute.before"] === "function");
 check("V1 chat.message hook", typeof v1["chat.message"] === "function");
 check("V1 permission.ask hook", typeof v1["permission.ask"] === "function");
-check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 36, `got ${Object.keys(v1.tool || {}).length}`);
+check("V1 tool catalog exposed", v1.tool && Object.keys(v1.tool).length === 37, `got ${Object.keys(v1.tool || {}).length}`);
 await v1["chat.message"]({ message: { role: "user", content: "hello battery world" } });
 const v1out = await v1.tool.hypernexus_status.execute({});
 check("V1 tool execute works", typeof v1out === "string" && v1out.length > 0);

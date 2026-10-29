@@ -1,0 +1,2 @@
+C:\Users\hyper\AppData\Roaming\npm\codex
+C:\Users\hyper\AppData\Roaming\npm\codex.cmd

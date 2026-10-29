@@ -125,27 +125,8 @@ export default function(pi) {
         })
       })
     });
-    ctx.ui.setStatus("tn", "TN active \u2022 L2 mem \u2022 tools \u2022 skills");
+    safeUi(ctx)?.setStatus?.("tn", "TN active \u2022 L2 mem \u2022 tools \u2022 skills");
     refreshWidget(ctx);
-  });
-  try {
-    pi.registerMcpServer("hypernexus-kernel", {
-      command: "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe",
-      args: ["mcp"],
-      env: { HYPERNEXUS_WORKSPACE_ROOT: "C:/Users/hyper/workspace" },
-      exposure: "deferred"
-    });
-  } catch {
-  }
-  pi.on("resources_discover", async (_event, _ctx) => {
-    return {
-      skillPaths: [
-        ".codex/plugins/hypernexus/skills",
-        ".codewhale/plugins/hypernexus/skills",
-        "engine-config/skills"
-      ],
-      promptPaths: [".codex/prompts"]
-    };
   });
   pi.on("project_trust", async (event, _ctx) => {
     const cwd = event.cwd ?? "";
@@ -289,7 +270,7 @@ ${contextBlock}` };
         })
       })
     });
-    ctx.ui.setStatus("tn", `TN \u2022 ${event.model.id}`);
+    safeUi(ctx)?.setStatus?.("tn", `TN \u2022 ${event.model.id}`);
   });
   pi.on("input", async (event, ctx) => {
     const text = event.text;
@@ -1626,7 +1607,15 @@ Task stored in L2 memory. Check results with hypernexus_memory_search.` }],
   });
   pi.registerFlag("tn-base", { description: "HyperNexus kernel base URL", type: "string", default: "http://127.0.0.1:7778" });
   pi.registerFlag("tn-verbose", { description: "Enable verbose TN logging", type: "boolean", default: false });
+  function safeUi(ctx) {
+    try {
+      return ctx?.hasUI ? ctx.ui ?? null : null;
+    } catch {
+      return null;
+    }
+  }
   async function refreshWidget(ctx) {
+    if (!safeUi(ctx)) return;
     try {
       const [mem, cold, mesh] = await Promise.all([
         tnFetchWithTimeout("/api/memory/list?limit=1", 4e3).then((r) => r.ok ? r.json() : {}).catch(() => ({})),
@@ -1646,17 +1635,20 @@ Task stored in L2 memory. Check results with hypernexus_memory_search.` }],
     try {
     } catch {
     }
-    try {
-      const health = await tnFetchWithTimeout("/health", 600);
-      if (health.ok) {
-        const h = await health.json().catch(() => ({}));
-        ctx.ui.setStatus("tn", `HyperNexus v${h.version ?? "?"}`);
-        ctx.ui.setWorkingMessage("HyperNexus ready");
-      } else {
-        ctx.ui.setStatus("tn", "HyperNexus degraded");
+    const __ui = safeUi(ctx);
+    if (__ui) {
+      try {
+        const health = await tnFetchWithTimeout("/health", 600);
+        if (health.ok) {
+          const h = await health.json().catch(() => ({}));
+          __ui.setStatus("tn", `HyperNexus v${h.version ?? "?"}`);
+          __ui.setWorkingMessage("HyperNexus ready");
+        } else {
+          __ui.setStatus("tn", "HyperNexus degraded");
+        }
+      } catch {
+        __ui.setStatus("tn", "HyperNexus offline");
       }
-    } catch {
-      ctx.ui.setStatus("tn", "HyperNexus offline");
     }
     refreshWidget(ctx);
     if (!widgetInterval) {
@@ -1677,6 +1669,60 @@ Task stored in L2 memory. Check results with hypernexus_memory_search.` }],
     if (widgetInterval) {
       clearInterval(widgetInterval);
       widgetInterval = null;
+    }
+  });
+  pi.registerCommand("tn-tools", {
+    description: "Discover tools across all connected MCP servers (semantic search)",
+    handler: async (args, ctx) => {
+      const query = await ctx.ui.input("Tool search query:", args || "");
+      if (!query) return;
+      const body = await tnJson(`/api/mcp/native/search?query=${encodeURIComponent(query)}`);
+      const results = body.results ?? (Array.isArray(body) ? body : []);
+      if (!Array.isArray(results) || results.length === 0) {
+        ctx.ui.notify("No tools found", "warning");
+        return;
+      }
+      const lines = results.slice(0, 8).map((r, i) => `${i + 1}. ${r.originalName ?? r.name ?? "?"} (${r.server ?? "?"})`);
+      ctx.ui.notify(`\u{1F527} ${results.length} tools:
+${lines.join("\n")}`, "info");
+    }
+  });
+  pi.registerCommand("tn-session", {
+    description: "Show current session context (goal, recent turns, active skills)",
+    handler: async (_args, ctx) => {
+      const body = await tnJson("/api/agent/session/context").catch(() => null);
+      const text = body ? JSON.stringify(body).slice(0, 1500) : "Session context unavailable (kernel offline?).";
+      ctx.ui.notify(`\u{1F5C2}\uFE0F Session context:
+${text}`, "info");
+    }
+  });
+  pi.registerCommand("tn-context", {
+    description: "Manually harvest relevant L2 context for the current task",
+    handler: async (args, ctx) => {
+      const topic = await ctx.ui.input("Harvest topic:", args || "");
+      if (!topic) return;
+      const body = await tnJson(`/api/memory/search?q=${encodeURIComponent(topic)}&limit=8`);
+      const memories = body.data ?? (Array.isArray(body) ? body : []);
+      if (!Array.isArray(memories) || memories.length === 0) {
+        ctx.ui.notify("No relevant context found", "warning");
+        return;
+      }
+      const lines = memories.map((m, i) => `${i + 1}. ${(m.content ?? m.text ?? JSON.stringify(m)).slice(0, 140)}`);
+      ctx.ui.notify(`\u{1F33E} Harvested ${memories.length} items:
+${lines.join("\n")}`, "info");
+    }
+  });
+  pi.registerCommand("tn-remember", {
+    description: "Quick-store one fact to L2 memory (args become the content)",
+    handler: async (args, ctx) => {
+      const content = args?.trim() || await ctx.ui.input("Remember:", "");
+      if (!content) return;
+      const ok = await tnOk("/api/memory/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: JSON.stringify({ content, tags: ["quick"], category: "general", timestamp: now() }) })
+      });
+      ctx.ui.notify(ok ? "\u2705 Remembered" : "Failed to store", ok ? "info" : "error");
     }
   });
   pi.registerShortcut("ctrl+shift+m", {

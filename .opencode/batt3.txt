@@ -1,0 +1,174 @@
+
+== 1. Module surface
+  ok   default export exists
+  ok   plugin id is 'hypernexus'
+  ok   setup is a function
+  ok   V1 server() shim is a function
+  ok   exports TOOLS (37)
+  ok   exports COMMANDS (13)
+  ok   exports SKILLS (4)
+
+== 2. RPC contract consistency
+  ok   rpc.TOOL covers every registered tool
+  ok   rpc.COMMAND covers every command
+  ok   every tool has JSON-schema input
+  ok   every tool has description
+  ok   every tool has run()
+[hypernexus] opencode plugin v1.2.0 loaded Ã¢â‚¬â€ kernel v1.0.21 online @ C:\Users\hyper\AppData\Local\Temp\hn-opencode-test-vL57s0
+
+== 3. Registration surface
+  ok   setup returns cleanup function
+  ok   namespace registered
+  ok   37 tools registered
+  ok   tool names match rpc contract
+  ok   13 commands registered
+  ok   hn-auth command registered
+  ok   hn-models command registered
+  ok   4 skills registered with path
+  ok   hypernexus-orchestrator skill registered
+  ok   skill SKILL.md files materialized
+  ok   MCP server 'hypernexus' registered
+  ok   MCP type local + command array
+  ok   MCP env passes kernel URL
+  ok   MCP startup timeout set
+  ok   worktree strategy registered
+  ok   session hooks registered (prompt/context/compaction/model.request/retry)
+  ok   aux hooks registered (generate/title/http.request/http.response)
+  ok   meta provider registered via provider.transform
+  ok   tool hooks registered (execute.before/execute.after)
+  ok   permission hook registered (evaluate)
+  ok   shell hook registered (create.before)
+  ok   storage boot record written
+
+== 4. Worktree strategy behavior
+  ok   create returns directory
+  ok   create writes linkage marker
+  ok   list finds managed worktree
+  ok   remove deletes marker
+
+== 5. Tool execution â€” live kernel
+  ok   tool status returns content string
+  ok   tool system_overview returns content string
+  ok   tool memory_store returns content string
+  ok   tool memory_search returns content string
+  ok   tool memory_fts_search returns content string
+  ok   tool memory_vector_search returns content string
+  ok   tool memory_list returns content string
+  ok   tool scratchpad returns content string
+  ok   tool context_harvest returns content string
+  ok   tool record_observation returns content string
+  ok   tool tool_search returns content string
+  ok   tool tool_discover returns content string
+  ok   tool suggest_tools returns content string
+  ok   tool mcp_status returns content string
+  ok   tool mcp_servers returns content string
+  ok   tool mcp_tools returns content string
+  ok   tool mcp_search returns content string
+  ok   tool mcp_call returns content string
+  ok   tool session_search returns content string
+  ok   tool session_context returns content string
+  ok   tool session_handoff returns content string
+  ok   tool skill_search returns content string
+  ok   tool skill_manage returns content string
+  ok   tool code_search returns content string
+  ok   tool memory_relate returns content string
+  ok   tool knowledge_graph returns content string
+  ok   tool billing_status returns content string
+  ok   tool memory_delete returns content string
+  ok   tool audit_log returns content string
+  ok   tool subagent returns content string
+  ok   tool workflow returns content string
+  ok   tool orchestrate returns content string
+  ok   tool browser returns content string
+  ok   tool meta_auth returns content string
+  ok   tool memory_stats returns content string
+  ok   tool session_list returns content string
+  ok   tool repomap returns content string
+  ok   all tools executed without throwing
+  ok   status reports kernel online
+  ok   memory_store persisted
+  ok   memory_search finds stored fact
+  ok   scratchpad round-trips
+  ok   session_handoff pickup responds
+  ok   session_context returns bootstrap + links
+  ok   session_context cross-session links parse (no 'invalid JSON body')
+  ok   knowledge_graph returns graph payload
+
+== 5b. Memory lifecycle + observation capture
+  ok   memory_delete requires id or tag
+  ok   memory_delete degrades gracefully on unknown id
+  ok   memory_delete tag fan-out finds nothing gracefully
+  ok   memory_search surfaces ids for delete/relate
+  ok   memory_store returns record id
+  ok   memory_relate links records
+  ok   relation visible via relations/get
+
+== 6. Command execution
+  ok   command hn-status executes
+  ok   command hn-store executes
+  ok   command hn-remember executes
+  ok   command hn-search executes
+  ok   command hn-tools executes
+  ok   command hn-session executes
+  ok   command hn-context executes
+  ok   command hn-plan executes
+  ok   command hn-summary executes
+  ok   command hn-restore executes
+  ok   command hn-purge executes
+  ok   command hn-auth executes
+  ok   command hn-models executes
+  ok   report commands produced synthetic output
+  ok   context commands produced prompts
+
+== 7. Hooks
+  FAIL prompt hook expands @memory: references â€” Please recall @memory:architecture and continue
+  ok   prompt hook keeps text non-empty
+  ok   prompt hook is non-throwing
+  ok   context hook injects a system block
+  ok   context hook block is budgeted in size
+  ok   compaction hook adds preservation guidance
+  ok   model.request hook sets identity header
+  ok   retry hook is non-throwing
+  ok   tool execute.before hook is non-throwing
+  ok   tool execute.after hook is non-throwing
+  ok   tool hooks skip hypernexus_* tools
+  ok   file-change observation reaches kernel
+  ok   permission hook denies in deny mode
+  ok   permission hook escalates in ask mode
+  ok   permission hook leaves safe actions alone
+  ok   shell hook injects HYPERNEXUS_URL
+  ok   shell hook injects HYPERNEXUS_CLIENT
+
+== 7b. Meta auth + aux hooks + new surfaces
+  ok   meta_auth tool registered
+  ok   meta_auth status redacts keys
+  ok   hn-auth command executes
+  ok   hn-auth produced synthetic output
+  ok   hn-models command executes (graceful without model ctx)
+  ok   generate hook is non-throwing
+  ok   title hook adds convention guidance
+  ok   http.request hook sets client header
+  ok   http.response hook is non-throwing on 200
+  ok   agent orchestrator registered
+  ok   integration pi-oauth method registered
+  ok   reference hypernexus-skills registered
+
+== 8. V1 compatibility shim
+[hypernexus] v1 server() shim active (kernel=http://127.0.0.1:7778)
+  ok   V1 server() returns hook map
+  ok   V1 chat.message hook
+  ok   V1 permission.ask hook
+  ok   V1 tool catalog exposed
+  ok   V1 tool execute works
+  ok   V1 tool.execute.after is non-throwing
+
+== 9. Degradation contract (kernel down)
+[hypernexus] opencode plugin v1.2.0 loaded Ã¢â‚¬â€ kernel unreachable at http://127.0.0.1:9 @ C:\Users\hyper\AppData\Local\Temp\hn-opencode-test-vL57s0
+  ok   setup succeeds with kernel down
+  ok   status tool degrades gracefully
+  ok   memory_store reports failure without throwing
+  ok   prompt hook stays inside hook budget when kernel down
+  ok   context hook injects offline notice
+
+== SUMMARY: 145/146 passed
+Failed: prompt hook expands @memory: references

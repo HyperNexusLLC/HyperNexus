@@ -1,0 +1,6 @@
+interface:
+  display_name: "HyperNexus"
+  short_description: "HyperNexus control plane for Codex"
+  default_prompt: "Use $hypernexus to recall memory, route tools, dispatch agents, or check kernel status."
+policy:
+  allow_implicit_invocation: true

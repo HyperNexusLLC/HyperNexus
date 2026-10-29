@@ -1,0 +1,40 @@
+{
+  "name": "codex-hypernexus",
+  "version": "1.0.21",
+  "hooks": "./hooks/hooks.extended.json",
+  "description": "HyperNexus AI control plane for Codex — persistent L2 vector memory, MCP tool routing, agent dispatch, status/billing, and session management over stdio",
+  "author": {
+    "name": "HyperNexus",
+    "url": "http://127.0.0.1:7778"
+  },
+  "license": "MIT",
+  "keywords": [
+    "hypernexus",
+    "memory",
+    "mcp",
+    "ai-control-plane",
+    "codex",
+    "tools",
+    "skills",
+    "sessions",
+    "billing"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "HyperNexus",
+    "shortDescription": "HyperNexus AI control plane with L2 memory, tool routing, agent dispatch, and billing",
+    "longDescription": "HyperNexus is a local AI control plane (Go kernel, port 7778) with persistent L2 vector memory, MCP tool routing, agent dispatch (chat/tool/swarm/A2A), system and billing status, and session management. Connected from Codex via MCP stdio: `hypernexus.exe mcp`."
+  },
+  "tools": {
+    "mcpServers": {
+      "hypernexus": {
+        "command": "C:\\Users\\hyper\\workspace\\HyperNexus\\bin\\hypernexus.exe",
+        "args": ["mcp"],
+        "env": {
+          "HYPERNEXUS_WORKSPACE_ROOT": "C:\\Users\\hyper\\workspace\\HyperNexus",
+          "HYPERNEXUS_URL": "http://127.0.0.1:7778"
+        }
+      }
+    }
+  }
+}

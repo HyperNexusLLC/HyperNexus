@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Maki HARNESS full integration + native Meta OAuth (v1.0.21)
+- Meta OAuth native: lua/meta_oauth.lua (device-code flow + pi auth.json mint, auto-refresh on 401/TTL); model meta/muse-spark-1.3-contributor verified headless + tool-call round-trip (system_status -> 1.0.21).
+- Full extension (extensions/maki-hypernexus/ + project .maki/ + %APPDATA%/maki): 35 kernel-backed tools, 12 md commands, 7 autocmds, 4 slots (bash guard/@memory recall/secret redact/completion), F7/F8 keymaps, prompt hints, hypernexus stdio MCP, 4 skills.
+- Double-load fix: global+project init.lua both require modules; pcall-skip on duplicate provider/slot registration (maki _G is readonly).
+- Battery bin/test-maki-ext.mjs: 61/61 green. Manifest maki entry added.
+
+
 ### Added
+- **Jcode HARNESS max-extent integration (native Meta OAuth + full HyperNexus surfaces)** — `meta/muse-spark-1.3-contributor` in jcode via TWO routes, native first: Route 1 = native `jcode login --provider muse-subscription` (device flow, jcode-owned `~/.jcode/muse_subscription.json`, `muse-spark-1.3-contributor` as the deliberate contributor variant; no pi needed); Route 2 = pi-OAuth live-mint bridge (`addons/jcode/bin/meta-muse-key.mjs` replays pi's `POST https://api.meta.ai/muse-code/key` mint → shell-local ~24h key, `--check` verified live) into the BUILT-IN `meta-muse` provider (`jcode auth status`: reads `META_MUSE_API_KEY`, runtime + tool validated — no custom `[providers.meta]` profile needed; `meta-model.jcode.toml` kept as legacy/optional snippet; `use-meta-model.ps1` runs `jcode run -p meta-muse -m muse-spark-1.3-contributor`, verified live with exact-reply BRIDGE-OK turn). HyperNexus extension at max jcode surface: 4 skills, **13** `/hn-*` commands (+hn-remember/hn-plan/hn-restore/hn-auth/hn-models), **4** hooks covering all **8** hook events (hn-observe session_start/end + turn_start/end + post_tool w/ token accounting + touched paths; hn-pre-tool RBAC audit/ask/deny w/ detached audit mirror; hn-post-feedback hyphen-trap note; hn-pre-transform hyphen-query repair), MCP stdio 58/58 merged inventory. `bin/test-jcode-ext.mjs` now **110 checks** (T1-T13 + T14 hooks live-exec + T15 13-command sync + T16 Meta auth incl. built-in-provider assertion), green at normal load; under extreme saturation individual upstream calls can exceed the 60s stdio budget (measured stats 58.9s, 0.7s-59s-refused swings) — same calls pass on retry and via direct HTTP, extension code unchanged. Shared manifest `jcode` entry updated (commands/hooks/meta-model surfaces)
 - **Droid (Factory HARNESS) full integration (`addons/droid/`)** — Meta `meta/muse-spark-1.3-contributor` runs NATIVELY in Droid via BYOK `apiKeyHelper` (`addons/droid/bin/meta-muse-key.mjs` mints a ~24h Model API key from the pi `~/.pi/agent/auth.json` OAuth identity via `POST https://api.meta.ai/muse-code/key`, mirroring pi-ai's own Meta OAuth flow; static `apiKey` removed from `~/.factory/settings.json`, session default stays `custom:Meta-Muse-Spark-1.3-Contributor-0`). Full HyperNexus plugin v1.2.0 installed + enabled (`hypernexus@marketplace`, user scope): stdio MCP server (58 tools, `droid mcp list` = connected), 3 skills, 11 `/hn-*` commands, 8 lifecycle hooks (SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop/SessionEnd/PreCompact/SubagentStop) as dependency-free Node scripts (no bash on Windows), 2 droids (orchestrator + read-only researcher), 1 output style. RBAC via `HYPERNEXUS_RBAC` (audit/ask/deny) on destructive `Execute` patterns
 - **`addons/droid/bin/test-droid-ext.mjs` battery (76 checks, 0 fail)** — plugin layout, hooks.json 8 events, `node --check` all hooks, plugin + user mcp.json, kernel surface (`/health` v1.0.21, fts/vector/list, `agent-memory/stats`, system overview, mcp status, billing, scratchpad get/set, facts/add + search round-trip, observations), mint `--check` OK, custom-model `apiKeyHelper` wiring, session default. Live verification: all 8 hooks executed, RBAC deny/ask, `droid exec --auto high` native-model proof (MCP add_memory + search_memory round-trip, L2-confirmed), CDP coordination to muse.ai delivered
 - **Shared manifest `droid` harness entry** — capability map bound to `mcp__hypernexus__*` tool names + apiKeyHelper note
@@ -17,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shared manifest `hax` harness entry** — capability map bound to exact `hn.mjs` verbs
 
 ### Fixed
-- **Stale endpoint references remapped in hax driver** — `/api/memory/stats` -> `/api/agent-memory/stats`, `/api/routes` -> MCP tool inventory fallback, `/api/code/repomap` -> `repomap` via `/api/agent/tool`, `/api/memory/update` -> delete + re-store (no in-place route published), `/api/memory/delete` -> `delete_memory` via dispatcher (mirrors pi tn-purge). Same staleness exists in the pi extension paths; hax driver uses the true published endpoints
+- **Stale endpoint references remapped in hax driver** — `/api/memory/stats` -> `/api/agent-memory/stats`, `/api/routes` -> MCP tool inventory fallback, `/api/code/repomap` -> `repomap` via `/api/agent/tool` (relative dirs resolved client-side to absolute; kernel maps CWD-relative paths against its own root), `/api/memory/update` -> delete + re-store (no in-place route published), `/api/memory/delete` -> `delete_memory` via dispatcher (mirrors pi tn-purge), `/api/memory/handoff` (GET+POST) -> `/api/agent-memory/handoff` (POST, payload key `notes`) + `/api/agent-memory/pickup`. Same staleness exists in the pi extension paths; hax driver uses the true published endpoints
+- **Saturated-host hardening in hax driver** — `HN_FAST_MS`/`HN_RETRIES` env overrides (battery: 30s/120s/2 retries), one backoff retry on transport timeouts only (4xx/5xx never retried); repomap maps source extensions only (`.go/.ts/.js/.py/…`) so non-source dirs legitimately return an empty map
 - **Memory-write visibility gap** — `/api/memory/add` appends to the gossip mirror only (visible via `list`, invisible to `search`/`fts`); driver `store`/`observe`/`update` now write via searchable `/api/memory/facts/add` (agent-memory store + vector dual-write), so stored items are recallable immediately
 
 ## [1.0.21] - 2026-10-21
@@ -586,3 +595,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dead upstream URLs (7787, 7779, 4000, 3847) from `sessionbridge.go`
 - `resolveLockedTRPCBase`, `DefaultTRPCBasesFromDiscovery`, `defaultTRPCBases`
 - Dead TS control plane launch from `start.sh`
+## [1.0.22] - 2026-10-28 
+### Added 
+- Codex HARNESS addon: codex-native install.mjs (TOML upsert with managed markers, 12 skills, 3 hooks, AGENTS.md overlay, --check/--uninstall). 
+- addons/codex/bin/test-codex-ext.mjs battery: 13 checks (config, skills, hooks, overlay, mint, kernel health, CLI presence). 
+- addons/codex/use-meta-model.ps1 launcher and meta-model.codex.md wiring doc (MODEL_API_KEY from pi live-mint, never stored). 
+- addons/codex/README.md rewritten codex-native (was a freebuff copy). 
+### Verified 
+- install --check green; uninstall (17 items) + reinstall cycle green; config untouched. 
+- Meta mint OK (key hidden); kernel 1.0.21 ok:true; battery 13 pass / 0 fail / 1 env-SKIP. 
+- CDP identification delivered to Chat-Bobbi (submit hit, text present at index 2462). 

@@ -1,0 +1,3 @@
+# HyperNexus kernel MCP bridge (stdio). Project-scoped; needs folder trust.
+[mcp.hypernexus]
+command = ["C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe", "mcp"]

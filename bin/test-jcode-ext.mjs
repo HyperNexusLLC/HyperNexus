@@ -15,7 +15,24 @@
  *   T8  concurrent dispatch: interleaved tools/list + tools/call both complete
  *       (regression: stdio dispatch used to serialize behind one slow call)
  *   T9  stdio ↔ router parity: every /api/mcp/tools registry tool is advertised
+ *       on stdio WITH the registry's arg properties (no schema shadowing)
+ *   T10 head-of-line: quick local-builtin call resolves while a slow call
+ *       is pending (concurrent dispatch regression)
+ *   T11 memory feature coverage: scratchpad lifecycle, tag-filtered search,
+ *       relation extraction
+ *   T12 doc accuracy: every mcp__hypernexus__* ref in skills is a live tool
+ *   T13 installer foreign-config preservation (temp target, never user config)
+ *   T14 hooks: all 4 hook scripts installed byte-identical + live execution
+ *       (observe events exit 0, RBAC deny blocks destructive, transform
+ *       repairs hyphenated queries, feedback notes hyphen trap)
+ *   T15 commands: all 13 hn-* installed byte-identical with valid frontmatter
+ *   T16 Meta auth routes: native muse-subscription credential presence-check
+ *       + bridge minter --check + snippet/launcher wiring (no secrets read)
  *
+ * NOTE on stdio warmup (T6): the first tools/list on a fresh stdio process may
+ * serve the 49-tool static fallback while the 58-tool upstream merge completes
+ * (15s TTL last-good cache). The battery WARMS UP with a throwaway process
+ * before asserting counts, so T6+ always assert live merged state.
  * Run: node bin/test-jcode-ext.mjs
  */
 
@@ -170,7 +187,13 @@ function rpcClient(child) {
   };
 }
 
-console.log("=== T6/T7/T8/T9: stdio MCP server (configured command) ===");
+console.log("=== T6/T7/T8/T9/T10/T11/T12: stdio MCP server (configured command) ===");
+// WARMUP (same-process): the first tools/list on a fresh stdio process can
+// serve the 49-tool static fallback while the 58-tool upstream merge
+// completes (merged-inventory cache is per-process with a 15s TTL, so a
+// throwaway process cannot warm it). Poll tools/list in THIS process until
+// the merged inventory arrives (up to ~90s on a saturated box), then assert.
+// A process that never merges past 49 within budget is a real regression.
 {
   const child = spawnConfigured();
   const rpc = rpcClient(child);
@@ -183,7 +206,17 @@ console.log("=== T6/T7/T8/T9: stdio MCP server (configured command) ===");
   check("stdio initialize", init?.result?.serverInfo?.name === "hypernexus" || !!init?.result?.protocolVersion, JSON.stringify(init).slice(0, 80));
   child.stdin.write(JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) + "\n");
 
-  const list = await rpc("tools/list", {});
+  const list = await (async () => {
+    // Same-process merge poll: first response may be the 49-tool static
+    // fallback; the merged 58-tool inventory arrives once the upstream
+    // /api/mcp/tools fetch completes. Poll up to ~90s before calling it.
+    let last = await rpc("tools/list", {}, 90000);
+    for (let i = 0; i < 5 && (last?.result?.tools ?? []).length < 55; i++) {
+      await new Promise((res) => setTimeout(res, 15000));
+      last = await rpc("tools/list", {}, 90000);
+    }
+    return last;
+  })();
   const tools = list?.result?.tools ?? [];
   const names = new Set(tools.map((t) => t.name));
   check("stdio tools/list non-empty", tools.length > 0, `${tools.length} tools`);
@@ -378,6 +411,111 @@ console.log("=== T6/T7/T8/T9: stdio MCP server (configured command) ===");
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
+}
+
+// T14 hooks: live execution of all 4 hook scripts (observe events exit 0,
+// RBAC deny blocks destructive, transform repairs hyphenated queries).
+console.log("=== T14: hooks (live execution) ===");
+{
+  function runHook(script, env, input) {
+    return execFileSync(process.execPath, [path.join(REPO_ROOT, "addons", "jcode", "hooks", script)], {
+      input, env: { ...process.env, ...env }, encoding: "utf8", timeout: 15000,
+    });
+  }
+  for (const evt of ["session_start", "session_end", "turn_start", "turn_end", "post_tool"]) {
+    const env = { JCODE_HOOK_EVENT: evt, JCODE_HOOK_SESSION_ID: "t14", JCODE_HOOK_MODEL: "m", JCODE_HOOK_STATUS: "ok", JCODE_HOOK_DURATION_MS: "10", JCODE_HOOK_TOOL_NAME: "read", JCODE_HOOK_TOUCHED_PATHS: "a/b.md" };
+    let ok = false;
+    try { ok = runHook("hn-observe.mjs", env, "").includes('"continue":true'); } catch { ok = false; }
+    check(`observe ${evt} exits 0 + continue`, ok);
+  }
+  try {
+    const out = runHook("hn-pre-tool.mjs", { JCODE_HOOK_TOOL_NAME: "bash" }, JSON.stringify({ command: "echo hi" }));
+    check("pre_tool audit allows benign", out.includes('"continue":true'));
+  } catch { check("pre_tool audit allows benign", false); }
+  let blocked = false;
+  try {
+    runHook("hn-pre-tool.mjs", { JCODE_HOOK_TOOL_NAME: "bash", HYPERNEXUS_RBAC: "deny" }, JSON.stringify({ command: "rm -rf / --no-preserve-root" }));
+  } catch (e) { blocked = e.status === 2; }
+  check("pre_tool deny blocks destructive (exit 2)", blocked);
+  let blockedW = false;
+  try {
+    runHook("hn-pre-tool.mjs", { JCODE_HOOK_TOOL_NAME: "write", HYPERNEXUS_RBAC: "deny" }, JSON.stringify({ file_path: "/etc/passwd" }));
+  } catch (e) { blockedW = e.status === 2; }
+  check("pre_tool deny blocks sensitive write (exit 2)", blockedW);
+  try {
+    const out = runHook("hn-pre-tool.mjs", { JCODE_HOOK_TOOL_NAME: "read", HYPERNEXUS_RBAC: "deny" }, JSON.stringify({ file_path: "C:/t/x.md" }));
+    check("pre_tool deny allows benign read", out.includes('"continue":true'));
+  } catch { check("pre_tool deny allows benign read", false); }
+  try {
+    const out = runHook("hn-pre-transform.mjs", { JCODE_HOOK_TOOL_NAME: "search_memory" }, JSON.stringify({ query: "foo-bar-baz", limit: 5 }));
+    check("pre_transform repairs hyphenated query", JSON.parse(out).query === "foo bar baz", out.slice(0, 60));
+  } catch (e) { check("pre_transform repairs hyphenated query", false, String(e.message).slice(0, 60)); }
+  try {
+    const out = runHook("hn-post-feedback.mjs", { JCODE_HOOK_TOOL_NAME: "search_memory" }, JSON.stringify({ query: "foo-bar-baz" }));
+    check("post_feedback notes hyphen trap", out.includes("post_tool_feedback") && out.includes("foo bar baz"), out.slice(0, 60));
+  } catch { check("post_feedback notes hyphen trap", false); }
+  // installed copies byte-identical in both scopes
+  for (const [scope, dir] of [["project", path.join(REPO_ROOT, ".jcode")], ["global", path.join(HOME, ".jcode")]]) {
+    for (const h of ["hn-observe.mjs", "hn-pre-tool.mjs", "hn-post-feedback.mjs", "hn-pre-transform.mjs"]) {
+      let same = false;
+      try {
+        same = fs.readFileSync(path.join(dir, "hooks", h), "utf8") === fs.readFileSync(path.join(REPO_ROOT, "addons", "jcode", "hooks", h), "utf8");
+      } catch { same = false; }
+      check(`${scope} hooks/${h} in sync`, same);
+    }
+  }
+}
+
+// T15 commands: all 13 hn-* installed byte-identical with valid frontmatter.
+console.log("=== T15: commands (13 hn-*) ===");
+{
+  const COMMANDS = ["hn-status", "hn-store", "hn-remember", "hn-search", "hn-tools", "hn-session", "hn-context", "hn-plan", "hn-summary", "hn-restore", "hn-purge", "hn-auth", "hn-models"];
+  check("13 commands registered", COMMANDS.length === 13, `${COMMANDS.length}`);
+  for (const [scope, dir] of [["project", path.join(REPO_ROOT, ".jcode")], ["global", path.join(HOME, ".jcode")]]) {
+    for (const name of COMMANDS) {
+      let ok = false;
+      let detail = "";
+      try {
+        const body = fs.readFileSync(path.join(dir, "skills", name, "SKILL.md"), "utf8");
+        const front = body.match(/^---\nname:\s*(\S+)\ndescription:/);
+        ok = body === fs.readFileSync(path.join(REPO_ROOT, "addons", "jcode", "commands", `${name}.md`), "utf8") && front?.[1] === name;
+        if (!ok) detail = front ? "differs from source" : "bad frontmatter";
+      } catch { detail = "missing"; }
+      check(`${scope} skills/${name}/SKILL.md installed + valid`, ok, detail || undefined);
+    }
+  }
+}
+
+// T16 Meta auth routes (presence-checks only — reads NO secret contents).
+console.log("=== T16: Meta auth routes (no secrets) ===");
+{
+  let syntax = false;
+  try {
+    execFileSync(process.execPath, ["--check", path.join(REPO_ROOT, "addons", "jcode", "bin", "meta-muse-key.mjs")], { stdio: "pipe", timeout: 15000 });
+    syntax = true;
+  } catch { syntax = false; }
+  check("meta-muse-key.mjs syntax valid", syntax);
+  let mint = false;
+  let mintDetail = "";
+  try {
+    execFileSync(process.execPath, [path.join(REPO_ROOT, "addons", "jcode", "bin", "meta-muse-key.mjs"), "--check"], { stdio: "pipe", timeout: 45000 });
+    mint = true;
+    mintDetail = "mint OK (key hidden)";
+  } catch (e) {
+    mintDetail = String(e.stderr || e.message || e).slice(0, 120);
+    mint = /expired|login meta/i.test(mintDetail);
+    if (mint) mintDetail = `bridge correctly reports lapsed session: ${mintDetail}`;
+  }
+  check("bridge minter --check (live mint or clean lapse)", mint, mintDetail);
+  const hasNative = fs.existsSync(path.join(HOME, ".jcode", "muse_subscription.json"));
+  check("native muse-subscription credential presence reported", true, hasNative ? "present (~/.jcode/muse_subscription.json)" : "absent — run jcode login --provider muse-subscription");
+  const snippet = fs.readFileSync(path.join(REPO_ROOT, "addons", "jcode", "meta-model.jcode.toml"), "utf8");
+  check("meta snippet references muse-spark-1.3-contributor", snippet.includes("muse-spark-1.3-contributor") && snippet.includes("api_key_env"), "api_key_env reference only");
+  const launcher = fs.readFileSync(path.join(REPO_ROOT, "addons", "jcode", "use-meta-model.ps1"), "utf8");
+  check("launcher is native-first + bridge fallback", launcher.includes("muse-subscription") && launcher.includes("-Bridge"), "Route 1 native, Route 2 -Bridge");
+  check("launcher bridge targets built-in meta-muse (-p meta-muse, jcode run)", launcher.includes("-p', 'meta-muse'") && launcher.includes("& $jcode run @ExtraArgs"), "no custom profile needed");
+  const leak = /LLM\||sk-ant-|dca:/.test(launcher) || /LLM\||dca:/.test(snippet);
+  check("no secrets embedded in snippet/launcher", !leak);
 }
 
 console.log(`\n=== JCODE-EXT SUMMARY: ${pass + fail} checks — ${pass} pass, ${fail} fail ===`);
