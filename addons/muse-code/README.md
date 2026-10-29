@@ -46,3 +46,6 @@ stored, printed, or committed — `--check` prints key-hidden confirmation only.
   store — trust/approve (`muse plugins approve hypernexus`) is your action anyway.
 - Kernel FTS lags fresh writes under load (verified 200-persisted writes read
   back 0 until index catches up) — hooks are ACK-verified, not read-back gated.
+
+## Binary
+`muse` = `C:\Users\hyper\AppData\Local\Programs\muse\muse.cmd` (Meta distribution, not npm, not on PATH by default). Headless: `muse.cmd exec "<prompt>"`. Verified live: MUSE-CODE-OK (meta/muse-spark-1.3-contributor) + MUSE-MCP-OK (hypernexus MCP system_status via native MCP client). MCP OAuth (if needed): `muse mcp login hypernexus`.

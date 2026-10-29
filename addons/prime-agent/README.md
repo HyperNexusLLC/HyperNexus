@@ -147,3 +147,6 @@ MCP server itself (initialize, tools/list schema validation, safe dispatch of 15
 tools, clean unknown-tool errors, plus the full file surface (8 focused skills, 8 commands,
 2 hooks with exit-0/continue:true and allow/deny gate behavior, mcp.json stdio+env,
 Meta env-reference-only wiring, agent brief, schedule template).
+
+## Binary
+`prime-agent` = `C:\Users\hyper\.local\bin\prime-agent` (v0.10.1-beta.40). Headless: `prime-agent -p --model meta/muse-spark-1.3-contributor "<prompt>"`. Verified live: PRIME2 via kernel proxy (models.json baseUrl http://127.0.0.1:7778/v1).
