@@ -12,10 +12,10 @@ borrowed from pi (`~/.pi/agent/auth.json`, pi owns refresh).
 | Surface | This addon |
 |---|---|
 | MCP server | `hypernexus` stdio (`bin/hypernexus.exe mcp`, 58 tools) — discover via `mcp_list_tools`, route via `mcp_call_tool` |
-| Slash commands | 8 files in `commands/` (`/hn-status`, `/hn-search`, `/hn-store`, `/hn-session`, `/hn-context`, `/hn-summary`, `/hn-tools`, `/hn-purge`); symlink/copy into `.crush/commands/` for project use |
+| Slash commands | 11 files in `commands/` (`/hn-status`, `/hn-search`, `/hn-store`, `/hn-session`, `/hn-context`, `/hn-summary`, `/hn-tools`, `/hn-purge`, `/hn-plan`, `/hn-remember`, `/hn-restore`); symlink/copy into `.crush/commands/` for project use |
 | Skills | 3 skills (`hypernexus`, `hypernexus-ops`, `hypernexus-workflows`) — user-invocable + model-invoked |
-| Hooks | `hooks/hn-gate.cmd` (pure-cmd PreToolUse gate, env-only) + `hooks/hn-session.cmd` (static SessionStart) + `hooks/hn-rbac.*` (deny-list) — **OPT-IN, not auto-registered**: Crush validates hook commands at config load and auto-registration stalls the load ~70s; paste the two lines from the managed block comment after verifying each exits 0 fast |
-| Meta model | `meta-model.crushrc.snippet` — `meta/muse-spark-1.3-contributor` via OpenAI-compat, token read LIVE from pi auth.json at every startup |
+| Hooks | `hooks/hn-gate.cmd` (pure-cmd PreToolUse gate, env-only) + `hooks/hn-session.cmd` (static SessionStart) + `hooks/hn-rbac.*` (deny-list) + POSIX twins (`hn-pre-tool.sh`, `hn-session.sh`, `hn-rbac.sh`) — **OPT-IN, not auto-registered**: Crush validates hook commands at config load and auto-registration stalls the load ~70s; paste the two lines from the managed block comment after verifying each exits 0 fast |
+| Meta model | `meta-model.crushrc.snippet` + `bin/meta-muse-key.mjs` — `meta/muse-spark-1.3-contributor` via OpenAI-compat, Model API key MINTED LIVE from pi identity at every startup (`node addons/crush/bin/meta-muse-key.mjs --check`); pi owns OAuth refresh, nothing stored |
 | Overlay | `prompt-overlay.md` (discipline loop), `preferred-tools.md` (routing), `swarm-prompt-block.md` |
 | Installer | `install.mjs` — `--global` (into `~/.config/crush/`) or project (into `.crush/`), `--check`, `--uninstall` |
 
@@ -50,5 +50,7 @@ node addons/crush/install.mjs --global --check
 - `hooks/hn-rbac.cmd` + `hn-rbac.sh` — second PreToolUse deny-list (destructive patterns, exit 2); opt-in AFTER the gate
 - `hooks/hn-pre-tool.sh` — POSIX twin of the gate (kept for non-Windows)
 - `agent/hypernexus-orchestrator.md` — orchestrator agent (RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY)
-- `commands/hn-*.md` — 8 slash-command prompt files
+- `bin/meta-muse-key.mjs` — mint a Meta Model API key from pi `auth.json` identity (live-read, never stored; crushrc api-key mints from it)
+- `commands/hn-*.md` — 11 slash-command prompt files (+ `hn-plan`, `hn-remember`, `hn-restore` for parity with droid/pi)
+- `agent/hypernexus-researcher.md` — read-only researcher agent (parity with droid/freebuff)
 - `skills/*/SKILL.md` — 3 skills with `user-invocable: true`

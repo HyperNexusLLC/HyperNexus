@@ -1,996 +1,1089 @@
 {
-  "$schema": "https://hypernexus.site/schemas/extension-manifest.v1.json",
-  "name": "hypernexus",
-  "displayName": "HyperNexus",
-  "version": "1.0.21",
-  "description": "Universal AI control plane integration: persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery across 26k+ tools, knowledge graph, session import, skill registry, code search, and agent orchestration.",
-  "kind": "harness-extension",
-  "generatedFor": "multi-harness + autonomous-orchestration",
-  "kernel": {
-    "baseUrl": "http://127.0.0.1:7778",
-    "health": "/health",
-    "overrideEnv": [
-      "HYPERNEXUS_URL",
-      "HYPERNEXUS_TRPC_UPSTREAM"
-    ],
-    "mcp": {
-      "command": "hypernexus.exe",
-      "args": [
-        "mcp"
-      ],
-      "transport": "stdio",
-      "toolNamespace": "mcp__hypernexus"
-    }
-  },
-  "harnesses": {
-    "pi": {
-      "status": "active",
-      "api": "@earendil-works/pi-coding-agent (ExtensionAPI)",
-      "adapter": "addons/pi/hypernexus.ts",
-      "install": "~/.pi/agent/extensions/hypernexus.ts",
-      "surfaces": [
-        "tools",
-        "commands",
-        "shortcuts",
-        "hooks",
-        "widget",
-        "event-bus"
-      ]
-    },
-    "mimo": {
-      "status": "active",
-      "api": "@mimo-ai/plugin (Plugin SDK)",
-      "adapter": "addons/mimo/plugin/hypernexus/index.js",
-      "install": "~/.config/mimocode/",
-      "surfaces": [
-        "tools",
-        "hooks",
-        "commands",
-        "agents",
-        "tui"
-      ]
-    },
-    "opencode": {
-      "status": "active",
-      "api": "OpenCode V2 Plugin API (Plugin.define/setup ctx) + V1 server() shim",
-      "adapter": "addons/opencode/plugin/hypernexus/index.js",
-      "install": "<project>/.opencode/plugins/hypernexus/ or ~/.config/opencode/plugins/hypernexus/",
-      "installer": "addons/opencode/install.mjs",
-      "surfaces": [
-        "tools",
-        "commands",
-        "skills",
-        "session-hooks",
-        "tool-hooks",
-        "permission-hook",
-        "shell-hook",
-        "mcp",
-        "worktree",
-        "events",
-        "agent"
-      ],
-      "notes": "36 tools + 11 /hn-* commands + 3 skills; auto-registers `hypernexus mcp` stdio server; hot-path FTS context injection; @memory:key prompt expansion; RBAC via HYPERNEXUS_RBAC."
-    },
-    "jcode": {
-      "status": "active",
-      "api": "Jcode MCP manager (mcpServers stdio config) + skills / prompt-overlay / preferred-tools / swarm-prompt surfaces",
-      "adapter": "addons/jcode/",
-      "install": "<project>/.jcode/ or ~/.jcode/ — mcp.json, skills/, prompt-overlay.md, preferred-tools.md, swarm-prompt.md block",
-      "installer": "addons/jcode/install.mjs",
-      "surfaces": [
-        "mcp",
-        "skills",
-        "prompt-overlay",
-        "preferred-tools",
-        "swarm-prompt"
-      ],
-      "notes": "58 tools via `hypernexus mcp` stdio server registered in .jcode/mcp.json (toolNamespace mcp__hypernexus). 3 skills + discipline overlay + tool routing + swarm persistence block. Core works without the extension over HTTP. Stdio server serves last-good inventory on slow kernel (15s TTL cache + retry) and dispatches requests concurrently."
-    },
-    "droid": {
-      "status": "active",
-      "api": "Factory Droid plugin (.factory-plugin/plugin.json) + MCP stdio + hooks + skills/commands/droids/output-styles",
-      "adapter": "addons/droid/plugin/hypernexus/",
-      "install": "addons/droid/marketplace/ via `node addons/droid/install.mjs` then `droid plugin marketplace add <dir>` + `droid plugin install hypernexus@marketplace --scope user`",
-      "installer": "addons/droid/install.mjs",
-      "surfaces": [
-        "mcp",
-        "plugin-bundle",
-        "commands",
-        "skills",
-        "hooks",
-        "droids",
-        "output-style"
-      ],
-      "notes": "58 tools via `hypernexus mcp` stdio server registered in plugin mcp.json (~/.factory/mcp.json). 3 skills + 11 /hn-* commands + 2 droids + 1 output style. 8 lifecycle hooks (SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop/SessionEnd/PreCompact/SubagentStop) as Node scripts (no bash dependency on Windows); hot-path FTS recall; @memory:key expansion; RBAC via HYPERNEXUS_RBAC (audit/ask/deny). Meta muse-spark-1.3-contributor runs natively via apiKeyHelper (addons/droid/bin/meta-muse-key.mjs mints Model API key from pi auth.json identity)."
-    },
-    "_template": {
-      "status": "template",
-      "api": "<harness plugin/extension API>",
-      "adapter": "addons/<harness>/",
-      "install": "<harness install dir>",
-      "note": "Copy this entry to add a new harness. Bind each capability below to your harness's tool-registration primitive. Keep budgets + never-throw contract identical."
-    },
-    "codewhale": {
-      "status": "active",
-      "api": "Codewhale MCP manager (mcpServers stdio config) + Agent Plugins v1.0.0 bundle (commands/skills/mcp.json) + skills / prompt-overlay surfaces",
-      "adapter": "addons/codewhale/",
-      "install": "<project>/.codewhale/ or ~/.codewhale/ — mcp.json, plugins/hypernexus/ bundle (plugin.json + plugin.toml + commands/ + skills/), skills/ mirror, AGENTS.md managed block",
-      "installer": "addons/codewhale/install.mjs",
-      "surfaces": [
-        "mcp",
-        "plugin-bundle",
-        "commands",
-        "skills",
-        "prompt-overlay"
-      ],
-      "notes": "58 tools via hypernexus mcp stdio server registered in .codewhale/mcp.json (toolNamespace mcp__hypernexus). Agent Plugins v1.0.0 bundle adds 8 /hn-* commands + 3 skills (activate via /plugin validate/show/trust/enable). Skills mirrored to skills/ for direct discovery. Version stamped from /VERSION at install. Core works without the extension over HTTP."
-    },
-    "crush": {
-      "status": "active",
-      "api": "Crush crushrc (Bash config) + MCP stdio + skills + PreToolUse/SessionStart hooks",
-      "adapter": "addons/crush/",
-      "install": "~/.config/crush/ (global) or <project>/.crush/ — crushrc managed block, skills/, commands/, hooks/, prompt-overlay.md, preferred-tools.md",
-      "installer": "addons/crush/install.mjs",
-      "surfaces": [
-        "mcp",
-        "commands",
-        "skills",
-        "hooks",
-        "prompt-overlay",
-        "preferred-tools",
-        "swarm-prompt"
-      ],
-      "notes": "58 tools via hypernexus mcp stdio server (FORWARD-SLASH exe path required; backslashes break the MCP handshake). 8 hn commands + 3 user-invocable skills. PreToolUse allow-gate (destructive-pattern deny) + SessionStart FTS bootstrap (fail-open, no python required). Meta meta/muse-spark-1.3-contributor via pi-OAuth live-read (pi owns refresh). Core works without the MCP server over HTTP http://127.0.0.1:7778."
-    },
-    "freebuff": {
-      "status": "active",
-      "api": "Freebuff/Codebuff platform (.agents/mcp.json stdio + .agents/skills SKILL.md + AGENTS.md overlay; no provider/hook API)",
-      "adapter": "addons/freebuff/",
-      "install": "<project>/.agents/ or ~/.agents/ (global) — mcp.json merge, 14 skills, HYPERNEXUS.md, AGENTS.md managed block",
-      "installer": "addons/freebuff/install.mjs",
-      "surfaces": [
-        "mcp",
-        "skills",
-        "command-skills",
-        "agent",
-        "hooks",
-        "prompt-overlay",
-        "preferred-tools",
-        "swarm-prompt",
-        "meta-model"
-      ],
-      "notes": "58 tools via hypernexus mcp stdio server registered in .agents/mcp.json (standard mcpServers format; freebuff reads projectDir/parents, trust via prompt or --trust-agents). 3 core skills + 2 agents (orchestrator + researcher) + 11 hn command-skills (all /skill:<name>). 3 hooks (hn-session/hn-rbac/hn-pre-tool) shipped in addons/freebuff/hooks and installed to .agents/hooks by-convention (freebuff has no hook API). AGENTS.md managed discipline block (freebuff reads AGENTS.md at chat start, falls back to CLAUDE.md). Meta muse-spark-1.3-contributor: /model picker ships it natively (paid-plan locked without a plan); subscription/OAuth path mints a Model API key live from pi auth.json via bin/meta-muse-key.mjs (pi owns refresh, nothing stored) + use-meta-model.ps1 launcher + BYOK openai-compatible connection (~/.config/freebuff/byok/connections.json, credentialRef env:META_MUSE_API_KEY, default-selected in manicode settings.json). Core works without the MCP server over HTTP http://127.0.0.1:7778."
-    },
-    "reasonix": {
-      "status": "active",
-      "api": "Reasonix Extension Protocol v2 (NDJSON JSON-RPC 2.0 stdio sidecar)",
-      "adapter": "addons/reasonix/",
-      "install": "reasonix plugin install <repo>/addons/reasonix --link + global config.toml [[plugins]] + global settings.json hooks + .mcp.json",
-      "installer": "addons/reasonix/install.mjs",
-      "surfaces": [
-        "tools",
-        "interceptors",
-        "skills",
-        "commands",
-        "agents",
-        "hooks",
-        "mcp",
-        "prompt-overlay"
-      ],
-      "notes": "36 ext__hypernexus__* runtime tools + 10 intercepts + 3 skills + 11 /hypernexus: commands + 1 orchestrator agent; native SessionStart/PostToolUse/PreToolUse hooks + SessionStart/PreCompact context files; MCP via contributes.mcpServers + config.toml [[plugins]] + .mcp.json. Meta muse-spark-1.3-contributor via META_MUSE_API_KEY env ref (pi owns OAuth refresh; scripts/sync-meta-oauth-reasonix.ps1). Core works without the extension over HTTP."
-    },
-    "muse-code": {
-      "status": "active",
-      "api": "muse settings.json (provider/model)",
-      "adapter": "addons/muse-code/",
-      "install": "~/.config/muse/settings.json",
-      "installer": "addons/muse-code/install.mjs",
-      "surfaces": [
-        "model",
-        "skills"
-      ],
-      "notes": "Meta muse-spark-1.3-contributor via pi-OAuth live-read."
-    },
-    "codex-cli": {
-      "status": "active",
-      "api": "codex config.toml",
-      "adapter": "addons/codex-cli/",
-      "install": "~/.codex/config.toml",
-      "installer": "addons/codex-cli/install.mjs",
-      "surfaces": [
-        "model",
-        "mcp"
-      ],
-      "notes": "Key via MODEL_API_KEY env."
-    },
-    "mini-swe-agent": {
-      "status": "active",
-      "api": "dotenv .env + litellm",
-      "adapter": "addons/mini-swe-agent/",
-      "install": "mini-swe-agent .env",
-      "installer": "addons/mini-swe-agent/install.mjs",
-      "surfaces": [
-        "model"
-      ],
-      "notes": "Proof MINISWEA-META-OK via scripts/mini-swe-agent-meta-test.py."
-    },
-    "maki": {
-      "status": "active",
-      "api": "maki live store + kernel route",
-      "adapter": "addons/maki/",
-      "install": "live store (providers.toml managed by maki)",
-      "installer": "addons/maki/install.mjs",
-      "surfaces": [
-        "model",
-        "mcp"
-      ],
-      "notes": "Proofs MAKI-META-OK + MAKI2."
-    },
-    "harness2": {
-      "status": "active",
-      "api": "HARNESS2_* env",
-      "adapter": "addons/harness2/",
-      "install": "persistent user env",
-      "installer": "addons/harness2/install.mjs",
-      "surfaces": [
-        "model"
-      ],
-      "notes": "~/workspace/harness2; jb/oc Ready."
-    },
-    "atom": {
-      "status": "active",
-      "api": "atomcode config.toml",
-      "adapter": "addons/atom/",
-      "install": "~/.atomcode/config.toml + mcp.json + skills/",
-      "installer": "addons/atom/install.mjs",
-      "surfaces": [
-        "model",
-        "mcp",
-        "skills"
-      ],
-      "notes": "Proof ATOM-META-OK."
-    },
-    "agy": {
-      "status": "active",
-      "api": "agy mcp add",
-      "adapter": "addons/agy/",
-      "install": "agy MCP store",
-      "installer": "addons/agy/install.mjs",
-      "surfaces": [
-        "mcp"
-      ],
-      "notes": "Models need interactive sign-in."
-    },
-    "copilot-cli": {
-      "status": "active",
-      "api": "mcp-config.json + skills/",
-      "adapter": "addons/copilot-cli/",
-      "install": "~/.copilot/mcp-config.json + skills",
-      "installer": "addons/copilot-cli/install.mjs",
-      "surfaces": [
-        "mcp",
-        "skills"
-      ],
-      "notes": "Login interactive; models GitHub-side."
-    },
-    "open-interpreter": {
-      "status": "active",
-      "api": "config.toml + mcp add",
-      "adapter": "addons/open-interpreter/",
-      "install": "~/.openinterpreter/config.toml",
-      "installer": "addons/open-interpreter/install.mjs",
-      "surfaces": [
-        "model",
-        "mcp"
-      ],
-      "notes": "Mirrors codex schema."
-    }
-  },
-  "contract": {
-    "hotPathBudgetMs": 400,
-    "defaultBudgetMs": 2500,
-    "rules": [
-      "Every kernel call is budgeted (AbortSignal.timeout) and never throws — a hung kernel degrades to a short note, never stalls a turn.",
-      "Hot-path hooks (before_agent_start / context / input) use FTS-only search (/api/memory/fts-search, ~15ms) within hotPathBudgetMs. Never call the full /api/memory/search (~800ms vector+embed) on a hot path.",
-      "Side-effect writes on per-event hooks (audit log, memory store) are fire-and-forget — do not await them in the turn path.",
-      "Explicit user-invoked tools may use the full semantic search and defaultBudgetMs.",
-      "Normalize kernel response shapes at the adapter boundary so harness code never reads `data[].record` vs `data[]` differences."
-    ]
-  },
-  "capabilities": [
-    {
-      "id": "memory_store",
-      "name": "Store memory",
-      "category": "memory",
-      "description": "Persist a fact / observation / decision to L2 vector memory.",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/memory/add",
-        "body": {
-          "content": "<string|json>",
-          "tags": [],
-          "category": "general"
-        }
-      },
-      "readOnly": false,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_memory_store",
-        "mimo": "hypernexus_memory_store",
-        "opencode": "hypernexus_memory_store",
-        "jcode": "mcp__hypernexus__add_memory",
-        "codewhale": "mcp__hypernexus__add_memory",
-        "reasonix": "ext__hypernexus__memory_store",
-        "crush": "add_memory"
-      }
-    },
-    {
-      "id": "memory_search",
-      "name": "Search memory",
-      "category": "memory",
-      "description": "Keyword + semantic search across L2 memory.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/memory/search?q=<query>&limit=<n>",
-        "fastAlt": {
-          "path": "/api/memory/fts-search?q=<query>&limit=<n>",
-          "budgetMs": 400,
-          "note": "hot-path variant"
-        }
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_memory_search",
-        "mimo": "hypernexus_memory_search",
-        "opencode": "hypernexus_memory_search",
-        "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory",
-        "reasonix": "ext__hypernexus__memory_search",
-        "crush": "search_memory"
-      }
-    },
-    {
-      "id": "memory_vector_search",
-      "name": "Semantic vector search",
-      "category": "memory",
-      "description": "Conceptual recall via bundled all-MiniLM-L6-v2 embeddings (384-dim, local, no Ollama).",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/memory/search?q=<query>&limit=<n>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_memory_vector_search",
-        "mimo": "hypernexus_memory_vector_search",
-        "opencode": "hypernexus_memory_vector_search",
-        "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory",
-        "reasonix": "ext__hypernexus__memory_vector_search",
-        "crush": "search_memory"
-      }
-    },
-    {
-      "id": "memory_list",
-      "name": "List / review recent memories",
-      "category": "memory",
-      "description": "Browse recent L2 memories and stats.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/memory/list?limit=<n>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_memory_search",
-        "mimo": "hypernexus_memory_list",
-        "opencode": "hypernexus_memory_list",
-        "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory",
-        "reasonix": "ext__hypernexus__memory_list",
-        "crush": "search_memory"
-      }
-    },
-    {
-      "id": "context_harvest",
-      "name": "Context harvest",
-      "category": "memory",
-      "description": "Pull prior decisions/gotchas and relevant L2 context for a task topic.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/memory/search?q=<query>&limit=<n>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_context_harvest",
-        "mimo": "hypernexus_context_harvest",
-        "opencode": "hypernexus_context_harvest",
-        "jcode": "mcp__hypernexus__search_memory",
-        "codewhale": "mcp__hypernexus__search_memory",
-        "reasonix": "ext__hypernexus__context_harvest",
-        "crush": "search_memory + memory_scratchpad_get"
-      }
-    },
-    {
-      "id": "scratchpad",
-      "name": "Scratchpad (L1 working memory)",
-      "category": "memory",
-      "description": "Read/write the L1 scratchpad for short-lived working state.",
-      "kernel": {
-        "method": "GET|POST",
-        "path": "/api/memory/scratchpad/get | /api/memory/scratchpad/set"
-      },
-      "readOnly": false,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_scratchpad",
-        "mimo": "hypernexus_scratchpad",
-        "opencode": "hypernexus_scratchpad",
-        "jcode": "mcp__hypernexus__memory_scratchpad_get",
-        "codewhale": "mcp__hypernexus__memory_scratchpad_get",
-        "reasonix": "ext__hypernexus__scratchpad",
-        "crush": "memory_scratchpad_get/set/append"
-      }
-    },
-    {
-      "id": "tool_search",
-      "name": "Tool discovery (semantic)",
-      "category": "discovery",
-      "description": "Describe what you need — find the best tool across 26k+ MCP tools by meaning.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/mcp/native/search?query=<query>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_tool_search",
-        "mimo": "hypernexus_search_tools",
-        "opencode": "hypernexus_tool_search",
-        "jcode": "mcp__hypernexus__mcp_list_tools",
-        "codewhale": "mcp__hypernexus__mcp_list_tools",
-        "reasonix": "ext__hypernexus__tool_search",
-        "crush": "mcp_list_tools + /api/mcp/tools/search"
-      }
-    },
-    {
-      "id": "tool_suggest",
-      "name": "Proactive tool suggestions",
-      "category": "discovery",
-      "description": "Preemptive monitor recommends tools for the current conversation (fed automatically by the context hook).",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/mcp/tool-suggestions",
-        "feed": {
-          "method": "POST",
-          "path": "/api/mcp/tool-suggestions",
-          "body": {
-            "role": "user",
-            "content": "<recent message>"
-          },
-          "fireAndForget": true
-        }
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_suggest_tools",
-        "mimo": "hypernexus_suggest_tools",
-        "opencode": "hypernexus_suggest_tools",
-        "reasonix": "ext__hypernexus__suggest_tools",
-        "crush": "mcp_list_tools (suggest via conversation scan)"
-      }
-    },
-    {
-      "id": "mcp_call",
-      "name": "Route MCP tool call",
-      "category": "discovery",
-      "description": "Invoke a discovered MCP tool through the kernel router.",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/agent/tool",
-        "body": {
-          "tool": "<server/tool>",
-          "args": {}
-        }
-      },
-      "readOnly": false,
-      "budgetMs": 8000,
-      "harness": {
-        "mimo": "hypernexus_mcp_call",
-        "opencode": "hypernexus_mcp_call",
-        "jcode": "mcp__hypernexus__mcp_call_tool",
-        "codewhale": "mcp__hypernexus__mcp_call_tool",
-        "reasonix": "ext__hypernexus__mcp_call",
-        "crush": "mcp_call_tool"
-      }
-    },
-    {
-      "id": "session_search",
-      "name": "Session search",
-      "category": "sessions",
-      "description": "Search/list/get imported coding sessions (Claude Code, Aider, etc.).",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/sessions/imported/list | /api/sessions/imported/get?id=<id>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_session_search",
-        "mimo": "hypernexus_session_search",
-        "opencode": "hypernexus_session_search",
-        "reasonix": "ext__hypernexus__session_search",
-        "crush": "search_memory (session-scoped) + /api/sessions/summary"
-      }
-    },
-    {
-      "id": "skill_manage",
-      "name": "Skill registry",
-      "category": "skills",
-      "description": "List/search/read/create reusable skill modules (SKILL.md).",
-      "kernel": {
-        "method": "GET|POST",
-        "path": "/api/skills | /api/skills/read?name=<id> | /api/skills/create"
-      },
-      "readOnly": false,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_skill_manage",
-        "mimo": "hypernexus_skill_manage",
-        "opencode": "hypernexus_skill_manage",
-        "reasonix": "ext__hypernexus__skill_manage",
-        "crush": "/api/skills registry + ~/.config/crush/skills/"
-      }
-    },
-    {
-      "id": "code_search",
-      "name": "Code search",
-      "category": "code",
-      "description": "Search code via AST-grep rules, semantic deepcontext, or file patterns. Modes: symbols|definitions|references.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/mcp/native/search?query=<mode query>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_code_search",
-        "mimo": "hypernexus_code_search",
-        "opencode": "hypernexus_code_search",
-        "jcode": "mcp__hypernexus__codebase_search",
-        "codewhale": "mcp__hypernexus__codebase_search",
-        "reasonix": "ext__hypernexus__code_search",
-        "crush": "codebase_search"
-      }
-    },
-    {
-      "id": "subagent",
-      "name": "Subagent dispatch",
-      "category": "orchestration",
-      "description": "Dispatch an independent sub-task; results are stored back to L2.",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/memory/add",
-        "body": {
-          "content": "[SUBAGENT TASK] ...",
-          "category": "subagent"
-        }
-      },
-      "readOnly": false,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_subagent",
-        "mimo": "hypernexus_subagent",
-        "opencode": "hypernexus_subagent",
-        "reasonix": "ext__hypernexus__subagent",
-        "crush": "add_memory ([SUBAGENT TASK]) + crush run -s"
-      }
-    },
-    {
-      "id": "system_status",
-      "name": "System + billing status",
-      "category": "ops",
-      "description": "Kernel health, memory tiers, mesh peers, billing/quotas.",
-      "kernel": {
-        "method": "GET",
-        "path": "/health | /api/mesh/status | /api/memory/cold-archive/count"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "tn-status",
-        "mimo": "hypernexus_status",
-        "opencode": "hypernexus_system_overview",
-        "jcode": "mcp__hypernexus__system_status",
-        "codewhale": "mcp__hypernexus__system_status",
-        "reasonix": "ext__hypernexus__system_overview",
-        "crush": "system_status + /health"
-      }
-    },
-    {
-      "id": "memory_delete",
-      "name": "Delete memory",
-      "category": "memory",
-      "description": "Remove a stored L2 memory entry by ID.",
-      "kernel": {
-        "method": "DELETE",
-        "path": "/api/memory/delete?id=<id>"
-      },
-      "readOnly": false,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_memory_delete",
-        "mimo": "hypernexus_memory_delete",
-        "reasonix": "ext__hypernexus__memory_delete",
-        "crush": "delete_memory"
-      }
-    },
-    {
-      "id": "memory_update",
-      "name": "Update memory",
-      "category": "memory",
-      "description": "Update an existing L2 memory entry (content, tags, category).",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/memory/update"
-      },
-      "readOnly": false,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_memory_update",
-        "mimo": "hypernexus_memory_update",
-        "crush": "delete_memory + add_memory (rewrite)"
-      }
-    },
-    {
-      "id": "memory_stats",
-      "name": "Memory statistics",
-      "category": "memory",
-      "description": "Counts across L2 vault / scratchpad / relation tiers.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/memory/stats"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "mimo": "hypernexus_memory_stats",
-        "opencode": "hypernexus_memory_stats",
-        "jcode": "mcp__hypernexus__memory_stats",
-        "codewhale": "mcp__hypernexus__memory_stats",
-        "reasonix": "ext__hypernexus__memory_stats",
-        "crush": "memory_stats"
-      }
-    },
-    {
-      "id": "memory_handoff",
-      "name": "Session handoff",
-      "category": "memory",
-      "description": "Write or read cross-session handoff notes.",
-      "kernel": {
-        "method": "GET|POST",
-        "path": "/api/memory/handoff"
-      },
-      "readOnly": false,
-      "budgetMs": 2500,
-      "harness": {
-        "mimo": "hypernexus_memory_handoff",
-        "reasonix": "ext__hypernexus__session_handoff",
-        "crush": "memory_scratchpad_set(goal) + add_memory(session,summary)"
-      }
-    },
-    {
-      "id": "session_list",
-      "name": "List sessions",
-      "category": "sessions",
-      "description": "List active/recent sessions.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/sessions/summary"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_session_list",
-        "mimo": "hypernexus_session_list",
-        "opencode": "hypernexus_session_list",
-        "reasonix": "ext__hypernexus__session_list",
-        "crush": "/api/sessions/summary"
-      }
-    },
-    {
-      "id": "session_context",
-      "name": "Session context",
-      "category": "sessions",
-      "description": "Get structured context for a session (goal, files, decisions).",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/sessions/context?id=<id>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_session_context",
-        "mimo": "hypernexus_session_context",
-        "reasonix": "ext__hypernexus__session_context",
-        "crush": "memory_scratchpad_get(goal) + search_memory"
-      }
-    },
-    {
-      "id": "kernel_routes",
-      "name": "Kernel route map",
-      "category": "ops",
-      "description": "Enumerate all registered kernel API routes.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/routes"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "pi": "hypernexus_kernel_routes",
-        "mimo": "hypernexus_kernel_routes",
-        "crush": "/api/routes + mcp_list_servers"
-      }
-    },
-    {
-      "id": "mcp_status",
-      "name": "MCP status",
-      "category": "discovery",
-      "description": "MCP bridge status: active upstream, fallback reason, connected servers.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/mcp/status"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "mimo": "hypernexus_mcp_status",
-        "reasonix": "ext__hypernexus__mcp_status",
-        "crush": "mcp_status"
-      }
-    },
-    {
-      "id": "mcp_servers",
-      "name": "List MCP servers",
-      "category": "discovery",
-      "description": "List registered MCP servers and connection state.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/mcp/servers"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "mimo": "hypernexus_mcp_servers",
-        "reasonix": "ext__hypernexus__mcp_servers",
-        "crush": "mcp_list_servers"
-      }
-    },
-    {
-      "id": "mcp_tools",
-      "name": "List MCP tools",
-      "category": "discovery",
-      "description": "List tools exposed by connected MCP servers.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/mcp/tools"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "mimo": "hypernexus_mcp_tools",
-        "reasonix": "ext__hypernexus__mcp_tools",
-        "crush": "mcp_list_tools"
-      }
-    },
-    {
-      "id": "skills_search",
-      "name": "Search skills",
-      "category": "skills",
-      "description": "Search the skill catalog for reusable modules.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/skills/search?q=<query>"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "mimo": "hypernexus_skills_search",
-        "reasonix": "ext__hypernexus__skill_search",
-        "crush": "/api/skills/search + skills/ dir"
-      }
-    },
-    {
-      "id": "system_overview",
-      "name": "System overview",
-      "category": "ops",
-      "description": "Unified overview: kernel health, MCP bridge, memory, sessions, providers, runtime status.",
-      "kernel": {
-        "method": "GET",
-        "path": "/api/system/overview"
-      },
-      "readOnly": true,
-      "budgetMs": 2500,
-      "harness": {
-        "mimo": "hypernexus_system_overview",
-        "opencode": "hypernexus_system_overview",
-        "reasonix": "ext__hypernexus__system_overview",
-        "crush": "system_status + mcp_status + billing_status"
-      }
-    },
-    {
-      "id": "repomap",
-      "name": "Repository map",
-      "category": "code",
-      "description": "Generate a ranked repository map with symbol summaries.",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/code/repomap"
-      },
-      "readOnly": true,
-      "budgetMs": 8000,
-      "harness": {
-        "pi": "hypernexus_repomap",
-        "mimo": "hypernexus_repomap",
-        "opencode": "hypernexus_repomap",
-        "reasonix": "ext__hypernexus__repomap",
-        "crush": "repomap"
-      }
-    },
-    {
-      "id": "knowledge_graph",
-      "name": "Knowledge graph",
-      "category": "memory",
-      "description": "Extract entities/relations from text or batch-extract across L2 vault.",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/memory/extract-relations"
-      },
-      "readOnly": false,
-      "budgetMs": 8000,
-      "harness": {
-        "pi": "hypernexus_knowledge_graph",
-        "mimo": "hypernexus_knowledge_graph",
-        "reasonix": "ext__hypernexus__knowledge_graph",
-        "crush": "memory_extract_relations(+_batch)"
-      }
-    },
-    {
-      "id": "workflow",
-      "name": "Workflow runner",
-      "category": "orchestration",
-      "description": "List or run HyperNexus engineering workflows.",
-      "kernel": {
-        "method": "GET|POST",
-        "path": "/api/workflows"
-      },
-      "readOnly": false,
-      "budgetMs": 8000,
-      "harness": {
-        "pi": "hypernexus_workflow",
-        "mimo": "hypernexus_workflow",
-        "reasonix": "ext__hypernexus__workflow",
-        "crush": "commands/hn-* + skills hypernexus-workflows"
-      }
-    },
-    {
-      "id": "orchestrate",
-      "name": "Multi-agent orchestration",
-      "category": "orchestration",
-      "description": "Dispatch and coordinate multiple agents on a complex task.",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/agent/orchestrate"
-      },
-      "readOnly": false,
-      "budgetMs": 8000,
-      "harness": {
-        "pi": "hypernexus_orchestrate",
-        "mimo": "hypernexus_orchestrate",
-        "reasonix": "ext__hypernexus__orchestrate",
-        "crush": "add_memory orchestration loop + crush run subagents"
-      }
-    },
-    {
-      "id": "browser",
-      "name": "Browser automation",
-      "category": "ops",
-      "description": "Web automation via CDP (navigate, read, interact).",
-      "kernel": {
-        "method": "POST",
-        "path": "/api/browser/action"
-      },
-      "readOnly": false,
-      "budgetMs": 8000,
-      "harness": {
-        "pi": "hypernexus_browser",
-        "mimo": "hypernexus_browser",
-        "reasonix": "ext__hypernexus__browser",
-        "crush": "launch_webview + /api/browser/action"
-      }
-    }
+ "$schema": "https://hypernexus.site/schemas/extension-manifest.v1.json",
+ "name": "hypernexus",
+ "displayName": "HyperNexus",
+ "version": "1.0.21",
+ "description": "Universal AI control plane integration: persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery across 26k+ tools, knowledge graph, session import, skill registry, code search, and agent orchestration.",
+ "kind": "harness-extension",
+ "generatedFor": "multi-harness + autonomous-orchestration",
+ "kernel": {
+  "baseUrl": "http://127.0.0.1:7778",
+  "health": "/health",
+  "overrideEnv": [
+   "HYPERNEXUS_URL",
+   "HYPERNEXUS_TRPC_UPSTREAM"
   ],
-  "hooks": {
-    "session_start": "Prime session: set name, status, inject TN system prompt + fast context.",
-    "before_agent_start": "Inject fast FTS context into system prompt (hot-path, 400ms budget).",
-    "context": "Per-turn: feed tool-suggestion monitor (fire-and-forget) + inject fast FTS context (hot-path).",
-    "tool_call": "Enterprise RBAC enforcement (dangerous-pattern authorize) + fire-and-forget audit log.",
-    "tool_result": "Auto-store substantial tool results to L2 (fire-and-forget).",
-    "input": "Expand @memory:key tokens via fast search (hot-path).",
-    "turn_end": "Store turn summary to L2 (fire-and-forget).",
-    "session_before_compact": "Enrich compaction summary with related L2 context.",
-    "session_compact": "Store compaction summary to L2 (fire-and-forget).",
-    "session_shutdown": "Clear widget/status, stop timers."
-  },
-  "orchestration": {
-    "loop": "RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY",
-    "compositionRules": [
-      "Always start with RECALL (context_harvest / memory_search) before multi-step work.",
-      "Use DISCOVER (tool_search / tool_suggest) when hitting a capability gap.",
-      "Always end with PERSIST (memory_store) for non-obvious decisions/gotchas.",
-      "VERIFY (system_status) before and after production changes."
-    ],
-    "workflows": [
-      {
-        "id": "MEM-FIRST",
-        "when": "any multi-step task",
-        "steps": [
-          "context_harvest",
-          "memory_search",
-          "memory_vector_search",
-          "<execute>",
-          "memory_store"
-        ]
-      },
-      {
-        "id": "DISCOVER",
-        "when": "capability gap",
-        "steps": [
-          "tool_suggest",
-          "tool_search",
-          "mcp_call",
-          "memory_store"
-        ]
-      },
-      {
-        "id": "HARVEST",
-        "when": "resuming after a break",
-        "steps": [
-          "context_harvest",
-          "memory_list",
-          "session_search",
-          "memory_vector_search"
-        ]
-      },
-      {
-        "id": "HANDOFF",
-        "when": "end of session / context switch",
-        "steps": [
-          "memory_store(session summary)",
-          "scratchpad(set goal)"
-        ]
-      },
-      {
-        "id": "OPS",
-        "when": "deployments / incidents",
-        "steps": [
-          "system_status",
-          "<act>",
-          "system_status",
-          "memory_store"
-        ]
-      }
-    ]
-  },
-  "autonomousOrchestration": {
-    "discovery": "Read this manifest to enumerate capabilities across all bound harnesses.",
-    "dispatch": "Each capability declares a uniform kernel binding; call the kernel directly regardless of harness, or call the harness-native tool name in `harness.<harness>`.",
-    "idempotence": "memory_store writes are append-only; reads are side-effect-free. Safe to retry reads; batch writes.",
-    "budgets": "Respect `budgetMs` per capability. Never exceed hotPathBudgetMs on turn-critical paths.",
-    "escalation": "If a harness adapter is unavailable, fall back to the kernel binding (the kernel is the single source of truth)."
+  "mcp": {
+   "command": "hypernexus.exe",
+   "args": [
+    "mcp"
+   ],
+   "transport": "stdio",
+   "toolNamespace": "mcp__hypernexus"
   }
+ },
+ "harnesses": {
+  "pi": {
+   "status": "active",
+   "api": "@earendil-works/pi-coding-agent (ExtensionAPI)",
+   "adapter": "addons/pi/hypernexus.ts",
+   "install": "~/.pi/agent/extensions/hypernexus.ts",
+   "surfaces": [
+    "tools",
+    "commands",
+    "shortcuts",
+    "hooks",
+    "widget",
+    "event-bus"
+   ]
+  },
+  "mimo": {
+   "status": "active",
+   "api": "@mimo-ai/plugin (Plugin SDK)",
+   "adapter": "addons/mimo/plugin/hypernexus/index.js",
+   "install": "~/.config/mimocode/",
+   "surfaces": [
+    "tools",
+    "hooks",
+    "commands",
+    "agents",
+    "tui"
+   ]
+  },
+  "opencode": {
+   "status": "active",
+   "api": "OpenCode V2 Plugin API (Plugin.define/setup ctx) + V1 server() shim",
+   "adapter": "addons/opencode/plugin/hypernexus/index.js",
+   "install": "<project>/.opencode/plugins/hypernexus/ or ~/.config/opencode/plugins/hypernexus/",
+   "installer": "addons/opencode/install.mjs",
+   "surfaces": [
+    "tools",
+    "commands",
+    "skills",
+    "session-hooks",
+    "tool-hooks",
+    "permission-hook",
+    "shell-hook",
+    "mcp",
+    "worktree",
+    "events",
+    "agent"
+   ],
+   "notes": "36 tools + 11 /hn-* commands + 3 skills; auto-registers `hypernexus mcp` stdio server; hot-path FTS context injection; @memory:key prompt expansion; RBAC via HYPERNEXUS_RBAC."
+  },
+  "jcode": {
+   "status": "active",
+   "api": "Jcode MCP manager (mcpServers stdio config) + skills / commands / hooks / prompt-overlay / preferred-tools / swarm-prompt surfaces",
+   "adapter": "addons/jcode/",
+   "install": "<project>/.jcode/ or ~/.jcode/ \u2014 mcp.json, skills/, prompt-overlay.md, preferred-tools.md, swarm-prompt.md block",
+   "installer": "addons/jcode/install.mjs",
+   "surfaces": [
+    "mcp",
+    "skills",
+    "commands",
+    "hooks",
+    "prompt-overlay",
+    "preferred-tools",
+    "swarm-prompt",
+    "meta-model"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server in .jcode/mcp.json (toolNamespace mcp__hypernexus). 4 skills + 13 /hn-* commands + 4 hooks covering all 8 hook events (observe/transform/feedback/RBAC gate) + prompt-overlay + preferred-tools + swarm block. Meta muse-spark-1.3-contributor: native muse-subscription OAuth primary (jcode login --provider muse-subscription), pi-OAuth live-mint bridge via addons/jcode/bin/meta-muse-key.mjs (shell-local ~24h). Battery bin/test-jcode-ext.mjs 109 checks. Core works without the extension over HTTP."
+  },
+  "droid": {
+   "status": "active",
+   "api": "Factory Droid plugin (.factory-plugin/plugin.json) + MCP stdio + hooks + skills/commands/droids/output-styles",
+   "adapter": "addons/droid/plugin/hypernexus/",
+   "install": "addons/droid/marketplace/ via `node addons/droid/install.mjs` then `droid plugin marketplace add <dir>` + `droid plugin install hypernexus@marketplace --scope user`",
+   "installer": "addons/droid/install.mjs",
+   "surfaces": [
+    "mcp",
+    "plugin-bundle",
+    "commands",
+    "skills",
+    "hooks",
+    "droids",
+    "output-style"
+   ],
+   "notes": "58 tools via `hypernexus mcp` stdio server registered in plugin mcp.json (~/.factory/mcp.json). 3 skills + 11 /hn-* commands + 2 droids + 1 output style. 8 lifecycle hooks (SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop/SessionEnd/PreCompact/SubagentStop) as Node scripts (no bash dependency on Windows); hot-path FTS recall; @memory:key expansion; RBAC via HYPERNEXUS_RBAC (audit/ask/deny). Meta muse-spark-1.3-contributor runs natively via apiKeyHelper (addons/droid/bin/meta-muse-key.mjs mints Model API key from pi auth.json identity)."
+  },
+  "_template": {
+   "status": "template",
+   "api": "<harness plugin/extension API>",
+   "adapter": "addons/<harness>/",
+   "install": "<harness install dir>",
+   "note": "Copy this entry to add a new harness. Bind each capability below to your harness's tool-registration primitive. Keep budgets + never-throw contract identical."
+  },
+  "codewhale": {
+   "status": "active",
+   "api": "Codewhale MCP manager (mcpServers stdio config) + Agent Plugins v1.0.0 bundle (commands/skills/mcp.json) + skills / prompt-overlay surfaces",
+   "adapter": "addons/codewhale/",
+   "install": "<project>/.codewhale/ or ~/.codewhale/ \u2014 mcp.json, plugins/hypernexus/ bundle (plugin.json + plugin.toml + commands/ + skills/), skills/ mirror, AGENTS.md managed block",
+   "installer": "addons/codewhale/install.mjs",
+   "surfaces": [
+    "mcp",
+    "plugin-bundle",
+    "commands",
+    "skills",
+    "prompt-overlay"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server registered in .codewhale/mcp.json (toolNamespace mcp__hypernexus). Agent Plugins v1.0.0 bundle adds 8 /hn-* commands + 3 skills (activate via /plugin validate/show/trust/enable). Skills mirrored to skills/ for direct discovery. Version stamped from /VERSION at install. Core works without the extension over HTTP."
+  },
+  "crush": {
+   "status": "active",
+   "api": "Crush crushrc (Bash config) + MCP stdio + skills + PreToolUse/SessionStart hooks",
+   "adapter": "addons/crush/",
+   "install": "~/.config/crush/ (global) or <project>/.crush/ \u2014 crushrc managed block, skills/, commands/, hooks/, prompt-overlay.md, preferred-tools.md",
+   "installer": "addons/crush/install.mjs",
+   "surfaces": [
+    "mcp",
+    "commands",
+    "skills",
+    "hooks",
+    "prompt-overlay",
+    "preferred-tools",
+    "swarm-prompt"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server (FORWARD-SLASH exe path required; backslashes break the MCP handshake). 8 hn commands + 3 user-invocable skills. PreToolUse allow-gate (destructive-pattern deny) + SessionStart FTS bootstrap (fail-open, no python required). Meta meta/muse-spark-1.3-contributor via pi-OAuth live-read (pi owns refresh). Core works without the MCP server over HTTP http://127.0.0.1:7778."
+  },
+  "freebuff": {
+   "status": "active",
+   "api": "Freebuff/Codebuff platform (.agents/mcp.json stdio + .agents/skills SKILL.md + AGENTS.md overlay; no provider/hook API)",
+   "adapter": "addons/freebuff/",
+   "install": "<project>/.agents/ or ~/.agents/ (global) \u2014 mcp.json merge, 16 skills, HYPERNEXUS.md, AGENTS.md managed block",
+   "installer": "addons/freebuff/install.mjs",
+   "surfaces": [
+    "mcp",
+    "skills",
+    "command-skills",
+    "agent",
+    "hooks",
+    "prompt-overlay",
+    "preferred-tools",
+    "swarm-prompt",
+    "meta-model"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server registered in .agents/mcp.json (standard mcpServers format; freebuff reads projectDir/parents, trust via prompt or --trust-agents). 3 core skills + 2 agents (orchestrator + researcher) + 11 hn command-skills (all /skill:<name>). 3 hooks (hn-session/hn-rbac/hn-pre-tool) shipped in addons/freebuff/hooks and installed to .agents/hooks by-convention (freebuff has no hook API). AGENTS.md managed discipline block (freebuff reads AGENTS.md at chat start, falls back to CLAUDE.md). Meta muse-spark-1.3-contributor: /model picker ships it natively (paid-plan locked without a plan); subscription/OAuth path mints a Model API key live from pi auth.json via bin/meta-muse-key.mjs (pi owns refresh, nothing stored) + use-meta-model.ps1 launcher + BYOK openai-compatible connection (~/.config/freebuff/byok/connections.json, credentialRef env:META_MUSE_API_KEY, default-selected in manicode settings.json). Core works without the MCP server over HTTP http://127.0.0.1:7778."
+  },
+  "reasonix": {
+   "status": "active",
+   "api": "Reasonix Extension Protocol v2 (NDJSON JSON-RPC 2.0 stdio sidecar)",
+   "adapter": "addons/reasonix/",
+   "install": "reasonix plugin install <repo>/addons/reasonix --link + global config.toml [[plugins]] + global settings.json hooks + .mcp.json",
+   "installer": "addons/reasonix/install.mjs",
+   "surfaces": [
+    "tools",
+    "interceptors",
+    "skills",
+    "commands",
+    "agents",
+    "hooks",
+    "mcp",
+    "prompt-overlay"
+   ],
+   "notes": "36 ext__hypernexus__* runtime tools + 10 intercepts + 3 skills + 11 /hypernexus: commands + 1 orchestrator agent; native SessionStart/PostToolUse/PreToolUse hooks + SessionStart/PreCompact context files; MCP via contributes.mcpServers + config.toml [[plugins]] + .mcp.json. Meta muse-spark-1.3-contributor via META_MUSE_API_KEY env ref (pi owns OAuth refresh; scripts/sync-meta-oauth-reasonix.ps1). Core works without the extension over HTTP."
+  },
+  "muse-code": {
+   "status": "active",
+   "api": "Muse Code 1.4.14 native plugin (.muse-plugin/plugin.json: skills/commands/hooks/mcpServers/reminders) + settings.json (provider/model/mcpServers)",
+   "adapter": "addons/muse-code/plugin/hypernexus/",
+   "install": "`node addons/muse-code/install.mjs` (settings ensure incl. mcpServers.hypernexus + user-scope skills + best-effort plugin install)",
+   "installer": "addons/muse-code/install.mjs",
+   "surfaces": [
+    "model",
+    "plugin-bundle",
+    "commands",
+    "skills",
+    "hooks",
+    "mcp"
+   ],
+   "notes": "Meta muse-spark-1.3-contributor via pi-OAuth live mint (bin/meta-muse-key.mjs, pi owns refresh; META_API_KEY per shell). ACTIVATED via user-scope skills (3/3 on, zero diagnostics) + settings.json mcpServers.hypernexus stdio + live `muse exec` proof (system_status -> kernel version). Validator-clean native bundle (3 skills, 11 commands, 5 hooks, 1 MCP server) ships ready; plugin-record load pending product fix. Reminders family ships as duty file but unreferenced: 1.4.14 rejects every memoryEvidence source shape including its own shipped example. KNOWN PRODUCT BLOCKER: `muse plugins install` fails deterministically on this box (os error 32, failing file never materializes, no locker process); proven with a 1-skill probe."
+  },
+  "codex-cli": {
+   "status": "active",
+   "api": "codex config.toml",
+   "adapter": "addons/codex-cli/",
+   "install": "~/.codex/config.toml",
+   "installer": "addons/codex-cli/install.mjs",
+   "surfaces": [
+    "model",
+    "mcp"
+   ],
+   "notes": "Key via MODEL_API_KEY env."
+  },
+  "mini-swe-agent": {
+   "status": "active",
+   "api": "dotenv .env + litellm",
+   "adapter": "addons/mini-swe-agent/",
+   "install": "mini-swe-agent .env",
+   "installer": "addons/mini-swe-agent/install.mjs",
+   "surfaces": [
+    "model"
+   ],
+   "notes": "Proof MINISWEA-META-OK via scripts/mini-swe-agent-meta-test.py."
+  },
+  "maki": {
+   "status": "active",
+   "api": "maki Lua plugin API (register_tool/command/prompt_hint/slots/autocmds/keymap/provider)",
+   "adapter": "extensions/maki-hypernexus/",
+   "install": "%APPDATA%/maki/ (global) + <project>/.maki/ (project scope)",
+   "model": "meta/muse-spark-1.3-contributor (native Meta OAuth: lua/meta_oauth.lua device-code + pi auth.json mint, auto-refresh)",
+   "battery": "bin/test-maki-ext.mjs (61 checks)",
+   "surfaces": [
+    "tools:35 kernel-backed",
+    "slash-commands:12 md + 5 plugin",
+    "hooks:7 autocmds + 4 slots (guard/recall/redact/completion)",
+    "keymaps:F7/F8",
+    "prompt-hints",
+    "mcp:hypernexus stdio",
+    "skills:4",
+    "provider:meta"
+   ]
+  },
+  "harness2": {
+   "status": "active",
+   "api": "HARNESS2_* env",
+   "adapter": "addons/harness2/",
+   "install": "persistent user env",
+   "installer": "addons/harness2/install.mjs",
+   "surfaces": [
+    "model"
+   ],
+   "notes": "~/workspace/harness2; jb/oc Ready."
+  },
+  "atom": {
+   "status": "active",
+   "api": "atomcode config.toml",
+   "adapter": "addons/atom/",
+   "install": "~/.atomcode/config.toml + mcp.json + skills/",
+   "installer": "addons/atom/install.mjs",
+   "surfaces": [
+    "model",
+    "mcp",
+    "skills"
+   ],
+   "notes": "Proof ATOM-META-OK."
+  },
+  "agy": {
+   "status": "active",
+   "api": "agy mcp add",
+   "adapter": "addons/agy/",
+   "install": "agy MCP store",
+   "installer": "addons/agy/install.mjs",
+   "surfaces": [
+    "mcp"
+   ],
+   "notes": "Models need interactive sign-in."
+  },
+  "copilot-cli": {
+   "status": "active",
+   "api": "mcp-config.json + skills/",
+   "adapter": "addons/copilot-cli/",
+   "install": "~/.copilot/mcp-config.json + skills",
+   "installer": "addons/copilot-cli/install.mjs",
+   "surfaces": [
+    "mcp",
+    "skills"
+   ],
+   "notes": "Login interactive; models GitHub-side."
+  },
+  "open-interpreter": {
+   "status": "active",
+   "api": "config.toml + mcp add",
+   "adapter": "addons/open-interpreter/",
+   "install": "~/.openinterpreter/config.toml",
+   "installer": "addons/open-interpreter/install.mjs",
+   "surfaces": [
+    "model",
+    "mcp"
+   ],
+   "notes": "Mirrors codex schema."
+  },
+  "hax": {
+   "status": "active",
+   "api": "hax C binary: no MCP/extension/plugin/hook runtime by design (docs/philosophy.md); binds via custom provider + skills dirs + AGENTS.md hierarchy + hax -p composition",
+   "adapter": "addons/hax/",
+   "install": "~/.config/hax/ (providers.meta + presets, skills) + <repo>/AGENTS.md managed block; installer: addons/hax/install.mjs",
+   "installer": "addons/hax/install.mjs",
+   "surfaces": [
+    "provider",
+    "presets",
+    "skills",
+    "prompt-overlay",
+    "cli",
+    "commands",
+    "subagents",
+    "sessions-jsonl"
+   ],
+   "notes": "Meta Muse Spark via pi OAuth (HAX_META_API_KEY live-read from pi auth.json by scripts/meta-env.sh; key never in config.json). hn.mjs CLI covers all 31 manifest capabilities (true published endpoints; stale /api/memory/stats, /api/routes, /api/memory/update, /api/memory/delete, /api/memory/handoff remapped). 11 @-mentionable command files. hn-worker subagent preset. Turn scripts mirror the 10 hook contracts outside-process. Battery: bin/test-hax-ext.mjs (70 checks)."
+  }
+ },
+ "contract": {
+  "hotPathBudgetMs": 400,
+  "defaultBudgetMs": 2500,
+  "rules": [
+   "Every kernel call is budgeted (AbortSignal.timeout) and never throws \u2014 a hung kernel degrades to a short note, never stalls a turn.",
+   "Hot-path hooks (before_agent_start / context / input) use FTS-only search (/api/memory/fts-search, ~15ms) within hotPathBudgetMs. Never call the full /api/memory/search (~800ms vector+embed) on a hot path.",
+   "Side-effect writes on per-event hooks (audit log, memory store) are fire-and-forget \u2014 do not await them in the turn path.",
+   "Explicit user-invoked tools may use the full semantic search and defaultBudgetMs.",
+   "Normalize kernel response shapes at the adapter boundary so harness code never reads `data[].record` vs `data[]` differences."
+  ]
+ },
+ "capabilities": [
+  {
+   "id": "memory_store",
+   "name": "Store memory",
+   "category": "memory",
+   "description": "Persist a fact / observation / decision to L2 vector memory.",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/memory/add",
+    "body": {
+     "content": "<string|json>",
+     "tags": [],
+     "category": "general"
+    }
+   },
+   "readOnly": false,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_memory_store",
+    "mimo": "hypernexus_memory_store",
+    "opencode": "hypernexus_memory_store",
+    "jcode": "mcp__hypernexus__add_memory",
+    "codewhale": "mcp__hypernexus__add_memory",
+    "reasonix": "ext__hypernexus__memory_store",
+    "crush": "add_memory",
+    "freebuff": "add_memory",
+    "hax": "hn.mjs store"
+   }
+  },
+  {
+   "id": "memory_search",
+   "name": "Search memory",
+   "category": "memory",
+   "description": "Keyword + semantic search across L2 memory.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/memory/search?q=<query>&limit=<n>",
+    "fastAlt": {
+     "path": "/api/memory/fts-search?q=<query>&limit=<n>",
+     "budgetMs": 400,
+     "note": "hot-path variant"
+    }
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_memory_search",
+    "mimo": "hypernexus_memory_search",
+    "opencode": "hypernexus_memory_search",
+    "jcode": "mcp__hypernexus__search_memory",
+    "codewhale": "mcp__hypernexus__search_memory",
+    "reasonix": "ext__hypernexus__memory_search",
+    "crush": "search_memory",
+    "freebuff": "search_memory",
+    "hax": "hn.mjs search"
+   }
+  },
+  {
+   "id": "memory_vector_search",
+   "name": "Semantic vector search",
+   "category": "memory",
+   "description": "Conceptual recall via bundled all-MiniLM-L6-v2 embeddings (384-dim, local, no Ollama).",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/memory/search?q=<query>&limit=<n>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_memory_vector_search",
+    "mimo": "hypernexus_memory_vector_search",
+    "opencode": "hypernexus_memory_vector_search",
+    "jcode": "mcp__hypernexus__search_memory",
+    "codewhale": "mcp__hypernexus__search_memory",
+    "reasonix": "ext__hypernexus__memory_vector_search",
+    "crush": "search_memory",
+    "freebuff": "search_memory",
+    "hax": "hn.mjs search"
+   }
+  },
+  {
+   "id": "memory_list",
+   "name": "List / review recent memories",
+   "category": "memory",
+   "description": "Browse recent L2 memories and stats.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/memory/list?limit=<n>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_memory_search",
+    "mimo": "hypernexus_memory_list",
+    "opencode": "hypernexus_memory_list",
+    "jcode": "mcp__hypernexus__search_memory",
+    "codewhale": "mcp__hypernexus__search_memory",
+    "reasonix": "ext__hypernexus__memory_list",
+    "crush": "search_memory",
+    "freebuff": "search_memory",
+    "hax": "hn.mjs list"
+   }
+  },
+  {
+   "id": "context_harvest",
+   "name": "Context harvest",
+   "category": "memory",
+   "description": "Pull prior decisions/gotchas and relevant L2 context for a task topic.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/memory/search?q=<query>&limit=<n>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_context_harvest",
+    "mimo": "hypernexus_context_harvest",
+    "opencode": "hypernexus_context_harvest",
+    "jcode": "mcp__hypernexus__search_memory",
+    "codewhale": "mcp__hypernexus__search_memory",
+    "reasonix": "ext__hypernexus__context_harvest",
+    "crush": "search_memory + memory_scratchpad_get",
+    "freebuff": "/skill:hn-context + search_memory + memory_scratchpad_get",
+    "hax": "hn.mjs harvest"
+   }
+  },
+  {
+   "id": "scratchpad",
+   "name": "Scratchpad (L1 working memory)",
+   "category": "memory",
+   "description": "Read/write the L1 scratchpad for short-lived working state.",
+   "kernel": {
+    "method": "GET|POST",
+    "path": "/api/memory/scratchpad/get | /api/memory/scratchpad/set"
+   },
+   "readOnly": false,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_scratchpad",
+    "mimo": "hypernexus_scratchpad",
+    "opencode": "hypernexus_scratchpad",
+    "jcode": "mcp__hypernexus__memory_scratchpad_get",
+    "codewhale": "mcp__hypernexus__memory_scratchpad_get",
+    "reasonix": "ext__hypernexus__scratchpad",
+    "crush": "memory_scratchpad_get/set/append",
+    "freebuff": "memory_scratchpad_get/set/append",
+    "hax": "hn.mjs scratch-get|scratch-set"
+   }
+  },
+  {
+   "id": "tool_search",
+   "name": "Tool discovery (semantic)",
+   "category": "discovery",
+   "description": "Describe what you need \u2014 find the best tool across 26k+ MCP tools by meaning.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/mcp/native/search?query=<query>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_tool_search",
+    "mimo": "hypernexus_search_tools",
+    "opencode": "hypernexus_tool_search",
+    "jcode": "mcp__hypernexus__mcp_list_tools",
+    "codewhale": "mcp__hypernexus__mcp_list_tools",
+    "reasonix": "ext__hypernexus__tool_search",
+    "crush": "mcp_list_tools + /api/mcp/tools/search",
+    "freebuff": "mcp_list_tools + /api/mcp/tools/search",
+    "hax": "hn.mjs tools"
+   }
+  },
+  {
+   "id": "tool_suggest",
+   "name": "Proactive tool suggestions",
+   "category": "discovery",
+   "description": "Preemptive monitor recommends tools for the current conversation (fed automatically by the context hook).",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/mcp/tool-suggestions",
+    "feed": {
+     "method": "POST",
+     "path": "/api/mcp/tool-suggestions",
+     "body": {
+      "role": "user",
+      "content": "<recent message>"
+     },
+     "fireAndForget": true
+    }
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_suggest_tools",
+    "mimo": "hypernexus_suggest_tools",
+    "opencode": "hypernexus_suggest_tools",
+    "reasonix": "ext__hypernexus__suggest_tools",
+    "crush": "mcp_list_tools (suggest via conversation scan)",
+    "freebuff": "mcp_list_tools (suggest via conversation scan)",
+    "hax": "hn.mjs suggest"
+   }
+  },
+  {
+   "id": "mcp_call",
+   "name": "Route MCP tool call",
+   "category": "discovery",
+   "description": "Invoke a discovered MCP tool through the kernel router.",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/agent/tool",
+    "body": {
+     "tool": "<server/tool>",
+     "args": {}
+    }
+   },
+   "readOnly": false,
+   "budgetMs": 8000,
+   "harness": {
+    "mimo": "hypernexus_mcp_call",
+    "opencode": "hypernexus_mcp_call",
+    "jcode": "mcp__hypernexus__mcp_call_tool",
+    "codewhale": "mcp__hypernexus__mcp_call_tool",
+    "reasonix": "ext__hypernexus__mcp_call",
+    "crush": "mcp_call_tool",
+    "freebuff": "mcp_call_tool",
+    "hax": "hn.mjs call"
+   }
+  },
+  {
+   "id": "session_search",
+   "name": "Session search",
+   "category": "sessions",
+   "description": "Search/list/get imported coding sessions (Claude Code, Aider, etc.).",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/sessions/imported/list | /api/sessions/imported/get?id=<id>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_session_search",
+    "mimo": "hypernexus_session_search",
+    "opencode": "hypernexus_session_search",
+    "reasonix": "ext__hypernexus__session_search",
+    "crush": "search_memory (session-scoped) + /api/sessions/summary",
+    "freebuff": "/skill:hn-session + search_memory (session-scoped) + /api/sessions/summary",
+    "hax": "hn.mjs session-get"
+   }
+  },
+  {
+   "id": "skill_manage",
+   "name": "Skill registry",
+   "category": "skills",
+   "description": "List/search/read/create reusable skill modules (SKILL.md).",
+   "kernel": {
+    "method": "GET|POST",
+    "path": "/api/skills | /api/skills/read?name=<id> | /api/skills/create"
+   },
+   "readOnly": false,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_skill_manage",
+    "mimo": "hypernexus_skill_manage",
+    "opencode": "hypernexus_skill_manage",
+    "reasonix": "ext__hypernexus__skill_manage",
+    "crush": "/api/skills registry + ~/.config/crush/skills/",
+    "freebuff": "/api/skills registry + .agents/skills/",
+    "hax": "hn.mjs skills|skill-read"
+   }
+  },
+  {
+   "id": "code_search",
+   "name": "Code search",
+   "category": "code",
+   "description": "Search code via AST-grep rules, semantic deepcontext, or file patterns. Modes: symbols|definitions|references.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/mcp/native/search?query=<mode query>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_code_search",
+    "mimo": "hypernexus_code_search",
+    "opencode": "hypernexus_code_search",
+    "jcode": "mcp__hypernexus__codebase_search",
+    "codewhale": "mcp__hypernexus__codebase_search",
+    "reasonix": "ext__hypernexus__code_search",
+    "crush": "codebase_search",
+    "freebuff": "codebase_search",
+    "hax": "hn.mjs code"
+   }
+  },
+  {
+   "id": "subagent",
+   "name": "Subagent dispatch",
+   "category": "orchestration",
+   "description": "Dispatch an independent sub-task; results are stored back to L2.",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/memory/add",
+    "body": {
+     "content": "[SUBAGENT TASK] ...",
+     "category": "subagent"
+    }
+   },
+   "readOnly": false,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_subagent",
+    "mimo": "hypernexus_subagent",
+    "opencode": "hypernexus_subagent",
+    "reasonix": "ext__hypernexus__subagent",
+    "crush": "add_memory ([SUBAGENT TASK]) + crush run -s",
+    "freebuff": "/skill:hypernexus-orchestrator + add_memory ([SUBAGENT TASK])",
+    "hax": "hn.mjs hn-worker preset"
+   }
+  },
+  {
+   "id": "system_status",
+   "name": "System + billing status",
+   "category": "ops",
+   "description": "Kernel health, memory tiers, mesh peers, billing/quotas.",
+   "kernel": {
+    "method": "GET",
+    "path": "/health | /api/mesh/status | /api/memory/cold-archive/count"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "tn-status",
+    "mimo": "hypernexus_status",
+    "opencode": "hypernexus_system_overview",
+    "jcode": "mcp__hypernexus__system_status",
+    "codewhale": "mcp__hypernexus__system_status",
+    "reasonix": "ext__hypernexus__system_overview",
+    "crush": "system_status + /health",
+    "freebuff": "system_status + /health",
+    "hax": "hn.mjs status"
+   }
+  },
+  {
+   "id": "memory_delete",
+   "name": "Delete memory",
+   "category": "memory",
+   "description": "Remove a stored L2 memory entry by ID.",
+   "kernel": {
+    "method": "DELETE",
+    "path": "/api/memory/delete?id=<id>"
+   },
+   "readOnly": false,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_memory_delete",
+    "mimo": "hypernexus_memory_delete",
+    "reasonix": "ext__hypernexus__memory_delete",
+    "crush": "delete_memory",
+    "freebuff": "delete_memory",
+    "hax": "hn.mjs delete"
+   }
+  },
+  {
+   "id": "memory_update",
+   "name": "Update memory",
+   "category": "memory",
+   "description": "Update an existing L2 memory entry (content, tags, category).",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/memory/update"
+   },
+   "readOnly": false,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_memory_update",
+    "mimo": "hypernexus_memory_update",
+    "crush": "delete_memory + add_memory (rewrite)",
+    "freebuff": "delete_memory + add_memory (rewrite)",
+    "hax": "hn.mjs update"
+   }
+  },
+  {
+   "id": "memory_stats",
+   "name": "Memory statistics",
+   "category": "memory",
+   "description": "Counts across L2 vault / scratchpad / relation tiers.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/memory/stats"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "mimo": "hypernexus_memory_stats",
+    "opencode": "hypernexus_memory_stats",
+    "jcode": "mcp__hypernexus__memory_stats",
+    "codewhale": "mcp__hypernexus__memory_stats",
+    "reasonix": "ext__hypernexus__memory_stats",
+    "crush": "memory_stats",
+    "freebuff": "memory_stats",
+    "hax": "hn.mjs stats"
+   }
+  },
+  {
+   "id": "memory_handoff",
+   "name": "Session handoff",
+   "category": "memory",
+   "description": "Write or read cross-session handoff notes.",
+   "kernel": {
+    "method": "GET|POST",
+    "path": "/api/memory/handoff"
+   },
+   "readOnly": false,
+   "budgetMs": 2500,
+   "harness": {
+    "mimo": "hypernexus_memory_handoff",
+    "reasonix": "ext__hypernexus__session_handoff",
+    "crush": "memory_scratchpad_set(goal) + add_memory(session,summary)",
+    "freebuff": "memory_scratchpad_set(goal) + add_memory(session,summary)",
+    "hax": "hn.mjs handoff"
+   }
+  },
+  {
+   "id": "session_list",
+   "name": "List sessions",
+   "category": "sessions",
+   "description": "List active/recent sessions.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/sessions/summary"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_session_list",
+    "mimo": "hypernexus_session_list",
+    "opencode": "hypernexus_session_list",
+    "reasonix": "ext__hypernexus__session_list",
+    "crush": "/api/sessions/summary",
+    "freebuff": "/api/sessions/summary",
+    "hax": "hn.mjs sessions"
+   }
+  },
+  {
+   "id": "session_context",
+   "name": "Session context",
+   "category": "sessions",
+   "description": "Get structured context for a session (goal, files, decisions).",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/sessions/context?id=<id>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_session_context",
+    "mimo": "hypernexus_session_context",
+    "reasonix": "ext__hypernexus__session_context",
+    "crush": "memory_scratchpad_get(goal) + search_memory",
+    "freebuff": "memory_scratchpad_get(goal) + search_memory",
+    "hax": "hn.mjs session-context"
+   }
+  },
+  {
+   "id": "kernel_routes",
+   "name": "Kernel route map",
+   "category": "ops",
+   "description": "Enumerate all registered kernel API routes.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/routes"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "pi": "hypernexus_kernel_routes",
+    "mimo": "hypernexus_kernel_routes",
+    "crush": "/api/routes + mcp_list_servers",
+    "freebuff": "/api/routes + mcp_list_servers",
+    "hax": "hn.mjs routes"
+   }
+  },
+  {
+   "id": "mcp_status",
+   "name": "MCP status",
+   "category": "discovery",
+   "description": "MCP bridge status: active upstream, fallback reason, connected servers.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/mcp/status"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "mimo": "hypernexus_mcp_status",
+    "reasonix": "ext__hypernexus__mcp_status",
+    "crush": "mcp_status",
+    "freebuff": "mcp_status",
+    "hax": "hn.mjs mcp-status"
+   }
+  },
+  {
+   "id": "mcp_servers",
+   "name": "List MCP servers",
+   "category": "discovery",
+   "description": "List registered MCP servers and connection state.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/mcp/servers"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "mimo": "hypernexus_mcp_servers",
+    "reasonix": "ext__hypernexus__mcp_servers",
+    "crush": "mcp_list_servers",
+    "freebuff": "mcp_list_servers",
+    "hax": "hn.mjs mcp-servers"
+   }
+  },
+  {
+   "id": "mcp_tools",
+   "name": "List MCP tools",
+   "category": "discovery",
+   "description": "List tools exposed by connected MCP servers.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/mcp/tools"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "mimo": "hypernexus_mcp_tools",
+    "reasonix": "ext__hypernexus__mcp_tools",
+    "crush": "mcp_list_tools",
+    "freebuff": "mcp_list_tools",
+    "hax": "hn.mjs mcp-tools"
+   }
+  },
+  {
+   "id": "skills_search",
+   "name": "Search skills",
+   "category": "skills",
+   "description": "Search the skill catalog for reusable modules.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/skills/search?q=<query>"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "mimo": "hypernexus_skills_search",
+    "reasonix": "ext__hypernexus__skill_search",
+    "crush": "/api/skills/search + skills/ dir",
+    "freebuff": "/api/skills/search + .agents/skills/ dir",
+    "hax": "hn.mjs skills"
+   }
+  },
+  {
+   "id": "system_overview",
+   "name": "System overview",
+   "category": "ops",
+   "description": "Unified overview: kernel health, MCP bridge, memory, sessions, providers, runtime status.",
+   "kernel": {
+    "method": "GET",
+    "path": "/api/system/overview"
+   },
+   "readOnly": true,
+   "budgetMs": 2500,
+   "harness": {
+    "mimo": "hypernexus_system_overview",
+    "opencode": "hypernexus_system_overview",
+    "reasonix": "ext__hypernexus__system_overview",
+    "crush": "system_status + mcp_status + billing_status",
+    "freebuff": "/skill:hn-status (system_status + mcp_status + billing_status)",
+    "hax": "hn.mjs overview"
+   }
+  },
+  {
+   "id": "repomap",
+   "name": "Repository map",
+   "category": "code",
+   "description": "Generate a ranked repository map with symbol summaries.",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/code/repomap"
+   },
+   "readOnly": true,
+   "budgetMs": 8000,
+   "harness": {
+    "pi": "hypernexus_repomap",
+    "mimo": "hypernexus_repomap",
+    "opencode": "hypernexus_repomap",
+    "reasonix": "ext__hypernexus__repomap",
+    "crush": "repomap",
+    "freebuff": "repomap",
+    "hax": "hn.mjs repomap"
+   }
+  },
+  {
+   "id": "knowledge_graph",
+   "name": "Knowledge graph",
+   "category": "memory",
+   "description": "Extract entities/relations from text or batch-extract across L2 vault.",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/memory/extract-relations"
+   },
+   "readOnly": false,
+   "budgetMs": 8000,
+   "harness": {
+    "pi": "hypernexus_knowledge_graph",
+    "mimo": "hypernexus_knowledge_graph",
+    "reasonix": "ext__hypernexus__knowledge_graph",
+    "crush": "memory_extract_relations(+_batch)",
+    "freebuff": "memory_extract_relations(+_batch)",
+    "hax": "hn.mjs graph"
+   }
+  },
+  {
+   "id": "workflow",
+   "name": "Workflow runner",
+   "category": "orchestration",
+   "description": "List or run HyperNexus engineering workflows.",
+   "kernel": {
+    "method": "GET|POST",
+    "path": "/api/workflows"
+   },
+   "readOnly": false,
+   "budgetMs": 8000,
+   "harness": {
+    "pi": "hypernexus_workflow",
+    "mimo": "hypernexus_workflow",
+    "reasonix": "ext__hypernexus__workflow",
+    "crush": "commands/hn-* + skills hypernexus-workflows",
+    "freebuff": "/skill:hn-plan + skills hypernexus-workflows",
+    "hax": "hn.mjs workflow-list"
+   }
+  },
+  {
+   "id": "orchestrate",
+   "name": "Multi-agent orchestration",
+   "category": "orchestration",
+   "description": "Dispatch and coordinate multiple agents on a complex task.",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/agent/orchestrate"
+   },
+   "readOnly": false,
+   "budgetMs": 8000,
+   "harness": {
+    "pi": "hypernexus_orchestrate",
+    "mimo": "hypernexus_orchestrate",
+    "reasonix": "ext__hypernexus__orchestrate",
+    "crush": "add_memory orchestration loop + crush run subagents",
+    "freebuff": "/skill:hypernexus-orchestrator",
+    "hax": "hn.mjs orchestrate"
+   }
+  },
+  {
+   "id": "browser",
+   "name": "Browser automation",
+   "category": "ops",
+   "description": "Web automation via CDP (navigate, read, interact).",
+   "kernel": {
+    "method": "POST",
+    "path": "/api/browser/action"
+   },
+   "readOnly": false,
+   "budgetMs": 8000,
+   "harness": {
+    "pi": "hypernexus_browser",
+    "mimo": "hypernexus_browser",
+    "reasonix": "ext__hypernexus__browser",
+    "crush": "launch_webview + /api/browser/action",
+    "freebuff": "launch_webview + /api/browser/action",
+    "hax": "hn.mjs browser"
+   }
+  }
+ ],
+ "hooks": {
+  "session_start": "Prime session: set name, status, inject TN system prompt + fast context.",
+  "before_agent_start": "Inject fast FTS context into system prompt (hot-path, 400ms budget).",
+  "context": "Per-turn: feed tool-suggestion monitor (fire-and-forget) + inject fast FTS context (hot-path).",
+  "tool_call": "Enterprise RBAC enforcement (dangerous-pattern authorize) + fire-and-forget audit log.",
+  "tool_result": "Auto-store substantial tool results to L2 (fire-and-forget).",
+  "input": "Expand @memory:key tokens via fast search (hot-path).",
+  "turn_end": "Store turn summary to L2 (fire-and-forget).",
+  "session_before_compact": "Enrich compaction summary with related L2 context.",
+  "session_compact": "Store compaction summary to L2 (fire-and-forget).",
+  "session_shutdown": "Clear widget/status, stop timers."
+ },
+ "orchestration": {
+  "loop": "RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY",
+  "compositionRules": [
+   "Always start with RECALL (context_harvest / memory_search) before multi-step work.",
+   "Use DISCOVER (tool_search / tool_suggest) when hitting a capability gap.",
+   "Always end with PERSIST (memory_store) for non-obvious decisions/gotchas.",
+   "VERIFY (system_status) before and after production changes."
+  ],
+  "workflows": [
+   {
+    "id": "MEM-FIRST",
+    "when": "any multi-step task",
+    "steps": [
+     "context_harvest",
+     "memory_search",
+     "memory_vector_search",
+     "<execute>",
+     "memory_store"
+    ]
+   },
+   {
+    "id": "DISCOVER",
+    "when": "capability gap",
+    "steps": [
+     "tool_suggest",
+     "tool_search",
+     "mcp_call",
+     "memory_store"
+    ]
+   },
+   {
+    "id": "HARVEST",
+    "when": "resuming after a break",
+    "steps": [
+     "context_harvest",
+     "memory_list",
+     "session_search",
+     "memory_vector_search"
+    ]
+   },
+   {
+    "id": "HANDOFF",
+    "when": "end of session / context switch",
+    "steps": [
+     "memory_store(session summary)",
+     "scratchpad(set goal)"
+    ]
+   },
+   {
+    "id": "OPS",
+    "when": "deployments / incidents",
+    "steps": [
+     "system_status",
+     "<act>",
+     "system_status",
+     "memory_store"
+    ]
+   }
+  ]
+ },
+ "autonomousOrchestration": {
+  "discovery": "Read this manifest to enumerate capabilities across all bound harnesses.",
+  "dispatch": "Each capability declares a uniform kernel binding; call the kernel directly regardless of harness, or call the harness-native tool name in `harness.<harness>`.",
+  "idempotence": "memory_store writes are append-only; reads are side-effect-free. Safe to retry reads; batch writes.",
+  "budgets": "Respect `budgetMs` per capability. Never exceed hotPathBudgetMs on turn-critical paths.",
+  "escalation": "If a harness adapter is unavailable, fall back to the kernel binding (the kernel is the single source of truth)."
+ }
 }

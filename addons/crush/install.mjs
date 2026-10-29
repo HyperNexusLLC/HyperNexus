@@ -109,16 +109,27 @@ function resolveExe() {
   return exe;
 }
 
+function minterPath() {
+  // Forward-slash minter path for crushrc $(...) shell expansion.
+  return path.join(REPO_ROOT, "addons", "crush", "bin", "meta-muse-key.mjs").split(path.sep).join("/");
+}
+
 function crushrcBlock(exe) {
   const wsRoot = REPO_ROOT.split(path.sep).join("/");
   const skillsDir = GLOBAL ? "$HOME/.config/crush/skills" : path.join(TARGET, "skills").split(path.sep).join("/");
   const hooksDir = GLOBAL ? "$HOME/.config/crush/hooks" : path.join(TARGET, "hooks").split(path.sep).join("/");
+  const minter = minterPath();
   return `${RC_BEGIN} (managed by HyperNexus addons/crush/install.mjs — do not edit inside this block)
-# --- Meta provider (OpenAI-compatible, pi-OAuth live-read, pi owns refresh) ---
+# --- Meta provider (OpenAI-compatible, pi-OAuth mint-on-startup, pi owns refresh) ---
+# WHY minter, not .meta.access: auth.json .meta.access is a SHORT-LIVED token
+# (minutes). The durable pattern (same as Droid apiKeyHelper + OpenCode plugin
+# meta-auth) mints a Model API key at startup via addons/crush/bin/meta-muse-key.mjs:
+# pi identity .meta.refresh -> POST https://api.meta.ai/muse-code/key.
+# Mint helper probe: node "${minter}" --check   (expect: mint OK, key hidden)
 provider add meta --type openai-compat \\
   --name "Meta" \\
   --base-url "https://api.meta.ai/v1" \\
-  --api-key "$(node -e "const p=require('path');const h=process.env.HOME||process.env.USERPROFILE;console.log(require(p.join(h,'.pi','agent','auth.json')).meta.access)")"
+  --api-key "$(node \"${minter}\")"
 
 # --- Muse Spark 1.3 Contributor as both large and small model ---
 # muse-spark is a thinking model: max_tokens must cover reasoning + answer.
@@ -161,9 +172,9 @@ ${RC_END}`;
 }
 
 const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
-const COMMANDS = ["hn-status", "hn-store", "hn-search", "hn-tools", "hn-session", "hn-context", "hn-summary", "hn-purge"];
+const COMMANDS = ["hn-status", "hn-store", "hn-search", "hn-tools", "hn-session", "hn-context", "hn-summary", "hn-purge", "hn-plan", "hn-remember", "hn-restore"];
 const HOOKS = ["hn-pre-tool.sh", "hn-session.sh", "hn-pre-tool.cmd", "hn-session.cmd", "hn-rbac.sh", "hn-rbac.cmd", "hn-gate.cmd"];
-const AGENTS = ["hypernexus-orchestrator.md"];
+const AGENTS = ["hypernexus-orchestrator.md", "hypernexus-researcher.md"];
 
 function hooksShellBlock() {
   return `hook add PreToolUse --name "hypernexus-gate" --command "${path.join(TARGET, "hooks", "hn-pre-tool.cmd")}" --matcher ".*" --timeout 15\nhook add SessionStart --name "hypernexus-boot" --command "${path.join(TARGET, "hooks", "hn-session.cmd")}" --timeout 15`;
@@ -173,12 +184,26 @@ function hooksShellBlock() {
 
 if (MODE === "install") {
   const exe = resolveExe();
+  const minterSrc = path.join(__dirname, "bin", "meta-muse-key.mjs");
   console.log(`HyperNexus → Crush install (${GLOBAL ? "global" : "project"} → ${TARGET})`);
   console.log(`  kernel exe: ${exe}`);
+  console.log(`  meta minter: ${minterSrc}`);
 
   const changed = [];
   const rcPath = GLOBAL ? path.join(TARGET, "crushrc") : path.join(TARGET, "crushrc");
   if (upsertManagedBlock(rcPath, crushrcBlock(exe), RC_BEGIN, RC_END)) changed.push("crushrc (meta + mcp + skills + hooks)");
+
+  // Ship the Meta mint helper so every target can mint a Model API key live.
+  {
+    const src = path.join(__dirname, "bin", "meta-muse-key.mjs");
+    const dst = path.join(TARGET, "bin", "meta-muse-key.mjs");
+    const body = fs.readFileSync(src, "utf8");
+    if (readIfExists(dst) !== body) {
+      fs.mkdirSync(path.dirname(dst), { recursive: true });
+      fs.writeFileSync(dst, body, "utf8");
+      changed.push("bin/meta-muse-key.mjs");
+    }
+  }
 
   for (const name of SKILLS) {
     const src = path.join(__dirname, "skills", name, "SKILL.md");
@@ -277,6 +302,21 @@ if (MODE === "install") {
     console.log(`  ${ok ? "ok " : "GAP"} ${f} (managed block)`);
     if (!ok) gaps++;
   }
+  {
+    // Meta mint helper must ship with every target: crushrc api-key mints live from it.
+    const p = path.join(TARGET, "bin", "meta-muse-key.mjs");
+    const same = fs.existsSync(p) && readIfExists(p) === fs.readFileSync(path.join(__dirname, "bin", "meta-muse-key.mjs"), "utf8");
+    console.log(`  ${same ? "ok " : "GAP"} bin/meta-muse-key.mjs`);
+    if (!same) gaps++;
+    // crushrc must mint via the helper, not read the short-lived .meta.access token.
+    // Only the executable --api-key line counts: doc comments legitimately mention
+    // .meta.access to explain why it is NOT used.
+    const keyLine = rc.split("\n").find((l) => l.includes("--api-key") && l.includes("$(")) ?? "";
+    const mintOk = (keyLine.includes("meta-muse-key.mjs") || keyLine.includes("${minter}"))
+      && !keyLine.includes(".meta.access");
+    console.log(`  ${mintOk ? "ok " : "GAP"} crushrc mints Meta key via helper (no .meta.access)`);
+    if (!mintOk) gaps++;
+  }
   process.exit(gaps ? 1 : 0);
 } else {
   console.log(`HyperNexus → Crush uninstall (${TARGET})`);
@@ -310,6 +350,13 @@ if (MODE === "install") {
     if (fs.existsSync(p) && readIfExists(p) === fs.readFileSync(path.join(__dirname, "hooks", name), "utf8")) {
       fs.rmSync(p, { force: true });
       removed.push(`hooks/${name}`);
+    }
+  }
+  {
+    const p = path.join(TARGET, "bin", "meta-muse-key.mjs");
+    if (fs.existsSync(p) && readIfExists(p) === fs.readFileSync(path.join(__dirname, "bin", "meta-muse-key.mjs"), "utf8")) {
+      fs.rmSync(p, { force: true });
+      removed.push("bin/meta-muse-key.mjs");
     }
   }
   for (const f of ["prompt-overlay.md", "preferred-tools.md"]) {

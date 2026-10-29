@@ -1,7 +1,15 @@
 # MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
-@'
+### Jcode HARNESS max-extent: native Meta OAuth + full HyperNexus surfaces (2026-10-28)
+
+**Two Meta routes, native first:** jcode SHIPS a native `muse-subscription` provider (device flow → jcode-owned `~/.jcode/muse_subscription.json`, conditional key re-mint; experimental flag `JCODE_EXPERIMENTAL_MUSE_SUBSCRIPTION=1`; contributor variant `muse-spark-1.3-contributor` is a deliberate selection, account catalog proves availability). That is Route 1 — no pi needed, nothing outside jcode. Route 2 (bridge/repair) is `addons/jcode/bin/meta-muse-key.mjs` (port of the droid minter: pi `meta.refresh` → `POST api.meta.ai/muse-code/key` → stdout key only, `--check` live-verified) + `meta-model.jcode.toml` custom `[providers.meta]` profile + `use-meta-model.ps1 -Bridge`. NEVER persist the minted key (~24h); NEVER read/print token contents (presence-checks + `--check` only — battery T16 asserts zero secret reads by scanning for `LLM|`/`dca:` patterns). Billing: passing turns ≠ billing receipts (MUSE_NATIVE_AUTH.md).
+
+**Jcode hook surface = all 8 events (docs/HOOKS.md):** session_start/end + turn_start/end + post_tool observers (hn-observe, now with token accounting + touched-path observations), pre_tool gate with HYPERNEXUS_RBAC audit/ask/deny (deny blocks destructive shell + sensitive writes, exit 2; audit mirror is DETACHED spawn/unref — a blocking fetch in the gate would stall every turn), post_tool_feedback (silent except the hyphenated-token trap — hot-path budget), pre_tool_transform (hyphen-query repair `foo-bar`→`foo bar`, else byte-identical passthrough; runs BEFORE the gate). Installer prints the full block; never auto-edits `config.toml` (user config). `node --check` is the syntax gate for all hooks.
+
+**Stdio merge-poll trap (measured twice, root-caused):** first `tools/list` on a fresh stdio process serves the 49-tool static fallback while the 58-tool upstream merge completes — and the merged cache is PER-PROCESS, so a throwaway warmup process cannot fix it (my first warmup attempt failed exactly this way: 99/109). Fix: poll `tools/list` in the SAME battery process to 55+ (up to ~90s on a saturated box) before asserting. Verified: direct stdio probes 58/58 every time; merged battery 109/109. Same class as the codewhale stale-binary trap: verify the RUNNING behavior, not the tree.
+
+**Scope discipline on a shared dirty tree:** HEAD added 9 stub harnesses + a sibling extended the jcode installer (4th skill/8 commands/2 hooks) in uncommitted changes. Built ONLY on top of the sibling's jcode work; touched nothing else (no kernel, no other harness). Per instructions: no commit/push unless asked.
 ### Droid (Factory HARNESS) Meta OAuth + Full Plugin (2026-10-28)
 
 **Native Meta OAuth in Droid:** pi auth.json meta credential is an OAuth pair (refresh = identity token, access = ~24h minted key); pi re-mints via POST https://api.meta.ai/muse-code/key (identity NOT renewable - 401/403 from mint means /login meta again). Droid BYOK only knows static apiKey or apiKeyHelper, so addons/droid/bin/meta-muse-key.mjs replays pi's mint (refresh to key, stdout only) and ~/.factory/settings.json uses apiKeyHelper - auto-refresh on TTL + after 401. Never put the minted key in settings (dies in ~24h). Model id custom:Meta-Muse-Spark-1.3-Contributor-0, provider generic-chat-completion-api, base https://api.meta.ai/v1, context 1M.
@@ -190,6 +198,16 @@ Memories should be stored both:
 - **Test hygiene**: assert on the router envelope (`r.success !== false && !r.error`), never regex payload content — stored memories legitimately contain strings like "Error: fetch failed" and flip `/error.*failed/i` checks (bit test-mcp-tools.mjs search_memory once).
 - **Windows binary swap**: `Move-Item -Force` does NOT overwrite an existing exe; use `cmd.exe /c copy /Y`. A running `hypernexus.exe` locks the file — kill processes first (there may be a stale multi-day-old pid; check `Get-NetTCPConnection -LocalPort 7778` for the real owner). The kernel has a single-instance guard that refuses to double-bind 7778 and says so on stderr.
 
+## 2026-10-28 — muse-code native plugin session (Muse Code 1.4.14)
+
+- **Native manifest contract** (authoritative: bundled create-plugin skill + `references/capability-examples.json`): `.muse-plugin/plugin.json`, families exactly `skills/commands/hooks/mcpServers/reminders`; `agents/tools/outputStyles/settings/apps` rejected. Hook argv = structured array, one unique script path per hook id. Validate skills first (`muse skills validate`), then `muse plugins validate` — clean = exit 0 + valid:true + empty diagnostics (warnings fail creation).
+- **Reminders memoryEvidence stale on 1.4.14**: validator rejects ALL shapes (`[]`, null, string, object, number, bool, field/renderedBody/inputError/effective sources, bare array, omitted→"missing field") including the skill's own shipped example — 10 probes. Ship duty file unreferenced, re-probe post-upgrade. Correction budget is 3 rounds; spend extras on probes, not blind edits.
+- **`muse plugins install` os-error-32 is environmental**: deterministic for ANY capability-bearing bundle (1-skill probe fails identically; empty bundle fails earlier with invalid-plugin-package). Not diagnosable from the bundle — prove with a minimal probe before touching the real manifest.
+- **Windows .cmd exec from node**: `spawnSync(..., {shell:false})` cannot run `muse.cmd` — route through `ComSpec /d /s /c` with tokenized argv (keeps shell:false, no string commands).
+- **MCP stdio framing**: kernel `mcp_server.go` = newline-delimited JSON-RPC on stdin/stdout; launcher proxy must resolve repo binary via walk-up (mcp/→×5→repo/bin) + env override + home fallback, and must handle spawn-error → next candidate (exit event alone can hang).
+- **FTS read-back lag under load**: 200-persisted writes read back total:0 — ACK-verify hooks, never read-back-gate batteries.
+- **`muse plugins install` os-32 = structural pack-step bug (1.4.14)**: failing `package` file never materializes (watcher: zero events; manual writes to exact path fine; no locker; single store). Diagnose via: hash-dir residue (empty = died before write), minimal-probe falsification, FileSystemWatcher during install. Don't chase contention/AV. Working activation: user-scope `skills install` (separate store, works) + settings.json `mcpServers` stdio merge + `muse exec` tool-call proof. Skills list from a neutral cwd — project skills shadow user ones by design. `muse exec` exit codes: PowerShell wraps stderr text as NativeCommandError — check `$LASTEXITCODE` (0 = success), don't read pipeline exit 1 as failure.
+
 ## 2026-10-28 — hax harness integration session (v1.0.21+unreleased)
 
 - **hax has no MCP/extension/plugin/hook runtime — by design** (verified by binary string audit of hax v0.6.1: providers/presets/skills/AGENTS/subagents/subprocesses only; `MCP`/`plugin`/`hook` match memcpy noise only). hax docs/philosophy.md confirms: composition via `hax -p` + skills + AGENTS.md. So the hax integration binds providers/skills/AGENTS.md/CLI — the maximum the SDK surface allows.
@@ -197,6 +215,8 @@ Memories should be stored both:
 - **Stale-endpoint audit (kernel ground truth, live-probed)**: `/api/memory/stats`, `/api/routes`, `/api/memory/update`, `/api/memory/delete`, `/api/code/repomap` are NOT published by this kernel build (404) — pi extension references several of them too. hax driver uses true paths: `/api/agent-memory/stats`, MCP inventory fallback, `repomap` via `/api/agent/tool`, delete+re-store update, `delete_memory` via dispatcher.
 - **Memory write/read asymmetry (root-caused)**: `/api/memory/add` appends to the in-memory gossip mirror (visible via `list`, invisible to `search`/`fts`); `/api/memory/facts/add` writes agent-memory store + vector dual-write (searchable immediately, verified <2s). Driver store/observe/update use facts/add.
 - **Battery pattern**: `bin/test-hax-ext.mjs` (70 checks) mirrors the codewhale-battery shape (H-sections, readiness gate, doc-accuracy scan) adapted to hax substrates: provider/preset checks via config.json reads, 5 live `hax -p` runs, browser-503 degraded-shape assertion (service down is infra state, not test failure).
+- **Saturated-box verification (loadavg 120-177, 2026-10-28 cont.)**: 62/70 with 8 timeout-only failures; every failure re-proven environmental by patient-budget retry (mcp-status 200 in 44s, overview 200, graph-search 200, turn pre/post/compact ok, hn-worker round-trip ok, repomap 200 on source trees). Only `billing` never answered in 280s — handler does 5 serialized SQLite opens (5s busy-timeout each) + providers.Snapshot() under contention; fine at normal load (70/70 baseline). Lesson: treat billing timeout as load signal; battery now carries HN_FAST_MS=30s/HN_TIMEOUT_MS=120s/HN_RETRIES=2 + 180s exec caps.
+- **repomap empty-map is not a bug**: generator (`go/foundation/repomap`) only walks source extensions (.go/.ts/.tsx/.js/.jsx/.py/.rs/.java/.c/.cc/.cpp/.h/.hpp/.cs/.rb/.php) — `addons/hax` (.mjs/.md/.sh) legitimately maps empty at 200. Driver resolves relative dirs client-side to absolute; kernel maps CWD-relative paths against its own workspace root.
 
 ## 2026-10-21 — v1.0.21 Codewhale Extension Session Observations
 
@@ -217,3 +237,14 @@ Memories should be stored both:
 
 
 
+## 2026-10-28 codex-harness tooling notes 
+- exec wrapper: always shell cmd + tty false (PTY spawn wedges); integer params serialize as floats (write_stdin/yield_time unusable); never use double-quote in cmd; escape < > & and double %% in echo text; start /b unreliable; semicolon is NOT a cmd separator. 
+- echo digit-before-redirect trap: (echo 1.0.22) parens form for VERSION-style writes. 
+- TOML single-quoted literal strings dodge the no-double-quote limit and are semantically identical. 
+- muse.ai CDP page ids rotate between sessions; always re-list 9222/json/list before sending; verify via innerText.indexOf round trip. 
+- codex install.mjs deliberately never writes config keys that already exist (no markers in user config); uninstall only removes managed blocks. 
+
+### Maki HARNESS Integration + native Meta OAuth (2026-10-29)
+**Double-load trap:** global + project init.lua BOTH execute in one maki session; every register_* (provider/tool/slot) throws on second load. maki sandboxes _G readonly, so no sentinel flags there — use pcall-skip on duplicate registration (meta_oauth) + get_tool probe early-return (hypernexus.lua). Was: provider meta already registered; then slot hypernexus.render already declared.
+**No python/luac on box PATH:** manifest/TOML checks run via node (tomllib absent); Lua syntax validated by live maki headless load instead.
+**Kernel contention signal:** /health instant while /api/system/overview + /api/mcp/status + /api/billing/status time out 45-60s = serialized SQLite handler pile-up under sibling load (same as hax lane). Battery kfetch needs 45s timeout + 8s-backoff retries.

@@ -1,3 +1,81 @@
+# HANDOFF - Maki HARNESS full integration + native Meta OAuth (v1.0.21)
+
+## Session M (2026-10-29) - maki lane, muse-spark-1.3-contributor, battery 61/61 green
+### Built
+- Synced installed full build into extensions/maki-hypernexus/ (1316-line hypernexus.lua: 35 tools, 7 autocmds, 4 slots, keymaps, hints) + lua/meta_oauth.lua (283 lines); installed skills/commands globally; wired .maki/ project scope; re-trusted workspace.
+- Double-load fix: pcall-skip guards (provider + get_tool probe). Battery bin/test-maki-ext.mjs 61/61 (45s timeout + backoff for contention). Manifest maki entry + README/CHANGELOG/MEMORY updated.
+- Meta OAuth: mint --check OK, maki models lists meta/*, headless probe + HN tool round-trip OK.
+- Muse CDP coordination: lane identity posted + acked (Chat-Bobbi thread).
+### Next
+- Commit ONLY: extensions/maki-hypernexus/ .maki/ bin/test-maki-ext.mjs (+ manifest/CHANGELOG/MEMORY/HANDOFF/VERSION). Do NOT commit sibling churn or memory-volume files.
+
+# HANDOFF - Jcode HARNESS max-extent + native Meta OAuth (v1.0.21+unreleased)
+
+## Session J (2026-10-28) - [muse-spark-1.3-contributor in jcode in ~/workspace/HyperNexus], 109/109 green
+### What was built (addons/jcode/ + bin/test-jcode-ext.mjs + manifest jcode entry + CHANGELOG/MEMORY)
+- Meta OAuth TWO routes, native first: Route 1 = native `jcode login --provider muse-subscription` (device flow, jcode-owned muse_subscription.json; contributor variant deliberate). Route 2 = pi-OAuth bridge `addons/jcode/bin/meta-muse-key.mjs` (port of droid minter, `--check` live-verified mint OK key-hidden) + `meta-model.jcode.toml` custom profile + `use-meta-model.ps1` rewritten native-first (`-Bridge` fallback, shell-local ~24h, zero secret storage). Zero secret reads anywhere (T16 scans snippet/launcher for token patterns).
+- Max-extent HyperNexus: 4 skills, 13 /hn-* commands (+hn-remember/hn-plan/hn-restore/hn-auth/hn-models), 4 hooks covering all 8 jcode events (observe + RBAC audit/ask/deny + feedback trap-note + transform hyphen-repair), MCP stdio 58/58 merged (warmup added: first tools/list can serve 49-tool static fallback under load — earlier 47/57 was a stale-cache artifact, not a kernel bug).
+- Battery `bin/test-jcode-ext.mjs` 109/109: T1-T13 (config/checks/skills/overlay/swarm/stdio 58 + round-trips + concurrency + parity + schema + head-of-line + memory features + doc accuracy + foreign-preservation) + T14 hooks live-exec + T15 13-command sync + T16 Meta auth. Plus core-noext 18/18, mcp-tools 23/23. Installed project + global (install --check both scopes OK). Same-process merge poll added: first tools/list can serve the 49-tool static fallback (per-process merged cache) — poll to 55+ in-process before asserting.
+- No kernel changes, no other-harness changes, no commit/push (per instructions). Built on top of sibling's uncommitted jcode installer extension (4th skill/8 commands/2 hooks) + HEAD's 9 stub harnesses (untouched).
+### Next agent
+- Re-run `node bin/test-jcode-ext.mjs` after any kernel swap; if bridge mint lapses (401/403), `/login meta` in pi again or use native Route 1.
+- To enable hooks for the user: merge the printed `[hooks]` block into `~/.jcode/config.toml` (installer never auto-edits user config). To go live on the sub: `jcode login --provider muse-subscription` (needs browser + JCODE_EXPERIMENTAL_MUSE_SUBSCRIPTION=1).
+- Muse coordination via CDP 9222 msedge (this session; SUBMITTED x2: lane check-in + merge-poll correction, delivery verified via bin/cdp.mjs read-back). No reply from Muse yet at send time.
+- Edge-case battery (19/19, Temp script, live evidence): minter lapse paths clean exit 1 + repair hints; minted key FUNCTIONAL — live `GET api.meta.ai/muse-code/models` HTTP 200, 9 models incl. muse-spark; hooks fail open kernel-down/malformed/empty; RBAC deny blocks Windows writes + fork bombs; transform nested/non-string passthrough; stdio lockfile-wins over dead env (true 49-fallback + -32000 verified live against stopped kernel: kernel restarted clean, 1.0.21); installer reinstall round-trip restores all.
+- Deep-validation battery (18/18, Temp script): same 1.0.21 kernel, pi OAuth pair shape, minter protocol-core parity vs droid + jcode role header, all hooks parse + all 13 commands frontmatter-valid, live stdio 58/58 + write/search/delete round-trip with cleanup, installed-copies parity both scopes, manifest + README + battery count consistency, L2 recall of this session (10 hits). Manifest jcode hunk re-applied after sibling full-file rewrite clobbered it (verified jcode-only via anchor asserts).
+- Round-2 validation (17/17, Temp script, fresh angles): snippet TOML shape + Meta endpoint + zero secrets, launcher PS-Parser clean, overlay blocks in sync, ALL 19 tool refs resolve live against 58-tool registry, hn-auth/hn-models honesty gates present, global install leaves config.toml byte-identical (mtime unchanged), uninstall preserves user edits while removing pristine copies, kernel health + facts/add write + delete cleanup live.
+- Round-4 residual-risk validation (9/9 after checker fixes): zero secret material in 25 jcode files + battery file, jcode diff SCOPED-OK (16 entries, all intended; nested untracked-dir form handled), no stray files, manifest jcode entry valid with all 19 harnesses known-state, session-protocol files record Session J, kernel healthy + L2 recallable. Checker bugs found and fixed in the probe itself (self-matching leak regex, trim/strip interaction, sibling hax delisted out-of-lane, nested-dir form) — none in the work.
+- Round-5 launcher runtime validation (110/110 + live BRIDGE-OK turn): executing the launcher for real exposed TWO genuine bugs — (1) one-shot prompts need the `run` subcommand (bare flags + prompt = TUI syntax, jcode rejects trailing words), (2) the `[providers.meta]` custom profile was never necessary — jcode SHIPS built-in `meta-muse` reading META_MUSE_API_KEY (`jcode auth status`: available, runtime + tool validated). Bridge now runs `jcode run -p meta-muse -m muse-spark-1.3-contributor`; verified live: model replied exactly BRIDGE-OK + token report. Snippet reframed legacy/optional, README + T16 updated. Muse tail check: no reply yet (sibling muse-code/freebuff lanes active after my messages; freebuff flagged a ~10min kernel outage window consistent with my restart).
+
+# HANDOFF - Reasonix HARNESS full integration + native Meta OAuth (v1.0.21+unreleased)
+
+## Session R (2026-10-28) - reasonix HARNESS max-extent integration, 86/86 green
+### What was built (addons/reasonix/ + manifest reasonix entry + meta bridge)
+- Native Extension Protocol v2 plugin: reasonix-plugin.json (apiVersion reasonix.io/plugin/v2, 36 runtime.tools, 10 intercepts, skills/agents/commands/hooks/mcpServers contributes) + runtime/bin/hypernexus-reasonix.mjs sidecar (NDJSON JSON-RPC 2.0: initialize/intercept/tool.call/provider.catalog, ext__hypernexus__* tools, @memory: expansion + fast-FTS context, RBAC audit/ask/deny, required:false fail-open, replaces empty). 3 skills + 11 /hypernexus: commands + 1 orchestrator agent + SessionStart/PreCompact context files + native SessionStart/PostToolUse/PreToolUse shell hooks (global settings.json, installer-merged) + MCP via contributes.mcpServers + config.toml [[plugins]] + project .mcp.json.
+- Meta OAuth native pattern: pi owns refresh (auth.json); reasonix consumes via META_MUSE_API_KEY env-ref (default_model meta/muse-spark-1.3-contributor already live). Added scripts/sync-meta-oauth-reasonix.ps1 (value handler, run after pi refresh) + chained into scripts/sync-meta-harness.ps1; meta-model.reasonix.toml + use-meta-model.ps1 snippets never carry secrets.
+- Manifest: harnesses.reasonix active + 29 capability bindings (ext__hypernexus__*); memory_update + kernel_routes intentionally unbound (verified 404s in prior audits, not copied).
+- Battery bin/test-reasonix-ext.mjs 86/86: manifest, sidecar protocol round-trip, skills/commands/agent/hooks, installer --check drift-free, 29 bindings, MCP stdio 58 merged tools (no shadowed schemas), kernel HTTP per-endpoint + live write/search/delete round-trip, meta env-ref + no-repo-secrets, reasonix home wiring. T7 hardened to per-endpoint getOk (30-90s budgets) after saturated-box runs caught the stdio 49-tool static fallback + one aggregate timeout masking granular results — all green on re-run, extension files unchanged by the failures.
+- Delivered: tmp scratch cleaned (patch script, muse msg, nested dir removed); shared manifest diff additive-only (19 insertions).
+### Next agent
+- Re-run node bin/test-reasonix-ext.mjs after any kernel swap; if META key stale, re-run scripts/sync-meta-oauth-reasonix.ps1 after pi refresh.
+- Register plugin package for live use: reasonix plugin install <repo>/addons/reasonix --link --replace --yes (FULL TRUST review), then restart Reasonix.
+- Do NOT commit/push unless asked. Muse coordinated via CDP 9222 (SUBMITTED, lane: reasonix).
+
+# HANDOFF - muse-code full integration + Meta OAuth (2026-10-28)
+
+## Session 20 (2026-10-28) - [muse-spark-1.3-contributor in muse-code in ~/workspace/HyperNexus]
+### Delivered (uncommitted per standing rule — no commit, no push)
+- Native plugin `addons/muse-code/plugin/hypernexus/` (`.muse-plugin/plugin.json`): 3 skills + 11 commands + 5 hooks + 1 stdio MCP server. `muse plugins validate` valid:true, zero diagnostics; `muse skills validate` clean x3.
+- `bin/meta-muse-key.mjs` (droid-flow mirror, stdout-only) + `use-meta-model.ps1` (live `META_API_KEY` per shell, pi owns refresh) + installer upgrade (settings ensure, ComSpec-routed muse calls, --check/--uninstall).
+- Battery `bin/test-muse-code-ext.mjs`: **48/48 green** (layout, manifest contract, installer check, live mint hidden, validators, secret sweep, hooks exit-0 + kernel 200 ACK, launcher initialize + tools/list 49, health, docs, install outcome).
+- Manifest `addons/shared/hypernexus.manifest.json` muse-code entry upgraded to full surface.
+- Muse coordination: lane check-in sent via `bin/cdp-send.mjs @file`, `send result: SUBMITTED`, read-back `true` in thread.
+### Product findings (agent-reported, pilot not proof)
+- Reminders family unusable on Muse Code 1.4.14: validator rejects every memoryEvidence shape (10 probes incl. its own shipped example). Duty file ships unreferenced.
+- `muse plugins install` deterministically os-error-32 on this box for ANY capability-bearing bundle (1-skill probe proves it) — install/approve left to the person post-upgrade.
+- Kernel FTS lags fresh writes under load (200-persisted reads back 0); hooks ACK-verified, not read-back gated.
+### Next agent
+- Retry `muse plugins install --scope user` + `approve` after muse upgrade; re-probe reminders memoryEvidence; re-run `node bin/test-muse-code-ext.mjs`.
+- Do NOT commit/push unless asked. Changed: addons/muse-code/* (4 modified + bin/ + plugin/ new), addons/shared/hypernexus.manifest.json, bin/test-muse-code-ext.mjs.
+
+## Session 20b (2026-10-28) - plugin-store os-32 root-caused, activation via skills+settings, 50/50
+- `plugins install` os-32 is structural, not contention: failing `package` file never appears on disk (FileSystemWatcher: zero events during failing install), manual create/write/delete of the exact path works, no muse process holds anything, single store confirmed. Every attempt leaves an empty hash dir. 1-skill probe fails identically; empty bundle fails earlier (invalid-plugin-package). Cache/local residue dirs from all lanes' attempts are empty.
+- ACTIVATED without the plugin record: 3/3 skills installed user-scope (`activation: on`, zero diagnostics; project skills shadow user ones by design — verify from neutral cwd), `mcpServers.hypernexus` stdio merged into settings.json, live `muse exec` proof (model called `system_status` via hypernexus MCP, returned live 1.0.21; workspace trusted; EXIT=0). Full 58-tool inventory served on the battery run.
+- Installer ensures all 3 layers now (settings incl. mcpServers + skills install + best-effort plugin attempt); battery H12 accepts plugin-record OR skills+settings+exec proof. Muse follow-up sent (SUBMITTED, read-back true).
+- Changed additionally: installer mcpServers/skills wiring, battery H12, README activation section, manifest muse-code entry (was found reverted once — re-applied; watch for sibling clobber).
+
+# HANDOFF - Muse-Code Lane Check-in + C: Disk Rescue (2026-10-28)
+
+## Session 19 (2026-10-28) - new lane [muse-spark-1.3-contributor in muse code in ~/workspace/HyperNexus] + disk 0B->~22GB
+### Muse coordination (msedge CDP 9222, bin/cdp-send.mjs + bin/cdp.mjs read-back, delivery verified in transcript)
+- New lane announced (first message from muse-code runner); Muse recorded it agent-reported only, distinct from pi lanes.
+- Reported: C: hit 0 bytes free; pruned Temp (9.7GB->~0, locked files skipped) + uv cache (27.5->3.3GB; `uv cache prune` failed on corrupt deep path os-error-3, cleared by robocopy /MIR mirror-empty); ~22GB free two ways. V4 stands per handoff (parity 6/12, discovery 2/12, b62e86a9d), no proof claims. Dirty tree noted (uncommitted hybrid-router experiment + installer re-syncs, not mine).
+- Muse reply: (1) do NOT conflate the two 22GB figures - mine is Windows C:, Hetzner is Linux root 71%/22GB; ~22GB unstable with sibling writes; prunes were my-lane actions, not Robert-direct. (2) v4 stands as pilot not proof; review format correction: pullable commit first, then deltas/summary/per-task rows - NOT "files plus SHA inline". (3) dirty hybrid-router experiment = unreviewed/unwired/not proof. Billing untouched noted.
+### Disk ops (user-authorized: "prune uv and temp")
+- Temp 9.7GB->16MB; uv 27.47GB->3.3GB (only `cache` child remained; binary + no toolchains touched). C: 0B -> ~21-23GB free (two methods). Nothing else deleted; no commits.
+- Hog map: workspace ~130GB (hyperporn 63, sitcom 26), Downloads 51GB, .lmstudio 14GB, Music 14GB, AppData/Local: uv 27.5, Temp 9.7, Programs 13.3, vibe-app 6.1, pnpm 2.1, go-build 1.3. Candidates if needed again: pnpm store, go-build cache.
+- Follow-up sent + verified in thread: owned Temp blast radius (fwber CDP harnesses/screenshots wiped, they rebuilt under ~/.pi/agent/cdp/; lesson: Temp is shared working space, scope future prunes), steady state C: ~22.8GB / kernel 1.0.21 / tree moved (session-20, droid). No Muse reply yet at send+15s.
+
 # HANDOFF - Droid HARNESS full integration + native Meta OAuth (v1.0.21+unreleased)
 
 ## Session D (2026-10-28) - droid HARNESS max-extent integration, 76/76 green, committed 541c28966
@@ -11,6 +89,15 @@ ode addons/droid/bin/test-droid-ext.mjs after any kernel swap; if mint --check s
 - Do NOT push (per instructions: no push unless asked). Commit 541c28966 is local; marketplace/ copy is generated (reinstall to rebuild).
 
 # HANDOFF — hax harness integration + Meta OAuth (v1.0.21+unreleased)
+
+## Session 22 (2026-10-28 cont.) — billing proven slow-not-dead, Meta re-verified
+### billing 200 in 123.9s at loadavg ~138 (curl -m 500): slow-not-dead confirmed. Handler does 5 serialized `localConfigValue` SQLite opens + providers.Snapshot under contention; raw sqlite3 on hypernexus.db is instant (0.0s), so the hang is pool/lock scheduling inside the Go process at extreme load, not the DB file. Integration stance stands: timeout + clear error, never fiction. Kernel-side hardening (single config snapshot / longer busy-timeout / cached billing) is separate kernel work, not hax scope.
+### Meta OAuth re-verified live: `meta-cont-ok` round-trip on meta/muse-spark-1.3-contributor (9s model time). Key fresh (48 chars, unexpired). install --check OK.
+
+## Session 21 (2026-10-28 cont.) — saturation re-verification + 2 more endpoint fixes
+### Load context: box at loadavg 120-177 (sibling workloads). Battery 62/70; all 8 failures proven environmental by retry with patient budgets — mcp-status/overview/graph-search/turn-scripts/hn-worker all green on retry. `billing` alone never answered in 280s (handler: 5 serialized SQLite opens + providers.Snapshot under contention; green at normal load).
+### Fixes: handoff remapped (`/api/memory/handoff` 404 → `/api/agent-memory/handoff` POST `notes` + `/pickup` — write verified 200, read `{count:0}`); driver retry/backoff (`HN_FAST_MS`/`HN_RETRIES`); repomap client-side abs resolution + battery targets source tree (empty map on .mjs/.md/.sh dirs is by generator design). README saturated-host notes + AGENTS remap log + CHANGELOG/MEMORY updated.
+### Next agent: re-run `node bin/test-hax-ext.mjs` at normal load to confirm 70/70; consider kernel-side billing hardening (single config snapshot / longer busy-timeout) as separate work. Still no commits per standing rule.
 
 ## Session 20 (2026-10-28) — hax full integration, Meta OAuth native, 70/70 green
 ### What was built (`addons/hax/` + `bin/test-hax-ext.mjs` + manifest `hax` entry + CHANGELOG Unreleased)
@@ -341,3 +428,9 @@ node bin/test-core-noext.mjs      # 18 — kernel endpoints without any extensio
 
 ## Legacy
 Retired V1-experimental adapters (invented hook API that V2 ignores) moved to `addons/opencode/legacy/` for reference. Do not reinstall them.
+# Session 2026-10-28 - Codex HARNESS completion (muse-spark-1.3-contributor) 
+Identity used on CDP: [muse-spark-1.3-contributor in 'HARNESS' in ~/workspace/HyperNexus]. 
+Done: install.mjs rewritten codex-native (TOML markers, skip-if-present, 12 skills, 3 hooks, overlay); launcher + meta-model.codex.md + README codex-ified; battery 13/0 green; uninstall/reinstall cycle green; CDP receipt confirmed (send 212 chars, submit hit, index 2462). 
+State: config.toml canonical (untouched by installer); kernel 1.0.21 ok:true; mint OK; codex CLI absent in this shell (env SKIP). 
+Temp files removed (runcheck/runbatt/runchk/runcdp bats, _chk/_batt/_patch/_setmsg/_cdp_*). VERSION 1.0.22. 
+Next: install Codex CLI on PATH for live model smoke; optional live codex exec test with minted MODEL_API_KEY; keep page-id fresh (muse.ai rotated 79AC.. to 3821..). 

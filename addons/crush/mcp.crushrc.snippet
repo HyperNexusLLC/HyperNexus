@@ -18,29 +18,16 @@ mcp add hypernexus \
   --env HYPERNEXUS_WORKSPACE_ROOT "C:/Users/hyper/workspace/HyperNexus" \
   --env HYPERNEXUS_URL "http://127.0.0.1:7778" \
   --timeout 30
-  --command "$HOME/.config/crush/hooks/hn-pre-tool.cmd" \
-  --command "$HOME/.config/crush/hooks/hn-session.cmd" \
 
 # --- Skills on the path (default skill dirs load automatically, explicit is safer) ---
 option skill-path "$HOME/.config/crush/skills"
 
-# --- Hooks: full lifecycle (PreToolUse gates + SessionStart bootstrap) ---
-hook add PreToolUse \
-  --name "hypernexus-gate" \
-  --command "$HOME/.config/crush/hooks/hn-pre-tool.cmd" \
-  --matcher ".*" \
-  --timeout 15
-
-hook add PreToolUse \
-  --name "hypernexus-rbac" \
-  --command "$HOME/.config/crush/hooks/hn-rbac.cmd" \
-  --matcher "^(bash|run_shell_command)$" \
-  --timeout 15
-
-hook add SessionStart \
-  --name "hypernexus-boot" \
-  --command "$HOME/.config/crush/hooks/hn-session.cmd" \
-  --timeout 15
+# --- Hooks: OPT-IN (NOT auto-registered) ---
+# Crush validates hook commands at config load and .cmd resolution stalls the
+# load ~70s then bricks every run. Hooks ship in hooks/ and check green; enable
+# AFTER manual verification (each must exit 0 fast on piped stdin) by pasting:
+#   hook add PreToolUse --name "hypernexus-gate" --command "$HOME/.config/crush/hooks/hn-gate.cmd" --matcher ".*" --timeout 15
+#   hook add SessionStart --name "hypernexus-boot" --command "$HOME/.config/crush/hooks/hn-session.cmd" --timeout 15
 
 # --- Permissions: read + edit auto-approved, everything else prompts ---
 permissions allow view ls grep edit bash read write
