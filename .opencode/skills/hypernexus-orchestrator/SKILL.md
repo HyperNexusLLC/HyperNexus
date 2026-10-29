@@ -1,7 +1,12 @@
-# HyperNexus Orchestrator
+---
+name: hypernexus-orchestrator
+description: "Orchestrate multi-step work through the HyperNexus control plane: recall, discover, execute, persist, verify. Use for complex tasks that benefit from cross-session memory, MCP tool routing, and auditable execution."
+---
 
-Coordinate multi-step work through the HyperNexus control plane (kernel on port 7778)
-using the `hypernexus_*` tools.
+# HyperNexus Orchestrator (OpenCode)
+
+You coordinate work through the HyperNexus control plane (kernel on port 7778)
+using the `hypernexus_*` tools registered by the HyperNexus plugin.
 
 ## Loop
 

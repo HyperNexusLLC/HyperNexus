@@ -45,6 +45,7 @@ export const TOOL = Object.freeze({
   MEMORY_STATS: "hypernexus_memory_stats",
   SESSION_LIST: "hypernexus_session_list",
   REPOMAP: "hypernexus_repomap",
+  META_AUTH: "hypernexus_meta_auth",
 });
 
 export const COMMAND = Object.freeze({
@@ -59,6 +60,8 @@ export const COMMAND = Object.freeze({
   SUMMARY: "hn-summary",
   RESTORE: "hn-restore",
   PURGE: "hn-purge",
+  AUTH: "hn-auth",
+  MODELS: "hn-models",
 });
 
 /** Maps shared-manifest capability IDs to the OpenCode tool that serves them. */
@@ -122,9 +125,6 @@ export const KERNEL = Object.freeze({
   billingFallback: "/api/billing/fallback-chain",
   billingDepleted: "/api/billing/depleted-models",
   memoryAddGeneric: "/api/memory/add",
-  agentMemoryStats: "/api/agent-memory/stats",
-  sessionsSummary: "/api/sessions/summary",
-  agentMemoryDelete: "/api/agent-memory/delete",
 });
 
 /** Budget contract (ms) — mirrors addons/shared/hypernexus.manifest.json. */

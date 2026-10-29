@@ -8,7 +8,7 @@
     ".": "./index.js",
     "./rpc": "./rpc.js"
   },
-  "files": ["index.js", "rpc.js", "README.md"],
+  "files": ["index.js", "rpc.js", "meta-muse-key.mjs", "README.md"],
   "keywords": ["opencode", "opencode-plugin", "hypernexus", "memory", "mcp"],
   "license": "MIT",
   "engines": { "node": ">=18" }

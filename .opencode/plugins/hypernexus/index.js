@@ -51,8 +51,80 @@ const MEM_TTL = 30_000;
 const SUG_TTL = 60_000;
 const MAX_STORE_CHARS = 4000;
 const MAX_SYSTEM_BLOCK = 1400; // chars of injected context per turn
+const META_MODEL_ID = "muse-spark-1.3-contributor";
+const META_PROVIDER_ID = "meta";
+const META_BASE_URL = "https://api.meta.ai/v1";
+const META_KEY_TTL_MS = 50 * 60 * 1000; // minted Model API keys live ~1h; refresh at 50min
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Small utilities Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+function metaToolState() {
+  return {
+    // Last-good minted Model API key. Kept IN MEMORY ONLY — never written to
+    // disk, config, logs, or transcripts. Values are always redacted in output.
+    key: null,
+    mintedAt: 0,
+    checking: null,
+    warnedNoPi: false,
+  };
+}
+const META_AUTH = metaToolState();
+
+/** Presence-only view of the pi Meta OAuth identity (NEVER reads token values). */
+function piOAuthPresence() {
+  try {
+    const p = process.env.META_AUTH_PATH || path.join(os.homedir(), ".pi", "agent", "auth.json");
+    if (!fs.existsSync(p)) return { present: false, path: p };
+    const stat = fs.statSync(p);
+    return { present: true, path: p, bytes: stat.size, mtime: stat.mtime.toISOString() };
+  } catch (err) {
+    return { present: false, error: String(err?.message || err) };
+  }
+}
+
+function metaKeyIsFresh() {
+  return !!META_AUTH.key && Date.now() - META_AUTH.mintedAt < META_KEY_TTL_MS;
+}
+
+/** Mint via bin/meta-muse-key.mjs in a child process (fd isolation: key only on stdout). */
+async function mintMetaKey() {
+  const here = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
+  const minter = path.resolve(here, "..", "..", "bin", "meta-muse-key.mjs");
+  const { execFile } = await import("node:child_process");
+  const stdout = await new Promise((resolve, reject) => {
+    execFile(process.execPath, [minter], { timeout: 45000, maxBuffer: 64 * 1024 }, (err, out, errout) => {
+      if (err) reject(new Error(String(errout || err.message || err).split("\n")[0].slice(0, 200)));
+      else resolve(String(out || "").trim());
+    });
+  });
+  if (!stdout) throw new Error("minter returned an empty key");
+  META_AUTH.key = stdout;
+  META_AUTH.mintedAt = Date.now();
+  return true;
+}
+
+/**
+ * Ensure a usable Meta Model API key for THIS PROCESS ONLY.
+ * Never throws for missing pi auth (returns {ok:false}); throws only when a
+ * mint was attempted (pi present) but failed — callers convert to redacted text.
+ */
+async function ensureMetaKey() {
+  if (process.env.META_MUSE_API_KEY) return { ok: true, source: "env" };
+  if (metaKeyIsFresh()) return { ok: true, source: "cache" };
+  const presence = piOAuthPresence();
+  if (!presence.present) {
+    return { ok: false, reason: "no-pi-auth", hint: "Run /login meta in pi, or set META_MUSE_API_KEY in this shell." };
+  }
+  await mintMetaKey();
+  process.env.META_MUSE_API_KEY = META_AUTH.key; // process env only — read by the Meta provider at request time
+  return { ok: true, source: "pi-oauth-mint" };
+}
+
+function redactMetaKey(text) {
+  let out = String(text ?? "");
+  for (const secret of [META_AUTH.key, process.env.META_MUSE_API_KEY]) {
+    if (typeof secret === "string" && secret.length > 8) out = out.split(secret).join("[REDACTED]");
+  }
+  return out;
+}
 
 function hash(str) {
   let h = 5381;
@@ -1393,6 +1465,79 @@ const TOOLS = [
     },
   },
   {
+    name: "meta_auth",
+    description:
+      "Meta muse-spark-1.3-contributor subscription auth for OpenCode. Actions: status (pi OAuth presence + key source, values never shown), mint (mint a Model API key LIVE from pi auth.json into this process only), check (verify the minted/env key against https://api.meta.ai/v1/models). Never writes keys to disk/config/logs.",
+    input: {
+      type: "object",
+      properties: {
+        action: { type: "string", enum: ["status", "mint", "check"], description: "Operation (default status)." },
+      },
+      additionalProperties: false,
+    },
+    async run({ action }) {
+      const act = String(action || "status");
+      const presence = piOAuthPresence();
+      const envSet = !!process.env.META_MUSE_API_KEY;
+      const cached = metaKeyIsFresh();
+      if (act === "status") {
+        const lines = [
+          `provider: ${META_PROVIDER_ID}/${META_MODEL_ID} @ ${META_BASE_URL}`,
+          `pi OAuth identity: ${presence.present ? `present (${presence.bytes} bytes, mtime ${presence.mtime})` : `absent (${presence.path})`}`,
+          `key source: ${envSet ? "env META_MUSE_API_KEY" : cached ? "in-memory minted cache (fresh)" : "none"}`,
+        ];
+        if (!presence.present && !envSet && !META_AUTH.warnedNoPi) {
+          META_AUTH.warnedNoPi = true;
+          audit({ type: "warning", title: "meta-auth:no-pi-oauth", content: "pi Meta OAuth identity absent; meta model unavailable until /login meta in pi or META_MUSE_API_KEY is set.", toolName: "opencode.meta_auth" });
+        }
+        return { content: lines.join("\n"), metadata: { ok: true, piPresent: presence.present, keySource: envSet ? "env" : cached ? "cache" : "none" } };
+      }
+      if (act === "mint") {
+        if (envSet) return { content: "META_MUSE_API_KEY already set in this process (source: env). Nothing minted.", metadata: { ok: true, source: "env" } };
+        if (cached) return { content: "Minted key cache is fresh (source: cache). Nothing re-minted.", metadata: { ok: true, source: "cache" } };
+        if (!presence.present) {
+          return { content: `[hypernexus] meta_auth mint failed: no pi Meta OAuth identity at ${presence.path}. Run /login meta in pi first, or set META_MUSE_API_KEY in this shell.`, metadata: { ok: false, reason: "no-pi-auth" } };
+        }
+        try {
+          await mintMetaKey();
+          process.env.META_MUSE_API_KEY = META_AUTH.key;
+          audit({ type: "progress", title: "meta-auth:mint", content: "minted Meta Model API key from pi OAuth (process memory only)", toolName: "opencode.meta_auth" });
+          return { content: "Minted Meta Model API key into THIS PROCESS ONLY (source: pi-oauth-mint). It is never written to disk/config/logs; values are redacted everywhere.", metadata: { ok: true, source: "pi-oauth-mint" } };
+        } catch (err) {
+          return { content: redactMetaKey(`[hypernexus] meta_auth mint failed: ${err?.message || err}`), metadata: { ok: false } };
+        }
+      }
+      // check: verify the key against the Meta endpoint (presence + HTTP status only)
+      try {
+        const ensured = await ensureMetaKey();
+        if (!ensured.ok) {
+          return { content: `[hypernexus] meta_auth check: no key (${ensured.reason}). ${ensured.hint}`, metadata: { ok: false, reason: ensured.reason } };
+        }
+        const key = process.env.META_MUSE_API_KEY;
+        let status = 0;
+        let okResp = false;
+        let detail = "";
+        try {
+          const res = await fetch(`${META_BASE_URL}/models`, {
+            headers: { Authorization: `Bearer ${key}` },
+            signal: AbortSignal.timeout(15000),
+          });
+          status = res.status;
+          okResp = res.ok;
+          if (!res.ok) detail = (await res.text()).slice(0, 160);
+        } catch (err) {
+          detail = String(err?.message || err).slice(0, 160);
+        }
+        const verdict = okResp
+          ? `Meta API key VALID (source: ${ensured.source}; HTTP 200 from ${META_BASE_URL}/models).`
+          : `Meta API key check FAILED (source: ${ensured.source}; HTTP ${status}${detail ? ` — ${detail}` : ""}).`;
+        return { content: redactMetaKey(verdict), metadata: { ok: okResp, source: ensured.source, httpStatus: status } };
+      } catch (err) {
+        return { content: redactMetaKey(`[hypernexus] meta_auth check failed: ${err?.message || err}`), metadata: { ok: false } };
+      }
+    },
+  },
+  {
     name: "memory_stats",
     description: "Memory tier statistics: counts across L2 vault, scratchpad, and relation tiers.",
     input: { type: "object", properties: {}, additionalProperties: false },
@@ -1650,6 +1795,66 @@ const COMMANDS = [
       return `Purged ${deleted}/${targets.length} memories matching tag "${key}".`;
     },
   },
+  {
+    name: "hn-auth",
+    description: "Meta muse-spark auth status — /hn-auth [mint|check] (never shows key values)",
+    kind: "report",
+    async build(args) {
+      const act = String(args || "").trim().toLowerCase() || "status";
+      const presence = piOAuthPresence();
+      const envSet = !!process.env.META_MUSE_API_KEY;
+      const statusLine = [
+        `provider: ${META_PROVIDER_ID}/${META_MODEL_ID} @ ${META_BASE_URL}`,
+        `pi OAuth identity: ${presence.present ? `present (${presence.bytes} bytes, ${presence.mtime})` : `absent (${presence.path})`}`,
+        `key source: ${envSet ? "env META_MUSE_API_KEY" : metaKeyIsFresh() ? "in-memory minted cache (fresh)" : "none"}`,
+      ].join("\n");
+      if (act === "mint") {
+        if (envSet) return `${statusLine}\n\nKey already set in this process (source: env). Nothing minted.`;
+        if (!presence.present) return `${statusLine}\n\nMint unavailable: no pi Meta OAuth identity. Run /login meta in pi first.`;
+        try {
+          await mintMetaKey();
+          process.env.META_MUSE_API_KEY = META_AUTH.key;
+          return `${statusLine}\n\nMinted Model API key into THIS PROCESS ONLY (redacted everywhere). Restart-free: already active for the meta provider.`;
+        } catch (err) {
+          return `${statusLine}\n\nMint failed: ${redactMetaKey(err?.message || err)}`;
+        }
+      }
+      if (act === "check") {
+        const ensured = await ensureMetaKey().catch((e) => ({ ok: false, error: String(e?.message || e) }));
+        if (!ensured.ok) return `${statusLine}\n\nCheck: no key (${ensured.reason || ensured.error}).`;
+        try {
+          const res = await fetch(`${META_BASE_URL}/models`, {
+            headers: { Authorization: `Bearer ${process.env.META_MUSE_API_KEY}` },
+            signal: AbortSignal.timeout(15000),
+          });
+          return redactMetaKey(`${statusLine}\n\nCheck: HTTP ${res.status} from ${META_BASE_URL}/models (${res.ok ? "VALID" : "FAILED"}).`);
+        } catch (err) {
+          return redactMetaKey(`${statusLine}\n\nCheck failed: ${err?.message || err}`);
+        }
+      }
+      return statusLine;
+    },
+  },
+  {
+    name: "hn-models",
+    description: "List models available to this OpenCode session (verifies meta/muse-spark-1.3-contributor)",
+    kind: "report",
+    async build(args, ctx) {
+      try {
+        const models = await ctx.model.list();
+        const rows = (Array.isArray(models) ? models : []).map((m) => {
+          const pid = m?.providerID ?? m?.provider ?? "?";
+          const id = m?.id ?? m?.modelID ?? "?";
+          return `- ${pid}/${id}${m?.name ? ` (${m.name})` : ""}`;
+        });
+        const want = `${META_PROVIDER_ID}/${META_MODEL_ID}`;
+        const hit = rows.some((r) => r.includes(want));
+        return [`Available models (${rows.length}):`, ...rows.slice(0, 60), ``, hit ? `OK: ${want} is selectable.` : `NOTE: ${want} not listed — check the meta provider key (see /hn-auth).`].join("\n");
+      } catch (err) {
+        return `Model list unavailable: ${String(err?.message || err)}`;
+      }
+    },
+  },
 ];
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Skills (registered programmatically; also shipped as SKILL.md files) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -1700,13 +1905,40 @@ Record structured findings with \`hypernexus_record_observation\`: discovery | d
     description: "Reusable orchestration workflows: MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS.",
     content: `# HyperNexus Workflows
 
-- **MEM-FIRST** (multi-step tasks): context_harvest Ã¢â€ â€™ memory_search Ã¢â€ â€™ <execute> Ã¢â€ â€™ memory_store
-- **DISCOVER** (capability gap): suggest_tools Ã¢â€ â€™ tool_search Ã¢â€ â€™ mcp_call Ã¢â€ â€™ memory_store
-- **HARVEST** (resuming after a break): context_harvest Ã¢â€ â€™ session_context Ã¢â€ â€™ memory_list
-- **HANDOFF** (context switch / session end): session_handoff(write) Ã¢â€ â€™ memory_store(summary)
-- **OPS** (deployments/incidents): system_overview Ã¢â€ â€™ <act> Ã¢â€ â€™ system_overview Ã¢â€ â€™ memory_store
+- **MEM-FIRST** (multi-step tasks): context_harvest -> memory_search -> <execute> -> memory_store
+- **DISCOVER** (capability gap): suggest_tools -> tool_search -> mcp_call -> memory_store
+- **HARVEST** (resuming after a break): context_harvest -> session_context -> memory_list
+- **HANDOFF** (context switch / session end): session_handoff(write) -> memory_store(summary)
+- **OPS** (deployments/incidents): system_overview -> <act> -> system_overview -> memory_store
 
-Follow RECALL Ã¢â€ â€™ DISCOVER Ã¢â€ â€™ EXECUTE Ã¢â€ â€™ PERSIST Ã¢â€ â€™ VERIFY.
+Follow RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY.
+`,
+  },
+  {
+    id: "hypernexus-orchestrator",
+    name: "HyperNexus Orchestrator",
+    description: "Orchestrate multi-step work through the HyperNexus control plane: recall, discover, execute, persist, verify.",
+    content: `# HyperNexus Orchestrator
+
+Coordinate multi-step work through the HyperNexus control plane (kernel on port 7778)
+using the \`hypernexus_*\` tools.
+
+## Loop
+
+1. **RECALL** — \`hypernexus_context_harvest\` + \`hypernexus_memory_search\` before planning.
+2. **DISCOVER** — on capability gaps use \`hypernexus_suggest_tools\` → \`hypernexus_tool_search\` → \`hypernexus_mcp_call\`.
+3. **EXECUTE** — do the work with normal tools; keep the plan in \`hypernexus_scratchpad\` (key \`current_task\`).
+4. **PERSIST** — \`hypernexus_memory_store\` every non-obvious decision/gotcha with tags;
+   \`hypernexus_record_observation\` for structured findings.
+5. **VERIFY** — \`hypernexus_status\` after significant changes; record outcomes via \`hypernexus_audit_log\`.
+
+## Rules
+
+- Never re-derive what memory already holds — recall first.
+- Keep hot-path calls on \`hypernexus_memory_fts_search\`; full semantic search is for explicit tool calls.
+- Write \`@memory:keyword\` in prompts to pull specific facts inline.
+- End long sessions with \`hypernexus_session_handoff\` (action=write) so the next session can resume.
+- If the kernel is offline, degrade gracefully: continue with local tools and note the gap.
 `,
   },
 ];
@@ -1732,6 +1964,12 @@ function resolveMcpCommand() {
   return [process.platform === "win32" ? "hypernexus.exe" : "hypernexus", "mcp"]; // rely on PATH
 }
 
+/** Absolute path of the pi-OAuth key minter (addons/opencode/bin/meta-muse-key.mjs). */
+function metaMinterPath() {
+  const here = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
+  return path.resolve(here, "..", "..", "bin", "meta-muse-key.mjs");
+}
+
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ V2 plugin Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 async function setup(ctx) {
@@ -1752,6 +1990,10 @@ async function setup(ctx) {
     autoStore: options.autoStore !== false,
     contextInjection: options.contextInjection !== false,
     env: options.env !== false,
+    meta: options.meta !== false,
+    agents: options.agents !== false,
+    references: options.references !== false,
+    websearch: options.websearch === true, // opt-in: only register when explicitly enabled
   };
 
   // Boot banner + reachability
@@ -2094,42 +2336,135 @@ async function setup(ctx) {
   } catch (err) {
     console.error(`[hypernexus] session hooks skipped: ${String(err?.message || err)}`);
   }
+  // ── Native provider registration (runs outside the hooks gate) ──
   try {
-  if (enabled.hooks) {
+    if (enabled.meta !== false && ctx.provider && typeof ctx.provider.transform === "function") {
+      track(
+        await ctx.provider.transform((editor) => {
+          try {
+            const existing = editor.get ? editor.get(META_PROVIDER_ID) : undefined;
+            if (existing) return; // respect explicit user/provider config
+            editor.add({
+              info: {
+                id: META_PROVIDER_ID,
+                name: "Meta (muse-spark, HyperNexus pi-OAuth)",
+                activation: "enabled",
+                package: "@opencode/ai/providers/openai-compatible",
+                settings: { baseURL: options.metaBaseUrl || META_BASE_URL },
+                env: ["META_MUSE_API_KEY"],
+              },
+              models: [
+                {
+                  id: META_MODEL_ID,
+                  name: "Muse Spark 1.3 Contributor",
+                  limit: { context: 1048576, output: 131072 },
+                },
+              ],
+            });
+          } catch {
+            /* editor shape drift: skip rather than break setup */
+          }
+        })
+      );
+      // Prefer meta/muse-spark-1.3-contributor as the session default when nothing is pinned.
+      try {
+        if (ctx.model && typeof ctx.model.transform === "function" && options.metaDefault !== false) {
+          track(
+            await ctx.model.transform((editor) => {
+              try {
+                const cur = editor.default ? editor.default.get() : undefined;
+                if (!cur) editor.default.set(META_PROVIDER_ID, META_MODEL_ID);
+              } catch {
+                /* leave the default untouched */
+              }
+            })
+          );
+        }
+      } catch {
+        /* model default is best-effort */
+      }
+      // Integration surface: OAuth login method pointing at pi (command-based).
+      try {
+        if (ctx.integration && typeof ctx.integration.transform === "function") {
+          track(
+            await ctx.integration.transform((editor) => {
+              try {
+                const list = editor.list ? editor.list() : [];
+                const hasMeta = Array.isArray(list) && list.some((i) => i?.id === META_PROVIDER_ID || i?.providerID === META_PROVIDER_ID);
+                if (!hasMeta && editor.method && typeof editor.method.update === "function") {
+                  editor.method.update({
+                    integrationID: META_PROVIDER_ID,
+                    method: {
+                      id: "pi-oauth",
+                      type: "command",
+                      label: "Sign in via pi Meta OAuth (/login meta in pi)",
+                      command: ["node", metaMinterPath(), "--check"],
+                    },
+                  });
+                }
+              } catch {
+                /* integration editor shape drift: skip */
+              }
+            })
+          );
+        }
+      } catch {
+        /* integration surface is best-effort */
+      }
+    }
+  } catch (err) {
+    console.error(`[hypernexus] meta provider registration skipped: ${String(err?.message || err)}`);
+  }
+
+  try {
+    if (enabled.hooks) {
+      // generate/title auxiliary-request parity hooks (context-hook parity, kind-guarded)
+      for (const auxKind of ["generate", "title"]) {
+      track(
+        await ctx.session.hook(auxKind, async (event) => {
+          try {
+            if (auxKind === "title" && event.system) {
+              event.system.push({
+                type: "text",
+                text: "\nTitle convention: short verb-led phrase; keep HyperNexus memory keys (file paths, decisions) out of titles.\n",
+              });
+            }
+          } catch {
+            /* never block auxiliary requests */
+          }
+        })
+      );
+    }
+    // native HTTP hooks: identity headers on provider requests + Meta 401/403 telemetry
     track(
-      await ctx.tool.hook("execute.before", (event) => {
+      await ctx.session.hook("http.request", (event) => {
         try {
-          const hit = dangerousMatch(`${event.tool} ${JSON.stringify(event.input ?? {})}`);
-          if (hit && rbacMode() !== "audit") {
-            audit({ type: "warning", title: `rbac-${rbacMode()}:${event.tool}`, content: `dangerous pattern: ${hit}`, toolName: event.tool });
+          const headers = event?.request?.headers;
+          if (headers && typeof headers.set === "function") {
+            headers.set("x-hypernexus-client", `opencode/${PLUGIN_VERSION}`);
+            if (event.sessionID) headers.set("x-hypernexus-session", String(event.sessionID));
+          } else if (event?.request && typeof event.request === "object") {
+            event.request.headers = event.request.headers || {};
+            event.request.headers["x-hypernexus-client"] = `opencode/${PLUGIN_VERSION}`;
           }
         } catch {
           /* ignore */
         }
       })
     );
-
     track(
-      await ctx.tool.hook("execute.after", (event) => {
+      await ctx.session.hook("http.response", async (event) => {
         try {
-          const toolName = String(event.tool || "");
-          if (toolName.startsWith("hypernexus_")) return;
-          const captured = event.status === "completed" && captureFileObservation(toolName, event.input);
-          if (!captured) {
+          const status = event?.response?.status;
+          if ((status === 401 || status === 403) && String(event?.model?.providerID || "") === META_PROVIDER_ID) {
+            META_AUTH.key = null;
+            META_AUTH.mintedAt = 0; // force re-mint on next use; pi owns refresh
             audit({
-              type: "progress",
-              title: `tool:${toolName}`,
-              content: `${toolName} ${event.status}`,
-              toolName,
-              metadata: { status: event.status },
+              type: "warning",
+              title: "meta-auth:expired",
+              content: `meta provider HTTP ${status}; cleared minted key cache so the next call re-mints from pi OAuth.`,
+              toolName: "opencode.http",
             });
-          }
-          if (enabled.autoStore && event.status === "completed") {
-            const text =
-              typeof event.result?.content === "string"
-                ? event.result.content
-                : JSON.stringify(event.result?.content ?? event.result ?? "");
-            autoStoreResult(toolName, event.input, text);
           }
         } catch {
           /* ignore */
@@ -2137,55 +2472,98 @@ async function setup(ctx) {
       })
     );
   }
+  } catch (err) {
+    console.error(`[hypernexus] auxiliary/http hooks skipped: ${String(err?.message || err)}`);
+  }
+  try {
+    if (enabled.hooks) {
+      track(
+        await ctx.tool.hook("execute.before", (event) => {
+          try {
+            const hit = dangerousMatch(`${event.tool} ${JSON.stringify(event.input ?? {})}`);
+            if (hit && rbacMode() !== "audit") {
+              audit({ type: "warning", title: `rbac-${rbacMode()}:${event.tool}`, content: `dangerous pattern: ${hit}`, toolName: event.tool });
+            }
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+
+      track(
+        await ctx.tool.hook("execute.after", (event) => {
+          try {
+            const toolName = String(event.tool || "");
+            if (toolName.startsWith("hypernexus_")) return;
+            const captured = event.status === "completed" && captureFileObservation(toolName, event.input);
+            if (!captured) {
+              audit({
+                type: "progress",
+                title: `tool:${toolName}`,
+                content: `${toolName} ${event.status}`,
+                toolName,
+                metadata: { status: event.status },
+              });
+            }
+            if (enabled.autoStore && event.status === "completed") {
+              const text =
+                typeof event.result?.content === "string"
+                  ? event.result.content
+                  : JSON.stringify(event.result?.content ?? event.result ?? "");
+              autoStoreResult(toolName, event.input, text);
+            }
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+    }
+  } catch (err) {
 
   // Ã¢â€â‚¬Ã¢â€â‚¬ Permission hook: kernel-aware RBAC Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   } catch (err) {
     console.error(`[hypernexus] tool hooks skipped: ${String(err?.message || err)}`);
   }
   try {
-  if (enabled.hooks) {
-    track(
-      await ctx.permission.hook("evaluate", (event) => {
-        try {
-          const mode = rbacMode();
-          if (mode === "audit") return;
-          const hit = dangerousMatch(`${event.action} ${(event.resources || []).join(" ")}`);
-          if (!hit) return;
-          audit({
-            type: "warning",
-            title: `rbac-${mode}:${event.action}`,
-            content: `dangerous action ${event.action} on ${clamp((event.resources || []).join(", "), 200)} (pattern ${hit})`,
-            toolName: "opencode.permission",
-          });
-          event.effect = mode === "deny" ? "deny" : "ask";
-          event.message = `HyperNexus RBAC (${mode}): destructive pattern matched (${hit}).`;
-        } catch {
-          /* never break permission flow */
-        }
-      })
-    );
-  }
-
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Shell hook: env injection Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    if (enabled.hooks) {
+      track(
+        await ctx.permission.hook("evaluate", (event) => {
+          try {
+            const mode = rbacMode();
+            if (mode === "audit") return;
+            const hit = dangerousMatch(`${event.action} ${(event.resources || []).join(" ")}`);
+            if (!hit) return;
+            audit({
+              type: "warning",
+              title: `rbac-${mode}:${event.action}`,
+              content: `dangerous action ${event.action} on ${clamp((event.resources || []).join(", "), 200)} (pattern ${hit})`,
+              toolName: "opencode.permission",
+            });
+            event.effect = mode === "deny" ? "deny" : "ask";
+            event.message = `HyperNexus RBAC (${mode}): destructive pattern matched (${hit}).`;
+          } catch {
+            /* never break permission flow */
+          }
+        })
+      );
+    }
   } catch (err) {
     console.error(`[hypernexus] permission hook skipped: ${String(err?.message || err)}`);
   }
   try {
-  if (enabled.hooks && enabled.env) {
-    track(
-      await ctx.shell.hook("create.before", (event) => {
-        try {
-          event.env = event.env || {};
-          event.env.HYPERNEXUS_URL = base;
-          event.env.HYPERNEXUS_CLIENT = `opencode/${PLUGIN_VERSION}`;
-        } catch {
-          /* ignore */
-        }
-      })
-    );
-  }
-
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Event stream: turn observation (fire-and-forget) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    if (enabled.hooks && enabled.env) {
+      track(
+        await ctx.shell.hook("create.before", (event) => {
+          try {
+            event.env = event.env || {};
+            event.env.HYPERNEXUS_URL = base;
+            event.env.HYPERNEXUS_CLIENT = `opencode/${PLUGIN_VERSION}`;
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+    }
   } catch (err) {
     console.error(`[hypernexus] shell hook skipped: ${String(err?.message || err)}`);
   }
@@ -2215,7 +2593,88 @@ async function setup(ctx) {
     /* event subscription is optional */
   }
 
-  // Cleanup: dispose registrations and flush the audit queue
+  // ── Agent surface: register the HyperNexus orchestrator subagent ──
+  try {
+    if (enabled.agents !== false && ctx.agent && typeof ctx.agent.transform === "function") {
+      track(
+        await ctx.agent.transform((editor) => {
+          try {
+            const existing = editor.get ? editor.get("hypernexus-orchestrator") : undefined;
+            if (existing) return;
+            editor.add({
+              id: "hypernexus-orchestrator",
+              name: "HyperNexus Orchestrator",
+              description:
+                "Orchestrates multi-step work through the HyperNexus control plane: recall -> discover -> execute -> persist -> verify.",
+              mode: "subagent",
+              system:
+                "RECALL (hypernexus_context_harvest + hypernexus_memory_search) before planning. " +
+                "DISCOVER (hypernexus_suggest_tools -> hypernexus_tool_search -> hypernexus_mcp_call) on capability gaps. " +
+                "EXECUTE with normal tools; keep the plan in hypernexus_scratchpad (key current_task). " +
+                "PERSIST non-obvious decisions/gotchas via hypernexus_memory_store. " +
+                "VERIFY with hypernexus_status after significant changes. Degrade gracefully when the kernel is offline.",
+            });
+          } catch {
+            /* agent editor shape drift: skip */
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.error(`[hypernexus] agent registration skipped: ${String(err?.message || err)}`);
+  }
+
+  // ── Websearch surface: HyperNexus code-aware search provider (opt-in default) ──
+  try {
+    if (enabled.websearch === true && ctx.websearch && typeof ctx.websearch.transform === "function") {
+      track(
+        await ctx.websearch.transform((editor) => {
+          try {
+            editor.add({
+              id: "hypernexus",
+              name: "HyperNexus code search",
+              execute: async ({ query }, { signal }) => {
+                const res = await kernel(
+                  `/api/mcp/native/search?query=${encodeURIComponent(`symbols ${clamp(String(query || ""), 160)}`)}&limit=10`,
+                  { budget: FAST_BUDGET, signal }
+                );
+                return asList(unwrap(res)).slice(0, 10).map((t) => {
+                  const r = recOf(t) || {};
+                  return { url: "", title: String(r.name ?? r.id ?? "result"), content: clamp(String(r.description ?? ""), 400), time: {} };
+                });
+              },
+            });
+          } catch {
+            /* websearch editor shape drift: skip */
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.error(`[hypernexus] websearch registration skipped: ${String(err?.message || err)}`);
+  }
+
+  // ── Reference surface: HyperNexus SKILL.md + kernel endpoint docs as file refs ──
+  try {
+    if (enabled.references !== false && ctx.reference && typeof ctx.reference.transform === "function") {
+      track(
+        await ctx.reference.transform((editor) => {
+          try {
+            const root = path.join(ctx.location?.directory || process.cwd(), ".opencode", "skills");
+            if (editor.get && !editor.get("hypernexus-skills") && fs.existsSync(root)) {
+              editor.add("hypernexus-skills", { type: "local", path: root });
+            }
+          } catch {
+            /* reference editor shape drift: skip */
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.error(`[hypernexus] reference registration skipped: ${String(err?.message || err)}`);
+  }
+
+  // ── Cleanup: dispose registrations and flush the audit queue ──
   return async () => {
     try {
       await flushAudit();
