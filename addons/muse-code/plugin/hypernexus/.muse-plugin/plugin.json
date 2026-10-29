@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "name": "hypernexus",
+  "displayName": "HyperNexus",
+  "version": "1.0.21",
+  "description": "HyperNexus AI control plane for Muse Code: persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery, knowledge graph, kernel ops, and cross-harness session continuity via the local Go kernel on port 7778.",
+  "compat": {
+    "source": "native",
+    "manifestDir": ".muse-plugin"
+  },
+  "capabilities": {
+    "skills": [
+      {
+        "id": "hypernexus",
+        "path": "skills/hypernexus/SKILL.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hypernexus-ops",
+        "path": "skills/hypernexus-ops/SKILL.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hypernexus-workflows",
+        "path": "skills/hypernexus-workflows/SKILL.md",
+        "enabledDefault": true
+      }
+    ],
+    "commands": [
+      {
+        "id": "hn-status",
+        "path": "commands/hn-status.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-store",
+        "path": "commands/hn-store.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-search",
+        "path": "commands/hn-search.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-tools",
+        "path": "commands/hn-tools.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-session",
+        "path": "commands/hn-session.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-context",
+        "path": "commands/hn-context.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-plan",
+        "path": "commands/hn-plan.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-summary",
+        "path": "commands/hn-summary.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-remember",
+        "path": "commands/hn-remember.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-restore",
+        "path": "commands/hn-restore.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-purge",
+        "path": "commands/hn-purge.md",
+        "enabledDefault": true
+      }
+    ],
+    "hooks": [
+      {
+        "id": "hn-session-start",
+        "event": "SessionStart",
+        "command": [
+          "node",
+          "hooks/scripts/hn-session-start.mjs"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging session start to HyperNexus"
+      },
+      {
+        "id": "hn-prompt-submit",
+        "event": "UserPromptSubmit",
+        "command": [
+          "node",
+          "hooks/scripts/hn-prompt-submit.mjs"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging prompt to HyperNexus"
+      },
+      {
+        "id": "hn-pre-tool-use",
+        "event": "PreToolUse",
+        "command": [
+          "node",
+          "hooks/scripts/hn-pre-tool-use.mjs"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "HyperNexus pre-tool audit"
+      },
+      {
+        "id": "hn-post-tool-use",
+        "event": "PostToolUse",
+        "command": [
+          "node",
+          "hooks/scripts/hn-post-tool-use.mjs"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging tool result to HyperNexus"
+      },
+      {
+        "id": "hn-session-stop",
+        "event": "Stop",
+        "command": [
+          "node",
+          "hooks/scripts/hn-session-stop.mjs"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging session end to HyperNexus"
+      }
+    ],
+    "mcpServers": [
+      {
+        "id": "hypernexus",
+        "transport": "stdio",
+        "command": [
+          "node",
+          "mcp/hn-mcp.mjs"
+        ]
+      }
+    ],
+    "reminders": []
+  }
+}

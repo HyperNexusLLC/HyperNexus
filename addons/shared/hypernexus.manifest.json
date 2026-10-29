@@ -198,6 +198,26 @@
    ],
    "notes": "Meta muse-spark-1.3-contributor via pi-OAuth live mint (bin/meta-muse-key.mjs, pi owns refresh; META_API_KEY per shell). ACTIVATED via user-scope skills (3/3 on, zero diagnostics) + settings.json mcpServers.hypernexus stdio + live `muse exec` proof (system_status -> kernel version). Validator-clean native bundle (3 skills, 11 commands, 5 hooks, 1 MCP server) ships ready; plugin-record load pending product fix. Reminders family ships as duty file but unreferenced: 1.4.14 rejects every memoryEvidence source shape including its own shipped example. KNOWN PRODUCT BLOCKER: `muse plugins install` fails deterministically on this box (os error 32, failing file never materializes, no locker process); proven with a 1-skill probe."
   },
+  "claude-code": {
+   "status": "active",
+   "api": "Claude Code native plugin (.claude-plugin/plugin.json: commands/skills/agents/hooks/mcpServers) + settings.json env (ANTHROPIC_BASE_URL) + kernel Anthropic shim (/v1/messages, /v1/models)",
+   "adapter": "addons/claude-code/plugin/hypernexus/",
+   "install": "`node addons/claude-code/install.mjs [--project <dir>|--global]` (plugin + project .mcp.json) — or `claude --plugin-dir plugin/hypernexus` direct",
+   "installer": "addons/claude-code/install.mjs",
+   "surfaces": [
+    "model",
+    "plugin-bundle",
+    "commands",
+    "skills",
+    "agents",
+    "hooks",
+    "mcp",
+    "prompt-overlay",
+    "preferred-tools",
+    "swarm-prompt"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server registered in plugin .mcp.json + project .mcp.json (toolNamespace mcp__hypernexus). 11 /hn-* commands + 3 skills + 2 agents (orchestrator + read-only researcher). 7 hook events (SessionStart/UserPromptSubmit/PreToolUse-Bash-RBAC-gate/PostToolUse/PreCompact/Stop/SubagentStop) as dependency-free Node scripts. Meta muse-spark-1.3-contributor NATIVE: kernel Anthropic shim (go/internal/httpapi/anthropic_compat.go) reads the pi Meta OAuth identity per request (pi owns refresh, nothing stored); use-meta-model.ps1 mints a fresh per-run override key via bin/meta-muse-key.mjs. Battery bin/test-claude-code-ext.mjs (hermetic + --live). Core works without the plugin over HTTP http://127.0.0.1:7778."
+  },
   "codex-cli": {
    "status": "active",
    "api": "codex config.toml",
@@ -354,7 +374,8 @@
     "reasonix": "ext__hypernexus__memory_store",
     "crush": "add_memory",
     "freebuff": "add_memory",
-    "hax": "hn.mjs store"
+    "hax": "hn.mjs store",
+    "claude-code": "mcp__hypernexus__add_memory"
    }
   },
   {
@@ -382,7 +403,8 @@
     "reasonix": "ext__hypernexus__memory_search",
     "crush": "search_memory",
     "freebuff": "search_memory",
-    "hax": "hn.mjs search"
+    "hax": "hn.mjs search",
+    "claude-code": "mcp__hypernexus__search_memory"
    }
   },
   {
@@ -405,7 +427,8 @@
     "reasonix": "ext__hypernexus__memory_vector_search",
     "crush": "search_memory",
     "freebuff": "search_memory",
-    "hax": "hn.mjs search"
+    "hax": "hn.mjs search",
+    "claude-code": "mcp__hypernexus__search_memory"
    }
   },
   {
@@ -428,7 +451,8 @@
     "reasonix": "ext__hypernexus__memory_list",
     "crush": "search_memory",
     "freebuff": "search_memory",
-    "hax": "hn.mjs list"
+    "hax": "hn.mjs list",
+    "claude-code": "mcp__hypernexus__search_memory"
    }
   },
   {
@@ -451,7 +475,8 @@
     "reasonix": "ext__hypernexus__context_harvest",
     "crush": "search_memory + memory_scratchpad_get",
     "freebuff": "/skill:hn-context + search_memory + memory_scratchpad_get",
-    "hax": "hn.mjs harvest"
+    "hax": "hn.mjs harvest",
+    "claude-code": "mcp__hypernexus__search_memory"
    }
   },
   {
@@ -474,7 +499,8 @@
     "reasonix": "ext__hypernexus__scratchpad",
     "crush": "memory_scratchpad_get/set/append",
     "freebuff": "memory_scratchpad_get/set/append",
-    "hax": "hn.mjs scratch-get|scratch-set"
+    "hax": "hn.mjs scratch-get|scratch-set",
+    "claude-code": "mcp__hypernexus__memory_scratchpad_get"
    }
   },
   {
@@ -497,7 +523,8 @@
     "reasonix": "ext__hypernexus__tool_search",
     "crush": "mcp_list_tools + /api/mcp/tools/search",
     "freebuff": "mcp_list_tools + /api/mcp/tools/search",
-    "hax": "hn.mjs tools"
+    "hax": "hn.mjs tools",
+    "claude-code": "mcp__hypernexus__mcp_list_tools"
    }
   },
   {
@@ -527,7 +554,8 @@
     "reasonix": "ext__hypernexus__suggest_tools",
     "crush": "mcp_list_tools (suggest via conversation scan)",
     "freebuff": "mcp_list_tools (suggest via conversation scan)",
-    "hax": "hn.mjs suggest"
+    "hax": "hn.mjs suggest",
+    "claude-code": "mcp__hypernexus__mcp_list_tools"
    }
   },
   {
@@ -553,7 +581,8 @@
     "reasonix": "ext__hypernexus__mcp_call",
     "crush": "mcp_call_tool",
     "freebuff": "mcp_call_tool",
-    "hax": "hn.mjs call"
+    "hax": "hn.mjs call",
+    "claude-code": "mcp__hypernexus__mcp_call_tool"
    }
   },
   {
@@ -574,7 +603,8 @@
     "reasonix": "ext__hypernexus__session_search",
     "crush": "search_memory (session-scoped) + /api/sessions/summary",
     "freebuff": "/skill:hn-session + search_memory (session-scoped) + /api/sessions/summary",
-    "hax": "hn.mjs session-get"
+    "hax": "hn.mjs session-get",
+    "claude-code": "mcp__hypernexus__search_memory"
    }
   },
   {
@@ -595,7 +625,8 @@
     "reasonix": "ext__hypernexus__skill_manage",
     "crush": "/api/skills registry + ~/.config/crush/skills/",
     "freebuff": "/api/skills registry + .agents/skills/",
-    "hax": "hn.mjs skills|skill-read"
+    "hax": "hn.mjs skills|skill-read",
+    "claude-code": "/api/skills registry + plugin skills/"
    }
   },
   {
@@ -618,7 +649,8 @@
     "reasonix": "ext__hypernexus__code_search",
     "crush": "codebase_search",
     "freebuff": "codebase_search",
-    "hax": "hn.mjs code"
+    "hax": "hn.mjs code",
+    "claude-code": "mcp__hypernexus__codebase_search"
    }
   },
   {
@@ -643,7 +675,8 @@
     "reasonix": "ext__hypernexus__subagent",
     "crush": "add_memory ([SUBAGENT TASK]) + crush run -s",
     "freebuff": "/skill:hypernexus-orchestrator + add_memory ([SUBAGENT TASK])",
-    "hax": "hn.mjs hn-worker preset"
+    "hax": "hn.mjs hn-worker preset",
+    "claude-code": "mcp__hypernexus__add_memory ([SUBAGENT TASK])"
    }
   },
   {
@@ -666,7 +699,8 @@
     "reasonix": "ext__hypernexus__system_overview",
     "crush": "system_status + /health",
     "freebuff": "system_status + /health",
-    "hax": "hn.mjs status"
+    "hax": "hn.mjs status",
+    "claude-code": "mcp__hypernexus__system_status"
    }
   },
   {
@@ -686,7 +720,8 @@
     "reasonix": "ext__hypernexus__memory_delete",
     "crush": "delete_memory",
     "freebuff": "delete_memory",
-    "hax": "hn.mjs delete"
+    "hax": "hn.mjs delete",
+    "claude-code": "mcp__hypernexus__delete_memory"
    }
   },
   {
@@ -705,7 +740,8 @@
     "mimo": "hypernexus_memory_update",
     "crush": "delete_memory + add_memory (rewrite)",
     "freebuff": "delete_memory + add_memory (rewrite)",
-    "hax": "hn.mjs update"
+    "hax": "hn.mjs update",
+    "claude-code": "mcp__hypernexus__delete_memory + mcp__hypernexus__add_memory (rewrite)"
    }
   },
   {
@@ -727,7 +763,8 @@
     "reasonix": "ext__hypernexus__memory_stats",
     "crush": "memory_stats",
     "freebuff": "memory_stats",
-    "hax": "hn.mjs stats"
+    "hax": "hn.mjs stats",
+    "claude-code": "mcp__hypernexus__memory_stats"
    }
   },
   {
@@ -746,7 +783,8 @@
     "reasonix": "ext__hypernexus__session_handoff",
     "crush": "memory_scratchpad_set(goal) + add_memory(session,summary)",
     "freebuff": "memory_scratchpad_set(goal) + add_memory(session,summary)",
-    "hax": "hn.mjs handoff"
+    "hax": "hn.mjs handoff",
+    "claude-code": "mcp__hypernexus__memory_scratchpad_set(goal) + mcp__hypernexus__add_memory(session,summary)"
    }
   },
   {
@@ -767,7 +805,8 @@
     "reasonix": "ext__hypernexus__session_list",
     "crush": "/api/sessions/summary",
     "freebuff": "/api/sessions/summary",
-    "hax": "hn.mjs sessions"
+    "hax": "hn.mjs sessions",
+    "claude-code": "/api/sessions/summary"
    }
   },
   {
@@ -787,7 +826,8 @@
     "reasonix": "ext__hypernexus__session_context",
     "crush": "memory_scratchpad_get(goal) + search_memory",
     "freebuff": "memory_scratchpad_get(goal) + search_memory",
-    "hax": "hn.mjs session-context"
+    "hax": "hn.mjs session-context",
+    "claude-code": "mcp__hypernexus__memory_scratchpad_get(goal) + mcp__hypernexus__search_memory"
    }
   },
   {
@@ -806,7 +846,8 @@
     "mimo": "hypernexus_kernel_routes",
     "crush": "/api/routes + mcp_list_servers",
     "freebuff": "/api/routes + mcp_list_servers",
-    "hax": "hn.mjs routes"
+    "hax": "hn.mjs routes",
+    "claude-code": "/api/routes + mcp__hypernexus__mcp_list_servers"
    }
   },
   {
@@ -825,7 +866,8 @@
     "reasonix": "ext__hypernexus__mcp_status",
     "crush": "mcp_status",
     "freebuff": "mcp_status",
-    "hax": "hn.mjs mcp-status"
+    "hax": "hn.mjs mcp-status",
+    "claude-code": "mcp__hypernexus__mcp_status"
    }
   },
   {
@@ -844,7 +886,8 @@
     "reasonix": "ext__hypernexus__mcp_servers",
     "crush": "mcp_list_servers",
     "freebuff": "mcp_list_servers",
-    "hax": "hn.mjs mcp-servers"
+    "hax": "hn.mjs mcp-servers",
+    "claude-code": "mcp__hypernexus__mcp_list_servers"
    }
   },
   {
@@ -863,7 +906,8 @@
     "reasonix": "ext__hypernexus__mcp_tools",
     "crush": "mcp_list_tools",
     "freebuff": "mcp_list_tools",
-    "hax": "hn.mjs mcp-tools"
+    "hax": "hn.mjs mcp-tools",
+    "claude-code": "mcp__hypernexus__mcp_list_tools"
    }
   },
   {
@@ -882,7 +926,8 @@
     "reasonix": "ext__hypernexus__skill_search",
     "crush": "/api/skills/search + skills/ dir",
     "freebuff": "/api/skills/search + .agents/skills/ dir",
-    "hax": "hn.mjs skills"
+    "hax": "hn.mjs skills",
+    "claude-code": "/api/skills/search + plugin skills/ dir"
    }
   },
   {
@@ -902,7 +947,8 @@
     "reasonix": "ext__hypernexus__system_overview",
     "crush": "system_status + mcp_status + billing_status",
     "freebuff": "/skill:hn-status (system_status + mcp_status + billing_status)",
-    "hax": "hn.mjs overview"
+    "hax": "hn.mjs overview",
+    "claude-code": "/hn-status (mcp__hypernexus__system_status + mcp__hypernexus__mcp_status + mcp__hypernexus__billing_status)"
    }
   },
   {
@@ -923,7 +969,8 @@
     "reasonix": "ext__hypernexus__repomap",
     "crush": "repomap",
     "freebuff": "repomap",
-    "hax": "hn.mjs repomap"
+    "hax": "hn.mjs repomap",
+    "claude-code": "mcp__hypernexus__repomap"
    }
   },
   {
@@ -943,7 +990,8 @@
     "reasonix": "ext__hypernexus__knowledge_graph",
     "crush": "memory_extract_relations(+_batch)",
     "freebuff": "memory_extract_relations(+_batch)",
-    "hax": "hn.mjs graph"
+    "hax": "hn.mjs graph",
+    "claude-code": "mcp__hypernexus__memory_extract_relations(+_batch)"
    }
   },
   {
@@ -963,7 +1011,8 @@
     "reasonix": "ext__hypernexus__workflow",
     "crush": "commands/hn-* + skills hypernexus-workflows",
     "freebuff": "/skill:hn-plan + skills hypernexus-workflows",
-    "hax": "hn.mjs workflow-list"
+    "hax": "hn.mjs workflow-list",
+    "claude-code": "/hn-plan + skills hypernexus-workflows"
    }
   },
   {
@@ -983,7 +1032,8 @@
     "reasonix": "ext__hypernexus__orchestrate",
     "crush": "add_memory orchestration loop + crush run subagents",
     "freebuff": "/skill:hypernexus-orchestrator",
-    "hax": "hn.mjs orchestrate"
+    "hax": "hn.mjs orchestrate",
+    "claude-code": "/skill:hypernexus-orchestrator"
    }
   },
   {
@@ -1003,7 +1053,8 @@
     "reasonix": "ext__hypernexus__browser",
     "crush": "launch_webview + /api/browser/action",
     "freebuff": "launch_webview + /api/browser/action",
-    "hax": "hn.mjs browser"
+    "hax": "hn.mjs browser",
+    "claude-code": "launch_webview + /api/browser/action"
    }
   }
  ],
