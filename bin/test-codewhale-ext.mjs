@@ -97,7 +97,9 @@ for (const flags of [[], ["--global"]]) {
 }
 
 console.log("=== T3: skills installed (bundle + direct mirror) ===");
-const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
+const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows", "hypernexus-orchestrator"];
+const AGENTS = ["hypernexus-orchestrator", "hypernexus-researcher"];
+const HOOKS = ["hn-session.mjs", "hn-rbac.mjs", "hn-pre-tool.mjs"];
 for (const [scope, dir] of [["project", path.join(REPO_ROOT, ".codewhale")], ["global", path.join(HOME, ".codewhale")]]) {
   for (const name of SKILLS) {
     const src = fs.readFileSync(path.join(REPO_ROOT, "addons", "codewhale", "skills", name, "SKILL.md"), "utf8");
@@ -136,7 +138,7 @@ console.log("=== T4: plugin bundle manifest validity ===");
       check(`${scope} plugin.json name=hypernexus`, manifest.name === "hypernexus", manifest.name);
       check(`${scope} plugin.json version stamped from VERSION`, manifest.version === version, `${manifest.version} vs ${version}`);
       const ext = manifest.extensions?.["net.codewhale"] ?? {};
-      check(`${scope} plugin.json declares commands+skills paths`, ext.commands?.path === "commands" && ext.skills?.path === "skills", JSON.stringify(ext).slice(0, 80));
+      check(`${scope} plugin.json declares commands+skills+agents paths`, ext.commands?.path === "commands" && ext.skills?.path === "skills" && ext.agents?.path === "agents", JSON.stringify(ext).slice(0, 120));
     }
     const toml = fs.readFileSync(path.join(bundle, "plugin.toml"), "utf8");
     check(`${scope} plugin.toml exists + names hypernexus @ ${version}`, /^name = "hypernexus"/m.test(toml) && toml.includes(`version = "${version}"`));
@@ -149,6 +151,32 @@ console.log("=== T4: plugin bundle manifest validity ===");
       else check(`${scope} commands/${f} frontmatter (description+usage)`, false);
     }
     check(`${scope} 11 commands with valid frontmatter`, cmdOk === 11, `${cmdOk}/11`);
+    for (const a of AGENTS) {
+      let ok = false;
+      let detail = `agents/${a}.md`;
+      try {
+        const src = fs.readFileSync(path.join(REPO_ROOT, "addons", "codewhale", "plugin", "agents", `${a}.md`), "utf8");
+        const body = fs.readFileSync(path.join(bundle, "agents", `${a}.md`), "utf8");
+        const front = body.match(/^---\r?\nname:\s*(\S+)/);
+        ok = body === src && front?.[1] === a;
+        if (!ok) detail = front ? "differs from source" : "bad frontmatter";
+      } catch {
+        detail = "missing";
+      }
+      check(`${scope} agents/${a}.md installed + valid`, ok, detail);
+    }
+    for (const h of HOOKS) {
+      let ok = false;
+      let detail = `hooks/${h}`;
+      try {
+        const src = fs.readFileSync(path.join(REPO_ROOT, "addons", "codewhale", "hooks", h), "utf8");
+        ok = fs.readFileSync(path.join(bundle, "hooks", h), "utf8") === src;
+        if (!ok) detail = "differs from source";
+      } catch {
+        detail = "missing";
+      }
+      check(`${scope} hooks/${h} installed byte-identical`, ok, detail);
+    }
   }
 }
 
