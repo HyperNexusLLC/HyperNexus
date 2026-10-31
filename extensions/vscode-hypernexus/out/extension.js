@@ -39,12 +39,12 @@ const vscode = __importStar(require("vscode"));
 const http = __importStar(require("http"));
 let statusBarItem;
 let connected = false;
-let serverUrl = "http://localhost:8080/mcp";
+let serverUrl = "http://127.0.0.1:7778";
 function activate(context) {
     console.log("HyperNexus extension activated");
-    // Load configuration
+    // Load configuration (port 7778 is authoritative; 8080 is stale).
     const config = vscode.workspace.getConfiguration("hypernexus");
-    serverUrl = config.get("serverUrl", "http://localhost:8080/mcp");
+    serverUrl = config.get("serverUrl", "http://127.0.0.1:7778");
     const autoConnect = config.get("autoConnect", true);
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
@@ -53,8 +53,8 @@ function activate(context) {
     statusBarItem.command = "hypernexus.showStatus";
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
-    // Register commands
-    context.subscriptions.push(vscode.commands.registerCommand("hypernexus.connect", () => connect()), vscode.commands.registerCommand("hypernexus.disconnect", () => disconnect()), vscode.commands.registerCommand("hypernexus.saveMemory", () => saveMemory()), vscode.commands.registerCommand("hypernexus.searchMemory", () => searchMemory()), vscode.commands.registerCommand("hypernexus.showStatus", () => showStatus()), vscode.commands.registerCommand("hypernexus.openDashboard", () => openDashboard()));
+    // Register commands (12: union checklist)
+    context.subscriptions.push(vscode.commands.registerCommand("hypernexus.connect", () => connect()), vscode.commands.registerCommand("hypernexus.disconnect", () => disconnect()), vscode.commands.registerCommand("hypernexus.saveMemory", () => saveMemory()), vscode.commands.registerCommand("hypernexus.searchMemory", () => searchMemory()), vscode.commands.registerCommand("hypernexus.showStatus", () => showStatus()), vscode.commands.registerCommand("hypernexus.openDashboard", () => openDashboard()), vscode.commands.registerCommand("hypernexus.showBilling", () => showBilling()), vscode.commands.registerCommand("hypernexus.searchCode", () => searchCode()), vscode.commands.registerCommand("hypernexus.captureHandoff", () => captureHandoff()), vscode.commands.registerCommand("hypernexus.showSessions", () => showSessions()), vscode.commands.registerCommand("hypernexus.runOpsCheck", () => runOpsCheck()), vscode.commands.registerCommand("hypernexus.dispatchAgent", () => dispatchAgent()));
     // Auto-connect if enabled
     if (autoConnect) {
         connect();
@@ -63,7 +63,7 @@ function activate(context) {
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => {
         if (e.affectsConfiguration("hypernexus")) {
             const newConfig = vscode.workspace.getConfiguration("hypernexus");
-            serverUrl = newConfig.get("serverUrl", "http://localhost:8080/mcp");
+            serverUrl = newConfig.get("serverUrl", "http://127.0.0.1:7778");
         }
     }));
 }
@@ -99,9 +99,15 @@ function disconnect() {
     statusBarItem.backgroundColor = undefined;
     vscode.window.showInformationMessage("HyperNexus disconnected");
 }
-async function saveMemory() {
+function requireConnected() {
     if (!connected) {
         vscode.window.showWarningMessage("HyperNexus not connected");
+        return false;
+    }
+    return true;
+}
+async function saveMemory() {
+    if (!requireConnected()) {
         return;
     }
     const editor = vscode.window.activeTextEditor;
@@ -134,8 +140,7 @@ async function saveMemory() {
     }
 }
 async function searchMemory() {
-    if (!connected) {
-        vscode.window.showWarningMessage("HyperNexus not connected");
+    if (!requireConnected()) {
         return;
     }
     const query = await vscode.window.showInputBox({
@@ -159,7 +164,7 @@ async function searchMemory() {
                 const editor = vscode.window.activeTextEditor;
                 if (editor) {
                     editor.edit((editBuilder) => {
-                        editBuilder.insert(editor.selection.active, selected.description || '');
+                        editBuilder.insert(editor.selection.active, selected.description || "");
                     });
                 }
             }
@@ -200,8 +205,128 @@ HyperNexus Status:
     }
 }
 function openDashboard() {
-    const dashboardUrl = serverUrl.replace("/mcp", "").replace(":8080", ":7779") + "/dashboard";
+    const dashboardUrl = serverUrl.replace(/\/mcp\/?$/, "") + "/dashboard";
     vscode.env.openExternal(vscode.Uri.parse(dashboardUrl));
+}
+async function showBilling() {
+    if (!requireConnected()) {
+        return;
+    }
+    try {
+        const billing = await makeRequest("/api/billing/status");
+        vscode.window.showInformationMessage(`HyperNexus billing: ${JSON.stringify(billing).substring(0, 300)}`);
+    }
+    catch (error) {
+        vscode.window.showErrorMessage(`Billing check failed: ${error}`);
+    }
+}
+async function searchCode() {
+    if (!requireConnected()) {
+        return;
+    }
+    const query = await vscode.window.showInputBox({
+        prompt: "Semantic code search",
+        placeHolder: "Enter search query",
+    });
+    if (!query)
+        return;
+    try {
+        const response = await makeRequest(`/api/memory/fts-search?q=${encodeURIComponent(query)}&limit=10`);
+        const list = response?.data ?? response ?? [];
+        if (Array.isArray(list) && list.length > 0) {
+            const items = list.slice(0, 10).map((r) => ({
+                label: String(r.title ?? r.file ?? "result"),
+                description: JSON.stringify(r).substring(0, 100),
+            }));
+            await vscode.window.showQuickPick(items, {
+                placeHolder: "Matching results",
+            });
+        }
+        else {
+            vscode.window.showInformationMessage("No code results found");
+        }
+    }
+    catch (error) {
+        vscode.window.showErrorMessage(`Code search failed: ${error}`);
+    }
+}
+async function captureHandoff() {
+    if (!requireConnected()) {
+        return;
+    }
+    const summary = await vscode.window.showInputBox({
+        prompt: "Session handoff summary",
+        placeHolder: "What should the next session know?",
+    });
+    if (!summary)
+        return;
+    try {
+        await makeRequest("/api/memory/session-summaries/capture", "POST", {
+            status: "active",
+            summary,
+        });
+        vscode.window.showInformationMessage("Handoff captured");
+    }
+    catch (error) {
+        vscode.window.showErrorMessage(`Handoff failed: ${error}`);
+    }
+}
+async function showSessions() {
+    if (!requireConnected()) {
+        return;
+    }
+    try {
+        const summary = await makeRequest("/api/sessions/summary");
+        vscode.window.showInformationMessage(`HyperNexus sessions: ${JSON.stringify(summary).substring(0, 300)}`);
+    }
+    catch (error) {
+        vscode.window.showErrorMessage(`Sessions check failed: ${error}`);
+    }
+}
+async function runOpsCheck() {
+    if (!requireConnected()) {
+        return;
+    }
+    try {
+        const before = await makeRequest("/health");
+        vscode.window.showInformationMessage(`HyperNexus ops baseline: ok=${before.ok} version=${before.version ?? "N/A"}. Apply your change, then run this command again to compare.`);
+        await makeRequest("/api/memory/facts/add", "POST", {
+            title: "VS Code ops check",
+            content: `Ops baseline: ${JSON.stringify(before).substring(0, 500)}`,
+            tags: ["ops", "deploy"],
+            namespace: "project",
+        });
+    }
+    catch (error) {
+        vscode.window.showErrorMessage(`Ops check failed: ${error}`);
+    }
+}
+async function dispatchAgent() {
+    if (!requireConnected()) {
+        return;
+    }
+    const verb = await vscode.window.showQuickPick(["tool", "chat", "swarm", "broadcast"], { placeHolder: "Agent call verb" });
+    if (!verb)
+        return;
+    const payload = await vscode.window.showInputBox({
+        prompt: `Payload for ${verb}`,
+        placeHolder: verb === "chat" ? "Message text" : "JSON arguments",
+    });
+    if (payload === undefined)
+        return;
+    const config = vscode.workspace.getConfiguration("hypernexus");
+    const model = config.get("model", "muse-spark-1.3-contributor");
+    try {
+        const endpoint = verb === "chat" ? "/api/agent/chat" : `/api/agent/${verb}/start`;
+        const body = verb === "chat"
+            ? { message: payload, model }
+            : { arguments: payload, model };
+        const response = await makeRequest(endpoint, "POST", body);
+        vscode.window.showInformationMessage(`Agent ${verb} dispatched: ${JSON.stringify(response).substring(0, 300)}`);
+    }
+    catch (error) {
+        vscode.window.showErrorMessage(`Agent dispatch failed: ${error}`);
+    }
 }
 async function makeRequest(path, method = "GET", body) {
     return new Promise((resolve, reject) => {

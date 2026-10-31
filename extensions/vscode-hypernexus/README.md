@@ -38,7 +38,7 @@ code --install-extension hypernexus.hypernexus
 
 ```json
 {
-  "hypernexus.serverUrl": "http://localhost:8080/mcp",
+  "hypernexus.serverUrl": "http://127.0.0.1:7778",
   "hypernexus.autoConnect": true,
   "hypernexus.enableMemory": true,
   "hypernexus.enableToolRouting": true
