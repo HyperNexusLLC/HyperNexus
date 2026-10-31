@@ -5,7 +5,7 @@
 ## 🔴 High (do next)
 
 - [x] ~~Dashboard consolidation~~ — **verified already consolidated** (nav = 7 value-ordered sections, all tooltips present, all hrefs → home-view anchors). Remaining polish below.
-- [ ] **Flesh out 3 thin home-view sections** — `health-metrics` (~676c), `skills-workflows` (~562c), `security-audit` (~550c) are stubs; add real content/forms/tooltips.
+- [x] **Flesh out 3 thin home-view sections** — `health-metrics`, `skills-workflows`, `security-audit` now carry tooltips (`title`), `aria-label`, `data-testid` wraps, and truth-pass copy (loading/error/empty, never mocked) in `dashboard-home-view.tsx`. Remaining: per-card forms/filters live in sub-pages.
 - [ ] **Decompose `dashboard-home-view.tsx`** (4958 lines) → one lazy-loaded component per section.
 - [ ] **Retire 99 legacy `dashboard/*` pages** (not in nav) — redirect to home anchors to remove dead weight.
 - [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.

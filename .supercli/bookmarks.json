@@ -1,9 +1,5 @@
-[
-  {
-    "title": "probe",
-    "url": "https://example.com",
-    "tags": [
-      "probe"
-    ]
-  }
-]
+{
+  "tags": null,
+  "title": "t",
+  "url": "https://example.com"
+}
