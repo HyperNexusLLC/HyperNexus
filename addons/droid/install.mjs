@@ -7,7 +7,11 @@
  * the kernel's stdio MCP server in ~/.factory/mcp.json when missing.
  *
  * Usage:
- *   node install.mjs [--marketplace <dir>] [--uninstall] [--check] [--no-mcp]
+ *   node install.mjs [--marketplace <dir>] [--uninstall] [--check] [--no-mcp] [--no-model]
+ *
+ * Also merges the Meta muse-spark-1.3-contributor custom-model default into
+ * ~/.factory/settings.json (apiKeyHelper live-mint, no secrets — see
+ * addons/droid/meta-model.droid.md). Skip with --no-model.
  *
  * Modes:
  *   (default)   copy plugin/ -> <marketplace>/hypernexus + write marketplace.json
@@ -40,6 +44,7 @@ const optValue = (f) => {
 const uninstall = has("--uninstall");
 const check = has("--check");
 const noMcp = has("--no-mcp");
+const noModel = has("--no-model");
 const marketplaceDir = path.resolve(optValue("--marketplace") || path.join(HERE, "marketplace"));
 const DEST_PLUGIN = path.join(marketplaceDir, "hypernexus");
 
@@ -109,6 +114,7 @@ function drift() {
   return problems;
 }
 
+const SETTINGS_PATH = path.join(os.homedir(), ".factory", "settings.json");
 const MCP_PATH = path.join(os.homedir(), ".factory", "mcp.json");
 function ensureMcp() {
   let cfg = { mcpServers: {} };
@@ -134,8 +140,27 @@ function ensureMcp() {
   }
 }
 
+function modelDrift() {
+  // Mirrors addons/droid/bin/test-droid-ext.mjs section 6 expectations.
+  const problems = [];
+  let s = null;
+  try { s = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8")); }
+  catch { return [`settings.json unreadable: ${SETTINGS_PATH}`]; }
+  const m = ((s.customModels || []).find((x) => x.model === "muse-spark-1.3-contributor"));
+  if (!m) problems.push("custom model muse-spark-1.3-contributor missing");
+  else {
+    if (!(m.apiKeyHelper && /meta-muse-key\.mjs/.test(m.apiKeyHelper))) problems.push("model apiKeyHelper not live-mint");
+    if (m.baseUrl !== "https://api.meta.ai/v1") problems.push("model baseUrl drift");
+    if (m.provider !== "generic-chat-completion-api") problems.push("model provider drift");
+    if (m.maxContextLimit !== 1048576) problems.push("model context drift");
+  }
+  if (!((s.sessionDefaultSettings?.model || "").includes("Meta-Muse-Spark"))) problems.push("session default model drift");
+  return problems;
+}
+
 if (check) {
   const problems = drift();
+  if (!noModel) problems.push(...modelDrift());
   if (problems.length) { for (const p of problems) console.error(`drift: ${p}`); process.exit(1); }
   log("OK — marketplace plugin matches source layout");
   process.exit(0);
@@ -156,4 +181,38 @@ log(`installed hypernexus plugin -> ${DEST_PLUGIN}`);
 log(`marketplace manifest -> ${path.join(marketplaceDir, ".factory-plugin", "marketplace.json")}`);
 log(`next: droid plugin marketplace add ${marketplaceDir}`);
 log(`      droid plugin install hypernexus@hypernexus-marketplace --scope user`);
+function ensureModel() {
+  // Idempotent: merge the Meta-Muse-Spark custom-model default (apiKeyHelper
+  // live-mint — no secrets stored) without touching other settings.
+  let cfg = {};
+  if (fs.existsSync(SETTINGS_PATH)) {
+    try { cfg = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8")); }
+    catch (e) { fail(`cannot parse ${SETTINGS_PATH}: ${e.message}`); }
+  }
+  cfg.customModels = Array.isArray(cfg.customModels) ? cfg.customModels : [];
+  const minter = path.join(HERE, "bin", "meta-muse-key.mjs").split(path.sep).join("/");
+  const entry = {
+    name: "Meta-Muse-Spark",
+    model: "muse-spark-1.3-contributor",
+    provider: "generic-chat-completion-api",
+    baseUrl: "https://api.meta.ai/v1",
+    apiKeyHelper: `node ${minter}`,
+    maxContextLimit: 1048576,
+  };
+  const i = cfg.customModels.findIndex((x) => x && x.model === entry.model);
+  if (i >= 0) cfg.customModels[i] = { ...cfg.customModels[i], ...entry };
+  else cfg.customModels.push(entry);
+  cfg.sessionDefaultSettings = cfg.sessionDefaultSettings || {};
+  if (!cfg.sessionDefaultSettings.model) {
+    cfg.sessionDefaultSettings.model = "Meta-Muse-Spark";
+    log("session default model -> Meta-Muse-Spark (only because none was set)");
+  } else {
+    log("session default model already set — untouched");
+  }
+  fs.mkdirSync(path.dirname(SETTINGS_PATH), { recursive: true });
+  writeUtf8(SETTINGS_PATH, JSON.stringify(cfg, null, 2) + "\n");
+  log(`merged Meta-Muse-Spark custom model into ${SETTINGS_PATH}`);
+}
+
 if (!noMcp) ensureMcp();
+if (!noModel) ensureModel();
