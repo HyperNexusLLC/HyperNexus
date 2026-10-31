@@ -15,7 +15,13 @@ const candidates = [
   "python3",
   "python",
 ];
-const py = candidates.find((c) => c === "python3" || c === "python" || existsSync(c));
+function probe(cmd) {
+  try {
+    const r = spawnSync(cmd, ["--version"], { encoding: "utf8", timeout: 15000 });
+    return !r.error && r.status === 0;
+  } catch { return false; }
+}
+const py = candidates.find((c) => (c === "python3" || c === "python" ? probe(c) : existsSync(c) && probe(c)));
 
 const run = spawnSync(py, [script, ...process.argv.slice(2)], { stdio: "inherit" });
 process.exit(run.status ?? 1);
