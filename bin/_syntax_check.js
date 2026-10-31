@@ -931,7 +931,16 @@ ${items}` }], structuredContent: { count: mems.length ?? 0, memories: [] } };
     outputSchema: Type.Object({ ok: Type.Boolean(), deleted: Type.Optional(Type.String()) }),
     parameters: Type.Object({ id: Type.String({ description: "Memory ID to delete" }) }),
     async execute(_toolCallId, params, signal) {
-      const ok = await tnOk("/api/memory/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: params.id }) }, signal);
+      const post = (p, b) => tnOk(p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }, signal);
+      let ok = await post("/api/agent/tool", { name: "delete_memory", args: { id: params.id } });
+      if (!ok) {
+        try {
+          const r = await tnFetch(`/api/memory/delete?id=${encodeURIComponent(params.id)}`, { method: "DELETE" }, signal);
+          ok = r.ok;
+        } catch {
+          ok = false;
+        }
+      }
       return ok ? { content: [{ type: "text", text: "Memory " + params.id + " deleted." }], structuredContent: { ok: true, deleted: params.id } } : { content: [{ type: "text", text: "Delete failed." }], isError: true, structuredContent: { ok: false } };
     }
   });
@@ -952,11 +961,17 @@ ${items}` }], structuredContent: { count: mems.length ?? 0, memories: [] } };
       title: Type.Optional(Type.String({ description: "New title" }))
     }),
     async execute(_toolCallId, params, signal) {
-      const body = { id: params.id };
-      if (params.content !== void 0) body.content = params.content;
-      if (params.tags !== void 0) body.tags = params.tags;
-      if (params.title !== void 0) body.title = params.title;
-      const ok = await tnOk("/api/memory/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }, signal);
+      const post = (p, b) => tnOk(p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }, signal);
+      const removed = await post("/api/agent/tool", { name: "delete_memory", args: { id: params.id } });
+      if (!removed) {
+        return { content: [{ type: "text", text: "Update failed (could not remove " + params.id + " first)." }], isError: true, structuredContent: { ok: false, id: params.id } };
+      }
+      const ok = await post("/api/memory/facts/add", {
+        title: params.title ?? `updated ${params.id}`,
+        content: params.content ?? "",
+        tags: [...params.tags ?? [], "updated"],
+        category: "general"
+      });
       return ok ? { content: [{ type: "text", text: "Memory " + params.id + " updated." }], structuredContent: { ok: true, id: params.id } } : { content: [{ type: "text", text: "Update failed." }], isError: true, structuredContent: { ok: false, id: params.id } };
     }
   });
@@ -1221,15 +1236,18 @@ ${steps.join("\n\n")}` }], structuredContent: { ok: true, steps } };
     namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
     exposure: "deferred",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    outputSchema: Type.Object({ ok: Type.Boolean(), handoff: Type.Optional(Type.Any()) }),
-    parameters: Type.Object({ summary: Type.Optional(Type.String({ description: "Summary to write (omit to read latest handoff)" })), pickup: Type.Optional(Type.Boolean({ description: "Read the last handoff instead of writing" })) }),
+    outputSchema: Type.Object({ ok: Type.Boolean(), handoff: Type.Optional(Type.Any()), artifact: Type.Optional(Type.String()) }),
+    parameters: Type.Object({ summary: Type.Optional(Type.String({ description: "Summary to write (omit to read latest handoff)" })), pickup: Type.Optional(Type.Boolean({ description: "Read the last handoff instead of writing" })), artifact: Type.Optional(Type.String({ description: "Artifact id from a previous write (required: pickup restores by artifact id)" })) }),
     async execute(_toolCallId, params, signal) {
+      const post = { method: "POST", headers: { "Content-Type": "application/json" } };
       if (params.pickup) {
-        const body = await tnJson("/api/memory/handoff?pickup=true", {}, signal).catch(() => null);
+        const body = await tnJson("/api/agent-memory/pickup", { ...post, body: JSON.stringify(params.artifact ? { artifact: params.artifact } : {}) }, signal).catch(() => null);
         return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3e3) }], structuredContent: { ok: !!body, handoff: body } };
       }
-      const ok = await tnOk("/api/memory/handoff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: params.summary || "" }) }, signal);
-      return ok ? { content: [{ type: "text", text: "Handoff written." }], structuredContent: { ok: true } } : { content: [{ type: "text", text: "Handoff write failed." }], isError: true, structuredContent: { ok: false } };
+      const text = params.summary || "";
+      const data = await tnJson("/api/agent-memory/handoff", { ...post, body: JSON.stringify({ notes: text, summary: text, content: text }) }, signal).catch(() => null);
+      const artifact = typeof data === "string" ? data : data && typeof data.artifact === "string" ? data.artifact : data && typeof data.id === "string" ? data.id : data ? JSON.stringify(data) : "";
+      return artifact ? { content: [{ type: "text", text: "Handoff written." }], structuredContent: { ok: true, artifact } } : { content: [{ type: "text", text: "Handoff write failed." }], isError: true, structuredContent: { ok: false } };
     }
   });
   pi.registerTool({

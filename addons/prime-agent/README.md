@@ -21,6 +21,23 @@ Core kernel functionality works **with and without** the extension: the skill an
 MCP server are thin clients over the same HTTP/stdio surfaces the kernel already
 exposes (verified by `bin/test-core-noext.mjs`).
 
+## Meta OAuth (native, from pi's auth.json)
+
+`sync-meta-oauth.py` copies the pi `/login meta` OAuth block verbatim — no minting,
+no key derivation, no pasted tokens:
+
+```bash
+python addons/prime-agent/sync-meta-oauth.py          # sync (idempotent)
+python addons/prime-agent/sync-meta-oauth.py --check   # verify in-sync
+```
+
+The kernel proxy (`POST /api.meta.ai/v1/responses` via `metaAccessToken()`)
+resolves the Bearer token as `$META_MUSE_API_KEY` -> pi `auth.json` ->
+prime `auth.json`, so the synced prime-side oauth block makes prime
+self-sufficient when pi's file is absent. `prime-agent -p --provider meta
+--model muse-spark-1.3-contributor` is verified live (PRIME2 / AUTHCHECK /
+PROXYOAUTH proofs).
+
 ## Install
 
 ```bash
@@ -40,7 +57,13 @@ python addons/prime-agent/install.py --uninstall
 
 The installer registers the kernel's stdio MCP server through the canonical CLI
 (`prime-agent mcp add ...`) and falls back to a direct `settings.json` edit (with
-backup) when the CLI is unavailable. Start a **new** Prime Agent session after
+backup) when the CLI is unavailable. The CLI rewrites the entry without env, so
+the installer re-applies the env passthrough refs afterwards
+(`HYPERNEXUS_WORKSPACE_ROOT`, `HYPERNEXUS_URL` as `{"env": ...}` refs — never
+values). The installer also syncs Meta OAuth from pi
+(`sync-meta-oauth.py`: `~/.pi/agent/auth.json` -> `~/.prime/agent/auth.json`
+`meta` block, `{type: oauth, refresh, access, expires}`); `--check` verifies the
+sync and `--no-meta-sync` skips it. Start a **new** Prime Agent session after
 installing so the kernel venv picks up the skill.
 
 ## Provider / model support (Meta)

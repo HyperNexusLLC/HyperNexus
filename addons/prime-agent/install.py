@@ -187,7 +187,7 @@ def check_file_surface() -> bool:
         if not (SRC_HOOKS / name).exists():
             log(f"MISSING hook: {SRC_HOOKS / name}")
             ok = False
-    for extra in ["mcp.json", "meta-model.prime.json", "use-meta-model.ps1",
+    for extra in ["mcp.json", "meta-model.prime.json", "use-meta-model.ps1", "sync-meta-oauth.py",
                   "agents/hypernexus-dispatcher.md", "schedules/hn-standup.txt"]:
         if not (HERE / extra).exists():
             log(f"MISSING: {HERE / extra}")
@@ -197,7 +197,7 @@ def check_file_surface() -> bool:
             log(f"MISSING skill: {SRC_SKILLS / name / 'SKILL.md'}")
             ok = False
     if ok:
-        log("file surface complete (9 skills, 8 commands, 2 hooks, mcp.json, meta wiring, agent brief, schedule)")
+        log("file surface complete (9 skills, 8 commands, 2 hooks, mcp.json, meta wiring + oauth sync, agent brief, schedule)")
     return ok
 
 
@@ -220,6 +220,19 @@ def check_installed_surface(root: Path, commands: Path, hooks: Path) -> bool:
     return ok
 
 
+def sync_meta_oauth() -> bool:
+    """Sync Meta OAuth (pi -> prime auth.json). Returns True when in sync."""
+    run = subprocess.run([sys.executable, str(HERE / "sync-meta-oauth.py"), "--check"],
+                         capture_output=True, text=True)
+    print(run.stdout.strip())
+    if run.returncode == 0:
+        return True
+    run2 = subprocess.run([sys.executable, str(HERE / "sync-meta-oauth.py")],
+                          capture_output=True, text=True)
+    print(run2.stdout.strip() or run2.stderr.strip())
+    return run2.returncode == 0
+
+
 def register_mcp(exe: str, cli: str | None) -> None:
     if cli:
         run = subprocess.run(
@@ -228,9 +241,29 @@ def register_mcp(exe: str, cli: str | None) -> None:
         )
         if run.returncode == 0:
             log(f"MCP server '{MCP_SERVER}' registered via CLI -> {exe} mcp")
+            ensure_mcp_env(exe)
             return
         log(f"CLI add failed ({run.stderr.strip() or run.stdout.strip()}); falling back to settings.json")
     write_settings_entry(exe)
+
+
+def ensure_mcp_env(exe: str) -> None:
+    """Re-apply the env passthrough refs after a CLI registration (the CLI
+    rewrites the entry without env). Idempotent; keeps command/args from CLI."""
+    settings = agent_dir() / "settings.json"
+    if not settings.exists():
+        return
+    data = json.loads(settings.read_text(encoding="utf-8"))
+    servers = data.get("mcpServers") or {}
+    entry = servers.get(MCP_SERVER) or {"type": "stdio", "command": exe, "args": ["mcp"]}
+    env = entry.get("env") or {}
+    env.setdefault("HYPERNEXUS_WORKSPACE_ROOT", {"env": "HYPERNEXUS_WORKSPACE_ROOT"})
+    env.setdefault("HYPERNEXUS_URL", {"env": "HYPERNEXUS_URL"})
+    entry["env"] = env
+    servers[MCP_SERVER] = entry
+    data["mcpServers"] = servers
+    settings.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    log(f"MCP server '{MCP_SERVER}' env refs ensured in {settings}")
 
 
 def write_settings_entry(exe: str) -> None:
@@ -298,6 +331,7 @@ def main() -> int:
     ap.add_argument("--uninstall", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--no-mcp", action="store_true", help="skip MCP server registration")
+    ap.add_argument("--no-meta-sync", action="store_true", help="skip Meta OAuth sync (pi -> prime auth.json)")
     ap.add_argument("--exe", type=str, default=None, help="path to the hypernexus kernel binary")
     args = ap.parse_args()
 
@@ -315,6 +349,9 @@ def main() -> int:
             rc = 1
         if not check_installed_surface(skills, commands, hooks):
             rc = 1
+        if not args.no_meta_sync and not sync_meta_oauth():
+            log("Meta OAuth OUT OF SYNC (run install without --check to sync)")
+            rc = 1
         return rc
     if args.uninstall:
         remove_skills(skills)
@@ -327,6 +364,11 @@ def main() -> int:
     install_skills(skills)
     install_commands(commands)
     install_hooks(hooks)
+    if not args.no_meta_sync:
+        if sync_meta_oauth():
+            log("Meta OAuth in sync (pi -> prime auth.json)")
+        else:
+            log("Meta OAuth sync attempted; pi may need /login meta")
     if not args.no_mcp:
         exe = find_kernel_exe(args.exe)
         if exe:
