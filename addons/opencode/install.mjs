@@ -31,6 +31,7 @@ const SRC_PLUGIN = path.join(HERE, "plugin", "hypernexus");
 const SRC_SKILLS = path.join(HERE, "skills");
 const SRC_AGENT = path.join(HERE, "agent", "hypernexus-orchestrator.md");
 const SRC_BIN = path.join(HERE, "bin", "meta-muse-key.mjs");
+const SRC_REMINDERS = path.join(HERE, "reminders");
 
 const args = process.argv.slice(2);
 const has = (flag) => args.includes(flag);
@@ -50,6 +51,7 @@ const opencodeDir = globalMode ? path.join(os.homedir(), ".config", "opencode") 
 const PLUGIN_DEST = path.join(opencodeDir, "plugins", "hypernexus");
 const SKILLS_DEST = path.join(opencodeDir, "skills");
 const AGENT_DEST = path.join(opencodeDir, "agent", "hypernexus-orchestrator.md");
+const REMINDERS_DEST = path.join(opencodeDir, "reminders");
 
 function log(msg) {
   console.log(`[hypernexus-install] ${msg}`);
@@ -187,6 +189,13 @@ function install() {
     copyUtf8(SRC_AGENT, AGENT_DEST);
     log(`agent → ${AGENT_DEST}`);
   }
+  if (fs.existsSync(SRC_REMINDERS)) {
+    for (const entry of fs.readdirSync(SRC_REMINDERS, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+      copyUtf8(path.join(SRC_REMINDERS, entry.name), path.join(REMINDERS_DEST, entry.name));
+    }
+    log(`reminders → ${REMINDERS_DEST}`);
+  }
   if (fs.existsSync(SRC_BIN)) {
     copyUtf8(SRC_BIN, path.join(PLUGIN_DEST, "meta-muse-key.mjs"));
     log(`meta key minter → ${PLUGIN_DEST}`);
@@ -238,7 +247,7 @@ function migrateV1Provider(file) {
 }
 
 function uninstallAll() {
-  for (const target of [PLUGIN_DEST, AGENT_DEST, path.join(SKILLS_DEST, "hypernexus"), path.join(SKILLS_DEST, "hypernexus-ops"), path.join(SKILLS_DEST, "hypernexus-workflows"), path.join(SKILLS_DEST, "hypernexus-orchestrator")]) {
+  for (const target of [PLUGIN_DEST, AGENT_DEST, path.join(SKILLS_DEST, "hypernexus"), path.join(SKILLS_DEST, "hypernexus-ops"), path.join(SKILLS_DEST, "hypernexus-workflows"), path.join(SKILLS_DEST, "hypernexus-orchestrator"), path.join(REMINDERS_DEST, "hn-memory-first.md"), path.join(REMINDERS_DEST, "hn-verify-ops.md")]) {
     try {
       fs.rmSync(target, { recursive: true, force: true });
       log(`removed ${target}`);
@@ -278,6 +287,12 @@ function checkAll() {
   }
   if (fs.existsSync(SRC_BIN)) {
     ok = same(SRC_BIN, path.join(PLUGIN_DEST, "meta-muse-key.mjs")) && ok;
+  }
+  for (const reminder of ["hn-memory-first.md", "hn-verify-ops.md"]) {
+    const reminderSrc = path.join(SRC_REMINDERS, reminder);
+    if (fs.existsSync(reminderSrc)) {
+      ok = same(reminderSrc, path.join(REMINDERS_DEST, reminder)) && ok;
+    }
   }
   const file = findConfigFile();
   let mcpOk = false;

@@ -10,6 +10,7 @@ HyperNexus control plane (Go kernel, default `http://127.0.0.1:7778`).
 | **37 tools** | `hypernexus_*` namespace: memory (store/search/fts/vector/list/delete/relate/stats), scratchpad, context harvest, observations, tool discovery (3 layers), MCP bridge (status/servers/tools/search/call), imported sessions, handoff, session list, skills, code search, repomap, knowledge graph, billing, audit, subagent dispatch, workflow, orchestrate, browser, system overview, status, **meta_auth** (pi-OAuth status/mint/check) |
 | **13 commands** | `/hn-status` `/hn-store` `/hn-remember` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-plan` `/hn-summary` `/hn-restore` `/hn-purge` `/hn-auth` `/hn-models` |
 | **4 skills** | `hypernexus`, `hypernexus-ops`, `hypernexus-workflows`, `hypernexus-orchestrator` (registered programmatically + shipped as SKILL.md) |
+| **2 reminders** | `hn-memory-first`, `hn-verify-ops` (`reminders/*.md`, installed to `.opencode/reminders/`; OpenCode has no reminder API so they also ship as skill/compaction discipline text) |
 | **Meta model** | native `meta/muse-spark-1.3-contributor` provider registration (`@opencode/ai/providers/openai-compatible` → `https://api.meta.ai/v1`, key from `META_MUSE_API_KEY`); pi-OAuth integration method (`node bin/meta-muse-key.mjs --check`); session-default preference when unpinned; `/hn-auth` + `/hn-models` commands; Meta 401/403 clears the minted-key cache (pi re-mints) |
 | **Session hooks** | prompt admission (`@memory:key` expansion, suggestion feed, session priming with active goal), per-turn context injection (fast FTS recall + status + proactive tool suggestions), compaction enrichment, generate/title parity, model-request + native HTTP identity headers, retry observability with hard-fail caps |
 | **Tool hooks** | destructive-pattern RBAC pre-check, fire-and-forget audit trail, structured file-change/file-read observations for the knowledge graph, auto-store of substantial results to L2 |
@@ -102,6 +103,7 @@ addons/opencode/
   meta-model.opencode.jsonc   drop-in V2 providers.meta wiring (no secrets)
   use-meta-model.ps1          live-mint launcher (process env only)
   skills/*/SKILL.md           skill docs (hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator)
+  reminders/*.md              reminder duty files (hn-memory-first, hn-verify-ops)
   agent/hypernexus-orchestrator.md
 ```
 
