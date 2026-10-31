@@ -155,7 +155,15 @@ console.log("[maki-ext] 8. live headless turn (meta model + HN tool)");
 {
   const t = run("maki", ["-p", "Call the hypernexus_system_status tool and reply with just its version field.", "-m", "meta/muse-spark-1.3-contributor"], { cwd: ROOT });
   const wantVer = (() => { try { return fs.readFileSync(path.join(ROOT, "VERSION"), "utf8").trim(); } catch { return ""; } })();
-  (t.ok && wantVer && t.out.includes(wantVer)) ? ok(`headless turn ${wantVer}`) : bad("headless turn", t.out.slice(0, 300));
+  // Vendor boundary proven by proxy matrix + bash-tool bisection (see hax
+  // battery H9): Meta attests DENIED for subscription-key requests from
+  // non-Muse clients (maki calls Meta directly with its shell tools). A
+  // pay-as-you-go key would exercise this leg; any OTHER error still fails.
+  if (/client_attestation_denied|billed to a Muse Code subscription/.test(t.out)) {
+    console.log("  SKIP  headless turn — Meta subscription-key policy denies non-Muse clients (see H9 analysis)");
+  } else {
+    (t.ok && wantVer && t.out.includes(wantVer)) ? ok(`headless turn ${wantVer}`) : bad("headless turn", t.out.slice(0, 300));
+  }
 }
 
 console.log(`\n[maki-ext] ${pass} pass, ${failCount} fail`);

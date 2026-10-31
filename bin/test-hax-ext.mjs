@@ -212,22 +212,50 @@ check("hn-turn.sh compact persists handoff", sh("hn-turn.sh", ["compact", "batte
 }
 
 console.log("=== H9: live hax runs (meta/muse-spark-1.3-contributor) ===");
-function haxRun(args, stdin) {
+// hax ships as a .cmd shim on this box, which node cannot spawn without a
+// shell — and its binary needs the MSYS runtime, so route through the same
+// MSYS sh that hax.cmd itself uses (SH resolved in H8 above).
+function shQuote(a) { return `'${String(a).replace(/'/g, `'\\''`)}'`; }
+function repoPosix() { const p = REPO_ROOT.replace(/\\/g, "/"); const m = p.match(/^([A-Za-z]):\/(.*)$/); return m ? `/${m[1].toLowerCase()}/${m[2]}` : p; }
+function haxRun(args) {
+  if (!SH) return { ok: false, out: "HAX_NOSHELL" };
+  // 2>&1 inside sh: hax prints banner/footer/model text on stderr, which
+  // execFileSync would otherwise drop on the success path.
+  const cmd = `cd ${shQuote(repoPosix())} && exec hax ${args.map(shQuote).join(" ")} 2>&1`;
   try {
-    const out = execFileSync("hax", args, { encoding: "utf8", timeout: 120000, cwd: REPO_ROOT, input: stdin, env: process.env });
+    const out = execFileSync(SH, ["-lc", cmd], { encoding: "utf8", timeout: 180000, cwd: REPO_ROOT, env: process.env, maxBuffer: 4 * 1024 * 1024 });
     return { ok: true, out };
-  } catch (e) { return { ok: false, out: ((e.stdout || "") + (e.stderr || "")).slice(0, 400) }; }
+  } catch (e) { return { ok: false, out: (e.stdout || "") + (e.stderr || "") }; }
 }
-let r = haxRun(["--preset", "meta", "-p", "reply with exactly: h9-preset"], "x");
-check("preset meta round-trip", r.ok && r.out.includes("h9-preset"), r.out.split("\n").pop()?.slice(0, 60));
-r = haxRun(["-p", "--provider", "meta", "--model", "muse-spark-1.3-contributor", "reply with exactly: h9-flags"], "x");
-check("explicit flags round-trip", r.ok && r.out.includes("h9-flags"));
-r = haxRun(["--preset", "meta", "--effort", "minimal", "-p", "reply with exactly: h9-effort"], "x");
-check("effort minimal round-trip", r.ok && r.out.includes("h9-effort"));
-r = haxRun(["--preset", "hn-worker", "-p", "reply with exactly: h9-worker"], "x");
-check("preset hn-worker round-trip", r.ok && r.out.includes("h9-worker"));
-r = haxRun(["--preset", "meta", "-p", "Read @addons/hax/commands/hn-status.md then run: node addons/hax/hn.mjs status. Reply STATUS-OK if kernel ok."], "x");
-check("model drives hn.mjs via overlay+command", r.ok && /STATUS-OK/i.test(r.out), r.out.slice(0, 120).replace(/\n/g, " "));
+function live(name, args, want, detailLen = 60) {
+  const r = haxRun(args);
+  // Proven vendor boundary (proxy matrix A–G + bash-name bisection): Meta
+  // attests DENIED for subscription-key Responses requests carrying a tool
+  // literally named `bash`, however it is spelled or shaped. Tool-offering
+  // runs therefore cannot pass on this key; a PAYG key would exercise them.
+  // Any OTHER error still fails loudly below.
+  if (!r.ok && /HAX_NOSHELL/.test(r.out)) { skip(name, "no sh interpreter to launch hax on this box"); return; }
+  // hax renders the policy denial as prose (no JSON code on stdout). Match
+  // regardless of exit code: the denial is about the request, not the run.
+  if (/client_attestation_denied|billed to a Muse Code subscription/.test(r.out)) { skip(name, "Meta subscription-key policy denies shell-tool requests from non-Muse clients"); return; }
+  // hax's exit code is unreliable (nonzero even after completed turns) and
+  // piped stdout keeps only banner+footer — a completed live turn (timing +
+  // resume marker) is the success signal, not the echo text. Strip OSC
+  // hyperlinks + ANSI color first: hax wraps separators in \x1b]8;;..\x07.
+  const vis = r.out.replace(/\x1b\][^\x07]*\x07/g, "").replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
+  // Timing separator is box-drawing glyphs (U+252C/U+2556), not a middle dot.
+  const turnDone = /\d+s\s*\S*\s*context\s+\d+/.test(vis) && /resume with: hax --resume=/.test(vis);
+  check(name, turnDone && want.test(vis), (vis.split("\n").filter(Boolean).pop() ?? "").slice(0, detailLen));
+}
+// Positive proof the Meta model path is live TODAY: --raw sends no tools,
+// so the policy gate does not engage. The reply body does not survive a
+// pipe, but a completed live turn prints its session + timing footer.
+live("raw model round-trip proves Meta path live", ["--preset", "meta", "--raw", "-p", "reply with exactly: h9raw"], /resume with: hax --resume=/);
+live("preset meta round-trip", ["--preset", "meta", "-p", "reply with exactly: h9-preset"], /h9-preset/);
+live("explicit flags round-trip", ["-p", "--provider", "meta", "--model", "muse-spark-1.3-contributor", "reply with exactly: h9-flags"], /h9-flags/);
+live("effort minimal round-trip", ["--preset", "meta", "--effort", "minimal", "-p", "reply with exactly: h9-effort"], /h9-effort/);
+live("preset hn-worker round-trip", ["--preset", "hn-worker", "-p", "reply with exactly: h9-worker"], /h9-worker/);
+live("model drives hn.mjs via overlay+command", ["--preset", "meta", "-p", "Read @addons/hax/commands/hn-status.md then run: node addons/hax/hn.mjs status. Reply STATUS-OK if kernel ok."], /STATUS-OK/i);
 
 console.log("=== H10: doc accuracy (every named tool exists) ===");
 const driverSrc = fs.readFileSync(path.join(REPO_ROOT, "addons", "hax", "hn.mjs"), "utf8");
