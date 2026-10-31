@@ -72,7 +72,7 @@ if (!process.env.HAX_META_API_KEY) {
 console.log("=== H1: provider wiring (meta custom provider) ===");
 const cfg = JSON.parse(fs.readFileSync(path.join(HOME, ".config", "hax", "config.json"), "utf8"));
 check("providers.meta exists", !!cfg.providers?.meta);
-check("base_url api.meta.ai/v1", cfg.providers?.meta?.base_url === "https://api.meta.ai/v1");
+check("base_url kernel proxy or api.meta.ai (installer accepts both)", ["http://127.0.0.1:7778/v1", "https://api.meta.ai/v1"].includes(cfg.providers?.meta?.base_url), cfg.providers?.meta?.base_url);
 check("api openai-responses", cfg.providers?.meta?.api === "openai-responses");
 check("api_key_env HAX_META_API_KEY (key never in config.json)",
   cfg.providers?.meta?.api_key_env === "HAX_META_API_KEY" && !cfg.providers?.meta?.api_key);
@@ -166,6 +166,9 @@ const sg = hn(["scratch-get", `hax-battery-${tag}`]);
 check("scratch-get round-trips", sg.ok && JSON.stringify(sg.json).includes("ping"));
 
 console.log("=== H8: turn scripts ===");
+function skip(name, reason) { console.log(`  SKIP  ${name} — ${reason}`); }
+let hasSh = true;
+try { execFileSync("sh", ["--version"], { encoding: "utf8", timeout: 15000 }); } catch { hasSh = false; }
 function sh(script, args) {
   try {
     const out = execFileSync("sh", [path.join(REPO_ROOT, "addons", "hax", "scripts", script), ...args],
@@ -173,6 +176,9 @@ function sh(script, args) {
     return { ok: true, out };
   } catch (e) { return { ok: false, out: ((e.stdout || "") + (e.stderr || "")).slice(0, 300) }; }
 }
+if (!hasSh) {
+  for (const n of ["meta-env.sh exports key", "hn-prime.sh emits prime", "hn-turn.sh pre emits context", "hn-turn.sh post persists", "hn-turn.sh compact persists handoff"]) skip(n, "no sh interpreter on this box (scripts are POSIX sh)");
+} else {
 check("meta-env.sh exports 48-char key", (() => {
   const r = spawnSync("sh", [path.join(REPO_ROOT, "addons", "hax", "scripts", "meta-env.sh")], { encoding: "utf8" });
   return r.status === 0 && /export HAX_META_API_KEY='\S{20,}'/.test(r.stdout);
@@ -181,6 +187,7 @@ check("hn-prime.sh emits prime", sh("hn-prime.sh", ["battery test"]).out.include
 check("hn-turn.sh pre emits context", sh("hn-turn.sh", ["pre", "battery"]).ok);
 check("hn-turn.sh post persists", sh("hn-turn.sh", ["post", "battery turn note"]).out.includes("persisted"));
 check("hn-turn.sh compact persists handoff", sh("hn-turn.sh", ["compact", "battery compact note"]).ok);
+}
 
 console.log("=== H9: live hax runs (meta/muse-spark-1.3-contributor) ===");
 function haxRun(args, stdin) {

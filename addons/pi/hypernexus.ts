@@ -1069,7 +1069,16 @@ export default function (pi: ExtensionAPI) {
     outputSchema: Type.Object({ ok: Type.Boolean(), deleted: Type.Optional(Type.String()) }),
     parameters: Type.Object({ id: Type.String({ description: "Memory ID to delete" }) }),
     async execute(_toolCallId, params, signal) {
-      const ok = await tnOk("/api/memory/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: params.id }) }, signal);
+      // True path (mirrors hax hn.mjs delete): universal dispatcher; the older
+      // /api/memory/delete is not published by this kernel build.
+      const post = (p: string, b: any) => tnOk(p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }, signal);
+      let ok = await post("/api/agent/tool", { name: "delete_memory", args: { id: params.id } });
+      if (!ok) {
+        try {
+          const r = await tnFetch(`/api/memory/delete?id=${encodeURIComponent(params.id)}`, { method: "DELETE" }, signal);
+          ok = r.ok;
+        } catch { ok = false; }
+      }
       return ok
         ? { content: [{ type: "text", text: "Memory " + params.id + " deleted." }], structuredContent: { ok: true, deleted: params.id } }
         : { content: [{ type: "text", text: "Delete failed." }], isError: true, structuredContent: { ok: false } };
@@ -1094,11 +1103,19 @@ export default function (pi: ExtensionAPI) {
       title: Type.Optional(Type.String({ description: "New title" })),
     }),
     async execute(_toolCallId, params, signal) {
-      const body: any = { id: params.id };
-      if (params.content !== undefined) body.content = params.content;
-      if (params.tags !== undefined) body.tags = params.tags;
-      if (params.title !== undefined) body.title = params.title;
-      const ok = await tnOk("/api/memory/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }, signal);
+      // No published in-place update route on this kernel build (mirrors hax
+      // hn.mjs update): delete then re-store via the searchable facts/add path.
+      const post = (p: string, b: any) => tnOk(p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }, signal);
+      const removed = await post("/api/agent/tool", { name: "delete_memory", args: { id: params.id } });
+      if (!removed) {
+        return { content: [{ type: "text", text: "Update failed (could not remove " + params.id + " first)." }], isError: true, structuredContent: { ok: false, id: params.id } };
+      }
+      const ok = await post("/api/memory/facts/add", {
+        title: params.title ?? `updated ${params.id}`,
+        content: params.content ?? "",
+        tags: [...(params.tags ?? []), "updated"],
+        category: "general",
+      });
       return ok
         ? { content: [{ type: "text", text: "Memory " + params.id + " updated." }], structuredContent: { ok: true, id: params.id } }
         : { content: [{ type: "text", text: "Update failed." }], isError: true, structuredContent: { ok: false, id: params.id } };
@@ -1391,11 +1408,16 @@ export default function (pi: ExtensionAPI) {
     outputSchema: Type.Object({ ok: Type.Boolean(), handoff: Type.Optional(Type.Any()) }),
     parameters: Type.Object({ summary: Type.Optional(Type.String({ description: "Summary to write (omit to read latest handoff)" })), pickup: Type.Optional(Type.Boolean({ description: "Read the last handoff instead of writing" })) }),
     async execute(_toolCallId, params, signal) {
+      // True paths (mirrors hax hn.mjs handoff): /api/agent-memory/handoff
+      // (POST artifact) for writes, /api/agent-memory/pickup (POST) for reads.
+      // Older /api/memory/handoff is not published by this kernel build.
+      const post = { method: "POST", headers: { "Content-Type": "application/json" } };
       if (params.pickup) {
-        const body = await tnJson("/api/memory/handoff?pickup=true", {}, signal).catch(() => null);
+        const body = await tnJson("/api/agent-memory/pickup", { ...post, body: JSON.stringify({}) }, signal).catch(() => null);
         return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3000) }], structuredContent: { ok: !!body, handoff: body } };
       }
-      const ok = await tnOk("/api/memory/handoff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: params.summary || "" }) }, signal);
+      const text = params.summary || "";
+      const ok = await tnOk("/api/agent-memory/handoff", { ...post, body: JSON.stringify({ notes: text, summary: text, content: text }) }, signal);
       return ok
         ? { content: [{ type: "text", text: "Handoff written." }], structuredContent: { ok: true } }
         : { content: [{ type: "text", text: "Handoff write failed." }], isError: true, structuredContent: { ok: false } };
