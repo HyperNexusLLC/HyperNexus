@@ -10,7 +10,7 @@ Connect to HyperNexus for persistent memory across coding sessions.
 ## MCP Server
 
 ```bash
-aider --mcp-server http://localhost:8080/mcp
+aider --mcp-server http://127.0.0.1:7778/mcp
 ```
 
 ## Available Tools
@@ -24,7 +24,7 @@ aider --mcp-server http://localhost:8080/mcp
 1. Start Aider with HyperNexus:
 
    ```bash
-   aider --mcp-server http://localhost:8080/mcp
+   aider --mcp-server http://127.0.0.1:7778/mcp
    ```
 
 2. Ask Aider to remember things:
@@ -46,5 +46,5 @@ Add to `.aider.conf.yml`:
 ```yaml
 mcp-servers:
   - name: hypernexus
-    url: http://localhost:8080/mcp
+    url: http://127.0.0.1:7778/mcp
 ```
