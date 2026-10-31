@@ -167,20 +167,42 @@ check("scratch-get round-trips", sg.ok && JSON.stringify(sg.json).includes("ping
 
 console.log("=== H8: turn scripts ===");
 function skip(name, reason) { console.log(`  SKIP  ${name} — ${reason}`); }
-let hasSh = true;
-try { execFileSync("sh", ["--version"], { encoding: "utf8", timeout: 15000 }); } catch { hasSh = false; }
+// sh resolution: PATH first, else the MSYS sh that hax itself requires
+// (hax.cmd execs through C:\Users\hyper\tools\msys64). No shell at all → SKIP.
+const MSYS_SH = "C:\\Users\\hyper\\tools\\msys64\\usr\\bin\\sh.exe";
+let SH = "sh";
+try { execFileSync(SH, ["--version"], { encoding: "utf8", timeout: 15000 }); }
+catch {
+  try { execFileSync(MSYS_SH, ["--version"], { encoding: "utf8", timeout: 15000 }); SH = MSYS_SH; }
+  catch { SH = null; }
+}
 function sh(script, args) {
   try {
-    const out = execFileSync("sh", [path.join(REPO_ROOT, "addons", "hax", "scripts", script), ...args],
+    const out = execFileSync(SH, [path.join(REPO_ROOT, "addons", "hax", "scripts", script), ...args],
       { encoding: "utf8", timeout: 60000, cwd: REPO_ROOT, env: process.env });
     return { ok: true, out };
   } catch (e) { return { ok: false, out: ((e.stdout || "") + (e.stderr || "")).slice(0, 300) }; }
 }
-if (!hasSh) {
+function shProbe(cmd) {
+  // Functional probe: presence alone lies (e.g. a WindowsApps python3 stub
+  // that cannot run). The scripts need working python3 + head.
+  const probes = {
+    python3: `python3 -c "import json,sys,urllib.request;print('dep-ok')"`,
+    head: `head --version`,
+  };
+  try {
+    const out = execFileSync(SH, ["-c", probes[cmd]], { encoding: "utf8", timeout: 30000 });
+    return cmd === "python3" ? out.includes("dep-ok") : true;
+  } catch { return false; }
+}
+const shDeps = ["python3", "head"].filter((c) => !shProbe(c));
+if (!SH) {
   for (const n of ["meta-env.sh exports key", "hn-prime.sh emits prime", "hn-turn.sh pre emits context", "hn-turn.sh post persists", "hn-turn.sh compact persists handoff"]) skip(n, "no sh interpreter on this box (scripts are POSIX sh)");
+} else if (shDeps.length) {
+  for (const n of ["meta-env.sh exports key", "hn-prime.sh emits prime", "hn-turn.sh pre emits context", "hn-turn.sh post persists", "hn-turn.sh compact persists handoff"]) skip(n, `sh present but missing script deps: ${shDeps.join(", ")}`);
 } else {
 check("meta-env.sh exports 48-char key", (() => {
-  const r = spawnSync("sh", [path.join(REPO_ROOT, "addons", "hax", "scripts", "meta-env.sh")], { encoding: "utf8" });
+  const r = spawnSync(SH, [path.join(REPO_ROOT, "addons", "hax", "scripts", "meta-env.sh")], { encoding: "utf8" });
   return r.status === 0 && /export HAX_META_API_KEY='\S{20,}'/.test(r.stdout);
 })());
 check("hn-prime.sh emits prime", sh("hn-prime.sh", ["battery test"]).out.includes("session prime"));

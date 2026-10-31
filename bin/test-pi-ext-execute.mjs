@@ -106,13 +106,14 @@ let lok = 0, lfail = 0; const lfails = [];
         lcheck("lifecycle delete ok", !d?.isError && d?.structuredContent?.deleted === mid2, JSON.stringify(d).slice(0, 90));
       }
       const w = await call("hypernexus_memory_handoff", { summary: `pi probe handoff ${tag}` });
-      lcheck("lifecycle handoff write ok", !w?.isError, JSON.stringify(w).slice(0, 90));
-      const p = await call("hypernexus_memory_handoff", { pickup: true });
-      // Pickup shape-validates only: the kernel's local agent-memory fallback
-      // can report count 0 right after a 200 write (pre-existing kernel-side
-      // read/write asymmetry, same for all harnesses). The write leg above is
-      // the true proof (HTTP 200 + artifact payload echoed).
-      lcheck("lifecycle handoff pickup responds", !p?.isError, JSON.stringify(p).slice(0, 90));
+      const art = w?.structuredContent?.artifact ?? null;
+      // The artifact itself carries the notes (kernel embeds them at write).
+      lcheck("lifecycle handoff write ok", !w?.isError && !!art && JSON.stringify(art).includes(tag), JSON.stringify(w).slice(0, 90));
+      // Pickup restores BY ARTIFACT ID and replays its recentContext entries
+      // (kernel contract: it returns {success,count}, not the notes — those
+      // live in the artifact the write leg returned, asserted above).
+      const p = await call("hypernexus_memory_handoff", { pickup: true, artifact: art });
+      lcheck("lifecycle handoff pickup restores", !p?.isError && !!art && JSON.stringify(p).includes('"success":true'), JSON.stringify(p).slice(0, 120));
       // Cleanup: remove the handoff-test fact if still present.
       const mid3 = await findId();
       if (mid3) await call("hypernexus_memory_delete", { id: mid3 });

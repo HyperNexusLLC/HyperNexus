@@ -1405,21 +1405,27 @@ export default function (pi: ExtensionAPI) {
     namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
     exposure: "deferred",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    outputSchema: Type.Object({ ok: Type.Boolean(), handoff: Type.Optional(Type.Any()) }),
-    parameters: Type.Object({ summary: Type.Optional(Type.String({ description: "Summary to write (omit to read latest handoff)" })), pickup: Type.Optional(Type.Boolean({ description: "Read the last handoff instead of writing" })) }),
+    outputSchema: Type.Object({ ok: Type.Boolean(), handoff: Type.Optional(Type.Any()), artifact: Type.Optional(Type.String()) }),
+    parameters: Type.Object({ summary: Type.Optional(Type.String({ description: "Summary to write (omit to read latest handoff)" })), pickup: Type.Optional(Type.Boolean({ description: "Read the last handoff instead of writing" })), artifact: Type.Optional(Type.String({ description: "Artifact id from a previous write (required: pickup restores by artifact id)" })) }),
     async execute(_toolCallId, params, signal) {
-      // True paths (mirrors hax hn.mjs handoff): /api/agent-memory/handoff
-      // (POST artifact) for writes, /api/agent-memory/pickup (POST) for reads.
+      // True paths: /api/agent-memory/handoff (POST artifact) for writes,
+      // /api/agent-memory/pickup (POST {artifact}) for reads. Pickup restores
+      // BY ARTIFACT ID (kernel contract: empty artifact restores nothing), so
+      // the write returns the artifact id for the follow-up pickup call.
       // Older /api/memory/handoff is not published by this kernel build.
       const post = { method: "POST", headers: { "Content-Type": "application/json" } };
       if (params.pickup) {
-        const body = await tnJson("/api/agent-memory/pickup", { ...post, body: JSON.stringify({}) }, signal).catch(() => null);
+        const body = await tnJson("/api/agent-memory/pickup", { ...post, body: JSON.stringify(params.artifact ? { artifact: params.artifact } : {}) }, signal).catch(() => null);
         return { content: [{ type: "text", text: JSON.stringify(body).slice(0, 3000) }], structuredContent: { ok: !!body, handoff: body } };
       }
       const text = params.summary || "";
-      const ok = await tnOk("/api/agent-memory/handoff", { ...post, body: JSON.stringify({ notes: text, summary: text, content: text }) }, signal);
-      return ok
-        ? { content: [{ type: "text", text: "Handoff written." }], structuredContent: { ok: true } }
+      const data: any = await tnJson("/api/agent-memory/handoff", { ...post, body: JSON.stringify({ notes: text, summary: text, content: text }) }, signal).catch(() => null);
+      const artifact = typeof data === "string" ? data
+        : (data && typeof data.artifact === "string" ? data.artifact
+        : (data && typeof data.id === "string" ? data.id
+        : (data ? JSON.stringify(data) : "")));
+      return artifact
+        ? { content: [{ type: "text", text: "Handoff written." }], structuredContent: { ok: true, artifact } }
         : { content: [{ type: "text", text: "Handoff write failed." }], isError: true, structuredContent: { ok: false } };
     },
   });

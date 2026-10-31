@@ -154,7 +154,8 @@ console.log("[maki-ext] 7. meta oauth mint");
 console.log("[maki-ext] 8. live headless turn (meta model + HN tool)");
 {
   const t = run("maki", ["-p", "Call the hypernexus_system_status tool and reply with just its version field.", "-m", "meta/muse-spark-1.3-contributor"], { cwd: ROOT });
-  (t.ok && t.out.includes("1.0.21")) ? ok("headless turn 1.0.21") : bad("headless turn", t.out.slice(0, 300));
+  const wantVer = (() => { try { return fs.readFileSync(path.join(ROOT, "VERSION"), "utf8").trim(); } catch { return ""; } })();
+  (t.ok && wantVer && t.out.includes(wantVer)) ? ok(`headless turn ${wantVer}`) : bad("headless turn", t.out.slice(0, 300));
 }
 
 console.log(`\n[maki-ext] ${pass} pass, ${failCount} fail`);
