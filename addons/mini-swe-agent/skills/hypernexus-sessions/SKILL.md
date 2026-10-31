@@ -1,9 +1,9 @@
 ---
 name: hypernexus-sessions
-description: "HyperNexus session lifecycle from pi: start/shutdown/compact hooks, session listing, handoff facts. Use when resuming work, compacting context, or handing off across sessions."
+description: "HyperNexus session lifecycle from mini-swe-agent: start/shutdown/compact hooks, session listing, handoff facts. Use when resuming work, compacting context, or handing off across sessions."
 ---
 
-# HyperNexus Sessions (pi)
+# HyperNexus Sessions (mini-swe-agent)
 
 Kernel baseline: `http://127.0.0.1:7778`.
 
@@ -17,10 +17,10 @@ Kernel baseline: `http://127.0.0.1:7778`.
 
 ## Listing / handoff
 
-- Tool: `hn_session_list` → `GET /api/sessions` (detail: `/api/sessions/context`, `/api/sessions/summary`).
+- Tool: `hypernexus_session_list` → `GET /api/sessions` (detail: `/api/sessions/context`, `/api/sessions/summary`).
 - Handoff pattern: store `type: "task"` facts with `agent:dispatch` tags;
-  the next session recalls them with `hn_memory_search`.
-- Command surface: `/hn-recall <topic>` pulls the L2 context a new session needs.
+  the next session recalls them with `hypernexus_memory_search`.
+- Command surface: `/hn-search <topic>` pulls the L2 context a new session needs.
 
 ## Rules
 

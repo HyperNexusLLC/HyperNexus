@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-restore
-description: "Restore the last HyperNexus handoff (goal + next steps) from Freebuff. Trigger on '/skill:hn-restore' or 'restore handoff'."
+description: "Restore the last HyperNexus handoff (goal + next steps) from Open Interpreter. Trigger on '/skill:hn-restore' or 'restore handoff'."
 ---
 
 # /skill:hn-restore

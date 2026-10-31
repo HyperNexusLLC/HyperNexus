@@ -145,7 +145,8 @@ console.log("[maki-ext] 6. kernel surface");
 
 console.log("[maki-ext] 7. meta oauth mint");
 {
-  const mint = run("node", [path.join(ROOT, "addons", "freebuff", "bin", "meta-muse-key.mjs"), "--check"]);
+  const mintMaki = run("node", [path.join(ROOT, "addons", "maki", "bin", "meta-muse-key.mjs"), "--check"]);
+  const mint = mintMaki.ok ? mintMaki : run("node", [path.join(ROOT, "addons", "freebuff", "bin", "meta-muse-key.mjs"), "--check"]);
   mint.ok ? ok("mint --check") : bad("mint --check", mint.out.slice(0, 200));
   const models = run("maki", ["models"]);
   (models.ok && models.out.includes("meta/muse-spark-1.3-contributor")) ? ok("meta provider listed") : bad("meta provider listed", models.out.slice(0, 200));

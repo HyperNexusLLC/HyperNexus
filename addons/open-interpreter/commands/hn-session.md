@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-session
-description: "Search imported cross-harness HyperNexus sessions and resume context from Freebuff. Trigger on '/skill:hn-session', 'resume session', or 'previous session'."
+description: "Search imported cross-harness HyperNexus sessions and resume context from Open Interpreter. Trigger on '/skill:hn-session', 'resume session', or 'previous session'."
 ---
 
 # /skill:hn-session [query] [--limit n]

@@ -1,9 +1,9 @@
 ---
 name: hypernexus-l2
-description: "HyperNexus L2 vault + L3 cold archive for pi: tiers, namespaces, fact shapes, vector vs FTS recall. Use when choosing where a memory lives, listing vault contents, or debugging recall misses."
+description: "HyperNexus L2 vault + L3 cold archive for mini-swe-agent: tiers, namespaces, fact shapes, vector vs FTS recall. Use when choosing where a memory lives, listing vault contents, or debugging recall misses."
 ---
 
-# HyperNexus L2 Vault (pi)
+# HyperNexus L2 Vault (mini-swe-agent)
 
 Kernel baseline: `http://127.0.0.1:7778`.
 
@@ -33,5 +33,5 @@ for tasks, topic tags otherwise.
 
 ## Rules
 
-- L2 is append-only from pi: never rewrite another agent's facts; add corrections as new facts.
+- L2 is append-only from mini-swe-agent: never rewrite another agent's facts; add corrections as new facts.
 - Keep hook observations under ~2000 chars; truncate tool output to ~300 chars.

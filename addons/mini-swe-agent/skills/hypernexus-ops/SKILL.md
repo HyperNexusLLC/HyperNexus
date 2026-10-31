@@ -1,6 +1,6 @@
 ---
 name: hypernexus-ops
-description: "Operate and verify the HyperNexus kernel from OpenCode: health checks, MCP bridge inventory, billing/quotas, RBAC audit trail, and verify-before/after discipline for deployments and incidents. Trigger on 'kernel health', 'mcp servers', 'billing', 'quotas', 'audit', 'deploy verification', or 'hypernexus ops'."
+description: "Operate and verify the HyperNexus kernel from mini-swe-agent: health checks, MCP bridge inventory, billing/quotas, RBAC audit trail, and verify-before/after discipline for deployments and incidents. Trigger on 'kernel health', 'mcp servers', 'billing', 'quotas', 'audit', 'deploy verification', or 'hypernexus ops'."
 ---
 
 # HyperNexus Ops

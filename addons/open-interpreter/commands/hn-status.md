@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-status
-description: "Report HyperNexus kernel health, MCP bridge inventory, memory stats, and billing from Freebuff. Trigger on '/skill:hn-status', 'hypernexus status', or 'kernel health'."
+description: "Report HyperNexus kernel health, MCP bridge inventory, memory stats, and billing from Open Interpreter. Trigger on '/skill:hn-status', 'hypernexus status', or 'kernel health'."
 ---
 
 # /skill:hn-status

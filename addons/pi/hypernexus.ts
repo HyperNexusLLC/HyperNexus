@@ -8,7 +8,7 @@ const TN_BASE = "http://127.0.0.1:7778";
  *
  * Full bridge: pi ↔ HyperNexus
  * ───────────────────────────────────────────
- * - 22 custom tools (memory store/search/list/vector, tool search + suggestions, sessions, skills,
+ * - 33 custom tools (memory store/search/list/vector, tool search + suggestions, sessions, skills,
  *   code, repomap, knowledge graph, context harvest, scratchpad, system status, billing,
  *   session context, universal tool call, add-fact, subagent)
  * - Session priming + per-turn context harvesting + compaction hooks

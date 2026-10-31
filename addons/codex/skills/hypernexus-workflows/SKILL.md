@@ -1,17 +1,16 @@
 ---
 user-invocable: true
 name: hypernexus-workflows
-description: "Reusable HyperNexus orchestration workflows for Freebuff: MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS, and the RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY loop. Trigger on 'multi-step task', 'resume work', 'capability gap', 'handoff', 'session summary', or when starting complex work with hypernexus tools available."
+description: "Reusable HyperNexus orchestration workflows for Codex: MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS, and the RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY loop. Trigger on 'multi-step task', 'resume work', 'capability gap', 'handoff', 'session summary', or when starting complex work with hypernexus tools available."
 ---
 
-# HyperNexus Workflows (Freebuff)
+# HyperNexus Workflows (Codex)
 
 Invoke with `/skill:hypernexus-workflows`.
 
 Loop: **RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY**
 
-Freebuff maps the loop onto MCP tools + HTTP (no hooks surface — run each
-step explicitly).
+Codex maps the loop onto MCP tools + HTTP (by-convention hooks in CODEX_HOME/hooks; run each step explicitly).
 
 ## MEM-FIRST (any multi-step task)
 
@@ -37,7 +36,7 @@ step explicitly).
 
 1. `/skill:hn-summary` — model-generated session summary stored to L2
 2. `add_memory` with tags `["session", "summary"]`
-3. `freebuff --continue` reopens the chat; `/export` writes the transcript to Markdown
+3. Reopen the chat to continue the session
 
 ## OPS (deployments / incidents)
 

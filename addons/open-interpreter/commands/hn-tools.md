@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-tools
-description: "Discover tools across the assimilated HyperNexus MCP catalog and route calls from Freebuff. Trigger on '/skill:hn-tools', 'find a tool', or 'tool discovery'."
+description: "Discover tools across the assimilated HyperNexus MCP catalog and route calls from Open Interpreter. Trigger on '/skill:hn-tools', 'find a tool', or 'tool discovery'."
 ---
 
 # /skill:hn-tools [query] [--call serverName.toolName {json-args}]

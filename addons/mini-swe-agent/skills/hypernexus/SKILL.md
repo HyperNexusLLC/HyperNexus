@@ -3,7 +3,7 @@ name: hypernexus
 description: "HyperNexus AI control plane — persistent L2 vector memory, semantic MCP tool discovery across 26k+ tools, knowledge graph, session import, billing, and agent orchestration. Use when the task benefits from cross-session memory (scratchpad, facts, observations), tool discovery across MCP servers, knowledge ingestion, system health checks, or routing through the HyperNexus Go kernel on port 7778. Trigger on mentions of 'hypernexus', 'HN', 'scratchpad', 'cross-session memory', 'MCP tools', 'tool discovery', 'knowledge graph', 'agent memory', or 'control plane'."
 ---
 
-# HyperNexus Integration (OpenCode)
+# HyperNexus Integration (mini-swe-agent)
 
 HyperNexus is a local AI control plane running a Go kernel on port 7778 (dashboard 7779) with persistent multi-tier memory (L1 scratchpad, L2 vector store, L3 cold archive), semantic tool discovery across 60+ MCP servers / 26,000+ tools, knowledge graph, session import, and agent orchestration.
 
@@ -14,7 +14,7 @@ HyperNexus is a local AI control plane running a Go kernel on port 7778 (dashboa
 - When you need a capability you don't have → discover tools (`hypernexus_mcp_search` / `hypernexus_tool_discover`) then route (`hypernexus_mcp_call`)
 - When the user asks about system health, billing, or the repo → `hypernexus_system_overview`, `hypernexus_billing_status`, `hypernexus_knowledge_graph`
 
-## OpenCode Tools (registered by the plugin)
+## mini-swe-agent Tools (registered by the plugin)
 
 | Tool | Purpose |
 |---|---|
@@ -70,7 +70,7 @@ curl -s http://localhost:7778/api/system/overview
 curl -s http://localhost:7778/api/billing/status
 ```
 
-## OpenCode Commands
+## mini-swe-agent Commands
 
 - `/hn-store` — store a memory fact · `/hn-remember` — store a decision
 - `/hn-search` — search memory · `/hn-tools` — discover tools

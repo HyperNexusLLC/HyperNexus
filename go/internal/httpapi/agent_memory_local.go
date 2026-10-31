@@ -115,7 +115,18 @@ func (s *Server) localWriteAgentMemories(records []localAgentMemoryRecord) error
 	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
 		return err
 	}
-	return os.Rename(tmp, path)
+	// Windows refuses rename while any process holds the destination open
+	// (concurrent kernel readers, scanners). Retry briefly: the holder is
+	// always transient, and a 503 here fails handoff pickup + observation
+	// writes that users see as data loss.
+	var renameErr error
+	for i := 0; i < 10; i++ {
+		if renameErr = os.Rename(tmp, path); renameErr == nil {
+			return nil
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	return renameErr
 }
 
 func localNewAgentMemoryID() string {
@@ -315,6 +326,55 @@ func (s *Server) localAddAgentMemoryEntry(content, memoryType, namespace string,
 		return localAgentMemoryRecord{}, err
 	}
 	return record, nil
+}
+// localAgentMemoryEntryInput is one entry for the batch writer below.
+type localAgentMemoryEntryInput struct {
+	Content  string
+	Metadata map[string]any
+}
+
+// localAddAgentMemoryEntries appends many entries with a single
+// read-modify-write cycle. Pickup replay previously persisted each entry
+// separately (one full store rewrite per entry), which blew past client
+// timeouts once the store grew; behavior (records, count) is identical.
+func (s *Server) localAddAgentMemoryEntries(items []localAgentMemoryEntryInput, memoryType, namespace string) (int, error) {
+	agentMemoryMu.Lock()
+	defer agentMemoryMu.Unlock()
+	records, err := s.localAgentMemories()
+	if err != nil {
+		return 0, err
+	}
+	now := time.Now().UTC()
+	count := 0
+	for _, it := range items {
+		content := strings.TrimSpace(it.Content)
+		if content == "" {
+			continue
+		}
+		record := localAgentMemoryRecord{
+			ID:          localNewAgentMemoryID(),
+			Content:     content,
+			Type:        localNormalizeAgentMemoryType(memoryType, "working"),
+			Namespace:   localNormalizeAgentMemoryNamespace(namespace, "project"),
+			Metadata:    cloneMap(it.Metadata),
+			CreatedAt:   now.Format(time.RFC3339Nano),
+			AccessedAt:  now.Format(time.RFC3339Nano),
+			AccessCount: 0,
+		}
+		if record.Metadata == nil {
+			record.Metadata = map[string]any{}
+		}
+		if record.Type == "session" {
+			ttl := float64(localAgentMemorySessionTTLMilliseconds)
+			record.TTL = &ttl
+		}
+		records = append(records, record)
+		count++
+	}
+	if err := s.localWriteAgentMemories(records); err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (s *Server) localDeleteAgentMemory(id string) (bool, error) {

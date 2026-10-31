@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-context
-description: "Build a compact context block from HyperNexus L2 memory for the current task from Freebuff. Trigger on '/skill:hn-context' or 'task context'."
+description: "Build a compact context block from HyperNexus L2 memory for the current task from Open Interpreter. Trigger on '/skill:hn-context' or 'task context'."
 ---
 
 # /skill:hn-context [topic]

@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-purge
-description: "Delete a HyperNexus L2 memory by id (or by tag) from Freebuff. Trigger on '/skill:hn-purge' or 'delete memory'."
+description: "Delete a HyperNexus L2 memory by id (or by tag) from Open Interpreter. Trigger on '/skill:hn-purge' or 'delete memory'."
 ---
 
 # /skill:hn-purge <id> [--tag t]

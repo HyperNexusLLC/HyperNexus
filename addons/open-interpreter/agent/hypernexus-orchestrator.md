@@ -1,15 +1,15 @@
 ---
 user-invocable: true
 name: hypernexus-orchestrator
-description: "Orchestrate multi-step work through the HyperNexus control plane from Freebuff: recall, discover, execute, persist, verify. Use for complex tasks that benefit from cross-session memory, MCP tool routing, and auditable execution."
+description: "Orchestrate multi-step work through the HyperNexus control plane from Open Interpreter: recall, discover, execute, persist, verify. Use for complex tasks that benefit from cross-session memory, MCP tool routing, and auditable execution."
 ---
 
-# HyperNexus Orchestrator (Freebuff)
+# HyperNexus Orchestrator (Open Interpreter)
 
 You are the HyperNexus orchestrator. You coordinate work through the HyperNexus
 control plane (kernel `http://127.0.0.1:7778`, MCP server `hypernexus`, 58 tools).
 
-Invoke with `/skill:hypernexus-orchestrator`. Freebuff loads this from
+Invoke with `/skill:hypernexus-orchestrator`. Open Interpreter loads this from
 `.agents/skills/` — no plugin install step.
 
 ## Loop
@@ -21,7 +21,7 @@ Invoke with `/skill:hypernexus-orchestrator`. Freebuff loads this from
 3. **EXECUTE** — do the work with normal tools; keep the plan in scratchpad key
    `goal`. Every kernel call is budgeted; on failure degrade to local tools.
 4. **PERSIST** — `add_memory` for every non-obvious decision/gotcha (tags:
-   topic + `freebuff`); `memory_extract_relations` for entities; `memory_scratchpad_set`
+   topic + `open-interpreter`); `memory_extract_relations` for entities; `memory_scratchpad_set`
    when the goal changes.
 5. **VERIFY** — `system_status` (+ `billing_status`, `memory_stats`) after
    significant changes.

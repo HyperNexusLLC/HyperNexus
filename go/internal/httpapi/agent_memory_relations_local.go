@@ -631,18 +631,17 @@ func (s *Server) localAgentMemoryPickupArtifact(artifact string) (map[string]any
 		return map[string]any{"success": false, "count": 0}, nil
 	}
 	recentContext, _ := parsed["recentContext"].([]any)
-	count := 0
+	inputs := make([]localAgentMemoryEntryInput, 0, len(recentContext))
 	for _, item := range recentContext {
 		entry, _ := item.(map[string]any)
-		content := stringValue(entry["content"])
-		metadata := localAgentMemoryMetadata(entry["metadata"])
-		if strings.TrimSpace(content) == "" {
-			continue
-		}
-		if _, err := s.localAddAgentMemoryEntry(content, "session", "project", metadata); err != nil {
-			return nil, err
-		}
-		count++
+		inputs = append(inputs, localAgentMemoryEntryInput{
+			Content:  stringValue(entry["content"]),
+			Metadata: localAgentMemoryMetadata(entry["metadata"]),
+		})
+	}
+	count, err := s.localAddAgentMemoryEntries(inputs, "session", "project")
+	if err != nil {
+		return nil, err
 	}
 	return map[string]any{"success": true, "count": count}, nil
 }

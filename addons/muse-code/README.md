@@ -38,12 +38,13 @@ stored, printed, or committed — `--check` prints key-hidden confirmation only.
 
 ## Known product blockers (Muse Code 1.4.14, this box)
 
-- `muse plugins install` fails deterministically with `plugin-store-write-failed`
-  (os error 32) for ANY capability-bearing bundle (proven with a 1-skill probe;
+- `muse plugins install` can fail intermittently with `plugin-store-write-failed`
+  (os error 32) for capability-bearing bundles (seen on this box with a 1-skill probe;
   the failing `package` file never even appears — manual writes to the exact
-  path work, no locker process exists). The bundle is validator-clean, commands
-  (11) and hooks (5) ship ready, but load only after a muse upgrade fixes the
-  store — trust/approve (`muse plugins approve hypernexus`) is your action anyway.
+  path work, no locker process exists; later battery runs installed clean, so the
+  lock is intermittent, not deterministic). The bundle is validator-clean, commands
+  (11) and hooks (5) ship ready — if the store blocks, retry after a muse upgrade;
+  trust/approve (`muse plugins approve hypernexus`) is your action anyway.
 - Kernel FTS lags fresh writes under load (verified 200-persisted writes read
   back 0 until index catches up) — hooks are ACK-verified, not read-back gated.
 

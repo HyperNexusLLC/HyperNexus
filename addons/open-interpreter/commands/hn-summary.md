@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-summary
-description: "Persist a Freebuff session summary to HyperNexus L2 memory and hand off to the next session. Trigger on '/skill:hn-summary', 'summarize session', or 'handoff'."
+description: "Persist an Open Interpreter session summary to HyperNexus L2 memory and hand off to the next session. Trigger on '/skill:hn-summary', 'summarize session', or 'handoff'."
 ---
 
 # /skill:hn-summary [what-changed]
@@ -17,4 +17,4 @@ End-of-session handoff (pairs with the HANDOFF.md multi-agent protocol):
    `hypernexus MCP memory_extract_relations` on the summary.
 
 Append-only and safe to retry. Confirm each write's id in one short list.
-`freebuff --continue` reopens the chat; `/export` writes the transcript to Markdown.
+Reopen the chat to continue the session.

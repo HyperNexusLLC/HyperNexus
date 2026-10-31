@@ -21,7 +21,7 @@ with Meta `muse-spark-1.3-contributor`.
 ```powershell
 node addons/mini-swe-agent/install.mjs            # writes %LOCALAPPDATA%/mini-swe-agent/mini-swe-agent/.env
 node addons/mini-swe-agent/install.mjs --check    # verify model + endpoint
-.\addons\mini-swe-agent\use-meta-model.ps1 "prompt"  # one-shot via install + check
+.\addons\mini-swe-agent\use-meta-model.ps1           # mint fresh key + refresh .env + check
 ```
 
 ## Tests

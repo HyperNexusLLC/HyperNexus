@@ -23,10 +23,11 @@
 //   --uninstall remove the plugin record (settings left in place by design)
 //   --check     verify installation state, exit non-zero on drift
 //
-// KNOWN PRODUCT BLOCKER (Muse Code 1.4.14): `muse plugins install` fails
-// deterministically on this box with
+// KNOWN PRODUCT FLAKE (Muse Code 1.4.14): `muse plugins install` can fail
+// intermittently on this box with
 //   plugin-store-write-failed ... /package: os error 32
-// for ANY capability-bearing bundle (proven with a 1-skill probe), while
+// for capability-bearing bundles (seen with a 1-skill probe; later battery
+// runs installed clean, so the lock is intermittent, not deterministic), while
 // empty bundles are rejected earlier with invalid-plugin-package. The bundle
 // itself is validator-clean (`muse plugins validate` valid:true, no
 // diagnostics). Re-run the install command below after a muse upgrade; the

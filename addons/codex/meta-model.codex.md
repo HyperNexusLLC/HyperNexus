@@ -12,11 +12,13 @@ model_reasoning_summary = 'auto'
 model_context_window = 1048576 
 [model_providers.meta] 
 name = 'Meta' 
-base_url = 'https://api.meta.ai/v1' 
+base_url = 'http://127.0.0.1:7778/v1' 
 env_key = 'MODEL_API_KEY' 
 wire_api = 'responses' 
 (TOML accepts single-quoted literal strings; the installer writes this block 
-with managed markers, or skips it when your own equivalent keys exist.) 
+with managed markers, or skips it when your own equivalent keys exist.)
+base_url points at the kernel proxy (what install.mjs writes); the minted key
+also works direct against 'https://api.meta.ai/v1' if you prefer no proxy. 
 ## Subscription/OAuth path: mint a Model API key live from pi 
 node addons/codex/bin/meta-muse-key.mjs --check   # expect mint OK, key hidden 
 $env:MODEL_API_KEY = node addons/codex/bin/meta-muse-key.mjs   # current shell only 

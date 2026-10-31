@@ -34,11 +34,13 @@ How it works (mirrors pi's own Meta OAuth flow,
    (`META_KEY_MINT_URL` overrides) with `Authorization: Bearer <identity>`.
 3. Print ONLY the minted `api_key` to stdout.
 
-Direct call example (OpenAI-compatible endpoint, key from step above):
+Direct call example through the kernel (the subscription credential only covers
+the Responses API — a direct `chat/completions` call to Meta is rejected with
+`client_attestation_denied`; the kernel translates it for you):
 
 ```bash
 export META_MUSE_API_KEY="$(node addons/freebuff/bin/meta-muse-key.mjs)"
-curl -s https://api.meta.ai/v1/chat/completions \
+curl -s http://127.0.0.1:7778/v1/chat/completions \
   -H "Authorization: Bearer $META_MUSE_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"model":"muse-spark-1.3-contributor","messages":[{"role":"user","content":"reply with exactly: META_OK"}]}'

@@ -1,8 +1,13 @@
 #!/usr/bin/env node
-// HyperNexus Claude Code hook dispatcher. Usage: node hypernexus-hook.mjs <Event>
-// Reads Claude Code hook JSON from stdin. Fast, never throws, exits 0 —
+// HyperNexus mini-swe-agent hook dispatcher. Usage: node hypernexus-hook.mjs <Event>
+// Reads hook JSON from stdin. Fast, never throws, exits 0 —
 // except PreToolUse on destructive commands, which exits 2 to block.
 // Fire-and-forget kernel calls use short timeouts so hooks never stall turns.
+// NOTE: the event envelope + hooks.json command shape mirror the
+// Claude-Code-compatible plugin format this addon ships (see
+// config/hypernexus.plugin.json); only the client identity strings below
+// are mini-swe-agent. hooks.json still uses ${CLAUDE_PLUGIN_ROOT} as the
+// plugin-root variable expanded by that runner — do not rename it blindly.
 import { readFileSync } from "node:fs";
 
 const EVENT = process.argv[2] || "Unknown";
@@ -19,7 +24,7 @@ async function kernel(endpoint, body, ms = 2500) {
     const res = await fetch(BASE + endpoint, {
       method: body === undefined ? "GET" : "POST",
       signal: AbortSignal.timeout(ms),
-      headers: { "Content-Type": "application/json", "X-HyperNexus-Client": "claude-code/2.0" },
+      headers: { "Content-Type": "application/json", "X-HyperNexus-Client": "mini-swe-agent/1.0" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     return await res.json().catch(() => null);
@@ -68,7 +73,7 @@ switch (EVENT) {
       // Fire-and-forget persist; do not await.
       kernel("/api/memory/facts/add", {
         content: text.slice(0, 4000), title: `tool-result:${tool.slice(0, 64)}`,
-        tags: ["client:claude-code", `tool:${tool.slice(0, 40)}`], namespace: "project",
+        tags: ["client:mini-swe-agent", `tool:${tool.slice(0, 40)}`], namespace: "project",
       }, 2500).catch(() => {});
     }
     break;
@@ -78,7 +83,7 @@ switch (EVENT) {
     kernel("/api/memory/observations/record", {
       content: `Tool ${tool} failed: ${String(input.error ?? input.output ?? "").slice(0, 500)}`,
       type: "warning", title: `tool-failure:${tool.slice(0, 64)}`, toolName: tool,
-      metadata: { source: "claude-code-plugin" },
+      metadata: { source: "mini-swe-agent-hook" },
     }, 2500).catch(() => {});
     break;
   }

@@ -10,8 +10,11 @@ $reasonixEnv = "$env:APPDATA\reasonix\.env"
 $logPath = "$env:USERPROFILE\workspace\HyperNexus\.hypernexus\meta-sync-reasonix.log"
 try {
   $piAuth = Get-Content $piAuthPath -Raw | ConvertFrom-Json
-  $token = $piAuth.meta.access
-  if (-not $token) { throw "No meta access in Pi auth.json" }
+  # Canonical pi field is .meta.refresh (pi owns OAuth refresh). Prefer the
+  # shared minter (addons/shared/bin/meta-muse-key.mjs) for live Model API
+  # keys; this template only reads the identity for manual sync flows.
+  $token = $piAuth.meta.refresh
+  if (-not $token) { throw "No meta refresh in Pi auth.json" }
   # Reasonix global .env is KEY=VALUE lines; api_key_env = META_MUSE_API_KEY.
   $lines = @()
   if (Test-Path $reasonixEnv) { $lines = @(Get-Content $reasonixEnv -Raw -ErrorAction SilentlyContinue -Encoding UTF8 | ForEach-Object { $_ -split "`r?`n" }) }

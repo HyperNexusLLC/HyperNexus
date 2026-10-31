@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-search
-description: "Search HyperNexus L2 memory (semantic + keyword, optional tag/category filters) from Freebuff. Trigger on '/skill:hn-search' or 'search memory'."
+description: "Search HyperNexus L2 memory (semantic + keyword, optional tag/category filters) from Open Interpreter. Trigger on '/skill:hn-search' or 'search memory'."
 ---
 
 # /skill:hn-search <query> [--tag t] [--category c] [--limit n] [--cold]

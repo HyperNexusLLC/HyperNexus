@@ -1,10 +1,10 @@
-# HyperNexus hooks for Freebuff (by-convention)
+# HyperNexus hooks for Open Interpreter (by-convention)
 
-Freebuff exposes **no hook API** (no SessionStart / PreToolUse surface), so
-these scripts are the maximum possible through the Freebuff SDK: they ship the
+Open Interpreter exposes **no hook API** (no SessionStart / PreToolUse surface), so
+these scripts are the maximum possible through the Open Interpreter harness: they ship the
 exact crush gate policy as runnable POSIX scripts plus a static session
 bootstrap, and the installer copies them to `.agents/hooks/` for documentation,
-manual runs, and forward-compatibility if Freebuff ever adds hooks.
+manual runs, and forward-compatibility if Open Interpreter ever adds hooks.
 
 | Script | Mirrors | Use |
 |---|---|---|
@@ -12,6 +12,6 @@ manual runs, and forward-compatibility if Freebuff ever adds hooks.
 | `hn-rbac.sh` | crush `hn-rbac.sh` | `echo '{"tool_input":{"command":"<cmd>"}}' \| sh .agents/hooks/hn-rbac.sh` before destructive shell work |
 | `hn-pre-tool.sh` | crush `hn-pre-tool.sh` | allow-gate policy reference; exit 2 = deny |
 
-Enforcement in Freebuff is by-convention: the RBAC deny-list and the
+Enforcement in Open Interpreter is by-convention: the RBAC deny-list and the
 fail-open degradation contract are baked into the `hypernexus-ops` skill and
-the `AGENTS.md` managed block, which Freebuff reads at chat start.
+the `AGENTS.md` managed block, which Open Interpreter reads at chat start.

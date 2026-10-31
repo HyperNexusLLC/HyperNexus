@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# hn-pre-tool.sh — HyperNexus PreToolUse gate for Freebuff (fail-open allow-gate).
-# By-convention twin of crush hn-pre-tool.sh. Freebuff runs no PreToolUse hooks,
+# hn-pre-tool.sh — HyperNexus PreToolUse gate for Open Interpreter (fail-open allow-gate).
+# By-convention twin of crush hn-pre-tool.sh. Open Interpreter runs no PreToolUse hooks,
 # so this documents the gate policy and can be run manually. Exit 0 = allow
 # (stdout parsed as JSON decision), exit 2 = deny (stderr = reason).
 # Performs NO network I/O (hot path stays fast). Never reads credentials, never throws.

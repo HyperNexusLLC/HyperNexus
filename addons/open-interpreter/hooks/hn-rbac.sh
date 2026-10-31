@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# hn-rbac.sh — HyperNexus RBAC guard for Freebuff (deny-list for destructive patterns).
-# By-convention twin of crush hn-rbac.sh: Freebuff has no PreToolUse hook API,
+# hn-rbac.sh — HyperNexus RBAC guard for Open Interpreter (deny-list for destructive patterns).
+# By-convention twin of crush hn-rbac.sh: Open Interpreter has no PreToolUse hook API,
 # so run this manually before destructive shell work, or follow it as policy.
 # Exit 2 blocks (stderr = reason), exit 0 allows. Never reads credentials, never throws.
 TOOL="${CRUSH_TOOL_NAME:-${TOOL_NAME:-}}"

@@ -8,7 +8,7 @@ every other harness mints through pi's `~/.pi/agent/auth.json` identity.
 
 | Surface | Mechanism | Detail |
 |---|---|---|
-| **Tools** | `hypernexus.ts` ExtensionAPI | 22 custom tools: memory store/search/list/vector, tool search + suggestions, sessions, skills, code search, repomap, knowledge graph, context harvest, scratchpad, system + billing status, subagent dispatcher |
+| **Tools** | `hypernexus.ts` ExtensionAPI | 33 custom tools: memory store/search/list/vector, tool search + suggestions, sessions, skills, code search, repomap, knowledge graph, context harvest, scratchpad, system + billing status, subagent dispatcher |
 | **Hooks** | same file | session priming, per-turn harvest, FTS injection (hot-path budgeted), tool-suggestion monitor, RBAC, tool-result auto-storage, model-select tracking, `@memory:key` expansion |
 | **Commands** | same file | 7 slash commands (`/tn-store`, `/tn-search`, `/tn-status`, `/tn-plan`, `/tn-purge`, `/tn-summary`, `/tn-orchestrate`) |
 | **UI** | same file | live editor widget, footer, `Ctrl+Shift+M/T/P` shortcuts, inter-extension event bus |

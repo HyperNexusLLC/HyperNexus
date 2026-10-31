@@ -1,9 +1,9 @@
 ---
 name: hypernexus-status-billing
-description: "HyperNexus health + billing from pi: kernel reachability, memory counts, mesh peers, subscription state. Use when asked 'is HyperNexus up', for status-bar wiring, or billing checks."
+description: "HyperNexus health + billing from mini-swe-agent: kernel reachability, memory counts, mesh peers, subscription state. Use when asked 'is HyperNexus up', for status-bar wiring, or billing checks."
 ---
 
-# HyperNexus Status + Billing (pi)
+# HyperNexus Status + Billing (mini-swe-agent)
 
 Kernel baseline: `http://127.0.0.1:7778`.
 
@@ -19,7 +19,7 @@ Kernel baseline: `http://127.0.0.1:7778`.
 
 ## Surfaces
 
-- Tool: `hn_system_status` (health + L2 + peers in one call), `hn_billing_status`.
+- Tool: `hypernexus_system_status` (health + L2 + peers in one call), `hypernexus_billing_status`.
 - Command: `/hn-status`. Shortcut: `ctrl+shift+h` (health ping + notify).
 - Status bar: `session_start` sets `hn` key to `HyperNexus v<version>` /
   `degraded` / `offline` via `ctx.ui.setStatus` (additive — never replaces the
@@ -28,4 +28,4 @@ Kernel baseline: `http://127.0.0.1:7778`.
 ## Rules
 
 - Status reads never throw; offline kernel → `degraded`/`offline`, not a crash.
-- Billing responses are display-only; never act on subscription state from pi.
+- Billing responses are display-only; never act on subscription state from mini-swe-agent.

@@ -130,12 +130,13 @@ ok("meta-model snippet mints via helper (no live .meta.access read, no secrets)"
       && !/(dca:[A-Za-z0-9_:\-]{10,}|sk-[A-Za-z0-9]{16,})/.test(t);
   } catch { return false; }
 })());
-ok("minter mirrors droid flow (refresh -> /muse-code/key -> api_key, --check)", (() => {
+ok("minter delegates to shared canonical flow (refresh -> /muse-code/key -> api_key, --check)", (() => {
   try {
     const a = fs.readFileSync(path.join(ADDON, "bin", "meta-muse-key.mjs"), "utf8");
-    const d = fs.readFileSync(path.join(ROOT, "addons", "droid", "bin", "meta-muse-key.mjs"), "utf8");
-    return /meta\.refresh/.test(a) && /muse-code\/key/.test(a) && /api_key/.test(a) && /--check/.test(a)
-      && /meta\.refresh/.test(d) && /muse-code\/key/.test(d);
+    if (!/shared\/bin\/meta-muse-key\.mjs/.test(a)) return false;
+    const s = fs.readFileSync(path.join(ROOT, "addons", "shared", "bin", "meta-muse-key.mjs"), "utf8");
+    return /meta\.refresh/.test(s) && /muse-code\/key/.test(s) && /api_key/.test(s) && /--check/.test(s)
+      && /process\.stdout\.write\(key\)/.test(s);
   } catch { return false; }
 })());
 ok("use-meta-model.ps1 mints fresh per run (no pasted snapshot)", (() => {

@@ -10,6 +10,7 @@ const log = (m) => console.log(`${TAG} ${m}`);
 const read = (p) => { try { return fs.readFileSync(p, "utf8"); } catch { return null; } };
 const write = (f, c) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, c, "utf8"); };
 const HERE = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1"));
+const REPO = path.resolve(HERE, "..", "..");
 const CODEX_SRC = path.join(HERE, "..", "codex");
 const CODEX_HOME = process.env.CODEX_HOME ? process.env.CODEX_HOME : path.join(HOME, ".codex");
 const CFG = path.join(CODEX_HOME, "config.toml");
@@ -19,7 +20,21 @@ const CORE_SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
 const AGENT = "hypernexus-orchestrator";
 const COMMANDS = ["hn-status", "hn-search", "hn-store", "hn-session", "hn-context", "hn-summary", "hn-tools", "hn-purge"];
 const HOOKS = ["hn-session.sh", "hn-rbac.sh", "hn-pre-tool.sh"];
-function exe() { return "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe"; }
+function findKernel() {
+  const configured = process.env.HYPERNEXUS_BIN;
+  if (configured && fs.existsSync(configured)) return configured;
+  const exe = process.platform === "win32" ? "hypernexus.exe" : "hypernexus";
+  for (const c of [path.join(REPO, "bin", exe), path.join(HOME, ".hypernexus", "bin", exe)]) {
+    if (fs.existsSync(c)) return c;
+  }
+  for (const dir of (process.env.PATH || "").split(path.delimiter)) {
+    const c = path.join(dir, exe);
+    if (c && fs.existsSync(c)) return c;
+  }
+  return "hypernexus";
+}
+function exe() { return findKernel(); }
+function wsRoot() { return process.env.HYPERNEXUS_WORKSPACE_ROOT || REPO; }
 function ensureToml(t) {
   let s = t ?? "";
   const need = (re, block) => { if (!re.test(s)) s += (s.endsWith("\n") || s === "" ? "" : "\n") + block; };
@@ -28,7 +43,7 @@ function ensureToml(t) {
   if (!/^model_provider\s*=/m.test(s)) s = s.replace(/^model\s*=.*$/m, (m) => `${m}\nmodel_provider = "meta"`);
   else s = s.replace(/^model_provider\s*=.*$/m, `model_provider = "meta"`);
   need(/\[model_providers\.meta\]/, `\n[model_providers.meta]\nname = "Meta Model API (via HyperNexus kernel: live pi-OAuth token, no stale copies)"\nbase_url = "http://127.0.0.1:7778/v1"\nenv_key = "MODEL_API_KEY"\nwire_api = "responses"\n`);
-  need(/\[mcp_servers\.hypernexus\]/, `\n[mcp_servers.hypernexus]\ncommand = '${exe()}'\nargs = ["mcp"]\n\n[mcp_servers.hypernexus.env]\nHYPERNEXUS_URL = "http://127.0.0.1:7778"\nHYPERNEXUS_WORKSPACE_ROOT = 'C:/Users/hyper/workspace/HyperNexus'\n`);
+  need(/\[mcp_servers\.hypernexus\]/, `\n[mcp_servers.hypernexus]\ncommand = '${exe()}'\nargs = ["mcp"]\n\n[mcp_servers.hypernexus.env]\nHYPERNEXUS_URL = "http://127.0.0.1:7778"\nHYPERNEXUS_WORKSPACE_ROOT = '${wsRoot()}'\n`);
   return s;
 }
 function installSkillsHooks() {

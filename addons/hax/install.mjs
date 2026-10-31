@@ -48,6 +48,10 @@ const GLOBAL_AGENTS = process.argv.includes("--global");
 
 const BEGIN = "<!-- hypernexus:begin";
 const END = "<!-- hypernexus:end -->";
+// Hax-scoped markers: the generic BEGIN/END above also prefix other lanes'
+// blocks (codewhale, freebuff, codex, open-interpreter), so block ops must
+// anchor on the hax-managed marker or they would clobber a sibling block.
+const HAX_BEGIN = "<!-- hypernexus:begin (managed by addons/hax/install.mjs";
 const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
 
 function repoVersion() {
@@ -66,7 +70,8 @@ function writeIfChanged(dst, body) {
 function upsertManagedBlock(filePath, blockText) {
   const block = blockText.trim();
   const existing = readIfExists(filePath) ?? "";
-  const b = existing.indexOf(BEGIN), e = existing.indexOf(END);
+  const b = existing.indexOf(HAX_BEGIN);
+  const e = b >= 0 ? existing.indexOf(END, b) : -1;
   let next;
   if (b >= 0 && e > b) next = existing.slice(0, b) + block + existing.slice(e + END.length);
   else next = existing.trimEnd() + (existing.trimEnd() ? "\n\n" : "") + block + "\n";
@@ -75,7 +80,8 @@ function upsertManagedBlock(filePath, blockText) {
 function removeManagedBlock(filePath) {
   const existing = readIfExists(filePath);
   if (existing === null) return false;
-  const b = existing.indexOf(BEGIN), e = existing.indexOf(END);
+  const b = existing.indexOf(HAX_BEGIN);
+  const e = b >= 0 ? existing.indexOf(END, b) : -1;
   if (b < 0 || e < 0) return false;
   return writeIfChanged(filePath, (existing.slice(0, b) + existing.slice(e + END.length)).trim() + "\n");
 }
@@ -176,10 +182,10 @@ if (MODE === "check") {
     else if (src !== null && src !== dst) gaps.push(`skills/${s}: drift from repo copy`);
   }
   const agents = readIfExists(path.join(REPO_ROOT, "AGENTS.md")) ?? "";
-  if (!agents.includes(BEGIN)) gaps.push("AGENTS.md: managed overlay block missing");
+  if (!agents.includes(HAX_BEGIN)) gaps.push("AGENTS.md: managed overlay block missing");
   if (GLOBAL_AGENTS) {
     const g = readIfExists(path.join(HAX_CONFIG_DIR, "AGENTS.md")) ?? "";
-    if (!g.includes(BEGIN)) gaps.push("global AGENTS.md: managed overlay block missing");
+    if (!g.includes(HAX_BEGIN)) gaps.push("global AGENTS.md: managed overlay block missing");
   }
   for (const f of ["hn.mjs", "hn", "prompt-overlay.md", "scripts/meta-env.sh", "scripts/hn-prime.sh", "scripts/hn-turn.sh"]) {
     if (!fs.existsSync(path.join(REPO_ROOT, "addons", "hax", f))) gaps.push(`addons/hax/${f}: missing`);

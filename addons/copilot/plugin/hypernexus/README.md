@@ -1,6 +1,6 @@
 # HyperNexus for GitHub Copilot CLI
 
-This Agent Plugins v1.0 plugin supplies three HyperNexus skills, eleven `/hn-*`
+This Agent Plugins v1.0 package supplies three HyperNexus skills, eleven `/hn-*`
 commands, two custom agents, and the `hypernexus` stdio MCP server. The MCP
 server exposes the kernel's complete tool inventory; the project-level Copilot
 hooks in `.github/hooks/hypernexus.json` add kernel health context, explicit
@@ -16,15 +16,22 @@ Use the Meta subscription model without writing credentials to configuration:
 
 ```powershell
 .\addons\copilot\use-meta-model.ps1
-.\addons\copilot\use-meta-model.ps1 -p "Reply exactly META-COPILOT-OK" --silent
+.\addons\copilot\use-meta-model.ps1 -p "Reply exactly META-COPILOT-OK"
 ```
 
-The launcher uses Copilot CLI's documented BYOK environment provider and its
-`COPILOT_PROVIDER_API_KEY_COMMAND` callback. The callback reuses
-`addons/droid/bin/meta-muse-key.mjs`, which reads the Pi Meta OAuth identity
-token and mints a short-lived Meta Model API key for each request. The key is
-never written to a file or printed by the launcher. If Pi's identity expires,
-sign in again with `/login meta` in Pi.
+The launcher sets Copilot CLI's documented BYOK Responses API variables for the
+Copilot process only (`COPILOT_PROVIDER_TYPE=openai`,
+`COPILOT_PROVIDER_BASE_URL=<kernel>/v1`,
+`COPILOT_PROVIDER_WIRE_API=responses`,
+`COPILOT_PROVIDER_API_KEY=hypernexus-local`,
+`COPILOT_PROVIDER_MODEL_ID=meta/muse-spark-1.3-contributor`) and restores the
+previous environment afterwards. Requests go to the HyperNexus kernel proxy at
+`http://127.0.0.1:7778/v1`; the kernel reads the current Meta credential from
+Pi's `auth.json` per request, so the real OAuth-derived credential is never
+copied into Copilot configuration. The placeholder API key is local to the
+Copilot process and is not sent upstream as the Meta credential. The kernel
+proxy currently identifies its upstream client as `pi/1.4.0`; its normal
+API error is returned to Copilot if the kernel is unavailable.
 
 Copilot CLI does not expose a Pi-style in-process `ExtensionAPI`; its native
 extension surface is plugins plus MCP, skills, commands, agents, rules, hooks,

@@ -1,12 +1,12 @@
 {
   "mcpServers": {
     "hypernexus": {
-      "command": "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe",
+      "command": "hypernexus",
       "args": [
         "mcp"
       ],
       "env": {
-        "HYPERNEXUS_WORKSPACE_ROOT": "C:/Users/hyper/workspace/HyperNexus",
+        "HYPERNEXUS_WORKSPACE_ROOT": "<absolute-path-to-repo>",
         "HYPERNEXUS_URL": "http://127.0.0.1:7778"
       }
     }

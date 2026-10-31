@@ -1,6 +1,6 @@
 ---
 name: hypernexus-workflows
-description: "Reusable HyperNexus orchestration workflows for OpenCode: MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS, and the RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY loop. Trigger on 'multi-step task', 'resume work', 'capability gap', 'handoff', 'session summary', or when starting complex work with hypernexus tools available."
+description: "Reusable HyperNexus orchestration workflows for mini-swe-agent: MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS, and the RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY loop. Trigger on 'multi-step task', 'resume work', 'capability gap', 'handoff', 'session summary', or when starting complex work with hypernexus tools available."
 ---
 
 # HyperNexus Workflows

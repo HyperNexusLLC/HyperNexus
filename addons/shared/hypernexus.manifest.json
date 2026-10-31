@@ -87,7 +87,7 @@
     "swarm-prompt",
     "meta-model"
    ],
-   "notes": "58 tools via hypernexus mcp stdio server in .jcode/mcp.json (toolNamespace mcp__hypernexus). 4 skills + 13 /hn-* commands + 4 hooks covering all 8 hook events (observe/transform/feedback/RBAC gate) + prompt-overlay + preferred-tools + swarm block. Meta muse-spark-1.3-contributor: native muse-subscription OAuth primary (jcode login --provider muse-subscription), pi-OAuth live-mint bridge via addons/jcode/bin/meta-muse-key.mjs (shell-local ~24h). Battery bin/test-jcode-ext.mjs 109 checks. Core works without the extension over HTTP."
+   "notes": "58 tools via hypernexus mcp stdio server in .jcode/mcp.json (toolNamespace mcp__hypernexus). 4 skills + 13 /hn-* commands + 4 hooks covering all 8 hook events (observe/transform/feedback/RBAC gate) + prompt-overlay + preferred-tools + swarm block. Meta muse-spark-1.3-contributor: native muse-subscription OAuth primary (jcode login --provider muse-subscription), pi-OAuth live-mint bridge via addons/jcode/bin/meta-muse-key.mjs (shell-local ~24h). Battery bin/test-jcode-ext.mjs 108 checks. Core works without the extension over HTTP."
   },
   "droid": {
    "status": "active",
@@ -126,7 +126,7 @@
     "skills",
     "prompt-overlay"
    ],
-   "notes": "58 tools via hypernexus mcp stdio server registered in .codewhale/mcp.json (toolNamespace mcp__hypernexus). Agent Plugins v1.0.0 bundle adds 8 /hn-* commands + 3 skills (activate via /plugin validate/show/trust/enable). Skills mirrored to skills/ for direct discovery. Version stamped from /VERSION at install. Core works without the extension over HTTP."
+   "notes": "58 tools via hypernexus mcp stdio server registered in .codewhale/mcp.json (toolNamespace mcp__hypernexus). Agent Plugins v1.0.0 bundle adds 11 /hn-* commands + 4 skills (activate via /plugin validate/show/trust/enable). Skills mirrored to skills/ for direct discovery. Version stamped from /VERSION at install. Core works without the extension over HTTP."
   },
   "crush": {
    "status": "active",
@@ -196,7 +196,7 @@
     "hooks",
     "mcp"
    ],
-   "notes": "Meta muse-spark-1.3-contributor via pi-OAuth live mint (bin/meta-muse-key.mjs, pi owns refresh; META_API_KEY per shell). ACTIVATED via user-scope skills (3/3 on, zero diagnostics) + settings.json mcpServers.hypernexus stdio + live `muse exec` proof (system_status -> kernel version). Validator-clean native bundle (3 skills, 11 commands, 5 hooks, 1 MCP server) ships ready; plugin-record load pending product fix. Reminders family ships as duty file but unreferenced: 1.4.14 rejects every memoryEvidence source shape including its own shipped example. KNOWN PRODUCT BLOCKER: `muse plugins install` fails deterministically on this box (os error 32, failing file never materializes, no locker process); proven with a 1-skill probe."
+   "notes": "Meta muse-spark-1.3-contributor via pi-OAuth live mint (bin/meta-muse-key.mjs, pi owns refresh; META_API_KEY per shell). ACTIVATED via user-scope skills (3/3 on, zero diagnostics) + settings.json mcpServers.hypernexus stdio + live `muse exec` proof (system_status -> kernel version). Validator-clean native bundle (3 skills, 11 commands, 5 hooks, 1 MCP server) ships ready; plugin-record load pending product fix. Reminders family ships as duty file but unreferenced: 1.4.14 rejects every memoryEvidence source shape including its own shipped example. KNOWN PRODUCT BLOCKER: `muse plugins install` fails intermittently on this box (os error 32, failing file never materializes, no locker process); proven with a 1-skill probe."
   },
   "claude-code": {
    "status": "active",
@@ -218,6 +218,22 @@
    ],
    "notes": "58 tools via hypernexus mcp stdio server registered in plugin .mcp.json + project .mcp.json (toolNamespace mcp__hypernexus). 11 /hn-* commands + 3 skills + 2 agents (orchestrator + read-only researcher). 7 hook events (SessionStart/UserPromptSubmit/PreToolUse-Bash-RBAC-gate/PostToolUse/PreCompact/Stop/SubagentStop) as dependency-free Node scripts. Meta muse-spark-1.3-contributor NATIVE: kernel Anthropic shim (go/internal/httpapi/anthropic_compat.go) reads the pi Meta OAuth identity per request (pi owns refresh, nothing stored); use-meta-model.ps1 mints a fresh per-run override key via bin/meta-muse-key.mjs. Battery bin/test-claude-code-ext.mjs (hermetic + --live). Core works without the plugin over HTTP http://127.0.0.1:7778."
   },
+  "codex": {
+   "status": "active",
+   "api": "codex config.toml (model_providers.meta) + skills/commands/hooks/agent",
+   "adapter": "addons/codex/",
+   "install": "`node addons/codex/install.mjs`",
+   "installer": "addons/codex/install.mjs",
+   "surfaces": [
+    "model",
+    "mcp",
+    "skills",
+    "commands",
+    "hooks",
+    "meta-model"
+   ],
+   "notes": "Meta muse-spark-1.3-contributor via kernel proxy http://127.0.0.1:7778/v1 (MODEL_API_KEY). 3 skills, 8 commands, by-convention hooks, agent, MCP snippet, meta-model doc. Battery addons/codex/bin/test-codex-ext.mjs 13/13."
+  },
   "codex-cli": {
    "status": "active",
    "api": "codex config.toml",
@@ -237,9 +253,13 @@
    "install": "mini-swe-agent .env",
    "installer": "addons/mini-swe-agent/install.mjs",
    "surfaces": [
-    "model"
+    "model",
+    "mcp",
+    "skills",
+    "commands",
+    "hooks"
    ],
-   "notes": "Proof MINISWEA-META-OK via scripts/mini-swe-agent-meta-test.py."
+   "notes": "Proof MINISWEA-META-OK via scripts/mini-swe-agent-meta-test.py. Surfaces live: model (native muse-subscription primary + pi-OAuth bridge mint), mcp stdio, 9 skills, commands, hooks."
   },
   "maki": {
    "status": "active",
@@ -247,7 +267,7 @@
    "adapter": "extensions/maki-hypernexus/",
    "install": "%APPDATA%/maki/ (global) + <project>/.maki/ (project scope)",
    "model": "meta/muse-spark-1.3-contributor (native Meta OAuth: lua/meta_oauth.lua device-code + pi auth.json mint, auto-refresh)",
-   "battery": "bin/test-maki-ext.mjs (61 checks)",
+   "battery": "bin/test-maki-ext.mjs (60 checks)",
    "surfaces": [
     "tools:35 kernel-backed",
     "slash-commands:12 md + 5 plugin",
@@ -306,6 +326,18 @@
    ],
    "notes": "Login interactive; models GitHub-side."
   },
+  "copilot": {
+   "status": "active",
+   "api": "Agent Plugins v1.0 (plugin.json: skills/mcp.json) + MCP stdio",
+   "adapter": "addons/copilot/plugin/hypernexus/",
+   "install": "`node addons/copilot/install.mjs`",
+   "installer": "addons/copilot/install.mjs",
+   "surfaces": [
+    "mcp",
+    "skills"
+   ],
+   "notes": "3 skills (hypernexus, hypernexus-ops, hypernexus-workflows) + hypernexus MCP stdio. Meta via kernel /v1 proxy (COPILOT_PROVIDER_* vars, pi/1.4.0 client id). Battery addons/copilot/bin/test-copilot-ext.mjs 16/16."
+  },
   "open-interpreter": {
    "status": "active",
    "api": "config.toml + mcp add",
@@ -314,9 +346,12 @@
    "installer": "addons/open-interpreter/install.mjs",
    "surfaces": [
     "model",
-    "mcp"
+    "mcp",
+    "skills",
+    "hooks",
+    "agents"
    ],
-   "notes": "Mirrors codex schema."
+   "notes": "Mirrors codex schema. Installer ships 16 skills, 3 hooks, agents, commands (battery-verified). Meta muse-spark-1.3-contributor via pi-OAuth live mint + kernel proxy."
   },
   "hax": {
    "status": "active",
