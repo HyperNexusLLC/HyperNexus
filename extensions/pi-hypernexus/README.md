@@ -7,7 +7,10 @@ Kernel baseline: Go kernel `http://127.0.0.1:7778` (port 7778 authoritative).
 
 | Path | What |
 |---|---|
-| `pi-hypernexus.ts` | Extension entry: MCP stdio registration, hooks, 8 tools, 5 commands, 2 flags, 1 shortcut, status bar |
+| `pi-hypernexus.ts` | Extension entry: MCP stdio registration, hooks, 8 tools, 12 commands, 2 flags, 1 shortcut, status bar |
+| `reminders/hn-memory-first.md` | Reminder: recall L2 before reporting completion (promptSnippet on `hn_memory_search`) |
+| `reminders/hn-verify-ops.md` | Reminder: verify-ops loop around production changes (promptSnippet on `hn_system_status`) |
+| `settings.example.json` | Model wiring: `defaultProvider: meta`, `defaultModel: muse-spark-1.3-contributor` (copy into `~/.pi/agent/settings.json`; no secrets) |
 | `skills/hypernexus-memory/` | Store/recall/`@memory:` skill |
 | `skills/hypernexus-l2/` | L2 vault + L3 archive skill |
 | `skills/hypernexus-mcp-routing/` | MCP routing skill |
@@ -26,7 +29,8 @@ Kernel baseline: Go kernel `http://127.0.0.1:7778` (port 7778 authoritative).
   tool_call (guard + record), tool_result, user_bash (audit), model_select,
   input (`@memory:`), turn_end, compaction — all logging to
   `POST /api/memory/facts/add` with tags arrays
-- **Commands**: `/hn-status`, `/hn-remember`, `/hn-recall`, `/hn-dispatch`, `/hn-workflow`
+- **Commands (12)**: `/hn-status`, `/hn-remember`, `/hn-recall`, `/hn-dispatch`, `/hn-workflow`, `/hn-store`, `/hn-search`, `/hn-tools`, `/hn-session`, `/hn-context`, `/hn-plan`, `/hn-summary`
+- **Reminders**: `hn-memory-first`, `hn-verify-ops` (`reminders/*.md`; pi has no reminder API so they also ship as tool `promptSnippet` text)
 - **MCP config**: stdio `bin/hypernexus.exe mcp` with `HYPERNEXUS_WORKSPACE_ROOT` + `HYPERNEXUS_URL`
 - **Skills**: 8 skills via `resources_discover` (memory, L2, routing, dispatch, status/billing, sessions, ops, workflows)
 - **Reminders/agents**: pi exposes no native reminder/agent API; the portable
@@ -42,6 +46,12 @@ pi --provider meta --model meta/muse-spark-1.3-contributor -e C:/Users/hyper/wor
 ```
 
 (Verify presence only: check that the provider env var name is set — never print its value.)
+
+Default wiring (no secrets): copy `settings.example.json` into
+`~/.pi/agent/settings.json` (`defaultProvider: meta`,
+`defaultModel: muse-spark-1.3-contributor`). Pi owns the Meta OAuth identity
+(`~/.pi/agent/auth.json`, `/login meta`); if a shell needs a direct key it
+falls back to `META_MUSE_API_KEY` from the process environment only.
 
 ## Validate
 

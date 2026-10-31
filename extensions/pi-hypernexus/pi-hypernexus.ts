@@ -4,8 +4,11 @@ import { Type } from "typebox";
 // ─── HyperNexus pi companion extension (extensions/pi-hypernexus) ───────────
 // Complements addons/pi/hypernexus.ts (the full bridge). This package is the
 // installable companion: MCP stdio registration, hook observation logging to
-// POST /api/memory/facts/add, slash commands, skills (via resources_discover),
+// POST /api/memory/facts/add, 12 slash commands, skills (via resources_discover),
 // CLI flags, a keyboard shortcut, and status-bar presence.
+// Reminders (pi has no native reminder API): hn-memory-first and hn-verify-ops
+// ship as reminders/*.md duty files and as tool promptSnippets (memory-first on
+// hn_memory_search, verify-ops on hn_system_status).
 //
 // Kernel baseline: Go kernel http://127.0.0.1:7778 (port 7778 authoritative).
 // Model: Meta muse-spark-1.3-contributor, wired by env-var reference only —
@@ -308,7 +311,7 @@ export default function (pi: ExtensionAPI) {
     name: "hn_memory_search",
     label: "HN Memory Search",
     description: "Recall HyperNexus L2 memory (fast FTS; falls back to vector search).",
-    promptSnippet: "Recall HyperNexus memory",
+    promptSnippet: "Recall HyperNexus memory BEFORE re-deriving known answers (hn-memory-first)",
     parameters: Type.Object({
       query: Type.String({ description: "Search query" }),
       limit: Type.Optional(Type.Number({ description: "Max results (default 5)" })),
@@ -360,7 +363,7 @@ export default function (pi: ExtensionAPI) {
     name: "hn_system_status",
     label: "HN System Status",
     description: "Kernel health, memory counts, and mesh status in one call.",
-    promptSnippet: "HyperNexus system status",
+    promptSnippet: "HyperNexus system status — check before AND after production changes (hn-verify-ops)",
     parameters: Type.Object({}),
     annotations: { readOnlyHint: true },
     async execute(_id, _params, signal) {
@@ -534,6 +537,121 @@ export default function (pi: ExtensionAPI) {
           "No workflows.",
         "info",
       );
+    },
+  });
+
+  pi.registerCommand("hn-store", {
+    description: "Store args as one L2 fact, with optional [tags: a,b]",
+    handler: async (args, ctx) => {
+      const raw = args?.trim() || (await ctx.ui.input("Store:", ""));
+      if (!raw) return;
+      const parts = raw.split("[tags:");
+      const text = parts[0].trim();
+      const tags = parts[1] ? parts[1].replace("]", "").split(",").map((t) => t.trim()).filter(Boolean) : [];
+      if (!text) return;
+      const ok = await hnOk("/api/memory/facts/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, tags: ["pi", "quick", ...tags], type: "fact" }),
+      });
+      ctx.ui.notify(ok ? "Stored to L2." : "Store failed.", ok ? "info" : "error");
+    },
+  });
+
+  pi.registerCommand("hn-search", {
+    description: "Search L2 memory (FTS fast, vector fallback)",
+    handler: async (args, ctx) => {
+      const query = args?.trim() || (await ctx.ui.input("Search:", ""));
+      if (!query) return;
+      const fast = await hnFastSearch(query, 5);
+      if (fast.length > 0) {
+        ctx.ui.notify(
+          fast.map((m: any, i: number) => `${i + 1}. ${m.content.slice(0, 160)}`).join("\n"),
+          "info",
+        );
+        return;
+      }
+      const body = await hnJson(`/api/memory/search?q=${encodeURIComponent(query)}&limit=5`);
+      const items = Array.isArray(body) ? body : (body.data ?? []);
+      ctx.ui.notify(
+        (Array.isArray(items) ? items : [])
+          .map((m: any, i: number) => `${i + 1}. ${(m.content ?? m.text ?? JSON.stringify(m)).slice(0, 160)}`)
+          .join("\n") || "No memories found.",
+        "info",
+      );
+    },
+  });
+
+  pi.registerCommand("hn-tools", {
+    description: "Discover kernel MCP tools for a capability",
+    handler: async (args, ctx) => {
+      const query = args?.trim() || (await ctx.ui.input("Capability:", ""));
+      if (!query) return;
+      const body = await hnJson(`/api/tools/search?query=${encodeURIComponent(query)}&limit=8`);
+      const items = Array.isArray(body) ? body : (body.data ?? body.results ?? []);
+      ctx.ui.notify(
+        (Array.isArray(items) ? items : [])
+          .map((t: any) => `- ${(t.name ?? t.id ?? "?")}: ${String(t.description ?? "").slice(0, 120)}`)
+          .join("\n") || `No tools matched "${query}".`,
+        "info",
+      );
+    },
+  });
+
+  pi.registerCommand("hn-session", {
+    description: "List recent HyperNexus sessions",
+    handler: async (_args, ctx) => {
+      const body = await hnJson("/api/sessions/summary?limit=10");
+      const items = Array.isArray(body) ? body : (body.sessions ?? body.data ?? []);
+      ctx.ui.notify(
+        (Array.isArray(items) ? items : [])
+          .map((s: any, i: number) => `${i + 1}. ${(s.id ?? s.name ?? JSON.stringify(s)).toString().slice(0, 120)}`)
+          .join("\n") || "No sessions found.",
+        "info",
+      );
+    },
+  });
+
+  pi.registerCommand("hn-context", {
+    description: "Harvest relevant L2 context for the current work",
+    handler: async (args, ctx) => {
+      const topic = args?.trim() || (await ctx.ui.input("Topic:", ""));
+      if (!topic) return;
+      const hits = await hnFastSearch(topic, 5);
+      ctx.ui.notify(
+        hits.length > 0
+          ? hits.map((m: any, i: number) => `${i + 1}. ${m.content.slice(0, 200)}`).join("\n")
+          : "No prior L2 context found.",
+        hits.length > 0 ? "info" : "warning",
+      );
+    },
+  });
+
+  pi.registerCommand("hn-plan", {
+    description: "Store a plan to L2",
+    handler: async (args, ctx) => {
+      const text = args?.trim() || (await ctx.ui.input("Plan:", ""));
+      if (!text) return;
+      const ok = await hnOk("/api/memory/facts/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, title: `plan: ${text.slice(0, 50)}`, tags: ["pi", "plan"], type: "plan" }),
+      });
+      ctx.ui.notify(ok ? "Plan stored to L2." : "Store failed.", ok ? "info" : "error");
+    },
+  });
+
+  pi.registerCommand("hn-summary", {
+    description: "Store a session summary to L2",
+    handler: async (args, ctx) => {
+      const text = args?.trim() || (await ctx.ui.input("Summary:", ""));
+      if (!text) return;
+      const ok = await hnOk("/api/memory/facts/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, title: "session summary", tags: ["pi", "session", "summary"], type: "fact" }),
+      });
+      ctx.ui.notify(ok ? "Summary stored to L2." : "Store failed.", ok ? "info" : "error");
     },
   });
 
