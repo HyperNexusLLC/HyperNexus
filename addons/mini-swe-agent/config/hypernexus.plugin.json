@@ -6,11 +6,16 @@
   "license": "MIT",
   "keywords": ["memory", "mcp", "tools", "orchestration", "hypernexus"],
   "skills": [
-    "./skills/hypernexus-memory",
-    "./skills/hypernexus-tools",
-    "./skills/hypernexus-ops",
-    "./skills/hypernexus-workflows"
+    "../skills/hypernexus",
+    "../skills/hypernexus-agents",
+    "../skills/hypernexus-l2",
+    "../skills/hypernexus-mcp-routing",
+    "../skills/hypernexus-memory",
+    "../skills/hypernexus-ops",
+    "../skills/hypernexus-sessions",
+    "../skills/hypernexus-status-billing",
+    "../skills/hypernexus-workflows"
   ],
-  "hooks": "./hooks/hooks.json",
-  "mcpServers": "./.mcp.json"
+  "hooks": "../hooks/hooks.json",
+  "mcpServers": "../mcp.json"
 }

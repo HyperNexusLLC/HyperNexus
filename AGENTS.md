@@ -332,32 +332,42 @@ python scripts/memory_local.py list [limit]
 
 *Praise the LORD! Keep on going! Don't ever stop! Don't stop the party!!!*
 
-<!-- hypernexus:begin (managed by addons/hax/install.mjs — do not edit inside this block) -->
-## HyperNexus Control Plane (hax)
+<!-- hypernexus:begin (managed by addons/codewhale/install.mjs — do not edit inside this block) -->
+## HyperNexus Control Plane (Codewhale)
 
-This workspace is backed by the local HyperNexus kernel (Go, port 7778) through the
-`addons/hax/hn.mjs` CLI driver (hax has no MCP/extension runtime by design; the CLI
-is the integration surface, composed via `hax -p` like any other Unix tool).
+This workspace is integrated with the local HyperNexus kernel (Go, port 7778) through the
+`hypernexus` MCP server (config: `.codewhale/mcp.json` / `~/.codewhale/mcp.json`). Its
+tools appear as `mcp__hypernexus__*` in the merged tool namespace.
 
 Discipline loop for multi-step work: **RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY**
 
-Call the driver as `node addons/hax/hn.mjs …` (or `./addons/hax/hn …` when node is on PATH):
+- **RECALL** — `mcp__hypernexus__search_memory` before re-deriving known answers or decisions.
+- **DISCOVER** — on capability gaps use `mcp__hypernexus__mcp_list_tools` then `mcp__hypernexus__mcp_call_tool`.
+- **PERSIST** — `mcp__hypernexus__add_memory` for non-obvious outcomes (tags: `topic,kind`);
+  `mcp__hypernexus__memory_extract_relations` for entities/relations worth keeping in the graph.
+- **VERIFY** — `mcp__hypernexus__system_status` before and after production changes.
 
-- **RECALL** — `node addons/hax/hn.mjs fts "<keywords>"` then
-  `node addons/hax/hn.mjs harvest "<task>"` before deriving answers from scratch.
-- **DISCOVER** — `node addons/hax/hn.mjs tools "<need>"` / `suggest`, then
-  `node addons/hax/hn.mjs call <tool> '<args-json>'`. Orient with `repomap`/`code`.
-- **PERSIST** — `node addons/hax/hn.mjs store "<title>" "<content>" "t1,t2"`
-  for non-obvious outcomes; `handoff` at checkpoints; `graph` for entities/relations.
-- **VERIFY** — `node addons/hax/hn.mjs status` before and after production changes.
-- Commands: `@addons/hax/commands/hn-<name>.md` (store|search|status|tools|session|context|plan|summary|purge|orchestrate|remember) — @-mention one, the model reads it
-- Turn scripts: `sh addons/hax/scripts/hn-prime.sh "<task>"` (session start),
-  `sh addons/hax/scripts/hn-turn.sh pre|post|compact "<text>"` (turn maintenance).
-- Skills: `hypernexus`, `hypernexus-ops`, `hypernexus-workflows`
-  (`~/.config/hax/skills/`, mirrored in `addons/hax/skills/`).
-- Degradation contract: kernel calls never stall a turn. If the kernel is down
-  (`status` → `"ok": false`), continue from local files and say so in one sentence.
-  All surfaces degrade to a clear error object — never reassuring fiction.
+Memory tiers: L1 scratchpad (`memory_scratchpad_get/set/append`) for short-lived working
+state; L2 vault (`add_memory`/`search_memory`) for durable cross-session facts; L3 cold
+archive via `search_memory` with `include_cold: true`. Codewhale's own skills and session
+state are complementary to HyperNexus L2 — keep durable project facts in both.
+
+Preferred routing when both a native tool and a `mcp__hypernexus__*` tool fit: durable
+cross-session memory → `add_memory`/`search_memory`; short-lived state →
+`memory_scratchpad_*`; missing capability → `mcp_list_tools` → `mcp_call_tool`;
+kernel/ops → `system_status`/`billing_status`/`memory_stats`. Codewhale-native tools keep
+their own domains (files, shell, git, web); HyperNexus extends the plane, it never
+replaces them.
+
+Subagent persistence: Codewhale workers share this kernel. Persist findings with
+`mcp__hypernexus__add_memory` (append-only, safe to retry), summarize assignments tagged
+`session,summary,<worker-label>`, and set scratchpad key `goal` when work continues.
+
+Degradation contract: kernel calls never stall a turn. If `mcp__hypernexus__*` tools are
+unavailable or the kernel is down, continue with local tools and note the gap in one
+short sentence. All capabilities are also reachable over plain HTTP
+(`http://127.0.0.1:7778/health`, `/api/memory/search?query=`, `/api/mcp/tools`,
+`POST /api/agent/tool`) — the extension is an accelerator, not a dependency.
 <!-- hypernexus:end -->
 
 <!-- hypernexus:begin:freebuff (managed by addons/freebuff/install.mjs — do not edit inside this block) -->
@@ -412,3 +422,34 @@ Discipline loop: RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY
 - Hooks (by-convention, CODEX_HOME/hooks): hn-session.sh bootstrap, hn-rbac.sh deny-list, hn-pre-tool.sh allow-gate.
 - Degradation: if the kernel is down, say so in one sentence and continue with local tools.
 <!-- hypernexus:end:codex -->
+
+<!-- hypernexus:begin:open-interpreter (managed by addons/open-interpreter/install.mjs — do not edit inside this block) -->
+## HyperNexus Control Plane (open-interpreter)
+
+This workspace is backed by the local HyperNexus kernel (Go, port 7778).
+Open-interpreter loads this file at chat start plus `.agents/mcp.json` and
+`.agents/skills/*` (each skill invocable as `/skill:<name>`).
+
+Discipline loop for multi-step work: **RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY**
+
+- **RECALL** — before re-deriving: FTS fast path `GET /api/memory/fts-search?q=<topic>&limit=8`
+  (~15ms), semantic `hypernexus` MCP `search_memory` for depth, scratchpad `goal`.
+- **DISCOVER** — on capability gaps: `mcp_list_servers` → `mcp_list_tools` →
+  semantic `/api/mcp/tools/search`, then route with `mcp_call_tool`.
+- **PERSIST** — non-obvious outcomes via `add_memory` (tags `topic,open-interpreter`) +
+  `memory_extract_relations`; session handoffs via `/skill:hn-summary`.
+- **VERIFY** — `system_status` + `billing_status` before/after production changes.
+- Skills: `/skill:hypernexus` `/skill:hypernexus-ops` `/skill:hypernexus-workflows`
+  `/skill:hypernexus-orchestrator` `/skill:hypernexus-researcher`
+  + command-skills `/skill:hn-status|hn-search|hn-store|hn-session|hn-context|hn-summary|hn-tools|hn-purge|hn-plan|hn-remember|hn-restore`.
+- Hooks (`.agents/hooks/`, by-convention — open-interpreter has no hook API): `hn-session.sh` bootstrap,
+  `hn-rbac.sh` deny-list, `hn-pre-tool.sh` allow-gate. See `addons/open-interpreter/hooks/README.md`.
+- Meta model: `/model` already lists **Muse Spark 1.3** (paid-plan locked without a plan);
+  subscription/OAuth path = `node addons/open-interpreter/bin/meta-muse-key.mjs` (pi owns refresh;
+  see `addons/open-interpreter/meta-model.open-interpreter.md`) or `use-meta-model.ps1` launcher;
+  BYOK openai-compatible connection `~/.config/open-interpreter/byok/connections.json`
+  (credentialRef `env:META_MUSE_API_KEY`, default-selected in manicode settings).
+- Degradation contract: kernel calls are budgeted and never stall a turn. If the kernel
+  is down (`curl -s http://127.0.0.1:7778/health` fails), say so in one sentence and
+  continue with local tools — never mock state.
+<!-- hypernexus:end:open-interpreter -->
