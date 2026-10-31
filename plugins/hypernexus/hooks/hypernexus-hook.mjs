@@ -91,6 +91,17 @@ switch (EVENT) {
     out({ additionalContext: "HyperNexus: goal + open decisions are in L1 scratchpad (current_task) and L2 memory — re-harvest after compact." });
     break;
   }
+  case "SubagentStop": {
+    const text = String(input.output ?? input.result ?? "");
+    if (text.length > 400) {
+      // Fire-and-forget persist; do not await.
+      kernel("/api/memory/facts/add", {
+        content: text.slice(0, 4000), title: "subagent-result",
+        tags: ["client:claude-code", "hook:subagent-stop"], namespace: "project",
+      }, 2500).catch(() => {});
+    }
+    break;
+  }
   case "SessionEnd":
   case "Notification":
     break;
