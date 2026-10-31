@@ -591,7 +591,7 @@ check(
 );
 const mcpToolsOut = await runTool("mcp_tools", { limit: 3 });
 check("live MCP tool inventory reachable", typeof mcpToolsOut?.content === "string" && mcpToolsOut.content.length > 0);
-check("live MCP inventory is not an error echo", !/Connection closed|failed/i.test(mcpToolsOut?.content ?? "").slice(0, 200) || /hypernexus|No MCP tools/i.test(mcpToolsOut?.content ?? ""));
+check("live MCP inventory is not an error echo", !/Connection closed|failed/i.test((mcpToolsOut?.content ?? "").slice(0, 200)) || /hypernexus|No MCP tools/i.test(mcpToolsOut?.content ?? ""));
 
 section("8. V1 compatibility shim");
 const v1 = await plugin.server({}, {});

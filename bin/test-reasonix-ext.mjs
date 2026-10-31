@@ -274,7 +274,7 @@ async function getOk(p, budget = 30000) {
 }
 {
   const h = await getOk("/health");
-  check("GET /health ok v1.0.21", h.ok && h.json?.version === "1.0.21", h.json?.version ?? h.error ?? "");
+  check("GET /health ok matches /VERSION", h.ok && h.json?.version === (read(path.join(REPO, "VERSION")) ?? "").trim(), h.json?.version ?? h.error ?? "");
   const ov = await getOk("/api/system/overview", 60000);
   check("GET /api/system/overview", ov.ok, ov.ok ? "" : (ov.error ?? `HTTP ${ov.status}`));
   const ms = await getOk("/api/mcp/status", 90000);
