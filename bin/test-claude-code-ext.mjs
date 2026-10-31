@@ -171,12 +171,13 @@ ok("meta-model snippet documents native shim path (no secrets)", (() => {
       && !/(dca:[A-Za-z0-9_:\-]{10,}|sk-[A-Za-z0-9]{16,})/.test(t);
   } catch { return false; }
 })());
-ok("minter mirrors droid flow (refresh -> /muse-code/key -> api_key, --check)", (() => {
+ok("minter mirrors canonical flow (thin shim -> shared minter, refresh -> /muse-code/key -> api_key, --check)", (() => {
   try {
     const a = fs.readFileSync(path.join(ADDON, "bin", "meta-muse-key.mjs"), "utf8");
-    const d = fs.readFileSync(path.join(ROOT, "addons", "droid", "bin", "meta-muse-key.mjs"), "utf8");
-    return /meta\.refresh/.test(a) && /muse-code\/key/.test(a) && /api_key/.test(a) && /--check/.test(a)
-      && /meta\.refresh/.test(d) && /muse-code\/key/.test(d);
+    const s = fs.readFileSync(path.join(ROOT, "addons", "shared", "bin", "meta-muse-key.mjs"), "utf8");
+    const thinShim = /shared\/bin\/meta-muse-key\.mjs/.test(a);
+    const canonical = /meta\.refresh/.test(s) && /muse-code\/key/.test(s) && /api_key/.test(s) && /--check/.test(s);
+    return thinShim && canonical;
   } catch { return false; }
 })());
 ok("use-meta-model.ps1 mints fresh per run (no pasted snapshot)", (() => {

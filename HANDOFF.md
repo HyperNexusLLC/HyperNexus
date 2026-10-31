@@ -11,7 +11,15 @@
 ### Next agent
 - Scope: `addons/opencode/`, `bin/test-opencode-ext.mjs`, `.opencode/` project config, `addons/shared/hypernexus.manifest.json` opencode entry. Do NOT touch sibling harness dirs or runtime DBs.
 
-# HANDOFF - Claude Code HARNESS max-extent + kernel shim Responses migration (v1.0.22+unreleased)
+# HANDOFF - Claude Code HARNESS max-extent + kernel shim Responses migration (v1.0.22 DEPLOYED 2026-10-31)
+
+## Session CC2 (2026-10-31) - swap succeeded, 88/88 live green
+- `bin/swap-kernel.ps1 -Start -Expect "v1/responses"` → SWAP COMPLETE (staged exe consumed, kernel restarted, uptime reset). Live proofs on deployed kernel: `CLAUDE_RESP_OK` (non-stream 200), `STREAM_OK` (valid SSE), tool_use `get_weather{city:Paris}` (stop tool_use), `CLIPROOF` (`claude -p` with plugin).
+- Battery `bin/test-claude-code-ext.mjs --live` **88/88** (minter check updated: thin shim -> shared canonical `addons/shared/bin/meta-muse-key.mjs`, which a sibling extracted mid-session).
+- CDP 9222 unreachable this session (msedge remote-debugging not running) — no Muse reply read; prior SUBMITTED message stands.
+### Next agent
+- Re-run `node bin/test-claude-code-ext.mjs --live` after any kernel swap; if META mint 401/403s, `/login meta` in pi.
+- Do NOT commit/push unless asked. Scope: `addons/claude-code/`, `bin/test-claude-code-ext.mjs`, `go/internal/httpapi/anthropic_compat.go`, `go/internal/httpapi/anthropic_responses_test.go`, `addons/shared/hypernexus.manifest.json`, `CHANGELOG.md`, `MEMORY.md`, `HANDOFF.md`.
 
 ## Session CC (2026-10-29) - claude lane [muse-spark-1.3-contributor in "claude" in ~/workspace/HyperNexus], battery 85/85 green, kernel finding + staged fix
 ### Built (all uncommitted)
