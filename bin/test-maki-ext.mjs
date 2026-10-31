@@ -118,7 +118,7 @@ console.log("[maki-ext] 5. lua surface (tools/commands/autocmds/slots)");
   for (const pat of ["register_prompt_hint", "declare_slot", "create_autocmd", "set_slot", "completion.sources", "keymap.set"]) {
     src.includes(pat) ? ok(`surface ${pat}`) : bad(`surface ${pat}`, "missing");
   }
-  for (const ev of ["SessionFocusChanged", "TurnStart", "TurnEnd", "ModelChanged", "AutoCompacting", "CompactionDone", "SessionEnd"]) {
+  for (const ev of ["SessionFocusChanged", "TurnStart", "TurnEnd", "ModelChanged", "AutoCompacting", "CompactionDone", "SessionEnd", "ToolDone", "TaskStatusChanged"]) {
     src.includes(`"${ev}"`) ? ok(`autocmd ${ev}`) : bad(`autocmd ${ev}`, "missing");
   }
   const meta = fs.readFileSync(path.join(EXT, "lua/meta_oauth.lua"), "utf8");
