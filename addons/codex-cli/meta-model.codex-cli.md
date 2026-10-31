@@ -18,23 +18,29 @@ The shim delegates to the canonical minter
 per call. Set the result into the current shell only:
 
 ```powershell
-$env:MODEL_API_KEY = "$(node addons/codex-cli/bin/meta-muse-key.mjs)"
+$env:META_API_KEY = "$(node addons/codex-cli/bin/meta-muse-key.mjs)"
 ```
 
 Env overrides: `META_AUTH_PATH`, `META_KEY_MINT_URL` (see `--help`).
+
+Note: `addons/codex` (sibling) uses `MODEL_API_KEY` for the same
+`~/.codex/config.toml`. Both addons only add a `[model_providers.meta]`
+block when none exists, so the first install wins — set whichever env var
+your active block's `env_key` names.
 
 ## Wiring
 
 - `install.mjs` ensures in `~/.codex/config.toml`:
   `model = "muse-spark-1.3-contributor"` + `model_provider = "meta"` plus a
   `[model_providers.meta]` block whose `base_url` is the kernel proxy
-  (`http://127.0.0.1:7778/v1`) with `env_key = "MODEL_API_KEY"`, and a
+  (`http://127.0.0.1:7778/v1`) with `env_key = "META_API_KEY"` (union key),
+  and a
   `[mcp_servers.hypernexus]` block (kernel exe + workspace root resolved
   dynamically: `HYPERNEXUS_BIN` > `<repo>/bin/` > `~/.hypernexus/bin/` > `PATH`;
   `HYPERNEXUS_WORKSPACE_ROOT` env overrides the root). It also installs the
   3 core skills + orchestrator + 8 `hn-*` command-skills and 3 hooks from
   `addons/codex/` (`CODEX_HOME/skills/`, `CODEX_HOME/hooks/`).
-- `use-meta-model.ps1` best-effort mints `MODEL_API_KEY` into the process
+- `use-meta-model.ps1` best-effort mints `META_API_KEY` into the process
   environment via the shim, then runs install + check. Mint needs a live pi
   login (`/login meta` in pi); without it the script warns and continues with
   model/MCP/skills wiring only.

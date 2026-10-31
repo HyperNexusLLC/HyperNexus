@@ -14,7 +14,9 @@ const MCP = path.join(HOME, ".copilot", "mcp-config.json");
 const SKILLS = path.join(HOME, ".copilot", "skills");
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const HN_SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
+const HN_COMMANDS = ["hn-status", "hn-search", "hn-store", "hn-session", "hn-context", "hn-summary", "hn-tools", "hn-purge", "hn-plan", "hn-remember", "hn-restore"];
 const SKILL_SRC = path.join(REPO, "addons", "copilot", "plugin", "hypernexus", "skills");
+const COMMAND_SRC = path.join(REPO, "addons", "copilot", "plugin", "hypernexus", "com.github.copilot", "commands");
 function findKernel() {
   const configured = process.env.HYPERNEXUS_BIN;
   if (configured && fs.existsSync(configured)) return configured;
@@ -42,7 +44,13 @@ function install() {
     if (fs.existsSync(src)) { write(path.join(SKILLS, s, "SKILL.md"), fs.readFileSync(src, "utf8")); n++; }
     else log(`WARNING: skill source missing (skipped): ${src}`);
   }
-  log(`HN MCP + ${n}/${HN_SKILLS.length} skills installed. Next (interactive): 'copilot login --device-code'.`);
+  let c = 0;
+  for (const name of HN_COMMANDS) {
+    const src = path.join(COMMAND_SRC, `${name}.md`);
+    if (fs.existsSync(src)) { write(path.join(SKILLS, name, "SKILL.md"), fs.readFileSync(src, "utf8")); c++; }
+    else log(`WARNING: command source missing (skipped): ${src}`);
+  }
+  log(`HN MCP + ${n}/${HN_SKILLS.length} skills + ${c}/${HN_COMMANDS.length} hn-* command-skills installed. Next (interactive): 'copilot login --device-code'.`);
   return true;
 }
 function check() {
@@ -51,8 +59,9 @@ function check() {
   if (!raw) gaps.push(`missing ${MCP}`);
   else { try { const o = JSON.parse(raw); if (!(o.servers?.hypernexus || o.mcpServers?.hypernexus)) gaps.push("no hypernexus server"); } catch { gaps.push("mcp config invalid"); } }
   for (const s of HN_SKILLS) if (!fs.existsSync(path.join(SKILLS, s, "SKILL.md"))) gaps.push(`missing skill ${s}`);
+  for (const name of HN_COMMANDS) if (!fs.existsSync(path.join(SKILLS, name, "SKILL.md"))) gaps.push(`missing command-skill ${name}`);
   if (gaps.length) { console.log(`${TAG} CHECK FAILED:\n  - ${gaps.join("\n  - ")}`); process.exit(1); }
-  console.log(`${TAG} CHECK OK: MCP + ${HN_SKILLS.length} skills.`);
+  console.log(`${TAG} CHECK OK: MCP + ${HN_SKILLS.length} skills + ${HN_COMMANDS.length} hn-* command-skills.`);
 }
 if (MODE === "check") check();
 else if (MODE === "uninstall") log("uninstall: config left in place by design.");

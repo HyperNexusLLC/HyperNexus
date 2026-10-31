@@ -236,15 +236,19 @@
   },
   "codex-cli": {
    "status": "active",
-   "api": "codex config.toml",
+   "api": "codex config.toml (model_providers.meta) + CODEX_HOME skills/skills-as-commands + by-convention hooks",
    "adapter": "addons/codex-cli/",
-   "install": "~/.codex/config.toml",
+   "install": "`node addons/codex-cli/install.mjs` (config.toml + CODEX_HOME/skills + CODEX_HOME/hooks)",
    "installer": "addons/codex-cli/install.mjs",
    "surfaces": [
     "model",
-    "mcp"
+    "mcp",
+    "skills",
+    "commands",
+    "hooks",
+    "meta-model"
    ],
-   "notes": "Key via MODEL_API_KEY env."
+   "notes": "58 tools via hypernexus mcp stdio server in config.toml [mcp_servers.hypernexus] (toolNamespace mcp__hypernexus). 3 core skills (canonical .agents/skills fallback) + orchestrator + 8 hn-* command-skills + 3 by-convention hooks (hn-session/hn-rbac/hn-pre-tool). Meta muse-spark-1.3-contributor via kernel proxy http://127.0.0.1:7778/v1 (META_API_KEY union key, live-minted via bin/meta-muse-key.mjs; pi owns refresh). Battery addons/codex-cli/bin/test-codex-cli-ext.mjs (temp-CODEX_HOME round-trip). Core works without the extension over HTTP http://127.0.0.1:7778."
   },
   "mini-swe-agent": {
    "status": "active",
@@ -281,50 +285,56 @@
   },
   "harness2": {
    "status": "active",
-   "api": "HARNESS2_* env",
+   "api": "HARNESS2_* env (no MCP/skill/command/hook runtime; kernel over HTTP proxy)",
    "adapter": "addons/harness2/",
-   "install": "persistent user env",
+   "install": "`node addons/harness2/install.mjs` (setx model env + live-minted judge key in process env only)",
    "installer": "addons/harness2/install.mjs",
    "surfaces": [
-    "model"
+    "model",
+    "mcp",
+    "meta-model"
    ],
-   "notes": "~/workspace/harness2; jb/oc Ready."
+   "notes": "Solver/improver/codex/judge model env (meta/muse-spark-1.3-contributor, judge via kernel proxy http://127.0.0.1:7778/v1). Judge key minted LIVE per shell via bin/meta-muse-key.mjs into META_API_KEY/HARNESS2_JUDGE_API_KEY (never setx/stored; .meta.access is short-lived). MCP stdio sample in mcp.json for bridges; harness2 itself consumes the kernel over HTTP. No hook API — hooks not registered. ~/workspace/harness2; jb/oc Ready. Battery addons/harness2/bin/test-harness2-ext.mjs."
   },
   "atom": {
    "status": "active",
-   "api": "atomcode config.toml",
+   "api": "atomcode config.toml (providers.meta) + mcp.json stdio + skills/ (no hook/command API)",
    "adapter": "addons/atom/",
-   "install": "~/.atomcode/config.toml + mcp.json + skills/",
+   "install": "`node addons/atom/install.mjs` (~/.atomcode/config.toml + mcp.json + skills/)",
    "installer": "addons/atom/install.mjs",
    "surfaces": [
     "model",
     "mcp",
-    "skills"
+    "skills",
+    "meta-model"
    ],
-   "notes": "Proof ATOM-META-OK."
+   "notes": "58 tools via hypernexus mcp stdio server in ~/.atomcode/mcp.json (kernel exe + root resolved dynamically). 4 skills from plugins/hypernexus/skills. Meta muse-spark-1.3-contributor via [providers.meta] (api_key ${META_API_KEY} union key, base_url kernel proxy http://127.0.0.1:7778/v1, live-minted via bin/meta-muse-key.mjs; pi owns refresh). No hook API — hooks not registered; /hn-* commands MCP-only. Proof ATOM-META-OK. Battery addons/atom/bin/test-atom-ext.mjs. Core works without the extension over HTTP http://127.0.0.1:7778."
   },
   "agy": {
    "status": "active",
-   "api": "agy mcp add",
+   "api": "agy mcp add (MCP-only: no skill/command/hook loader)",
    "adapter": "addons/agy/",
-   "install": "agy MCP store",
+   "install": "`node addons/agy/install.mjs` (agy MCP store)",
    "installer": "addons/agy/install.mjs",
    "surfaces": [
-    "mcp"
+    "mcp",
+    "meta-model"
    ],
-   "notes": "Models need interactive sign-in."
+   "notes": "58 tools via hypernexus mcp stdio server registered with `agy mcp add` (kernel exe + root resolved dynamically). Skills + /hn-* commands MCP-only (no loader); hooks not registered. Meta muse-spark-1.3-contributor opt-in via META_API_KEY union key (live-minted via bin/meta-muse-key.mjs; pi owns refresh). Models need interactive agy sign-in. Battery addons/agy/bin/test-agy-ext.mjs. Core works without the extension over HTTP http://127.0.0.1:7778."
   },
   "copilot-cli": {
    "status": "active",
-   "api": "mcp-config.json + skills/",
+   "api": "mcp-config.json + skills/ (no hook API)",
    "adapter": "addons/copilot-cli/",
-   "install": "~/.copilot/mcp-config.json + skills",
+   "install": "`node addons/copilot-cli/install.mjs` (~/.copilot/mcp-config.json + skills)",
    "installer": "addons/copilot-cli/install.mjs",
    "surfaces": [
     "mcp",
-    "skills"
+    "skills",
+    "commands",
+    "meta-model"
    ],
-   "notes": "Login interactive; models GitHub-side."
+   "notes": "58 tools via hypernexus mcp stdio server in ~/.copilot/mcp-config.json (kernel exe + root resolved dynamically). 3 skills + 11 hn-* command-skills from the copilot plugin bundle. Meta muse-spark-1.3-contributor opt-in via META_API_KEY union key (live-minted via bin/meta-muse-key.mjs; pi owns refresh). No hook API — hooks not registered. Login interactive; models GitHub-side. Battery addons/copilot-cli/bin/test-copilot-cli-ext.mjs. Core works without the extension over HTTP http://127.0.0.1:7778."
   },
   "copilot": {
    "status": "active",

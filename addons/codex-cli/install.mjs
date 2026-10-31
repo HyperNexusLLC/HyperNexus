@@ -12,6 +12,7 @@ const write = (f, c) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs
 const HERE = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1"));
 const REPO = path.resolve(HERE, "..", "..");
 const CODEX_SRC = path.join(HERE, "..", "codex");
+const CANON_SKILLS = path.join(REPO, ".agents", "skills");
 const CODEX_HOME = process.env.CODEX_HOME ? process.env.CODEX_HOME : path.join(HOME, ".codex");
 const CFG = path.join(CODEX_HOME, "config.toml");
 const SKILLS_DIR = path.join(CODEX_HOME, "skills");
@@ -42,15 +43,22 @@ function ensureToml(t) {
   else s = s.replace(/^model\s*=.*$/m, `model = "muse-spark-1.3-contributor"`);
   if (!/^model_provider\s*=/m.test(s)) s = s.replace(/^model\s*=.*$/m, (m) => `${m}\nmodel_provider = "meta"`);
   else s = s.replace(/^model_provider\s*=.*$/m, `model_provider = "meta"`);
-  need(/\[model_providers\.meta\]/, `\n[model_providers.meta]\nname = "Meta Model API (via HyperNexus kernel: live pi-OAuth token, no stale copies)"\nbase_url = "http://127.0.0.1:7778/v1"\nenv_key = "MODEL_API_KEY"\nwire_api = "responses"\n`);
+  need(/\[model_providers\.meta\]/, `\n[model_providers.meta]\nname = "Meta Model API (via HyperNexus kernel: live pi-OAuth token, no stale copies)"\nbase_url = "http://127.0.0.1:7778/v1"\nenv_key = "META_API_KEY"\nwire_api = "responses"\n`);
   need(/\[mcp_servers\.hypernexus\]/, `\n[mcp_servers.hypernexus]\ncommand = '${exe()}'\nargs = ["mcp"]\n\n[mcp_servers.hypernexus.env]\nHYPERNEXUS_URL = "http://127.0.0.1:7778"\nHYPERNEXUS_WORKSPACE_ROOT = '${wsRoot()}'\n`);
   return s;
+}
+function skillSource(name) {
+  // Union fallback: sibling codex sources first, then canonical .agents/skills.
+  for (const src of [path.join(CODEX_SRC, "skills", name, "SKILL.md"), path.join(CANON_SKILLS, name, "SKILL.md")]) {
+    if (fs.existsSync(src)) return src;
+  }
+  return null;
 }
 function installSkillsHooks() {
   let n = 0;
   for (const name of CORE_SKILLS) {
-    const src = path.join(CODEX_SRC, "skills", name, "SKILL.md");
-    if (!fs.existsSync(src)) { log(`WARNING: missing source skill ${src}, skipping.`); continue; }
+    const src = skillSource(name);
+    if (!src) { log(`WARNING: missing source skill ${name} (checked addons/codex/skills + .agents/skills), skipping.`); continue; }
     write(path.join(SKILLS_DIR, name, "SKILL.md"), fs.readFileSync(src, "utf8")); n++;
   }
   const asrc = path.join(CODEX_SRC, "agent", AGENT + ".md");
@@ -72,7 +80,7 @@ function installSkillsHooks() {
 function install() {
   write(CFG, ensureToml(read(CFG)));
   const n = installSkillsHooks();
-  log(`meta provider + hypernexus MCP ensured in ${CFG} (key via MODEL_API_KEY, synced from pi) + ${n} skills/hooks.`);
+  log(`meta provider + hypernexus MCP ensured in ${CFG} (key via META_API_KEY, synced from pi) + ${n} skills/hooks.`);
   return true;
 }
 function check() {

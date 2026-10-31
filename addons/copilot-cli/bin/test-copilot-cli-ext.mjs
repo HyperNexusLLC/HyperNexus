@@ -92,13 +92,21 @@ check("installer syntax valid", () => {
   assert.equal(r.status, 0, r.stderr);
 });
 
-check("installer install + check round-trips MCP and all 3 skills", () => {
+check("installer install + check round-trips MCP, 3 skills, 11 hn-* command-skills", () => {
   const inst = node([path.join(ADDON, "install.mjs")]);
   assert.equal(inst.status, 0, inst.stderr);
   assert.match(inst.stdout, /3\/3 skills/);
+  assert.match(inst.stdout, /11\/11 hn-\* command-skills/);
   const chk = node([path.join(ADDON, "install.mjs"), "--check"]);
   assert.equal(chk.status, 0, chk.stdout + chk.stderr);
   assert.match(chk.stdout, /CHECK OK/);
+});
+
+check("hn-* command sources exist in the copilot plugin bundle", () => {
+  const src = path.join(ROOT, "addons", "copilot", "plugin", "hypernexus", "com.github.copilot", "commands");
+  for (const name of ["hn-status", "hn-search", "hn-store", "hn-session", "hn-context", "hn-summary", "hn-tools", "hn-purge", "hn-plan", "hn-remember", "hn-restore"]) {
+    assert.ok(fs.existsSync(path.join(src, `${name}.md`)), `missing command source ${name}`);
+  }
 });
 
 const health = await fetch("http://127.0.0.1:7778/health", { signal: AbortSignal.timeout(8000) });

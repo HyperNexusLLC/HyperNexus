@@ -18,7 +18,7 @@ The shim delegates to the canonical minter
 per call. Set the result into the current shell only:
 
 ```powershell
-$env:META_MUSE_API_KEY = "$(node addons/copilot-cli/bin/meta-muse-key.mjs)"
+$env:META_API_KEY = "$(node addons/copilot-cli/bin/meta-muse-key.mjs)"
 ```
 
 Env overrides: `META_AUTH_PATH`, `META_KEY_MINT_URL` (see `--help`).
@@ -30,10 +30,10 @@ Env overrides: `META_AUTH_PATH`, `META_KEY_MINT_URL` (see `--help`).
   dynamically: `HYPERNEXUS_BIN` > `<repo>/bin/` > `~/.hypernexus/bin/` > `PATH`)
   and copies the three `hypernexus*` skills from
   `addons/copilot/plugin/hypernexus/skills/`.
-- `use-meta-model.ps1` best-effort mints `META_MUSE_API_KEY` into the process
-  environment via the shim, then runs install + check. Mint needs a live pi
-  login (`/login meta` in pi); without it the script warns and continues with
-  MCP/skills wiring only.
+- `use-meta-model.ps1` best-effort mints `META_API_KEY` (union key) into the
+  process environment via the shim, then runs install + check. Mint needs a
+  live pi login (`/login meta` in pi); without it the script warns and
+  continues with MCP/skills wiring only.
 
 Note: Copilot CLI login itself is interactive (`copilot login --device-code`)
 and Copilot models are GitHub-side; the Meta provider above is opt-in.
