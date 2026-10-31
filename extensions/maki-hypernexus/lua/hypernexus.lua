@@ -1210,6 +1210,30 @@ maki.api.create_autocmd("TurnEnd", {
   end,
 })
 
+maki.api.create_autocmd("ToolDone", {
+  callback = function(ev)
+    local data = ev.data or {}
+    local tool = tostring(data.tool or data.tool_name or "?")
+    local ok = data.ok
+    if ok == nil and data.exit_code ~= nil then
+      ok = (data.exit_code == 0)
+    end
+    local detail = tostring(data.detail or data.output or ""):sub(1, 200)
+    M.hn_observe("tool_done", "tool=" .. tool .. " ok=" .. tostring(ok)
+      .. (detail ~= "" and (" " .. detail) or ""), { "record", "tool:" .. tool })
+  end,
+})
+
+maki.api.create_autocmd("TaskStatusChanged", {
+  callback = function(ev)
+    local data = ev.data or {}
+    local status = tostring(data.status or "?")
+    local task = tostring(data.task or data.task_id or data.id or "?")
+    M.hn_observe("subagent_stop", "task=" .. task .. " status=" .. status,
+      { "session", "subagent" })
+  end,
+})
+
 maki.api.create_autocmd("ModelChanged", {
   callback = function(ev)
     local m = ev.data and ev.data.model
