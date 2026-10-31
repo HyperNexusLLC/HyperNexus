@@ -27,8 +27,8 @@ codex mcp add hypernexus --env HYPERNEXUS_WORKSPACE_ROOT="%ROOT%" --env HYPERNEX
 if !errorlevel! neq 0 echo (MCP entry may already exist — continuing)
 
 echo.
-echo === 2/4: Install skills (hypernexus, hypernexus-ops, hypernexus-workflows) ===
-for %%S in (hypernexus hypernexus-ops hypernexus-workflows) do (
+echo === 2/4: Install skills (hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-sessions) ===
+for %%S in (hypernexus hypernexus-ops hypernexus-workflows hypernexus-sessions) do (
   if not exist "%USERPROFILE%\.codex\skills\%%S" mkdir "%USERPROFILE%\.codex\skills\%%S"
   xcopy /E /I /Y "%PLUGIN_DIR%\skills\%%S" "%USERPROFILE%\.codex\skills\%%S\" >nul
   if !errorlevel! neq 0 (

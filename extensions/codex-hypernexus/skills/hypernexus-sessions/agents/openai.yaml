@@ -1,0 +1,6 @@
+interface:
+  display_name: "HyperNexus Sessions"
+  short_description: "HyperNexus session lifecycle for Codex"
+  default_prompt: "Use $hypernexus-sessions to summarize sessions, capture handoffs, or resume prior work."
+policy:
+  allow_implicit_invocation: true

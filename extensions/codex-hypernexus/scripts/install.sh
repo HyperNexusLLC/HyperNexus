@@ -30,8 +30,8 @@ codex mcp add hypernexus \
   -- "$EXE" mcp || echo "(MCP entry may already exist — continuing)"
 
 echo ""
-echo "=== 2/4: Install skills (hypernexus, hypernexus-ops, hypernexus-workflows) ==="
-for SKILL in hypernexus hypernexus-ops hypernexus-workflows; do
+echo "=== 2/4: Install skills (hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-sessions) ==="
+for SKILL in hypernexus hypernexus-ops hypernexus-workflows hypernexus-sessions; do
   mkdir -p "$HOME/.codex/skills/$SKILL"
   cp -r "$PLUGIN_DIR/skills/$SKILL/." "$HOME/.codex/skills/$SKILL/"
 done

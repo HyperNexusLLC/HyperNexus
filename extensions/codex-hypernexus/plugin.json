@@ -20,6 +20,8 @@
     "billing"
   ],
   "skills": "./skills/",
+  "commands": "./commands/",
+  "agents": "./agents/",
   "interface": {
     "displayName": "HyperNexus",
     "shortDescription": "HyperNexus AI control plane with L2 memory, tool routing, agent dispatch, and billing",
