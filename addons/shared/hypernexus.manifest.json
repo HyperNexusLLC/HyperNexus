@@ -335,6 +335,24 @@
     "sessions-jsonl"
    ],
    "notes": "Meta Muse Spark via pi OAuth (HAX_META_API_KEY live-read from pi auth.json by scripts/meta-env.sh; key never in config.json). hn.mjs CLI covers all 31 manifest capabilities (true published endpoints; stale /api/memory/stats, /api/routes, /api/memory/update, /api/memory/delete, /api/memory/handoff remapped). 11 @-mentionable command files. hn-worker subagent preset. Turn scripts mirror the 10 hook contracts outside-process. Battery: bin/test-hax-ext.mjs (70 checks)."
+  },
+  "prime-agent": {
+   "status": "active",
+   "api": "Prime Agent Python skill package + MCP stdio + commands/skills/hooks/schedules/agents",
+   "adapter": "addons/prime-agent/",
+   "install": "python addons/prime-agent/install.py [--project <dir>|--global] + prime-agent mcp add hypernexus",
+   "installer": "addons/prime-agent/install.py",
+   "surfaces": [
+    "mcp",
+    "skills",
+    "commands",
+    "hooks",
+    "agents",
+    "schedules",
+    "prompt-overlay",
+    "meta-model"
+   ],
+   "notes": "35 typed async skill calls + 58 MCP stdio tools; 9 skill dirs + 8 hn commands + hn-observe/hn-gate hooks + dispatcher agent + standup schedule. Meta muse-spark-1.3-contributor via sync-meta-oauth.py (pi auth.json OAuth block verbatim, kernel proxy POST /api.meta.ai/v1/responses). Battery: bin/test-prime-agent-ext.mjs + tests/test_prime_agent_ext.py."
   }
  },
  "contract": {
