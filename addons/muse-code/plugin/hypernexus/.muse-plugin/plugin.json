@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "hypernexus",
   "displayName": "HyperNexus",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "HyperNexus AI control plane for Muse Code: persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery, knowledge graph, kernel ops, and cross-harness session continuity via the local Go kernel on port 7778.",
   "compat": {
     "source": "native",
