@@ -8,7 +8,7 @@ import { join } from "path";
 
 const root = process.cwd();
 const shared = join(root, "addons", "shared", "bin", "meta-muse-key.mjs");
-const harnesses = ["claude-code", "codex", "crush", "droid", "freebuff",
+const harnesses = ["claude-code", "codewhale", "codex", "crush", "droid", "freebuff",
   "jcode", "mini-swe-agent", "muse-code", "open-interpreter", "opencode"];
 
 let pass = 0, fail = 0;

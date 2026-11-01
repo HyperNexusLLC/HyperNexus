@@ -34,8 +34,8 @@ paths cover it instead:
    base_url = "http://127.0.0.1:7778/v1"
    ```
    pi-side refreshes flow through with no re-sync and no kernel restart.
-2. **Secret-store key (fast lane).** `scripts/sync-meta-oauth-codewhale.ps1`
-   mints the current pi access token into the Codewhale secret store
+2. **Secret-store key (fast lane).** `addons/codewhale/bin/meta-muse-key.mjs` (thin shim over the shared minter) and `scripts/sync-meta-oauth-codewhale.ps1`
+   mints via the shared minter (meta.refresh to api.meta.ai key, stdout key-only) into the Codewhale secret store
    (`codewhale auth set --provider meta`). Idempotent — re-run after pi refreshes.
 
 ## Launch

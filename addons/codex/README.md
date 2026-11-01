@@ -31,4 +31,6 @@ $env:MODEL_API_KEY = node addons/codex/bin/meta-muse-key.mjs  # current shell on
 - commands/hn-*.md : 8 command prompt files (installed as skills) 
 - hooks/ : hn-session.sh, hn-rbac.sh, hn-pre-tool.sh (by-convention; see hooks/README.md) 
 - bin/test-codex-ext.mjs : integration battery (config, skills, mint, kernel, smoke) 
-Hooks: hn-session.sh, hn-rbac.sh, hn-pre-tool.sh -- see hooks/README.md. Meta launcher: use-meta-model.ps1. 
+Hooks: hn-session.sh, hn-rbac.sh, hn-pre-tool.sh -- see hooks/README.md. Meta launcher: use-meta-model.ps1.
+## Shell policy
+Never include `bash`/`powershell`/shell-execution tools in model requests: Meta subscription attestation denies them with 403 `client_attestation_denied` even with a fresh key. Route shell needs through the HyperNexus `code_interpreter` parity tool with a minimal description instead.

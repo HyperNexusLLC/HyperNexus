@@ -1,5 +1,5 @@
 {
-  "hooks": {
+  "_note": "Shell intent routes through HyperNexus parity tools (apply_search_replace, repomap, mcp_call_tool); bash/powershell excluded from default allowlists.", "hooks": {
     "SessionStart": [
       {
         "matcher": "startup|resume|clear|compact",

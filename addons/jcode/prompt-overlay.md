@@ -15,7 +15,7 @@ Discipline loop for multi-step work: **RECALL → DISCOVER → EXECUTE → PERSI
 Memory tiers: L1 scratchpad (`memory_scratchpad_get/set/append`) for short-lived working
 state; L2 vault (`add_memory`/`search_memory`) for durable cross-session facts; L3 cold
 archive via `search_memory` with `include_cold: true`. Jcode's native `memory` tool and
-HyperNexus L2 are complementary — keep durable project facts in both.
+HyperNexus L2 are complementary — keep durable project facts in both. Shell/exec policy: bash/powershell are excluded from default tool allowlists; route shell needs through HyperNexus parity tools (apply_search_replace, repomap, mcp_call_tool) with minimal descriptions.
 
 Degradation contract: kernel calls never stall a turn. If `mcp__hypernexus__*` tools are
 unavailable or the kernel is down, continue with local tools and note the gap in one

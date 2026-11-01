@@ -1,19 +1,27 @@
 # use-meta-model.ps1 — launch Reasonix on Meta muse-spark-1.3-contributor.
-# USER-RUN ONLY. This script never reads auth.json / token files and never
-# prints the key. It only presence-checks the VARIABLE NAME, then launches.
+# MINTER PATTERN (per-invocation live mint — never snapshot a key).
+# This script mints a FRESH Meta Model API key on every run from pi's
+# auth.json identity (pi owns OAuth refresh), uses it for this process only,
+# and never stores it. Minted keys die in ~24h; a pasted snapshot would rot.
 #
-#   1. $env:META_MUSE_API_KEY = '<paste-your-token-here>'  # you set this
-#   2. .\use-meta-model.ps1 "your prompt here"             # one-shot via run
-#   3. .\use-meta-model.ps1                                # interactive TUI
+#   .\use-meta-model.ps1 "your prompt here"   # one-shot via run
+#   .\use-meta-model.ps1                      # interactive TUI
 #   # optional persistent wiring: merge meta-model.reasonix.toml [[providers]]
 #   # block into %APPDATA%\reasonix\config.toml, then /model in the TUI.
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Prompt)
 
-if ([string]::IsNullOrEmpty($env:META_MUSE_API_KEY)) {
-  Write-Error 'META_MUSE_API_KEY is not set. Set the variable in this shell first, then re-run. The value is never displayed or stored by this script.'
+$mintScript = Join-Path $PSScriptRoot 'bin/meta-muse-key.mjs'
+try {
+  $fresh = & node $mintScript 2>$null
+} catch {
+  $fresh = $null
+}
+if ([string]::IsNullOrWhiteSpace($fresh)) {
+  Write-Error 'Meta key mint failed. Run: node addons/reasonix/bin/meta-muse-key.mjs --check  — if it reports an expired session, /login meta in pi first (identity tokens are not renewable; pi owns refresh).'
   exit 1
 }
-Write-Host '[hypernexus] META_MUSE_API_KEY is set (value hidden). Starting reasonix with meta/muse-spark-1.3-contributor ...'
+$env:META_MUSE_API_KEY = $fresh.Trim()
+Write-Host '[hypernexus] minted fresh META_MUSE_API_KEY for this run only (value hidden, never stored). Starting reasonix with meta/muse-spark-1.3-contributor ...'
 
 $reasonix = Get-Command reasonix -ErrorAction SilentlyContinue
 if (-not $reasonix) { $reasonix = 'reasonix' }
@@ -24,3 +32,4 @@ if ($Prompt -and $Prompt.Count -gt 0) {
   $env:REASONIX_MODEL = 'meta/muse-spark-1.3-contributor'
   & $reasonix --model 'meta/muse-spark-1.3-contributor'
 }
+# Key dies with this process env. Next run mints fresh again.

@@ -166,7 +166,11 @@ option skill-path "${skillsDir}"
 #   hook add SessionStart --name "hypernexus-boot" --command "${hooksDir}/hn-session.cmd" --timeout 15
 
 # --- Permissions: read + edit auto-approved, everything else prompts ---
-permissions allow view ls grep edit bash read write
+# NOTE: no bash/powershell/shell tools in the default allow path. Shell needs
+# go through HyperNexus kernel parity tools (code_interpreter / run_shell_command
+# via mcp_call_tool, kernel-side execution only) — model-requested shell tools
+# trip Meta client_attestation_denied 403s.
+permissions allow view ls grep edit read write
 option auto-summarize true
 ${RC_END}`;
 }

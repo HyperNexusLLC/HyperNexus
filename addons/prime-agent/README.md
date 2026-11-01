@@ -8,10 +8,10 @@ and the HyperNexus control plane (Go kernel, default `http://127.0.0.1:7778`).
 | Surface | Mechanism | Detail |
 |---|---|---|
 | **Python skill** | `hypernexus` skill package | 35 typed async calls: memory (store/structured facts/search/FTS/list/delete/graph/relations), L1 scratchpad (get/set/append), tool discovery (semantic search + suggestions + context), MCP bridge (status/servers/tools/call/tool-search), sessions + session bootstrap, knowledge graph (observations record/search, ingest), context bundles (save/get), cross-session handoff + agent memory, system & billing status |
-| **MCP server** | `prime-agent mcp add hypernexus -- hypernexus mcp` | 58 tools from the kernel's stdio MCP server: memory vault, scratchpad, MCP bridge, processes, chat-surface automation, accessory/root tools (bash/read/write/edit/grep/find/ls/repomap/codebase search & outline), code interpreter, system stats |
+| **MCP server** | `prime-agent mcp add hypernexus -- hypernexus mcp` | 58 tools from the kernel's stdio MCP server: memory vault, scratchpad, MCP bridge, processes, chat-surface automation, file tools (read/write/edit/grep/find/ls/repomap/codebase search & outline), code interpreter, system stats |
 | **Session workflow** | `handoff()` / `pickup()` | HANDOFF.md-style cross-session continuity through `/api/agent-memory/*` |
 | **Fail-soft** | bounded 5s calls | Kernel down => typed `KernelUnreachable` with a fix hint; never stalls a turn |
-| **Commands** | `commands/hn-*.md` prompt files | 8 slash-commands (status/search/store/session/context/summary/tools/purge); load with `prime-agent --prompt-template <file>` |
+| **Commands** | `commands/hn-*.md` prompt files | 11 slash-commands (status/search/store/session/context/summary/tools/purge/plan/remember/restore); load with `prime-agent --prompt-template <file>` |
 | **Skills** | 9 skill dirs | base `hypernexus` + memory, l2, mcp-routing, agents, status-billing, sessions, ops, workflows |
 | **Hooks** | `hooks/hn-observe.py`, `hooks/hn-gate.py` | lifecycle observer (facts/add tags array + observations/record, exit 0 + `continue:true`) and fail-open allow-gate; Prime Agent has no native hook API, so run explicitly or from a scheduled prompt |
 | **Reminders/agents** | `schedules/hn-standup.txt`, `agents/hypernexus-dispatcher.md` | read-only status prompt for `prime-agent schedule add`; dispatcher brief for `--goal` / `prime-agent send` |
@@ -21,13 +21,14 @@ Core kernel functionality works **with and without** the extension: the skill an
 MCP server are thin clients over the same HTTP/stdio surfaces the kernel already
 exposes (verified by `bin/test-core-noext.mjs`).
 
-## Meta OAuth (native, from pi's auth.json)
+## Meta model (live minter; oauth sync is a one-time migration)
 
-`sync-meta-oauth.py` copies the pi `/login meta` OAuth block verbatim — no minting,
+The supported path is the shared live minter (`bin/meta-muse-key.mjs`, thin shim over `addons/shared/bin/meta-muse-key.mjs`; `use-meta-model.ps1` mints a FRESH key per run — never paste a token). `sync-meta-oauth.py` is a DEPRECATED one-time migration that copies the pi `/login meta` OAuth block verbatim — no minting,
 no key derivation, no pasted tokens:
 
 ```bash
-python addons/prime-agent/sync-meta-oauth.py          # sync (idempotent)
+node addons/prime-agent/bin/meta-muse-key.mjs --check   # verify live mint (key hidden; supported path)
+python addons/prime-agent/sync-meta-oauth.py          # one-time migration only (deprecated)
 python addons/prime-agent/sync-meta-oauth.py --check   # verify in-sync
 ```
 
@@ -75,7 +76,7 @@ wire, 1M context, reasoning on) with the key taken from the environment
 shell — never paste it in chat):
 
 ```powershell
-$env:MODEL_API_KEY = "YOUR_TOKEN_HERE"
+.\addons\prime-agent\use-meta-model.ps1 "hello"  # mints fresh MODEL_API_KEY for this run only (value hidden)
 prime-agent --provider meta --model muse-spark-1.3-contributor -p "hello"
 ```
 
@@ -101,7 +102,7 @@ Prime Agent loads prompt files with `--prompt-template <path>` (repeatable):
 prime-agent --prompt-template addons/prime-agent/commands/hn-status.md -p "status"
 ```
 
-Available: `hn-status`, `hn-search`, `hn-store`, `hn-session`, `hn-context`, `hn-summary`, `hn-tools`, `hn-purge`.
+Available: `hn-status`, `hn-search`, `hn-store`, `hn-session`, `hn-context`, `hn-summary`, `hn-tools`, `hn-purge`, `hn-plan`, `hn-remember`, `hn-restore`.
 
 ## Hooks, schedules, agents
 
@@ -134,8 +135,10 @@ prime-agent send <agent> "<task>"
 ## Meta model (user-run, no secrets in repo)
 
 ```powershell
-$env:MODEL_API_KEY = "<paste-your-token-here>"   # one live shell only, value never stored
-.\addons\prime-agent\use-meta-model.ps1 "hello"  # one-shot on meta/muse-spark-1.3-contributor
+.\addons\prime-agent\use-meta-model.ps1 "hello"  # mints fresh key per run (value hidden, never stored); one-shot on meta/muse-spark-1.3-contributor
+```
+```bash
+node addons/prime-agent/bin/meta-muse-key.mjs --check  # verify live mint (key hidden)
 ```
 
 `meta-model.prime.json` is the matching provider snippet (env-var NAME reference
@@ -167,7 +170,7 @@ contract (SKILL.md frontmatter, src layout, hatch wheel config), live skill
 calls (memory roundtrip, scratchpad, tool search, MCP bridge, sessions, handoff),
 graceful failure on a dead kernel, Prime Agent MCP registration, and the stdio
 MCP server itself (initialize, tools/list schema validation, safe dispatch of 15
-tools, clean unknown-tool errors, plus the full file surface (8 focused skills, 8 commands,
+tools, clean unknown-tool errors, plus the full file surface (8 focused skills, 11 commands,
 2 hooks with exit-0/continue:true and allow/deny gate behavior, mcp.json stdio+env,
 Meta env-reference-only wiring, agent brief, schedule template).
 

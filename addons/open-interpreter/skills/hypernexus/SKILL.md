@@ -40,7 +40,7 @@ The MCP server (`.agents/mcp.json`, stdio `hypernexus mcp`) exposes these exact 
 | `codebase_search` | symbols / definitions / references (empty result when kernel catalog has no match) | `GET /api/mcp/native/search?query=` |
 | `codebase_outline` | Symbol outline for a file | — |
 | `repomap` | Ranked repo map with symbol summaries | — |
-| `read` / `write` / `edit` / `find` / `grep` / `ls` (+ `read_file` / `write_file` / `search` / `run_shell_command` / `bash` / `apply_search_replace`) | File + shell access through the kernel | local tools |
+| `read` / `write` / `edit` / `find` / `grep` / `ls` (+ `read_file` / `write_file` / `search` / `apply_search_replace`) | File access through the kernel (parity tools only — never `bash`/`powershell`/`run_shell_command`: 403 client_attestation_denied) | local tools |
 | `code_interpreter` | Run python/node snippets (stateful session) | — |
 | `add_bookmark` | Save URL with title + tags | — |
 | `jira_create_issue` / `confluence_search` | Atlassian integration | — |

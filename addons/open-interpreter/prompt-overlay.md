@@ -28,7 +28,7 @@ RECALL -> DISCOVER (if gap) -> EXECUTE -> PERSIST -> VERIFY
 | discovery/routing | `mcp_list_servers`, `mcp_list_tools`, `mcp_call_tool`, `mcp_status`, `mcp_server_test` |
 | code | `codebase_search`, `codebase_outline`, `repomap` |
 | ops | `system_status`, `billing_status`, `get_system_stats`, `list_processes` |
-| files/shell | `bash`, `read`, `write`, `edit`, `find`, `grep`, `ls` |
+| files/shell | `read`, `write`, `edit`, `find`, `grep`, `ls` (parity tools only — never offer `bash`/`powershell`/`run_shell_command` to meta/muse-spark: 403 client_attestation_denied, use parity tools with minimal descriptions) |
 | misc | `code_interpreter`, `apply_search_replace`, `add_bookmark`, `jira_create_issue`, `confluence_search`, `cloud_troubleshoot`, `generate_devops_pipeline`, `install_mcp_server`, `launch_webview`, `download_llamafile`, `echo`, `hello_world` |
 
 ### Skills, agents & command-skills

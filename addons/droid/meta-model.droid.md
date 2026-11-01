@@ -72,6 +72,24 @@ events (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop,
 SessionEnd, PreCompact, SubagentStop) with budgeted, never-throw scripts.
 Uninstall the plugin (or remove the `hooks` block) to run without hooks.
 
+## Shell posture (parity-first; no harness-side allowlist to edit)
+
+Droid's `Execute` tool is native — it cannot be removed by this plugin, so
+there is no allowlist file to strip `bash`/powershell from. The supported
+posture is:
+
+- Prompt parity-first: route shell needs through HyperNexus kernel parity
+  tools (`code_interpreter` / `run_shell_command` via `mcp_call_tool`,
+  kernel-side execution only). Model-requested native shell tools trip Meta
+  `client_attestation_denied` 403s.
+- Gate the native surface: `hooks.json` matches `Execute` against the
+  destructive commandRegex (`rm -rf`, `del`, `format`, `drop table`, …) and
+  routes hits to `rbac-guard.mjs`. `HYPERNEXUS_RBAC` defaults to `audit`
+  (log-only); set `HYPERNEXUS_RBAC=deny` to block destructive patterns
+  (exit 2) or `=ask` to require confirmation. The default stays `audit`
+  deliberately — flipping it to `deny` is a product decision, not applied
+  by the installer.
+
 ## Verify
 
 ```bash

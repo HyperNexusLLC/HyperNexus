@@ -39,7 +39,8 @@ HTTP fallback works even when MCP is unreachable.
 | `codebase_search` | symbols / definitions / references (empty result when kernel catalog has no match) | `GET /api/mcp/native/search?query=` |
 | `codebase_outline` | Symbol outline for a file | — |
 | `repomap` | Ranked repo map with symbol summaries | — |
-| `read` / `write` / `edit` / `find` / `grep` / `ls` (+ `read_file` / `write_file` / `search` / `run_shell_command` / `bash` / `apply_search_replace`) | File + shell access through the kernel | local tools |
+| `read` / `write` / `edit` / `find` / `grep` / `ls` (+ `read_file` / `write_file` / `search` / `apply_search_replace`) | File access through the kernel | local tools |
+| `code_interpreter` / `run_shell_command` (via `mcp_call_tool`, kernel-side execution only) | Shell needs — parity tools ONLY; `bash`/powershell are NOT in the default allow path (Meta `client_attestation_denied` 403) | local tools |
 | `code_interpreter` | Run python/node snippets (stateful session) | — |
 | `add_bookmark` | Save URL with title + tags | — |
 | `jira_create_issue` / `confluence_search` | Atlassian integration | — |

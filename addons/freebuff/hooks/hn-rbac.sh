@@ -10,7 +10,7 @@ if [ -z "$CMD_TEXT" ]; then
   CMD_TEXT="$(printf '%s' "$RAW" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
 fi
 case "$TOOL" in
-  bash|run_shell_command|"")
+  bash|run_shell_command|powershell|pwsh|powershell.exe|pwsh.exe|"")
     # Check CMD_TEXT and RAW as separate lines so the $ anchor matches
     # (crush twin greps CMD_TEXT only; concatenation would break the $ anchor).
     if printf '%s\n%s' "$CMD_TEXT" "$RAW" | grep -qE 'rm[[:space:]]+-(rf|fr)[[:space:]]+/[[:space:]]*$|rm[[:space:]]+-(rf|fr)[[:space:]]+~|mkfs|:\(\)\{ *:\|:& *\};|format[[:space:]]+[A-Za-z]:|del[[:space:]]+/'; then

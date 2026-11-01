@@ -54,6 +54,9 @@ COMMAND_FILES = [
     "hn-summary.md",
     "hn-tools.md",
     "hn-purge.md",
+    "hn-plan.md",
+    "hn-remember.md",
+    "hn-restore.md",
 ]
 HOOK_FILES = ["hn-observe.py", "hn-gate.py"]
 MCP_SERVER = "hypernexus"
@@ -197,7 +200,7 @@ def check_file_surface() -> bool:
             log(f"MISSING skill: {SRC_SKILLS / name / 'SKILL.md'}")
             ok = False
     if ok:
-        log("file surface complete (9 skills, 8 commands, 2 hooks, mcp.json, meta wiring + oauth sync, agent brief, schedule)")
+        log("file surface complete (9 skills, 11 commands, 2 hooks, mcp.json, meta minter wiring + oauth migration, agent brief, schedule)")
     return ok
 
 

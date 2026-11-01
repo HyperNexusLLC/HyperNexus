@@ -12,7 +12,7 @@ HTTP on the kernel (port 7778).
 |---|---|---|
 | **MCP server `hypernexus`** | `.codewhale/mcp.json` (project) or `~/.codewhale/mcp.json` (global) | 58 tools: L2 memory (add/search/delete/stats), L1 scratchpad, knowledge-graph relation extraction, MCP discovery + call routing, code search, kernel health/billing |
 | **Plugin bundle** | `<target>/plugins/hypernexus/` | `plugin.json` + legacy `plugin.toml`, bundle `mcp.json`, 11 `/hn-*` commands, 4 skills, 2 agents, 3 hooks — activate via `/plugin validate/show/trust/enable hypernexus` |
-| **3 skills** | `<target>/skills/` (mirrored from the bundle) | `hypernexus` (tool map + discipline), `hypernexus-ops` (verify loop + degradation), `hypernexus-workflows` (MEM-FIRST / DISCOVER / HARVEST / HANDOFF / subagent persistence) |
+| **4 skills** | `<target>/skills/` (mirrored from the bundle) | `hypernexus` (tool map + discipline), `hypernexus-ops` (verify loop + degradation), `hypernexus-workflows` (MEM-FIRST / DISCOVER / HARVEST / HANDOFF / subagent persistence), `hypernexus-orchestrator` (multi-step orchestration) |
 | **Prompt overlay** | `AGENTS.md` managed block (project) | RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY discipline + memory tiers + preferred routing + degradation contract |
 | **11 commands** | bundle `commands/` | `/hn-status` `/hn-store` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-summary` `/hn-purge` `/hn-plan` `/hn-remember` `/hn-restore` |
 | **2 agents** | bundle `agents/` | `hypernexus-orchestrator`, `hypernexus-researcher` (read-only) |

@@ -2,15 +2,17 @@
 // =============================================================================
 // Model: muse-spark-1.3-contributor via Meta's OpenAI-compatible endpoint.
 // Auth is an ENV-VAR NAME REFERENCE ONLY ("apiKey": "MODEL_API_KEY") — this file
-// never contains a token. Set the variable in your own shell before launching.
+// never contains a token. The variable is minted FRESH per run by
+// use-meta-model.ps1 via bin/meta-muse-key.mjs (thin shim over the shared
+// minter addons/shared/bin/meta-muse-key.mjs; stdout = key-only contract).
 //
-// USER-RUN ACTIVATION (PowerShell — you type this, nothing is stored):
-//   $env:MODEL_API_KEY = '<paste-your-token-here>'   # one live shell only
-//   .\use-meta-model.ps1 "hello"                      # one-shot via -p
+// USER-RUN ACTIVATION (minter pattern — nothing pasted, nothing stored):
+//   .\use-meta-model.ps1 "hello"                      # mints fresh key, one-shot via -p
 //   # ...or merge the "meta" block below into ~/.prime/agent/models.json
-//   # under "providers", then launch:
+//   # under "providers", then launch (key still minted per run):
 //   # prime-agent --provider meta --model muse-spark-1.3-contributor
 //
+// Verify: node addons/prime-agent/bin/meta-muse-key.mjs --check (key hidden).
 // Presence-check only: this file carries the VARIABLE NAME, never a value.
 {
   "providers": {

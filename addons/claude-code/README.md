@@ -64,3 +64,12 @@ node bin/test-claude-code-ext.mjs --live   # + mint + kernel + model round-trip
 - `hooks/scripts/hn-compact.mjs` (Node) — `PreCompact` pointer: persists the
   resume marker (goal + latest summary reference) before compaction.
 - All hooks are fire-and-forget, budgeted, never block, never read credentials.
+
+## Shell policy
+
+Never include `bash`/`powershell`/shell-execution tools in model requests:
+Meta subscription attestation denies them with 403 `client_attestation_denied`
+even with a fresh key. Route shell needs through the HyperNexus
+`code_interpreter` parity tool with a minimal description instead. The
+`PreToolUse` Bash gate above stays as a destructive-pattern guard, not as a
+default shell allowlist.

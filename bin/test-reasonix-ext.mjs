@@ -330,6 +330,8 @@ console.log("=== T8: meta wiring (env-ref only, no secrets in repo) ===");
   check("meta-model snippet is env-ref only", snip.includes("META_MUSE_API_KEY") && !/sk-|tp-|dca:/.test(snip));
   const sync = read(path.join(REPO, "scripts", "sync-meta-oauth-reasonix.ps1")) ?? "";
   check("sync-meta-oauth-reasonix.ps1 exists", sync.includes("pi\\agent\\auth.json") || sync.includes(".pi"));
+  check("bin/meta-muse-key.mjs thin shim exists", !!read(path.join(ADDON, "bin", "meta-muse-key.mjs"))?.includes("shared/bin/meta-muse-key.mjs"));
+  check("use-meta-model.ps1 mints via meta-muse-key.mjs", (read(path.join(ADDON, "use-meta-model.ps1")) ?? "").includes("meta-muse-key.mjs"));
   // repo must not contain live tokens: scan addon + scripts for token-shaped values
   const suspects = [];
   for (const f of [path.join(ADDON, "meta-model.reasonix.toml"), path.join(ADDON, "use-meta-model.ps1"), path.join(ADDON, "reasonix-plugin.json")]) {

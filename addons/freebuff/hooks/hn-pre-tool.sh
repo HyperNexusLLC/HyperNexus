@@ -7,7 +7,7 @@
 TOOL="${CRUSH_TOOL_NAME:-${TOOL_NAME:-}}"
 INPUT="$(cat 2>/dev/null)"
 case "$TOOL" in
-  bash|run_shell_command|"")
+  bash|run_shell_command|powershell|pwsh|powershell.exe|pwsh.exe|"")
     case "$INPUT" in
       *"rm -rf /"*|*"rm -rf ~"*|*"mkfs"*|*":(){:|:&};:"*)
         echo "blocked: destructive shell pattern denied by hypernexus-gate" >&2

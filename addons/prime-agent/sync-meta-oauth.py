@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""sync-meta-oauth.py — native Meta OAuth login for Prime Agent, sourced from pi.
+"""sync-meta-oauth.py — ONE-TIME migration of Meta OAuth login for Prime Agent.
+
+DEPRECATED as a recurring sync: the supported path is the shared live minter
+(addons/prime-agent/bin/meta-muse-key.mjs, thin shim over
+addons/shared/bin/meta-muse-key.mjs), which mints a fresh Model API key per
+run from pi's identity. Use this script only once when migrating a machine
+from the old paste-token flow to the minter pattern.
+
+Legacy description (native Meta OAuth login for Prime Agent, sourced from pi):
 
 Copies the Meta OAuth credential (type oauth: refresh + access + expires) from
 pi's auth.json (~/.pi/agent/auth.json, created by `/login meta` in pi) into

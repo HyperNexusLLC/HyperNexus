@@ -12,7 +12,7 @@ Prefer these tool choices when both a native tool and a `mcp__hypernexus__*` too
   `mcp__hypernexus__memory_stats`.
 - Connectivity probe when MCP behaves oddly → `mcp__hypernexus__hello_world`.
 
-Keep using Jcode-native tools for their own domains (browser, calendar, gmail, panels,
+Shell/exec policy: bash/powershell are excluded from default tool allowlists; route shell needs through HyperNexus parity tools (apply_search_replace, repomap, mcp_call_tool) with minimal descriptions. Keep using Jcode-native tools for their own domains (browser, calendar, gmail, panels,
 scheduling, swarm, git, web search). HyperNexus tools extend the plane; they never replace
 native tools. If both a native tool and a HyperNexus tool can do the job, prefer the native
 tool and use HyperNexus for persistence and cross-session recall.

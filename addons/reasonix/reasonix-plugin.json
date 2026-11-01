@@ -65,19 +65,19 @@
     "tools": [
       {
         "name": "status",
-        "description": "HyperNexus kernel health, version, uptime, and MCP bridge status. Call first when the kernel may be offline.",
+        "description": "Kernel health, version, uptime, MCP bridge status.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "system_overview",
-        "description": "Full system overview: kernel health, MCP inventory, providers, memory tiers, mesh.",
+        "description": "Kernel health, MCP inventory, memory tiers, mesh.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "memory_store",
-        "description": "Persist a fact, decision, or gotcha to HyperNexus L2 memory with tags (survives across sessions/tools).",
+        "description": "Store a fact in L2 memory with tags.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -93,7 +93,7 @@
       },
       {
         "name": "memory_search",
-        "description": "Keyword + semantic search across L2 memory (best relevance; slower). For hot loops use memory_fts_search.",
+        "description": "Search L2 memory (keyword + semantic).",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -107,7 +107,7 @@
       },
       {
         "name": "memory_fts_search",
-        "description": "FAST keyword search across L2 memory (FTS). Prefer this in latency-sensitive loops.",
+        "description": "Fast FTS keyword search over L2 memory.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -121,7 +121,7 @@
       },
       {
         "name": "memory_vector_search",
-        "description": "Semantic vector search over L2 plus L3 cold-archive fallback for older knowledge.",
+        "description": "Semantic vector search over L2 + L3.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -136,7 +136,7 @@
       },
       {
         "name": "memory_list",
-        "description": "Browse the most recent L2 memories.",
+        "description": "List recent L2 memories.",
         "inputSchema": {
           "type": "object",
           "properties": { "limit": { "type": "number", "description": "How many (default 10)." } },
@@ -146,7 +146,7 @@
       },
       {
         "name": "memory_delete",
-        "description": "Delete an L2 memory by id, or every memory carrying a tag (capped fan-out).",
+        "description": "Delete an L2 memory by id or tag.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -159,7 +159,7 @@
       },
       {
         "name": "memory_relate",
-        "description": "Link two memories in the knowledge graph (source_id relation_type target_id) with optional weight.",
+        "description": "Link two memories in the knowledge graph.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -175,7 +175,7 @@
       },
       {
         "name": "scratchpad",
-        "description": "Read/write the L1 scratchpad: short-lived working state shared across harnesses.",
+        "description": "Read/write the L1 scratchpad working state.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -190,7 +190,7 @@
       },
       {
         "name": "context_harvest",
-        "description": "Harvest prior context for a task: memories, session summaries, observations. Start complex tasks with this.",
+        "description": "Harvest prior context for a task topic.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -204,7 +204,7 @@
       },
       {
         "name": "record_observation",
-        "description": "Record a structured observation (discovery, decision, progress, warning, fix) with concepts and touched files.",
+        "description": "Record a structured L2 observation.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -222,7 +222,7 @@
       },
       {
         "name": "tool_search",
-        "description": "Semantic discovery across the 26k+ MCP tool catalog. Describe what you need; get the best matching tools.",
+        "description": "Semantic search across the MCP tool catalog.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -236,7 +236,7 @@
       },
       {
         "name": "tool_discover",
-        "description": "Query the native MCP router (L1+L2+L3 layers) for tools, returning the working set it would auto-load.",
+        "description": "Query the native MCP router working set.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -250,25 +250,25 @@
       },
       {
         "name": "suggest_tools",
-        "description": "Read proactive tool suggestions the preemptive advertiser derived from this conversation.",
+        "description": "Proactive tool suggestions for this chat.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "mcp_status",
-        "description": "MCP bridge status: connected servers, counts, initialization state.",
+        "description": "MCP bridge status: servers and counts.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "mcp_servers",
-        "description": "List configured + runtime MCP servers with status and tool counts.",
+        "description": "List MCP servers with status and counts.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "mcp_tools",
-        "description": "List MCP tools currently exposed by the kernel bridge.",
+        "description": "List tools exposed by the kernel bridge.",
         "inputSchema": {
           "type": "object",
           "properties": { "limit": { "type": "number", "description": "Max rows (default 25)." } },
@@ -278,7 +278,7 @@
       },
       {
         "name": "mcp_search",
-        "description": "Search the live-synced MCP tool inventory (server-qualified tool names and schemas).",
+        "description": "Search the live MCP tool inventory.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -292,7 +292,7 @@
       },
       {
         "name": "mcp_call",
-        "description": "Invoke a discovered MCP tool through the kernel router (server/tool name + args).",
+        "description": "Invoke an MCP tool via the kernel router.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -306,7 +306,7 @@
       },
       {
         "name": "session_search",
-        "description": "Search imported coding sessions (Claude Code, Aider, Gemini) for prior work and decisions.",
+        "description": "Search imported coding sessions.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -320,13 +320,13 @@
       },
       {
         "name": "session_context",
-        "description": "Session bootstrap: active goal, last objective, and cross-session links for the current workspace.",
+        "description": "Session bootstrap: goal and workspace links.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "session_handoff",
-        "description": "Persist or restore a session handoff artifact (goal continuity across harnesses).",
+        "description": "Write or restore a session handoff artifact.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -341,7 +341,7 @@
       },
       {
         "name": "skill_search",
-        "description": "Search the HyperNexus skill registry for reusable capability modules (SKILL.md).",
+        "description": "Search the HyperNexus skill registry.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -355,7 +355,7 @@
       },
       {
         "name": "skill_manage",
-        "description": "List, read, or create HyperNexus skills (reusable SKILL.md capability modules).",
+        "description": "List, read, or create HyperNexus skills.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -370,7 +370,7 @@
       },
       {
         "name": "code_search",
-        "description": "Search code via the native router. Modes: symbols, definitions, references, files.",
+        "description": "Search code: symbols, refs, files.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -385,7 +385,7 @@
       },
       {
         "name": "knowledge_graph",
-        "description": "Read the knowledge graph: entities and relations derived from memory (nodes/edges).",
+        "description": "Read memory knowledge graph nodes/edges.",
         "inputSchema": {
           "type": "object",
           "properties": { "focus": { "type": "string", "description": "Optional entity or concept to focus on." } },
@@ -395,13 +395,13 @@
       },
       {
         "name": "billing_status",
-        "description": "Provider billing, quotas, depleted models, and the fallback chain.",
+        "description": "Provider billing, quotas, fallback chain.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "audit_log",
-        "description": "Record an action to the HyperNexus audit/observation trail (compliance, RBAC evidence).",
+        "description": "Record an action to the audit trail.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -416,7 +416,7 @@
       },
       {
         "name": "subagent",
-        "description": "Record a task to L2 memory for tracking and later recall (tracked under category subagent).",
+        "description": "Track a task in L2 memory as a subagent.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -430,7 +430,7 @@
       },
       {
         "name": "workflow",
-        "description": "List or run HyperNexus engineering workflows for orchestration.",
+        "description": "List or run HyperNexus workflows.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -444,7 +444,7 @@
       },
       {
         "name": "orchestrate",
-        "description": "Run the RECALL-DISCOVER-PERSIST leg of the orchestration loop for a task: harvests memory, finds tools, records the task.",
+        "description": "Harvest memory, find tools, record a task.",
         "inputSchema": {
           "type": "object",
           "properties": { "task": { "type": "string", "description": "The task to orchestrate." } },
@@ -455,7 +455,7 @@
       },
       {
         "name": "browser",
-        "description": "Browser automation: scrape a URL or check browser-service status. Degrades gracefully when the service is down.",
+        "description": "Scrape a URL or check browser status.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -469,13 +469,13 @@
       },
       {
         "name": "memory_stats",
-        "description": "Memory tier statistics: counts across L2 vault, scratchpad, and relation tiers.",
+        "description": "Memory tier counts: L2, scratchpad, graph.",
         "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
         "readOnly": true
       },
       {
         "name": "session_list",
-        "description": "List recent sessions across harnesses (who ran what, where).",
+        "description": "List recent sessions across harnesses.",
         "inputSchema": {
           "type": "object",
           "properties": { "limit": { "type": "number", "description": "Max sessions (default 10)." } },
@@ -485,7 +485,7 @@
       },
       {
         "name": "repomap",
-        "description": "Generate a ranked repository map with symbol summaries for a directory (code navigation starting point).",
+        "description": "Ranked repo map with symbol summaries.",
         "inputSchema": {
           "type": "object",
           "properties": { "dir": { "type": "string", "description": "Directory to map (default workspace root)." } },

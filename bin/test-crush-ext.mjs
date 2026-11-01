@@ -119,6 +119,28 @@ console.log("[crush-ext] installer wiring");
   })());
 }
 
+console.log("[crush-ext] shell-tool allowlist posture (no bash/powershell by default)");
+ok("installer crushrcBlock permissions allow has no bash/powershell", (() => {
+  const t = fs.readFileSync(path.join(ADDON, "install.mjs"), "utf8");
+  const lines = t.split("\n").filter((l) => l.trim().startsWith("permissions allow"));
+  return lines.length > 0 && !lines.some((l) => /\bbash\b|\bpowershell\b|run_shell_command/.test(l));
+})());
+ok("mcp snippet permissions allow has no bash/powershell", (() => {
+  const t = fs.readFileSync(path.join(ADDON, "mcp.crushrc.snippet"), "utf8");
+  const lines = t.split("\n").filter((l) => l.trim().startsWith("permissions allow"));
+  return lines.length > 0 && !lines.some((l) => /\bbash\b|\bpowershell\b|run_shell_command/.test(l));
+})());
+ok("prompt-overlay tool map routes shell via parity only (no bare bash row)", (() => {
+  const t = fs.readFileSync(path.join(ADDON, "prompt-overlay.md"), "utf8");
+  const rows = t.split("\n").filter((l) => l.startsWith("|"));
+  return !rows.some((l) => /^\|\s*files\/shell\s*\|/.test(l))
+    && /parity only/.test(t) && /NOT in the default/.test(t);
+})());
+ok("skill tool map has no bare bash/run_shell_command file-access row", (() => {
+  const t = fs.readFileSync(path.join(ADDON, "skills", "hypernexus", "SKILL.md"), "utf8");
+  return !/\|\s*`read`.*`run_shell_command`.*`bash`/.test(t);
+})());
+
 console.log("[crush-ext] meta wiring (hermetic: auth shape + minter pattern)");
 ok("meta-model snippet mints via helper (no live .meta.access read, no secrets)", (() => {
   try {

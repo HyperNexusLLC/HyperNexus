@@ -27,7 +27,7 @@ node addons/mini-swe-agent/install.mjs --check    # verify model + endpoint
 ## Tests
 
 ```powershell
-python addons/mini-swe-agent/tests/test_miniswe_ext.py
+node addons/mini-swe-agent/bin/test-mini-swe-agent-ext.mjs   # canonical wrapper: python P1-P7 battery + minter --check
 ```
 
 ## Notes

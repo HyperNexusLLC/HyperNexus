@@ -22,8 +22,8 @@ Preferred routing when both a native tool and a `mcp__hypernexus__*` tool fit: d
 cross-session memory → `add_memory`/`search_memory`; short-lived state →
 `memory_scratchpad_*`; missing capability → `mcp_list_tools` → `mcp_call_tool`;
 kernel/ops → `system_status`/`billing_status`/`memory_stats`. Codewhale-native tools keep
-their own domains (files, shell, git, web); HyperNexus extends the plane, it never
-replaces them.
+their own domains (files, git, web); HyperNexus extends the plane, it never
+replaces them. Shell/exec policy: bash/powershell are excluded from default tool allowlists; route shell needs through HyperNexus parity tools (apply_search_replace, repomap, mcp_call_tool) with minimal descriptions.
 
 Subagent persistence: Codewhale workers share this kernel. Persist findings with
 `mcp__hypernexus__add_memory` (append-only, safe to retry), summarize assignments tagged

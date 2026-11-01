@@ -14,7 +14,7 @@ HyperNexus control plane (Go kernel, default `http://127.0.0.1:7778`).
 | **2 agents** | `hypernexus-orchestrator` (RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY) + `hypernexus-researcher` (read-only research, no writes) |
 | **Hooks** | plugin `SessionStart` + `PreCompact` context files; native `SessionStart` / `PostToolUse` / `PreToolUse` shell hooks (global `settings.json`, merged by installer) |
 | **MCP** | `contributes.mcpServers.hypernexus` (stdio) + global `config.toml [[plugins]] hypernexus` + project `.mcp.json` — all three merged, never clobbered |
-| **Meta model** | `meta/muse-spark-1.3-contributor` via `META_MUSE_API_KEY` env-var reference only (see below) |
+| **Meta model** | `meta/muse-spark-1.3-contributor` via fresh per-run mint (`bin/meta-muse-key.mjs` thin shim, pi owns refresh) into `META_MUSE_API_KEY` (see below) |
 
 ## Install
 
@@ -34,23 +34,23 @@ node addons/reasonix/install.mjs --uninstall
 
 Restart Reasonix afterwards so the sidecar + MCP server connect.
 
-## Meta model (muse-spark-1.3-contributor, env reference only)
+## Meta model (muse-spark-1.3-contributor, minter pattern)
 
-This package never reads `auth.json`, token files, or secret values. Pi owns the Meta OAuth
-refresh; Reasonix consumes the live token through the variable name only:
+This package never stores a key. `use-meta-model.ps1` mints a FRESH Meta Model
+API key on every run from pi's `auth.json` identity (pi owns the OAuth
+refresh) and uses it for that process only — never pasted, never stored.
+Minted keys die in ~24h; a pasted snapshot would rot. Verify with
+`node addons/reasonix/bin/meta-muse-key.mjs --check` (key hidden):
 
 ```powershell
-$env:META_MUSE_API_KEY = '<paste-your-token-here>'  # one live shell only
 .\addons\reasonix\use-meta-model.ps1 "your prompt here"
 # ...or merge addons/reasonix/meta-model.reasonix.toml [[providers]] block
-# into %APPDATA%\reasonix\config.toml, then pick the model in the TUI.
+# into %APPDATA%\reasonix\config.toml, then pick the model in the TUI
+# (the provider still reads META_MUSE_API_KEY from the process env).
 ```
 
-After a Pi token refresh, re-sync (handles the token value — run in your own shell):
-
-```powershell
-.\scripts\sync-meta-oauth-reasonix.ps1
-```
+If the mint reports an expired session, re-login in pi (`/login meta`) —
+identity tokens are not renewable; pi owns the refresh.
 
 ## Configuration
 
