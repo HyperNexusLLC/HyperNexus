@@ -64,9 +64,30 @@ for (let i = 0; i < 60; i++) {
   await new Promise((res) => setTimeout(res, 2000));
   if (i === 59) { console.error("kernel never became ready"); process.exit(1); }
 }
-if (!process.env.HAX_META_API_KEY) {
-  console.error("HAX_META_API_KEY not set — source it: eval \"$(sh addons/hax/scripts/meta-env.sh)\"");
-  process.exit(1);
+// Key gate: H9 live runs need a VALID vendor key. Mint on demand via the
+// shared minter (value never logged) when the env key is missing or rejected
+// (401). The minter uses pi's refresh token, so this is the reauth path.
+async function vendorKeyOk(key) {
+  try {
+    const r = await fetch("https://api.meta.ai/v1/models", {
+      headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(20000),
+    });
+    return r.status !== 401;
+  } catch { return true; } // network blip: don't force a mint; let H9 report
+}
+if (!process.env.HAX_META_API_KEY || !(await vendorKeyOk(process.env.HAX_META_API_KEY))) {
+  const mint = spawnSync(process.execPath,
+    [path.join(REPO_ROOT, "addons", "hax", "bin", "meta-muse-key.mjs")],
+    { encoding: "utf8", timeout: 60000 });
+  const fresh = (mint.stdout || "").trim();
+  if (mint.status === 0 && fresh && !/[\r\n]/.test(fresh) && fresh.length >= 20) {
+    process.env.HAX_META_API_KEY = fresh;
+    process.env.HAX_OPENAI_API_KEY = fresh;
+    console.log("HAX_META_API_KEY minted fresh via shared minter (value hidden)");
+  } else {
+    console.error("HAX_META_API_KEY missing/stale and mint failed — reauth pi (meta), then run the battery again");
+    process.exit(1);
+  }
 }
 
 console.log("=== H1: provider wiring (meta custom provider) ===");
@@ -199,7 +220,13 @@ const shDeps = ["python3", "head"].filter((c) => !shProbe(c));
 if (!SH) {
   for (const n of ["meta-env.sh exports key", "hn-prime.sh emits prime", "hn-turn.sh pre emits context", "hn-turn.sh post persists", "hn-turn.sh compact persists handoff"]) skip(n, "no sh interpreter on this box (scripts are POSIX sh)");
 } else if (shDeps.length) {
-  for (const n of ["meta-env.sh exports key", "hn-prime.sh emits prime", "hn-turn.sh pre emits context", "hn-turn.sh post persists", "hn-turn.sh compact persists handoff"]) skip(n, `sh present but missing script deps: ${shDeps.join(", ")}`);
+  // meta-env.sh needs only sh+node now (node-minter fallback), so it runs
+  // even when python3/head are missing; the turn scripts still skip there.
+  check("meta-env.sh exports key (node-minter path, no python3 needed)", (() => {
+    const r = spawnSync(SH, [path.join(REPO_ROOT, "addons", "hax", "scripts", "meta-env.sh")], { encoding: "utf8", timeout: 90000 });
+    return r.status === 0 && /export HAX_META_API_KEY='\S{20,}'/.test(r.stdout);
+  })());
+  for (const n of ["hn-prime.sh emits prime", "hn-turn.sh pre emits context", "hn-turn.sh post persists", "hn-turn.sh compact persists handoff"]) skip(n, `sh present but missing script deps: ${shDeps.join(", ")}`);
 } else {
 check("meta-env.sh exports 48-char key", (() => {
   const r = spawnSync(SH, [path.join(REPO_ROOT, "addons", "hax", "scripts", "meta-env.sh")], { encoding: "utf8" });

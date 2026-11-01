@@ -48,10 +48,21 @@ const GLOBAL_AGENTS = process.argv.includes("--global");
 
 const BEGIN = "<!-- hypernexus:begin";
 const END = "<!-- hypernexus:end -->";
-// Hax-scoped markers: the generic BEGIN/END above also prefix other lanes'
-// blocks (codewhale, freebuff, codex, open-interpreter), so block ops must
-// anchor on the hax-managed marker or they would clobber a sibling block.
-const HAX_BEGIN = "<!-- hypernexus:begin (managed by addons/hax/install.mjs";
+// Hax-scoped markers: codewhale's battery counts exact generic markers, and
+// sibling lanes (freebuff, codex, open-interpreter) already scope theirs, so
+// the hax overlay uses :hax-suffixed markers and never collides with another
+// lane's block. LEGACY_ covers blocks written by older installers, which are
+// auto-migrated to the scoped form on the next upsert/remove.
+const HAX_BEGIN = "<!-- hypernexus:begin:hax (managed by addons/hax/install.mjs";
+const HAX_END = "<!-- hypernexus:end:hax -->";
+const LEGACY_HAX_BEGIN = "<!-- hypernexus:begin (managed by addons/hax/install.mjs";
+function haxBlockSpan(existing) {
+  let b = existing.indexOf(HAX_BEGIN);
+  if (b >= 0) return { b, e: existing.indexOf(HAX_END, b), endLen: HAX_END.length };
+  b = existing.indexOf(LEGACY_HAX_BEGIN);
+  if (b >= 0) return { b, e: existing.indexOf(END, b), endLen: END.length };
+  return { b: -1, e: -1, endLen: 0 };
+}
 const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
 
 function repoVersion() {
@@ -70,26 +81,24 @@ function writeIfChanged(dst, body) {
 function upsertManagedBlock(filePath, blockText) {
   const block = blockText.trim();
   const existing = readIfExists(filePath) ?? "";
-  const b = existing.indexOf(HAX_BEGIN);
-  const e = b >= 0 ? existing.indexOf(END, b) : -1;
+  const { b, e, endLen } = haxBlockSpan(existing);
   let next;
-  if (b >= 0 && e > b) next = existing.slice(0, b) + block + existing.slice(e + END.length);
+  if (b >= 0 && e > b) next = existing.slice(0, b) + block + existing.slice(e + endLen);
   else next = existing.trimEnd() + (existing.trimEnd() ? "\n\n" : "") + block + "\n";
   return writeIfChanged(filePath, next);
 }
 function removeManagedBlock(filePath) {
   const existing = readIfExists(filePath);
   if (existing === null) return false;
-  const b = existing.indexOf(HAX_BEGIN);
-  const e = b >= 0 ? existing.indexOf(END, b) : -1;
+  const { b, e, endLen } = haxBlockSpan(existing);
   if (b < 0 || e < 0) return false;
-  return writeIfChanged(filePath, (existing.slice(0, b) + existing.slice(e + END.length)).trim() + "\n");
+  return writeIfChanged(filePath, (existing.slice(0, b) + existing.slice(e + endLen)).trim() + "\n");
 }
 function readJson(p) {
   try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; }
 }
 
-const overlayBlock = () => `<!-- hypernexus:begin (managed by addons/hax/install.mjs — do not edit inside this block) -->
+const overlayBlock = () => `<!-- hypernexus:begin:hax (managed by addons/hax/install.mjs — do not edit inside this block) -->
 ## HyperNexus Control Plane (hax)
 
 This workspace is backed by the local HyperNexus kernel (Go, port 7778) through the
@@ -115,7 +124,7 @@ Call the driver as \`node addons/hax/hn.mjs …\` (or \`./addons/hax/hn …\` wh
 - Degradation contract: kernel calls never stall a turn. If the kernel is down
   (\`status\` → \`"ok": false\`), continue from local files and say so in one sentence.
   All surfaces degrade to a clear error object — never reassuring fiction.
-<!-- hypernexus:end -->`;
+<!-- hypernexus:end:hax -->`;
 
 // ── config.json merge (provider + presets) ─────────────────────────────────
 const META_PROVIDER = {

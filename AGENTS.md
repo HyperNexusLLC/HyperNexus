@@ -356,8 +356,8 @@ Preferred routing when both a native tool and a `mcp__hypernexus__*` tool fit: d
 cross-session memory → `add_memory`/`search_memory`; short-lived state →
 `memory_scratchpad_*`; missing capability → `mcp_list_tools` → `mcp_call_tool`;
 kernel/ops → `system_status`/`billing_status`/`memory_stats`. Codewhale-native tools keep
-their own domains (files, shell, git, web); HyperNexus extends the plane, it never
-replaces them.
+their own domains (files, git, web); HyperNexus extends the plane, it never
+replaces them. Shell/exec policy: bash/powershell are excluded from default tool allowlists; route shell needs through HyperNexus parity tools (apply_search_replace, repomap, mcp_call_tool) with minimal descriptions.
 
 Subagent persistence: Codewhale workers share this kernel. Persist findings with
 `mcp__hypernexus__add_memory` (append-only, safe to retry), summarize assignments tagged
@@ -454,7 +454,7 @@ Discipline loop for multi-step work: **RECALL → DISCOVER → EXECUTE → PERSI
   continue with local tools — never mock state.
 <!-- hypernexus:end:open-interpreter -->
 
-<!-- hypernexus:begin (managed by addons/hax/install.mjs — do not edit inside this block) -->
+<!-- hypernexus:begin:hax (managed by addons/hax/install.mjs — do not edit inside this block) -->
 ## HyperNexus Control Plane (hax)
 
 This workspace is backed by the local HyperNexus kernel (Go, port 7778) through the
@@ -480,4 +480,35 @@ Call the driver as `node addons/hax/hn.mjs …` (or `./addons/hax/hn …` when n
 - Degradation contract: kernel calls never stall a turn. If the kernel is down
   (`status` → `"ok": false`), continue from local files and say so in one sentence.
   All surfaces degrade to a clear error object — never reassuring fiction.
-<!-- hypernexus:end -->
+<!-- hypernexus:end:hax -->
+
+<!-- hypernexus:begin:grok (managed by addons/grok/install.mjs — do not edit inside this block) -->
+## HyperNexus Control Plane (grok)
+
+This workspace is backed by the local HyperNexus kernel (Go, port 7778).
+Grok loads this file at chat start plus `.agents/mcp.json` and
+`.agents/skills/*` (each skill invocable as `/skill:<name>`).
+
+Discipline loop for multi-step work: **RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY**
+
+- **RECALL** — before re-deriving: FTS fast path `GET /api/memory/fts-search?q=<topic>&limit=8`
+  (~15ms), semantic `hypernexus` MCP `search_memory` for depth, scratchpad `goal`.
+- **DISCOVER** — on capability gaps: `mcp_list_servers` → `mcp_list_tools` →
+  semantic `/api/mcp/tools/search`, then route with `mcp_call_tool`.
+- **PERSIST** — non-obvious outcomes via `add_memory` (tags `topic,grok`) +
+  `memory_extract_relations`; session handoffs via `/skill:hn-summary`.
+- **VERIFY** — `system_status` + `billing_status` before/after production changes.
+- Skills: `/skill:hypernexus` `/skill:hypernexus-ops` `/skill:hypernexus-workflows`
+  `/skill:hypernexus-orchestrator` `/skill:hypernexus-researcher`
+  + command-skills `/skill:hn-status|hn-search|hn-store|hn-session|hn-context|hn-summary|hn-tools|hn-purge|hn-plan|hn-remember|hn-restore`.
+- Hooks (`.agents/hooks/`, by-convention — grok has no hook API): `hn-session.sh` bootstrap,
+  `hn-rbac.sh` deny-list, `hn-pre-tool.sh` allow-gate. See `addons/grok/hooks/README.md`.
+- Meta model: `/model` already lists **Muse Spark 1.3** (paid-plan locked without a plan);
+  subscription/OAuth path = `node addons/grok/bin/meta-muse-key.mjs` (pi owns refresh;
+  see `addons/grok/meta-model.grok.md`) or `use-meta-model.ps1` launcher;
+  BYOK openai-compatible connection `~/.config/grok/byok/connections.json`
+  (credentialRef `env:META_MUSE_API_KEY`, default-selected in manicode settings).
+- Degradation contract: kernel calls are budgeted and never stall a turn. If the kernel
+  is down (`curl -s http://127.0.0.1:7778/health` fails), say so in one sentence and
+  continue with local tools — never mock state.
+<!-- hypernexus:end:grok -->
