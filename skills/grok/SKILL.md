@@ -6,7 +6,7 @@ Grok is xAI's AI model. Use it for code explanation, chat, and analysis.
 
 ## MCP Server
 
-Connect to HyperNexus at: <http://localhost:8080/mcp>
+Connect to HyperNexus at: <http://127.0.0.1:7778/mcp>
 
 ## Usage
 

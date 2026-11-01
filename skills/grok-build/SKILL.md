@@ -6,7 +6,7 @@ Grok Build is SpaceXAI's terminal-based AI coding agent. It runs as a full-scree
 
 ## MCP Server
 
-Connect to HyperNexus at: <http://localhost:8080/mcp>
+Connect to HyperNexus at: <http://127.0.0.1:7778/mcp>
 
 ## Commands
 
