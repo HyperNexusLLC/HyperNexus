@@ -12,26 +12,23 @@ Install from the repository root:
 node addons/copilot/install.mjs
 ```
 
-Use the Meta subscription model without writing credentials to configuration:
+Launch Copilot with HyperNexus and the Copilot account/model already configured:
 
 ```powershell
-.\addons\copilot\use-meta-model.ps1
-.\addons\copilot\use-meta-model.ps1 -p "Reply exactly META-COPILOT-OK"
+.\addons\copilot\use-hypernexus.ps1
 ```
 
-The launcher sets Copilot CLI's documented BYOK Responses API variables for the
-Copilot process only (`COPILOT_PROVIDER_TYPE=openai`,
-`COPILOT_PROVIDER_BASE_URL=<kernel>/v1`,
-`COPILOT_PROVIDER_WIRE_API=responses`,
-`COPILOT_PROVIDER_API_KEY=hypernexus-local`,
-`COPILOT_PROVIDER_MODEL_ID=meta/muse-spark-1.3-contributor`) and restores the
-previous environment afterwards. Requests go to the HyperNexus kernel proxy at
-`http://127.0.0.1:7778/v1`; the kernel reads the current Meta credential from
-Pi's `auth.json` per request, so the real OAuth-derived credential is never
-copied into Copilot configuration. The placeholder API key is local to the
-Copilot process and is not sent upstream as the Meta credential. The kernel
-proxy currently identifies its upstream client as `pi/1.4.0`; its normal
-API error is returned to Copilot if the kernel is unavailable.
+The launcher loads the HyperNexus plugin and excludes Copilot's native `bash`
+and `powershell` tools, leaving the HyperNexus MCP parity tools available.
+Starting `copilot` directly leaves its normal tool list unchanged.
+
+The Pi OAuth `use-meta-model.ps1` launcher is disabled. Meta's
+[Model API Terms](https://dev.meta.ai/legal/terms-of-service) restrict a
+Coding Harness Subscription credential to its subscribed harness (Section 3.2)
+and proxy/API-gateway access without written authorization (Section 10.1(i)).
+This plugin does not relay Pi subscription credentials to Copilot. A separate
+direct Meta Model API key would involve separate billing and data terms; it is
+not configured here.
 
 Copilot CLI does not expose a Pi-style in-process `ExtensionAPI`; its native
 extension surface is plugins plus MCP, skills, commands, agents, rules, hooks,

@@ -71,21 +71,24 @@ check("two custom agents are packaged", () => {
 check("Copilot-specific operating rule is packaged", () => {
   assert.ok(fs.existsSync(path.join(PLUGIN, "com.github.copilot", "rules", "hypernexus.md")));
 });
-check("Meta launcher uses the live Pi OAuth kernel proxy and Responses API", () => {
+check("Pi subscription Meta launcher fails closed", () => {
   const launcher = fs.readFileSync(path.join(ROOT, "addons", "copilot", "use-meta-model.ps1"), "utf8");
-  assert.match(launcher, /\$KernelUrl = 'http:\/\/127\.0\.0\.1:7778'/);
-  assert.match(launcher, /\$env:COPILOT_PROVIDER_BASE_URL = "\$KernelUrl\/v1"/);
-  assert.match(launcher, /COPILOT_PROVIDER_API_KEY = 'hypernexus-local'/);
-  assert.match(launcher, /COPILOT_PROVIDER_WIRE_API = 'responses'/);
-  const docs = fs.readFileSync(path.join(ROOT, "addons", "copilot", "README.md"), "utf8");
-  assert.match(docs, /Pi's `auth\.json`/);
-  assert.match(docs, /pi\/1\.4\.0/);
+  assert.match(launcher, /intentionally disabled/);
+  assert.match(launcher, /subscription credential/);
+  assert.match(launcher, /exit 1/);
+  assert.doesNotMatch(launcher, /COPILOT_PROVIDER_/);
   assert.doesNotMatch(launcher, /meta-muse-key\.mjs/);
-  assert.doesNotMatch(launcher, /api\.meta\.ai/);
-  assert.match(launcher, /meta\/muse-spark-1\.3-contributor/);
+});
+check("HyperNexus launcher loads plugin and excludes native shell tools", () => {
+  const launcher = fs.readFileSync(path.join(ROOT, "addons", "copilot", "use-hypernexus.ps1"), "utf8");
   assert.match(launcher, /--plugin-dir/);
   assert.match(launcher, /--excluded-tools bash powershell/);
-  assert.match(launcher, /\[Environment\]::SetEnvironmentVariable/);
+});
+check("Copilot docs distinguish MCP integration from Meta subscription auth", () => {
+  const docs = fs.readFileSync(path.join(ROOT, "addons", "copilot", "README.md"), "utf8");
+  assert.match(docs, /use-hypernexus\.ps1/);
+  assert.match(docs, /intentionally disabled/);
+  assert.match(docs, /Terms/);
   const rules = fs.readFileSync(path.join(PLUGIN, "com.github.copilot", "rules", "hypernexus.md"), "utf8");
   assert.match(rules, /native `bash` and `powershell` tools are excluded/);
   assert.match(rules, /hypernexus-bash/);
