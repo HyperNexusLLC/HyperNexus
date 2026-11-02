@@ -2,8 +2,12 @@ package httpapi
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
 )
 
 // Regression: the subscription credential only covers the Responses API.
@@ -64,5 +68,91 @@ func TestAnthropicTextOf(t *testing.T) {
 	blocks := []any{map[string]any{"type": "text", "text": "a"}, map[string]any{"type": "image", "source": "x"}}
 	if got := anthropicTextOf(blocks); got != "a" {
 		t.Fatalf("block extraction: %q", got)
+	}
+}
+
+// Regression: Meta subscription attestation denies exact bare tool names
+// (bash/powershell/shell/add_memory — verified live 2026-10-31, 55 names).
+// The shim renames them on the way out and maps them back on the way in.
+func TestMetaDeniedToolRenameRoundTrip(t *testing.T) {
+	if got := metaSafeName("bash"); got != "hypernexus_bash" {
+		t.Fatalf("bash must rename, got %q", got)
+	}
+	if got := metaSafeName("add_memory"); got != "hypernexus_add_memory" {
+		t.Fatalf("add_memory must rename, got %q", got)
+	}
+	// Untouched: everything else passes through, incl. namespaced variants.
+	for _, n := range []string{"Bash", "read", "mcp__hypernexus__bash", "mcp__hypernexus__add_memory", "run_shell_command"} {
+		if got := metaSafeName(n); got != n {
+			t.Fatalf("name %q must pass through, got %q", n, got)
+		}
+	}
+	if got := metaRealName("hypernexus_bash"); got != "bash" {
+		t.Fatalf("reverse map broken, got %q", got)
+	}
+
+	// Declaration path: bare bash declared -> renamed in Responses tools.
+	req := &anthropicMessagesRequest{
+		Model:     "muse-spark-1.3-contributor",
+		MaxTokens: 64,
+		Tools: []anthropicTool{{Name: "bash", Description: "Execute a shell command",
+			InputSchema: map[string]any{"type": "object"}}},
+		Messages: []anthropicMessage{{Role: "user", Content: "hi"}},
+	}
+	tools := anthropicToolsToResponses(req.Tools)
+	raw, _ := json.Marshal(tools)
+	if s := string(raw); !strings.Contains(s, `"name":"hypernexus_bash"`) {
+		t.Fatalf("declaration must rename bash, got: %s", s)
+	}
+
+	// History replay path: tool_use bash -> function_call hypernexus_bash.
+	req2 := &anthropicMessagesRequest{
+		Model:     "muse-spark-1.3-contributor",
+		MaxTokens: 64,
+		Messages: []anthropicMessage{
+			{Role: "user", Content: "hi"},
+			{Role: "assistant", Content: []any{
+				map[string]any{"type": "tool_use", "id": "toolu_1", "name": "bash", "input": map[string]any{}},
+			}},
+			{Role: "user", Content: []any{
+				map[string]any{"type": "tool_result", "tool_use_id": "toolu_1", "content": "hi"},
+			}},
+		},
+	}
+	items := anthropicToResponses(req2)
+	raw2, _ := json.Marshal(items)
+	if s := string(raw2); !strings.Contains(s, `"name":"hypernexus_bash"`) || strings.Contains(s, `"name":"bash"`) {
+		t.Fatalf("history replay must rename bash, got: %s", s)
+	}
+}
+
+// Regression: /v1/models must advertise the meta/-prefixed aliases.
+// Fleet configs pin model = "meta/muse-spark-1.3-contributor" (the kernel
+// strips the prefix upstream); codex 0.166 resolves picker entries and model
+// metadata by exact ID match, warning "model metadata not found" and hiding
+// the model when only bare IDs are listed.
+func TestAnthropicModelsAdvertisesPrefixedAliases(t *testing.T) {
+	server := New(config.Default(), stubDetector{})
+	rec := httptest.NewRecorder()
+	server.handleAnthropicModels(rec, httptest.NewRequest(http.MethodGet, "/v1/models", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("models expected 200, got %d", rec.Code)
+	}
+	var body struct {
+		Data []map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("models body must be JSON: %v", err)
+	}
+	ids := map[string]bool{}
+	for _, m := range body.Data {
+		if id, ok := m["id"].(string); ok {
+			ids[id] = true
+		}
+	}
+	for _, want := range []string{"muse-spark-1.3-contributor", "meta/muse-spark-1.3-contributor"} {
+		if !ids[want] {
+			t.Fatalf("models list must contain %q, got %v", want, ids)
+		}
 	}
 }

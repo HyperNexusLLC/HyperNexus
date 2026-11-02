@@ -203,6 +203,35 @@ func stripAttestationTools(tools []any) (kept []any, stripped []string) {
 			continue
 		}
 		name, _ := m["name"].(string)
+		if subs, isEnv := m["tools"].([]any); isEnv {
+			var droppedSubs []string
+			var keptList []any
+			for _, sub := range subs {
+				sm, _ := sub.(map[string]any)
+				sn, _ := sm["name"].(string)
+				if attestationTrippingTool(sn) {
+					droppedSubs = append(droppedSubs, name+"::"+sn)
+					continue
+				}
+				keptList = append(keptList, sub)
+			}
+			if len(keptList) == 0 {
+				stripped = append(stripped, name+"(emptied)")
+				continue
+			}
+			stripped = append(stripped, droppedSubs...)
+			if len(droppedSubs) == 0 {
+				kept = append(kept, t)
+				continue
+			}
+			env := make(map[string]any, len(m))
+			for k, v := range m {
+				env[k] = v
+			}
+			env["tools"] = keptList
+			kept = append(kept, env)
+			continue
+		}
 		typ, _ := m["type"].(string)
 		if (typ == "" || typ == "function") && attestationTrippingTool(name) {
 			stripped = append(stripped, name)
@@ -211,6 +240,115 @@ func stripAttestationTools(tools []any) (kept []any, stripped []string) {
 		kept = append(kept, t)
 	}
 	return kept, stripped
+}
+
+// stripDeniedTools applies both the attestation-name strip and the
+// recursive-schema strip, so a single retry sheds every known-bad tool no
+// matter which denial the vendor reported first.
+func stripDeniedTools(tools []any) (kept []any, names []string) {
+	keptAtt, namesAtt := stripAttestationTools(tools)
+	keptRec, namesRec := stripRecursiveSchemaTools(keptAtt)
+	return keptRec, append(namesAtt, namesRec...)
+}
+
+// schemaHasRef reports whether a decoded JSON-schema node contains a
+// $ref-style reference. Decoded JSON is always a tree, so plain recursion
+// is safe. The Meta vendor rejects recursive schemas outright (400
+// "Recursive JSON schemas are not currently supported"); codex's own
+// built-in app servers (notably the Gmail tools) ship $refs, so the proxy
+// strips those tools on retry instead of failing the whole request.
+func schemaHasRef(v any) bool {
+	switch t := v.(type) {
+	case map[string]any:
+		for k, child := range t {
+			if k == "$ref" || k == "$recursiveRef" || k == "$dynamicRef" {
+				return true
+			}
+			if schemaHasRef(child) {
+				return true
+			}
+		}
+	case []any:
+		for _, child := range t {
+			if schemaHasRef(child) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// toolHasRecursiveSchema reports whether a Responses function tool — or any
+// sub-tool of a namespace envelope — carries a $ref-style schema.
+func toolHasRecursiveSchema(tool any) bool {
+	m, ok := tool.(map[string]any)
+	if !ok {
+		return false
+	}
+	for _, key := range []string{"parameters", "inputSchema", "input_schema"} {
+		if s, ok := m[key]; ok && schemaHasRef(s) {
+			return true
+		}
+	}
+	if fn, ok := m["function"].(map[string]any); ok {
+		if s, ok := fn["parameters"]; ok && schemaHasRef(s) {
+			return true
+		}
+	}
+	if subs, ok := m["tools"].([]any); ok {
+		for _, sub := range subs {
+			if toolHasRecursiveSchema(sub) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// stripRecursiveSchemaTools drops tools with $ref-style schemas, filtering
+// sub-tools inside namespace envelopes (dropping an envelope left empty).
+// It returns the kept list plus display names of what was removed.
+func stripRecursiveSchemaTools(tools []any) (kept []any, names []string) {
+	for _, tool := range tools {
+		m, ok := tool.(map[string]any)
+		if !ok {
+			kept = append(kept, tool)
+			continue
+		}
+		name, _ := m["name"].(string)
+		subs, isEnv := m["tools"].([]any)
+		if !isEnv {
+			if toolHasRecursiveSchema(tool) {
+				names = append(names, name)
+				continue
+			}
+			kept = append(kept, tool)
+			continue
+		}
+		var keptSubs []any
+		var droppedSubs []string
+		for _, sub := range subs {
+			if toolHasRecursiveSchema(sub) {
+				sm, _ := sub.(map[string]any)
+				sn, _ := sm["name"].(string)
+				droppedSubs = append(droppedSubs, name+"::"+sn)
+				continue
+			}
+			keptSubs = append(keptSubs, sub)
+		}
+		if len(keptSubs) == 0 {
+			names = append(names, name+"(emptied)")
+			continue
+		}
+		names = append(names, droppedSubs...)
+		env := make(map[string]any, len(m))
+		for k, v := range m {
+			env[k] = v
+		}
+		env["tools"] = keptSubs
+		kept = append(kept, env)
+	}
+	return kept, names
 }
 
 // resetDanglingToolChoice drops a specific-function tool_choice that names a
@@ -262,15 +400,18 @@ func needsToolRetry(status int, body []byte) bool {
 // retryBodyForDenied returns a request body worth one retry after an upstream
 // tool-related rejection, or nil when the denial should surface unchanged:
 //   - known-bad tool names present → a copy without them (tool_choice fixed);
-//   - 400 recursive-schema with nothing known-bad → the identical body once
-//     (may be transient, e.g. a still-loading MCP tool definition);
+//   - 400 recursive-schema → a copy without the $ref-bearing tools (e.g.
+//     codex's built-in Gmail app tools); when nothing strips, the identical
+//     body once (may be transient, e.g. a still-loading MCP definition).
+//     Attested-name sub-tools inside envelopes are stripped in the same
+//     retry, since the vendor reports only one denial per attempt;
 //   - deterministic 403 with nothing to strip → nil (never retry blindly).
 func retryBodyForDenied(body map[string]any, tools []any, status int, respBody []byte) map[string]any {
 	if len(tools) == 0 || !needsToolRetry(status, respBody) {
 		return nil
 	}
-	kept, names := stripAttestationTools(tools)
-	if len(names) > 0 {
+	kept, names := stripDeniedTools(tools)
+	if isAttestationDenial(status, respBody) && len(names) > 0 {
 		model, _ := body["model"].(string)
 		log.Printf("openai-compat: tool fallback for model %s, stripped %v, retrying", model, names)
 		out := make(map[string]any, len(body))
@@ -283,6 +424,16 @@ func retryBodyForDenied(body map[string]any, tools []any, status int, respBody [
 	}
 	if isRecursiveSchemaDenial(status, respBody) {
 		model, _ := body["model"].(string)
+		if len(names) > 0 {
+			log.Printf("openai-compat: recursive-schema fallback for model %s, stripped %v, retrying", model, names)
+			out := make(map[string]any, len(body))
+			for k, v := range body {
+				out[k] = v
+			}
+			out["tools"] = kept
+			resetDanglingToolChoice(out)
+			return out
+		}
 		log.Printf("openai-compat: recursive-schema denial with no known-bad tools for model %s, retrying identical once", model)
 		return body
 	}

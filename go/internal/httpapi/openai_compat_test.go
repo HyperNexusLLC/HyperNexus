@@ -208,6 +208,135 @@ func TestRetryBodyForDenied(t *testing.T) {
 	}
 }
 
+func TestSchemaHasRef(t *testing.T) {
+	if !schemaHasRef(map[string]any{"type": "object", "properties": map[string]any{"x": map[string]any{"$ref": "#/defs/y"}}}) {
+		t.Fatal("nested $ref must be detected")
+	}
+	if !schemaHasRef(map[string]any{"$recursiveRef": "#"}) {
+		t.Fatal("top-level $recursiveRef must be detected")
+	}
+	if !schemaHasRef([]any{map[string]any{"type": "string"}, map[string]any{"$dynamicRef": "#d"}}) {
+		t.Fatal("$dynamicRef inside array must be detected")
+	}
+	for _, clean := range []any{
+		nil,
+		"plain",
+		map[string]any{"type": "object", "properties": map[string]any{"x": map[string]any{"type": "string"}}},
+		map[string]any{"type": "object"},
+	} {
+		if schemaHasRef(clean) {
+			t.Fatalf("clean schema must not trip: %v", clean)
+		}
+	}
+}
+
+func TestStripRecursiveSchemaTools(t *testing.T) {
+	refTool := func(name string) map[string]any {
+		return map[string]any{"type": "function", "name": name,
+			"parameters": map[string]any{"type": "object", "properties": map[string]any{"m": map[string]any{"$ref": "#/d"}}}}
+	}
+	cleanTool := func(name string) map[string]any {
+		return map[string]any{"type": "function", "name": name,
+			"parameters": map[string]any{"type": "object"}}
+	}
+	in := []any{
+		refTool("gmail_send"),
+		cleanTool("get_status"),
+		map[string]any{"type": "function", "name": "mcp__gmail", "tools": []any{refTool("_send"), cleanTool("_list")}},
+		map[string]any{"type": "function", "name": "mcp__empty", "tools": []any{refTool("_only")}},
+		"not-a-map",
+	}
+	kept, names := stripRecursiveSchemaTools(in)
+	if len(names) != 3 {
+		t.Fatalf("stripped = %v, want 3 names", names)
+	}
+	raw, _ := json.Marshal(kept)
+	s := string(raw)
+	for _, gone := range []string{`"gmail_send"`, `"_send"`, `"mcp__empty"`} {
+		if strings.Contains(s, gone) {
+			t.Fatalf("recursive tool must be gone: %s in %s", gone, s)
+		}
+	}
+	for _, want := range []string{`"get_status"`, `"_list"`, `"mcp__gmail"`, `"not-a-map"`} {
+		if !strings.Contains(s, want) {
+			t.Fatalf("kept tool missing: %s in %s", want, s)
+		}
+	}
+	if kept2, names := stripRecursiveSchemaTools([]any{cleanTool("read")}); len(names) != 0 || len(kept2) != 1 {
+		t.Fatalf("clean list must pass through, got kept=%d stripped=%v", len(kept2), names)
+	}
+}
+
+func TestRetryBodyRecursiveStrip(t *testing.T) {
+	rec400 := []byte(`{"error":{"message":"Recursive JSON schemas are not currently supported"}}`)
+	mkEnv := func(subs ...any) map[string]any {
+		return map[string]any{"type": "function", "name": "mcp__gmail", "tools": subs}
+	}
+	refSub := map[string]any{"name": "_send", "parameters": map[string]any{"$ref": "#/d"}}
+	okSub := map[string]any{"name": "_list", "parameters": map[string]any{"type": "object"}}
+	body := map[string]any{"model": "m", "tools": []any{mkEnv(refSub, okSub)}}
+	retry := retryBodyForDenied(body, []any{mkEnv(refSub, okSub)}, 400, rec400)
+	if retry == nil {
+		t.Fatal("400 recursive with $ref tools must retry stripped, not nil")
+	}
+	raw, _ := json.Marshal(retry)
+	if strings.Contains(string(raw), `"_send"`) {
+		t.Fatalf("$ref sub-tool must be stripped, got: %s", raw)
+	}
+	if !strings.Contains(string(raw), `"_list"`) {
+		t.Fatalf("clean sub-tool must survive, got: %s", raw)
+	}
+}
+
+func TestStripAttestationEnvelopeSubs(t *testing.T) {
+	mkEnv := func(name string, subs ...any) map[string]any {
+		return map[string]any{"type": "function", "name": name, "tools": subs}
+	}
+	mkSub := func(name string) map[string]any {
+		return map[string]any{"name": name, "parameters": map[string]any{"type": "object"}}
+	}
+	in := []any{
+		mkEnv("mcp__hypernexus", mkSub("bash"), mkSub("read")),
+		mkEnv("mcp__shell_only", mkSub("powershell")),
+	}
+	kept, names := stripAttestationTools(in)
+	if len(names) != 2 {
+		t.Fatalf("stripped = %v, want [mcp__hypernexus::bash mcp__shell_only(emptied)]", names)
+	}
+	raw, _ := json.Marshal(kept)
+	s := string(raw)
+	for _, gone := range []string{`"bash"`, `"powershell"`, `"mcp__shell_only"`} {
+		if strings.Contains(s, gone) {
+			t.Fatalf("tripping tool must be gone: %s in %s", gone, s)
+		}
+	}
+	if !strings.Contains(s, `"read"`) || !strings.Contains(s, `"mcp__hypernexus"`) {
+		t.Fatalf("clean sub-tool and envelope must survive: %s", s)
+	}
+}
+
+func TestStripDeniedToolsCombined(t *testing.T) {
+	refSub := map[string]any{"name": "_send", "parameters": map[string]any{"$ref": "#/d"}}
+	okSub := map[string]any{"name": "_list", "parameters": map[string]any{"type": "object"}}
+	in := []any{
+		map[string]any{"type": "function", "name": "bash"},
+		map[string]any{"type": "function", "name": "mcp__mix", "tools": []any{refSub, okSub}},
+		map[string]any{"type": "function", "name": "read"},
+	}
+	kept, names := stripDeniedTools(in)
+	if len(names) != 2 {
+		t.Fatalf("stripped = %v, want [bash mcp__mix::_send]", names)
+	}
+	raw, _ := json.Marshal(kept)
+	s := string(raw)
+	if strings.Contains(s, `"bash"`) || strings.Contains(s, `"_send"`) {
+		t.Fatalf("denied tools must be gone: %s", s)
+	}
+	if !strings.Contains(s, `"_list"`) || !strings.Contains(s, `"read"`) {
+		t.Fatalf("clean tools must survive: %s", s)
+	}
+}
+
 func TestResetDanglingToolChoice(t *testing.T) {
 	body := map[string]any{"tool_choice": map[string]any{"type": "function", "function": map[string]any{"name": "bash"}}}
 	resetDanglingToolChoice(body)

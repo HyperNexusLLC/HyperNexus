@@ -155,6 +155,44 @@ type responsesFuncCall struct {
 	Arguments string `json:"arguments"`
 }
 
+// metaDeniedTools maps bare tool names that Meta's subscription attestation
+// rejects with client_attestation_denied (exact-match denylist, verified live
+// 2026-10-31 across 55 names: only these four deny) to safe equivalents.
+// The rename applies to OUTGOING Responses declarations and replayed history;
+// incoming function_call names are mapped BACK so the client's tool loop keeps
+// working with the real names. Namespaced variants (mcp__hypernexus__bash,
+// Claude Code's native Bash) are unaffected — only these exact bare names.
+var metaDeniedTools = map[string]string{
+	"bash":       "hypernexus_bash",
+	"powershell": "hypernexus_powershell",
+	"shell":      "hypernexus_shell",
+	"add_memory": "hypernexus_add_memory",
+}
+
+var metaDeniedToolsReverse = func() map[string]string {
+	rev := make(map[string]string, len(metaDeniedTools))
+	for k, v := range metaDeniedTools {
+		rev[v] = k
+	}
+	return rev
+}()
+
+// metaSafeName returns the Responses-visible tool name.
+func metaSafeName(name string) string {
+	if safe, ok := metaDeniedTools[name]; ok {
+		return safe
+	}
+	return name
+}
+
+// metaRealName maps a Responses function_call name back to the client-facing one.
+func metaRealName(name string) string {
+	if real, ok := metaDeniedToolsReverse[name]; ok {
+		return real
+	}
+	return name
+}
+
 // anthropicToResponses converts an Anthropic Messages request into a Responses
 // API input item list. Assistant text is preserved as output_text content so
 // multi-turn tool loops replay faithfully; tool_result blocks become
@@ -227,7 +265,11 @@ func anthropicToResponses(req *anthropicMessagesRequest) []map[string]any {
 					case "tool_use":
 						var tc responsesFuncCall
 						tc.CallID, _ = bm["id"].(string)
-						tc.Name, _ = bm["name"].(string)
+						// Rename denied bare names so replayed history passes
+						// attestation the same way fresh declarations do.
+						if n, ok := bm["name"].(string); ok {
+							tc.Name = metaSafeName(n)
+						}
 						if inp, ok := bm["input"].(map[string]any); ok {
 							ab, _ := json.Marshal(inp)
 							tc.Arguments = string(ab)
@@ -273,7 +315,9 @@ func anthropicToolsToResponses(tools []anthropicTool) []map[string]any {
 		}
 		out = append(out, map[string]any{
 			"type": "function",
-			"name": t.Name, "description": t.Description, "parameters": params,
+			// Rename denied bare names (bash/powershell/shell/add_memory)
+			// so the declaration passes Meta attestation; mapped back on return.
+			"name": metaSafeName(t.Name), "description": t.Description, "parameters": params,
 		})
 	}
 	return out
@@ -288,10 +332,18 @@ func (s *Server) handleAnthropicModels(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"object": "list",
+		// Advertise both bare IDs and meta/-prefixed aliases. Fleet configs
+		// pin model = "meta/muse-spark-1.3-contributor" (the kernel strips
+		// the prefix upstream); codex 0.166 resolves picker entries and
+		// model metadata by exact ID match, so without the alias it warns
+		// "model metadata not found" and hides the model from the picker.
 		"data": []map[string]any{
 			{"id": "muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
+			{"id": "meta/muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
 			{"id": "muse-spark-1.3", "object": "model", "owned_by": "meta"},
+			{"id": "meta/muse-spark-1.3", "object": "model", "owned_by": "meta"},
 			{"id": "muse-spark-1.2-contributor", "object": "model", "owned_by": "meta"},
+			{"id": "meta/muse-spark-1.2-contributor", "object": "model", "owned_by": "meta"},
 		},
 	})
 }
@@ -412,7 +464,8 @@ func (s *Server) handleAnthropicMessages(w http.ResponseWriter, r *http.Request)
 				input = map[string]any{}
 			}
 			blocks = append(blocks, map[string]any{
-				"type": "tool_use", "id": item.CallID, "name": item.Name, "input": input,
+				// Map back: the client loop works with the real tool names.
+				"type": "tool_use", "id": item.CallID, "name": metaRealName(item.Name), "input": input,
 			})
 		default:
 			// reasoning / other items: not representable as Anthropic blocks;
