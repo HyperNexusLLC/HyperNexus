@@ -84,7 +84,11 @@ check("Meta launcher uses the live Pi OAuth kernel proxy and Responses API", () 
   assert.doesNotMatch(launcher, /api\.meta\.ai/);
   assert.match(launcher, /meta\/muse-spark-1\.3-contributor/);
   assert.match(launcher, /--plugin-dir/);
+  assert.match(launcher, /--excluded-tools bash powershell/);
   assert.match(launcher, /\[Environment\]::SetEnvironmentVariable/);
+  const rules = fs.readFileSync(path.join(PLUGIN, "com.github.copilot", "rules", "hypernexus.md"), "utf8");
+  assert.match(rules, /native `bash` and `powershell` tools are excluded/);
+  assert.match(rules, /hypernexus-bash/);
 });
 check("native hooks cover memory, RBAC, failures, and subagents", () => {
   for (const name of ["sessionStart", "userPromptTransformed", "preToolUse", "permissionRequest", "postToolUseFailure", "subagentStart"]) {

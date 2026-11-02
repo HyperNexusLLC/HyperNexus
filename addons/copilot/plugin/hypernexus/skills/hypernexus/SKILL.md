@@ -81,3 +81,4 @@ the user's prompt unchanged.
 2. **PERSIST** non-obvious outcomes with tags.
 3. **FAST on hot paths** — hooks use FTS-only search (<=400ms).
 4. **VERIFY** with `system_status` before and after production changes.
+5. In sessions launched through `use-meta-model.ps1`, use the HyperNexus MCP parity tools for shell and file operations; native Copilot `bash` and `powershell` tools are excluded to keep them out of provider tool declarations.

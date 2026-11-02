@@ -36,7 +36,7 @@ try {
   $env:COPILOT_PROVIDER_MAX_OUTPUT_TOKENS = '131072'
   $env:COPILOT_MODEL = 'meta/muse-spark-1.3-contributor'
 
-  & $Copilot.Source --plugin-dir $Plugin @args
+  & $Copilot.Source --plugin-dir $Plugin @args --excluded-tools bash powershell
   $ExitCode = $LASTEXITCODE
 } finally {
   foreach ($Name in $ProviderVariables) {

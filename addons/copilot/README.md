@@ -27,6 +27,13 @@ Copilot process and is not sent upstream as the Meta credential. The kernel
 proxy currently identifies its upstream client as `pi/1.4.0`; its normal
 API error is returned to Copilot if the kernel is unavailable.
 
+The launcher excludes Copilot's native `bash` and `powershell` tools from the
+model-visible tool list. Use the HyperNexus MCP parity tools (for example
+`hypernexus-bash`, `hypernexus-read`, `hypernexus-write`, `hypernexus-edit`,
+`hypernexus-grep`, and `hypernexus-find`) for shell and file operations instead.
+This filter is applied only by `use-meta-model.ps1`; starting `copilot`
+directly does not change the normal native tool list.
+
 ```powershell
 node addons/copilot/install.mjs --check
 node addons/copilot/bin/test-copilot-ext.mjs
