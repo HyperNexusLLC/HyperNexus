@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.0.23] - 2026-11-02
+
+### Codex HARNESS max-extent + native Meta OAuth (`addons/codex/`)
+- **13-command parity** — added `hn-plan`, `hn-remember`, `hn-restore`, `hn-auth`, `hn-models` (matching opencode 13); +read-only `hypernexus-researcher` agent (claude-code 2-agent pattern); 18 skills total in `CODEX_HOME`.
+- **Meta `muse-spark-1.3-contributor` native** — provider `model_providers.meta` via kernel proxy (`http://127.0.0.1:7778/v1`, `env_key MODEL_API_KEY`, `wire_api responses`); thin shim minter over shared canonical (`addons/shared/bin/meta-muse-key.mjs`, pi owns OAuth refresh, never stored); `use-meta-model.ps1` disables `shell_tool`/`unified_exec`/`goals` (verified `codex features list`); kernel strips `request_user_input` on 403 retry as backstop.
+- **Battery 25/25 green** — `bin/test-codex-ext.mjs` expanded (wire_api, no-active-node_repl, 18 sources, overlay-13, MCP probe, live proxy inference 200 no-403). Live end-to-end: `codex exec` on the Meta model returned exact `PONG`.
 ### Codewhale HARNESS max-extent integration + native Meta OAuth via kernel proxy (v1.0.22)
 - **Codewhale 11-command parity (`addons/codewhale/`)** — added `hn-plan`, `hn-remember`, `hn-restore` (matching the claude-code plugin); bundle now ships 11 `/hn-*` commands, 4 skills (+`hypernexus-orchestrator`), 2 agents (`hypernexus-orchestrator` + read-only `hypernexus-researcher`), 3 by-convention hooks (`hn-session.mjs` bootstrap, `hn-rbac.mjs` RBAC guard, `hn-pre-tool.mjs` pre-tool gate — 8/8 allow+deny probes green). Manifests declare the agents path (`plugin.json`/`plugin.toml`); installer ships agents/hooks/skills/commands to project + global scopes.
 - **Meta `muse-spark-1.3-contributor` native in Codewhale** — Codewhale 0.10.2 ships a native `meta` provider route; OAuth login flows through the kernel proxy (`providers.meta.base_url = http://127.0.0.1:7778/v1`, Bearer re-read from pi `auth.json` per request — `codewhale auth external-consent` reports no supported pi credential source, so the proxy is the native path) plus the secret-store fast lane (`scripts/sync-meta-oauth-codewhale.ps1`, verified in-sync). `meta-model.codewhale.md` documents both routes; `use-meta-model.ps1` launches Codewhale on the subscriber model. Live proofs: repeated exact-reply `exec` round-trips on `meta/muse-spark-1.3-contributor` via the proxy.
@@ -617,3 +623,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - install --check green; uninstall (17 items) + reinstall cycle green; config untouched. 
 - Meta mint OK (key hidden); kernel 1.0.21 ok:true; battery 13 pass / 0 fail / 1 env-SKIP. 
 - CDP identification delivered to Chat-Bobbi (submit hit, text present at index 2462). 
+

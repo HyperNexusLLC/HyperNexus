@@ -1,4 +1,4 @@
-## HyperNexus Discipline (Freebuff prompt overlay)
+## HyperNexus Discipline (Codex prompt overlay)
 
 Every turn in this workspace runs memory-first through the HyperNexus kernel
 (`http://127.0.0.1:7778`; MCP server `hypernexus`, 58 tools via stdio):
@@ -34,7 +34,7 @@ RECALL -> DISCOVER (if gap) -> EXECUTE -> PERSIST -> VERIFY
 
 ### Skills & command-skills
 
-Skills (`/skill:<name>`): `hypernexus` (recall/store/discover), `hypernexus-ops`
+Skills (`/skill:<name>`): `hypernexus` (recall/store/discover), `hypernexus-orchestrator` (multi-step loop), `hypernexus-researcher` (read-only), `hypernexus-ops`
 (health/billing/runbook), `hypernexus-workflows` (MEM-FIRST / DISCOVER / GRAPH /
 HANDOFF / OPS / HARVEST).
 Command-skills: `/skill:hn-status` `/skill:hn-search` `/skill:hn-store`
@@ -44,5 +44,6 @@ Command-skills: `/skill:hn-status` `/skill:hn-search` `/skill:hn-store`
 ### Meta model
 
 `/model` already lists **Muse Spark 1.3** (paid-plan locked without a plan).
-For the subscription/OAuth path, see `addons/freebuff/meta-model.freebuff.md`:
-mint live with `node addons/freebuff/bin/meta-muse-key.mjs --check`.
+For the subscription/OAuth path, see `addons/codex/meta-model.codex.md`:
+mint live with `node addons/codex/bin/meta-muse-key.mjs --check`.
+

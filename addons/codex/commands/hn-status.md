@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-status
-description: "Report HyperNexus kernel health, MCP bridge inventory, memory stats, and billing from Freebuff. Trigger on '/skill:hn-status', 'hypernexus status', or 'kernel health'."
+description: "Report HyperNexus kernel health, MCP bridge inventory, memory stats, and billing from Codex. Trigger on '/skill:hn-status', 'hypernexus status', or 'kernel health'."
 ---
 
 # /skill:hn-status
@@ -16,3 +16,4 @@ Report HyperNexus control-plane status, without taking any action:
 
 Present as a short bullet list. If the kernel is unreachable, say so plainly and point
 at `bin\hypernexus.exe serve` — never show a mock state.
+

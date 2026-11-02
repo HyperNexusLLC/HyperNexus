@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-context
-description: "Build a compact context block from HyperNexus L2 memory for the current task from Freebuff. Trigger on '/skill:hn-context' or 'task context'."
+description: "Build a compact context block from HyperNexus L2 memory for the current task from Codex. Trigger on '/skill:hn-context' or 'task context'."
 ---
 
 # /skill:hn-context [topic]
@@ -17,3 +17,4 @@ Assemble task context from persistent memory (this is a recall aid, not a report
    with its memory id so the user can prune with `/skill:hn-purge`.
 
 Keep the output under ~30 lines. If nothing matches, say so instead of padding.
+

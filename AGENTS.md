@@ -414,8 +414,8 @@ Discipline loop: RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY
 - DISCOVER: list MCP servers and tools, then route with mcp_call_tool.
 - PERSIST: store non-obvious outcomes via add_memory with topic,codex tags.
 - VERIFY: system_status plus billing_status before and after production changes.
-- Skills: hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator
-  plus command-skills hn-status, hn-search, hn-store, hn-session, hn-context, hn-summary, hn-tools, hn-purge.
+- Skills: hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator, hypernexus-researcher
+  plus command-skills hn-status, hn-search, hn-store, hn-session, hn-context, hn-summary, hn-tools, hn-purge, hn-plan, hn-remember, hn-restore, hn-auth, hn-models.
 - Model: meta/muse-spark-1.3-contributor via model_providers.meta (env_key MODEL_API_KEY).
   Mint with node addons/codex/bin/meta-muse-key.mjs (pi owns OAuth refresh).
   Launch with use-meta-model.ps1 after setting MODEL_API_KEY in your shell.

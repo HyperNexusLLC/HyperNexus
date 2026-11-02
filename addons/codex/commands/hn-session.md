@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-session
-description: "Search imported cross-harness HyperNexus sessions and resume context from Freebuff. Trigger on '/skill:hn-session', 'resume session', or 'previous session'."
+description: "Search imported cross-harness HyperNexus sessions and resume context from Codex. Trigger on '/skill:hn-session', 'resume session', or 'previous session'."
 ---
 
 # /skill:hn-session [query] [--limit n]
@@ -17,3 +17,4 @@ Session continuity through the HyperNexus kernel:
    (`hypernexus MCP memory_scratchpad_get`) and report it as the active goal.
 
 If the kernel is down, say continuity is unavailable this turn — do not invent history.
+

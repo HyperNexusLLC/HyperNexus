@@ -1,6 +1,13 @@
 # MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
+### pi file-lane session: attestation root-cause proven live + parity/doc fixes (2026-10-31)
+
+- **Live proof in session `01a19137`:** 9 consecutive `client_attestation_denied` 403s with powershell+bash in the toolset (any prompt, even trivial); recovery on the exact turn they were removed (`toolsRemoved: powershell, bash`). Keep shell tools out of model-facing surfaces everywhere; use parity tools (read/edit/write/grep/find/ls, memory_*, mcp_*) with minimal descriptions (now a manifest contract rule).
+- **Endpoint truth:** subscription keys are Responses-API-only. Direct `https://api.meta.ai/v1/chat/completions` 403s; kernel `/v1/*` compat shims translate to upstream `/v1/responses` (`openai_compat.go:434`, `anthropic_compat.go:396`). Fixed 5 stale doc refs: hax/open-interpreter/grok direct-call examples → kernel path; claude-code snippet + codewhale doc → `/v1/responses`.
+- **pi parity (file lane, uncommitted):** extension 34 tools / 12 commands (`/tn-restore` added, parity with `/hn-restore`); manifest pi bindings 23→31; 7 legacy dashboard routes deep-linked to home anchors (`health|metrics|pulse`→`#health-metrics`, `skills|workflows`→`#skills-workflows`, `security|audit`→`#security-audit`). Installed `~/.pi/agent/extensions/hypernexus.ts` already in sync; `~/.pi/agent/mcp.json` hypernexus stdio registered.
+- **24h-then-403 pattern = key TTL:** minted Model API keys die in ~24h — re-mint via pi (`/login meta` on 401/403), never persist the key.
+
 ### OpenCode HARNESS max-extent: native Meta OAuth + full HyperNexus surfaces (2026-10-29)
 
 **Meta OAuth in OpenCode (V2 config):** OpenCode V2 uses plural `providers` + package `env` (V1 singular `provider` is rejected by schema validation). `meta` provider: `@opencode/ai/providers/openai-compatible` to `https://api.meta.ai/v1`, `env: ["META_MUSE_API_KEY"]`, model `muse-spark-1.3-contributor` (ctx 1048576/out 131072). Key supply: `addons/opencode/bin/meta-muse-key.mjs` (pi refresh to key, stdout only) + `use-meta-model.ps1` live-mint launcher + `hypernexus_meta_auth` tool + `hn-auth`/`hn-models` commands + native `provider.transform` + pi-OAuth integration method + Meta 401/403 cache-clear hook. NEVER persist the key (process env only). Live proof: `meta_auth check` HTTP 200 from `api.meta.ai/v1/models`.
@@ -276,3 +283,10 @@ Memories should be stored both:
 **Double-load trap:** global + project init.lua BOTH execute in one maki session; every register_* (provider/tool/slot) throws on second load. maki sandboxes _G readonly, so no sentinel flags there — use pcall-skip on duplicate registration (meta_oauth) + get_tool probe early-return (hypernexus.lua). Was: provider meta already registered; then slot hypernexus.render already declared.
 **No python/luac on box PATH:** manifest/TOML checks run via node (tomllib absent); Lua syntax validated by live maki headless load instead.
 **Kernel contention signal:** /health instant while /api/system/overview + /api/mcp/status + /api/billing/status time out 45-60s = serialized SQLite handler pile-up under sibling load (same as hax lane). Battery kfetch needs 45s timeout + 8s-backoff retries.
+
+### Codex HARNESS max-extent: 13-command parity + researcher + live PONG (2026-11-02)
+
+**Upgrade (`addons/codex/`):** 8 -> 13 hn-* commands (+hn-plan/hn-remember/hn-restore/hn-auth/hn-models, matching opencode 13); +read-only `hypernexus-researcher` agent (claude-code 2-agent pattern); 18 skills total in CODEX_HOME. Fixed Freebuff copy-paste in all codex skills/commands/hooks docs -> Codex wording. Installer `COMMANDS` 13 + `AGENTS` array + overlay lists all. Battery `bin/test-codex-ext.mjs` expanded to 25 checks (config/wire-responses/no-active-node_repl/sources/overlay-13/mint/kernel/MCP-probe/proxy-inference).
+
+**Live proofs (kernel 1.0.22, mint OK):** battery 25/25; proxy `POST /v1/responses` with parity-only `code_interpreter` tool -> HTTP 200, no `client_attestation_denied`; `codex exec --disable shell_tool --disable unified_exec --disable goals` on `meta/muse-spark-1.3-contributor` -> exact `PONG` (reasoning low). 403 root cause stands: shell-named tools + codex `request_user_input`/`get/create/update_goal` trip Meta attestation; kernel `stripAttestationTools` + `retryBodyForDenied` strips on retry as backstop. Keep `node_repl` out of Meta-path CODEX_HOME (recursive-schema 400).
+

@@ -1,7 +1,7 @@
 ---
 user-invocable: true
 name: hn-tools
-description: "Discover tools across the assimilated HyperNexus MCP catalog and route calls from Freebuff. Trigger on '/skill:hn-tools', 'find a tool', or 'tool discovery'."
+description: "Discover tools across the assimilated HyperNexus MCP catalog and route calls from Codex. Trigger on '/skill:hn-tools', 'find a tool', or 'tool discovery'."
 ---
 
 # /skill:hn-tools [query] [--call serverName.toolName {json-args}]
@@ -19,3 +19,4 @@ Tool discovery and routing through the HyperNexus MCP bridge:
 After a successful routed call, suggest persisting which tool worked
 (`hypernexus MCP add_memory`, tags `tool-routing`). If the bridge is unavailable,
 fall back to `curl -s http://127.0.0.1:7778/api/mcp/tools`.
+

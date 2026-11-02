@@ -23,8 +23,9 @@ const TP_END = '# hypernexus:end:codex-meta';
 const TM_BEGIN = '# hypernexus:begin:codex-mcp (managed by addons/codex/install.mjs)'; 
 const TM_END = '# hypernexus:end:codex-mcp'; 
 const CORE_SKILLS = ['hypernexus', 'hypernexus-ops', 'hypernexus-workflows']; 
-const COMMANDS = ['hn-status', 'hn-search', 'hn-store', 'hn-session', 'hn-context', 'hn-summary', 'hn-tools', 'hn-purge']; 
-const AGENT = 'hypernexus-orchestrator'; 
+const COMMANDS = ['hn-status', 'hn-search', 'hn-store', 'hn-session', 'hn-context', 'hn-summary', 'hn-tools', 'hn-purge', 'hn-plan', 'hn-remember', 'hn-restore', 'hn-auth', 'hn-models'];
+const AGENTS = ['hypernexus-orchestrator', 'hypernexus-researcher'];
+const AGENT = AGENTS[0];
 const HOOKS = ['hn-session.sh', 'hn-rbac.sh', 'hn-pre-tool.sh']; 
 function log(m) { console.log('[hypernexus-codex] ' + m); } 
 function readIfExists(p) { try { return fs.readFileSync(p, 'utf8'); } catch (e) { return null; } } 
@@ -76,9 +77,10 @@ for (const name of CORE_SKILLS) {
 const src = path.join(__dirname, 'skills', name, 'SKILL.md'); 
 if (fs.existsSync(src) === false) { log('WARNING: missing source skill ' + src + ', skipping.'); continue; } 
 writeUtf8(path.join(SKILLS_DIR, name, 'SKILL.md'), fs.readFileSync(src, 'utf8')); count++; } 
-const asrc = path.join(__dirname, 'agent', AGENT + '.md'); 
-if (fs.existsSync(asrc)) { writeUtf8(path.join(SKILLS_DIR, AGENT, 'SKILL.md'), fs.readFileSync(asrc, 'utf8')); count++; } 
-else { log('WARNING: missing source agent ' + asrc + ', skipping.'); } 
+for (const ag of AGENTS) {
+const asrc = path.join(__dirname, 'agent', ag + '.md');
+if (fs.existsSync(asrc)) { writeUtf8(path.join(SKILLS_DIR, ag, 'SKILL.md'), fs.readFileSync(asrc, 'utf8')); count++; }
+else { log('WARNING: missing source agent ' + asrc + ', skipping.'); } } 
 for (const name of COMMANDS) { 
 const csrc = path.join(__dirname, 'commands', name + '.md'); 
 if (fs.existsSync(csrc) === false) { log('WARNING: missing source command ' + csrc + ', skipping.'); continue; } 
@@ -94,7 +96,7 @@ const rsrc = path.join(__dirname, 'hooks', 'README.md');
 if (fs.existsSync(rsrc)) { writeUtf8(path.join(HOOKS_DIR, 'README.md'), fs.readFileSync(rsrc, 'utf8')); } 
 return count; } 
 function agentsBlock() { 
-return [MBEGIN, '## HyperNexus Control Plane (codex)', '', 'This repo is backed by the local HyperNexus kernel (Go, port 7778).', 'Codex reads this file at session start plus skills from CODEX_HOME/skills', '(each skill invocable as /skill:name).', '', 'Discipline loop: RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY', '', '- RECALL: search kernel memory first (hypernexus MCP search_memory) before re-deriving.', '- DISCOVER: list MCP servers and tools, then route with mcp_call_tool.', '- PERSIST: store non-obvious outcomes via add_memory with topic,codex tags.', '- VERIFY: system_status plus billing_status before and after production changes.', '- Skills: hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator', '  plus command-skills hn-status, hn-search, hn-store, hn-session, hn-context, hn-summary, hn-tools, hn-purge.', '- Model: meta/muse-spark-1.3-contributor via model_providers.meta (env_key MODEL_API_KEY).', '  Mint with node addons/codex/bin/meta-muse-key.mjs (pi owns OAuth refresh).', '  Launch with use-meta-model.ps1 after setting MODEL_API_KEY in your shell.', '- Hooks (by-convention, CODEX_HOME/hooks): hn-session.sh bootstrap, hn-rbac.sh deny-list, hn-pre-tool.sh allow-gate.', '- Degradation: if the kernel is down, say so in one sentence and continue with local tools.', MEND].join('\n'); } 
+return [MBEGIN, '## HyperNexus Control Plane (codex)', '', 'This repo is backed by the local HyperNexus kernel (Go, port 7778).', 'Codex reads this file at session start plus skills from CODEX_HOME/skills', '(each skill invocable as /skill:name).', '', 'Discipline loop: RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY', '', '- RECALL: search kernel memory first (hypernexus MCP search_memory) before re-deriving.', '- DISCOVER: list MCP servers and tools, then route with mcp_call_tool.', '- PERSIST: store non-obvious outcomes via add_memory with topic,codex tags.', '- VERIFY: system_status plus billing_status before and after production changes.', '- Skills: hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator, hypernexus-researcher', '  plus command-skills hn-status, hn-search, hn-store, hn-session, hn-context, hn-summary, hn-tools, hn-purge, hn-plan, hn-remember, hn-restore, hn-auth, hn-models.', '- Model: meta/muse-spark-1.3-contributor via model_providers.meta (env_key MODEL_API_KEY).', '  Mint with node addons/codex/bin/meta-muse-key.mjs (pi owns OAuth refresh).', '  Launch with use-meta-model.ps1 after setting MODEL_API_KEY in your shell.', '- Hooks (by-convention, CODEX_HOME/hooks): hn-session.sh bootstrap, hn-rbac.sh deny-list, hn-pre-tool.sh allow-gate.', '- Degradation: if the kernel is down, say so in one sentence and continue with local tools.', MEND].join('\n'); } 
 function installOverlay() { 
 const ex = readIfExists(AGENTS_FILE); 
 if (ex == null) { log('WARNING: AGENTS.md not found, skipping overlay.'); return 'skipped'; } 
@@ -114,7 +116,7 @@ else {
 if (raw.indexOf('muse-spark-1.3-contributor') === -1) { gaps.push('config: no muse-spark-1.3-contributor model'); } 
 if (raw.indexOf('[model_providers.meta]') === -1) { gaps.push('config: no [model_providers.meta]'); } 
 if (raw.indexOf('[mcp_servers.hypernexus]') === -1) { gaps.push('config: no [mcp_servers.hypernexus]'); } } 
-const all = CORE_SKILLS.concat([AGENT]).concat(COMMANDS); 
+const all = CORE_SKILLS.concat(AGENTS).concat(COMMANDS); 
 for (const n of all) { if (fs.existsSync(path.join(SKILLS_DIR, n, 'SKILL.md')) === false) { gaps.push('missing skill ' + n); } } 
 for (const h of HOOKS) { if (fs.existsSync(path.join(HOOKS_DIR, h)) === false) { gaps.push('missing hook ' + h); } } 
 const agents = readIfExists(AGENTS_FILE); 
@@ -132,7 +134,7 @@ let nx = removeBlock(raw, TD_BEGIN, TD_END);
 nx = removeBlock(nx, TP_BEGIN, TP_END); 
 nx = removeBlock(nx, TM_BEGIN, TM_END); 
 if (nx !== raw) { writeUtf8(CONFIG, nx); removed++; } } 
-const all = CORE_SKILLS.concat([AGENT]).concat(COMMANDS); 
+const all = CORE_SKILLS.concat(AGENTS).concat(COMMANDS); 
 for (const n of all) { const d = path.join(SKILLS_DIR, n); if (fs.existsSync(d)) { fs.rmSync(d, { recursive: true, force: true }); removed++; } } 
 for (const h of HOOKS) { const f = path.join(HOOKS_DIR, h); if (fs.existsSync(f)) { fs.rmSync(f, { force: true }); removed++; } } 
 const hf = path.join(HOOKS_DIR, 'README.md'); 
@@ -153,3 +155,4 @@ log('installed (config ' + (cfg ? 'updated' : 'already current') + ', ' + nskill
 log('mint a key: node addons/codex/bin/meta-muse-key.mjs --mint (pi owns OAuth refresh; key stays in your shell env, never in files).'); 
 log('launch: set MODEL_API_KEY in this shell, then run use-meta-model.ps1'); 
 log('verify: node addons/codex/install.mjs --check'); } } 
+

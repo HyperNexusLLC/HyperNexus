@@ -1,3 +1,29 @@
+
+# HANDOFF - Codex HARNESS max-extent + native Meta OAuth (v1.0.23)
+
+## Session CX (2026-11-02) - codex lane [muse-spark-1.3-contributor in "codex" in ~/workspace/HyperNexus]
+### Built + verified + tested live
+- `addons/codex/`: 5 new commands (hn-plan/hn-remember/hn-restore/hn-auth/hn-models) + `agent/hypernexus-researcher.md`; installer 13 commands + AGENTS array; Freebuff->Codex wording fixes; prompt-overlay/preferred-tools/swarm/README updated (13 commands, 2 agents, 403 root cause).
+- Battery `bin/test-codex-ext.mjs` 25 checks **25/25 green** (mint OK, kernel 1.0.22 healthy, MCP probe, proxy inference 200 no-403).
+- Live end-to-end: `codex exec` (shell_tool/unified_exec/goals disabled, reasoning low) on meta/muse-spark-1.3-contributor -> `PONG`.
+- Manifest `addons/shared/hypernexus.manifest.json` codex entry updated.
+### Scope
+- `addons/codex/`, `addons/shared/hypernexus.manifest.json`, `AGENTS.md` (codex block), `CHANGELOG.md`, `MEMORY.md`, `HANDOFF.md`, `VERSION`.
+- Do NOT touch sibling harness dirs or runtime DBs (workspace has concurrent uncommitted changes from other lanes).
+### Next agent
+- Re-run `node addons/codex/install.mjs --check` + `node addons/codex/bin/test-codex-ext.mjs` after any kernel swap; if mint 401/403s, `/login meta` in pi.
+# HANDOFF - pi HARNESS parity: /tn-restore + doc sync (uncommitted, no exec in lane)
+
+## Session P (2026-10-31) - [muse-spark-1.3-contributor in "pi" in ~/workspace/HyperNexus], file-tools only
+### Built (uncommitted, no exec available — no tests run, no commit, no push)
+- `addons/pi/hypernexus.ts`: added 12th command `/tn-restore` (POST `/api/agent-memory/pickup`, artifact-id optional, parity with claude-code `/hn-restore`); header 33→34 tools / 7→12 commands; system-prompt slash list now all 12.
+- `addons/pi/README.md`: tools 33→34, commands 7→12 with full list.
+- Dashboard (same session, earlier): 3 consolidated sections got tooltips/`data-testid`/`aria-label`/truth-pass copy; 7 legacy routes (`health|metrics|pulse`→`#health-metrics`, `skills|workflows`→`#skills-workflows`, `security|audit`→`#security-audit`) now deep-link to anchors.
+### Not done (needs exec lane)
+- `node addons/pi/install.mjs --check` + `node bin/test-pi-*.mjs` (no shell here); `tsc`/dashboard build; `git commit/push`; kernel 7778 liveness; CDP 9222 Muse coordination.
+### Next agent
+- Run install --check + pi batteries, then commit ONLY `addons/pi/` + dashboard files. Scope: `addons/pi/`, `apps/web/src/app/dashboard/`.
+
 # HANDOFF - OpenCode HARNESS max-extent + native Meta OAuth (v1.0.22)
 
 ## Session O (2026-10-29) - opencode lane [muse-spark-1.3-contributor in "opencode" in ~/workspace/HyperNexus]
@@ -493,3 +519,4 @@ Done: install.mjs rewritten codex-native (TOML markers, skip-if-present, 12 skil
 State: config.toml canonical (untouched by installer); kernel 1.0.21 ok:true; mint OK; codex CLI absent in this shell (env SKIP). 
 Temp files removed (runcheck/runbatt/runchk/runcdp bats, _chk/_batt/_patch/_setmsg/_cdp_*). VERSION 1.0.22. 
 Next: install Codex CLI on PATH for live model smoke; optional live codex exec test with minted MODEL_API_KEY; keep page-id fresh (muse.ai rotated 79AC.. to 3821..). 
+

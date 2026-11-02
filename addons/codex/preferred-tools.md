@@ -1,4 +1,4 @@
-# HyperNexus preferred tools (Freebuff)
+# HyperNexus preferred tools (Codex)
 
 Route every HyperNexus need through the `hypernexus` MCP server first; fall back
 to the HTTP kernel API only when the MCP server is unreachable.
@@ -15,5 +15,6 @@ to the HTTP kernel API only when the MCP server is unreachable.
 6. **Code** — `codebase_search` (symbols|definitions|references) → `repomap` →
    `codebase_outline`; files via `read`/`write`/`edit`, search via `grep`/`find`/`ls`.
 7. **Sessions** — `search_memory` scoped by session + scratchpad `goal`; HTTP
-   `/api/sessions/summary` for cross-harness resume; `freebuff --continue` to reopen.
-8. **Skills** — HTTP `/api/skills*` registry; local `.agents/skills/hypernexus*/`.
+   `/api/sessions/summary` for cross-harness resume; `codex --continue` to reopen (or new `use-meta-model.ps1` run).
+8. **Skills** — HTTP `/api/skills*` registry; local `CODEX_HOME/skills/hypernexus*/`.
+

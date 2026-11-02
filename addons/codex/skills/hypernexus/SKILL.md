@@ -4,11 +4,11 @@ name: hypernexus
 description: "HyperNexus AI control plane — persistent L2 vector memory, semantic MCP tool discovery across 26k+ tools, knowledge graph, session import, billing, and agent orchestration. Use when the task benefits from cross-session memory (scratchpad, facts, observations), tool discovery across MCP servers, knowledge ingestion, system health checks, or routing through the HyperNexus Go kernel on port 7778. Trigger on mentions of 'hypernexus', 'HN', 'scratchpad', 'cross-session memory', 'MCP tools', 'tool discovery', 'knowledge graph', 'agent memory', or 'control plane'."
 ---
 
-# HyperNexus Integration (Freebuff)
+# HyperNexus Integration (Codex)
 
 HyperNexus is a local AI control plane running a Go kernel on port 7778 (dashboard 7779) with persistent multi-tier memory (L1 scratchpad, L2 vector store, L3 cold archive), semantic tool discovery across 60+ MCP servers / 26,000+ tools, knowledge graph, session import, and agent orchestration.
 
-Invoke with `/skill:hypernexus`. Freebuff loads this skill from `.agents/skills/` (or `.claude/skills/`) — no plugin install step.
+Invoke with `/skill:hypernexus`. Codex loads this skill from `.agents/skills/` (or `.claude/skills/`) — no plugin install step.
 
 ## When to Use
 
@@ -17,7 +17,7 @@ Invoke with `/skill:hypernexus`. Freebuff loads this skill from `.agents/skills/
 - When you need a capability you don't have → discover tools (`mcp_list_servers` / `mcp_list_tools`, semantic `GET /api/mcp/tools/search?query=`) then route (`mcp_call_tool`)
 - When the user asks about system health, billing, or the repo → `system_status`, `billing_status`, `repomap`, `codebase_search`
 
-## Freebuff Tools (via the hypernexus MCP server, 58 tools)
+## Codex Tools (via the hypernexus MCP server, 58 tools)
 
 The MCP server (`.agents/mcp.json`, stdio `hypernexus mcp`) exposes these exact tool names. Prefer the MCP tool; the HTTP fallback works even when MCP is unreachable.
 
@@ -62,3 +62,4 @@ RECALL → DISCOVER (if gap) → EXECUTE → PERSIST → VERIFY
 4. **VERIFY** around production changes: `system_status` + `billing_status` before and after.
 
 If the kernel is down, say so in one short sentence and continue with local tools — never present mock state.
+
