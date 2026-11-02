@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -160,6 +161,134 @@ func openAIToolsToResponses(tools []openAITool) []map[string]any {
 	return out
 }
 
+// ── Subscription attestation guard ──────────────────────────────────────────
+//
+// Live bisection against https://api.meta.ai/v1/responses (subscription key,
+// 2026-11-01): no tools → 200; parity tools (read/grep/memory, minimal
+// descriptions) → 200; a description mentioning "shell" → 200; a tool NAMED
+// bash, powershell, shell, request_user_input, get_goal, create_goal, or
+// update_goal → 403 client_attestation_denied (execute_command, web_search,
+// subagent namespaces, and view_image → 200). Attestation keys off the tool
+// NAME (case-insensitively here; vendor case handling untested). Codex sends
+// its native shell/goal/user-input tools and opencode sends native bash, so
+// proxying them verbatim always 403s. On a 403 attestation denial with tools
+// present, retry once WITHOUT the tripping names (PAYG keys pass the first
+// attempt, so they never pay the retry).
+
+// attestationTrippingTool reports whether a Responses function-tool name trips
+// Meta's subscription attestation. Live bisection 2026-11-02: the vendor
+// tightened attestation — web_search, web_fetch and search now 403 alongside
+// the shell/input/goal names, while execute_command, fetch and the
+// hypernexus parity tools still pass untouched.
+func attestationTrippingTool(name string) bool {
+	switch strings.ToLower(name) {
+	case "bash", "powershell", "shell",
+		"request_user_input",
+		"get_goal", "create_goal", "update_goal",
+		"web_search", "web_fetch", "search":
+		return true
+	}
+	return false
+}
+
+// stripAttestationTools drops Responses function tools whose names trip
+// subscription attestation (or break the vendor's schema subset, like
+// codex's deeply-nested request_user_input). It returns the kept tools and
+// the stripped names.
+func stripAttestationTools(tools []any) (kept []any, stripped []string) {
+	for _, t := range tools {
+		m, ok := t.(map[string]any)
+		if !ok {
+			kept = append(kept, t)
+			continue
+		}
+		name, _ := m["name"].(string)
+		typ, _ := m["type"].(string)
+		if (typ == "" || typ == "function") && attestationTrippingTool(name) {
+			stripped = append(stripped, name)
+			continue
+		}
+		kept = append(kept, t)
+	}
+	return kept, stripped
+}
+
+// resetDanglingToolChoice drops a specific-function tool_choice that names a
+// stripped tool back to "auto".
+func resetDanglingToolChoice(body map[string]any) {
+	tc, ok := body["tool_choice"].(map[string]any)
+	if !ok {
+		return
+	}
+	var cname string
+	if fn, ok := tc["function"].(map[string]any); ok {
+		cname, _ = fn["name"].(string)
+	} else {
+		cname, _ = tc["name"].(string)
+	}
+	if attestationTrippingTool(cname) {
+		body["tool_choice"] = "auto"
+	}
+}
+
+// normalizeMetaModel strips a harness provider prefix ("meta/") — the vendor
+// only knows the bare model ID (a prefixed ID 404s as model_not_found).
+func normalizeMetaModel(model string) string {
+	if rest, ok := strings.CutPrefix(model, "meta/"); ok && rest != "" {
+		return rest
+	}
+	return model
+}
+
+// isAttestationDenial reports a 403 client_attestation_denied upstream body.
+func isAttestationDenial(status int, body []byte) bool {
+	return status == http.StatusForbidden && bytes.Contains(body, []byte("client_attestation_denied"))
+}
+
+// isRecursiveSchemaDenial reports a 400 "Recursive JSON schemas" upstream
+// body. Codex ships deeply-nested tool parameters (request_user_input's
+// questions array); the vendor rejects those schemas before attestation
+// even runs, so the same strip-and-retry applies.
+func isRecursiveSchemaDenial(status int, body []byte) bool {
+	return status == http.StatusBadRequest && bytes.Contains(body, []byte("Recursive JSON schemas"))
+}
+
+// needsToolRetry reports whether an upstream rejection warrants one stripped
+// retry: an attestation denial or a recursive-schema rejection.
+func needsToolRetry(status int, body []byte) bool {
+	return isAttestationDenial(status, body) || isRecursiveSchemaDenial(status, body)
+}
+
+// retryBodyForDenied returns a request body worth one retry after an upstream
+// tool-related rejection, or nil when the denial should surface unchanged:
+//   - known-bad tool names present → a copy without them (tool_choice fixed);
+//   - 400 recursive-schema with nothing known-bad → the identical body once
+//     (may be transient, e.g. a still-loading MCP tool definition);
+//   - deterministic 403 with nothing to strip → nil (never retry blindly).
+func retryBodyForDenied(body map[string]any, tools []any, status int, respBody []byte) map[string]any {
+	if len(tools) == 0 || !needsToolRetry(status, respBody) {
+		return nil
+	}
+	kept, names := stripAttestationTools(tools)
+	if len(names) > 0 {
+		model, _ := body["model"].(string)
+		log.Printf("openai-compat: tool fallback for model %s, stripped %v, retrying", model, names)
+		out := make(map[string]any, len(body))
+		for k, v := range body {
+			out[k] = v
+		}
+		out["tools"] = kept
+		resetDanglingToolChoice(out)
+		return out
+	}
+	if isRecursiveSchemaDenial(status, respBody) {
+		model, _ := body["model"].(string)
+		log.Printf("openai-compat: recursive-schema denial with no known-bad tools for model %s, retrying identical once", model)
+		return body
+	}
+	return nil
+}
+
 // openAIToolChoiceToResponses maps the chat-completions tool_choice onto the
 // Responses equivalent.
 func openAIToolChoiceToResponses(tc any) any {
@@ -169,13 +298,10 @@ func openAIToolChoiceToResponses(tc any) any {
 	case string:
 		return v // auto | none | required
 	case map[string]any:
-		if v["type"] == "function" {
-			if fn, ok := v["function"].(map[string]any); ok {
-				if name, ok := fn["name"].(string); ok && name != "" {
-					return map[string]any{"type": "function", "name": name}
-				}
-			}
-		}
+		// Vendor change 2026-11-02: only the "auto" tool_choice is accepted
+		// ("none", "required" and named function choices 400). Map every
+		// object choice onto "auto" for all keys — a named choice 400s on
+		// pay-as-you-go keys too, so nothing is lost by normalizing.
 		return "auto"
 	default:
 		return "auto"
@@ -269,6 +395,10 @@ func (s *Server) handleOpenAIChatCompletions(w http.ResponseWriter, r *http.Requ
 	model := req.Model
 	if model == "" {
 		model = "muse-spark-1.3-contributor"
+	} else {
+		// Harness configs attach a provider prefix ("meta/..."); the vendor
+		// only knows the bare model ID (a prefixed ID 404s).
+		model = normalizeMetaModel(model)
 	}
 	maxTokens := req.MaxTokens
 	if req.MaxCompletionTokens > maxTokens {
@@ -298,27 +428,47 @@ func (s *Server) handleOpenAIChatCompletions(w http.ResponseWriter, r *http.Requ
 			body["tool_choice"] = "auto"
 		}
 	}
-	raw, _ := json.Marshal(body)
-	httpReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost,
-		"https://api.meta.ai/v1/responses", bytes.NewReader(raw))
-	if err != nil {
-		writeJSON(w, http.StatusBadGateway, map[string]any{"error": err.Error()})
-		return
+	postResponses := func(payload map[string]any) (int, []byte, error) {
+		raw, _ := json.Marshal(payload)
+		httpReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost,
+			"https://api.meta.ai/v1/responses", bytes.NewReader(raw))
+		if err != nil {
+			return 0, nil, err
+		}
+		httpReq.Header.Set("Authorization", "Bearer "+token)
+		httpReq.Header.Set("Content-Type", "application/json")
+		httpReq.Header.Set("User-Agent", "pi/1.4.0 (hypernexus-openai-compat)")
+		resp, err := (&http.Client{Timeout: 600 * time.Second}).Do(httpReq)
+		if err != nil {
+			return 0, nil, err
+		}
+		defer resp.Body.Close()
+		respBody, _ := io.ReadAll(resp.Body)
+		return resp.StatusCode, respBody, nil
 	}
-	httpReq.Header.Set("Authorization", "Bearer "+token)
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("User-Agent", "pi/1.4.0 (hypernexus-openai-compat)")
-	resp, err := (&http.Client{Timeout: 600 * time.Second}).Do(httpReq)
+	status, respBody, err := postResponses(body)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]any{"error": "meta unreachable: " + err.Error()})
 		return
 	}
-	defer resp.Body.Close()
-	respBody, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
+	if tools, ok := body["tools"].([]map[string]any); ok && len(tools) > 0 {
+		anyTools := make([]any, len(tools))
+		for i, t := range tools {
+			anyTools[i] = t
+		}
+		if retry := retryBodyForDenied(body, anyTools, status, respBody); retry != nil {
+			status, respBody, err = postResponses(retry)
+			if err != nil {
+				writeJSON(w, http.StatusBadGateway, map[string]any{"error": "meta unreachable: " + err.Error()})
+				return
+			}
+			body = retry
+		}
+	}
+	if status != http.StatusOK {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintf(w, `{"error":"meta api %d: %s"}`, resp.StatusCode, truncateForError(respBody))
+		fmt.Fprintf(w, `{"error":"meta api %d: %s"}`, status, truncateForError(respBody))
 		return
 	}
 	var rsp struct {
@@ -401,11 +551,27 @@ func (s *Server) proxyToMeta(w http.ResponseWriter, r *http.Request, upstream st
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "cannot read body: " + err.Error()})
 		return
 	}
-	// Default an empty model to the subscriber model; otherwise untouched.
+	// Default an empty model to the subscriber model; strip a harness
+	// provider prefix ("meta/") the vendor would 404 on.
 	var bodyMap map[string]any
 	if err := json.Unmarshal(raw, &bodyMap); err == nil {
+		dirty := false
 		if m, _ := bodyMap["model"].(string); m == "" {
 			bodyMap["model"] = "muse-spark-1.3-contributor"
+			dirty = true
+		} else if n := normalizeMetaModel(m); n != m {
+			bodyMap["model"] = n
+			dirty = true
+		}
+		// Vendor change 2026-11-02: only the "auto" tool_choice is
+		// accepted; a named function choice 400s before attestation even
+		// runs. Normalize object choices onto "auto" (string choices pass
+		// through untouched).
+		if tc, ok := bodyMap["tool_choice"].(map[string]any); ok && tc != nil {
+			bodyMap["tool_choice"] = "auto"
+			dirty = true
+		}
+		if dirty {
 			raw, _ = json.Marshal(bodyMap)
 		}
 	}
@@ -423,6 +589,47 @@ func (s *Server) proxyToMeta(w http.ResponseWriter, r *http.Request, upstream st
 	resp, err := (&http.Client{Timeout: 600 * time.Second}).Do(httpReq)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]any{"error": "meta unreachable: " + err.Error()})
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		// Buffer errors (small): a 403 attestation denial with tools present
+		// gets one stripped retry before surfacing.
+		respBody, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if bodyMap != nil {
+			if tools, ok := bodyMap["tools"].([]any); ok && len(tools) > 0 {
+				if retry := retryBodyForDenied(bodyMap, tools, resp.StatusCode, respBody); retry != nil {
+					raw2, _ := json.Marshal(retry)
+					httpReq2, err2 := http.NewRequestWithContext(r.Context(), http.MethodPost, upstream, bytes.NewReader(raw2))
+					if err2 == nil {
+						httpReq2.Header.Set("Authorization", "Bearer "+token)
+						httpReq2.Header.Set("Content-Type", "application/json")
+						httpReq2.Header.Set("User-Agent", "pi/1.4.0 (hypernexus-openai-compat)")
+						if accept := r.Header.Get("Accept"); accept != "" {
+							httpReq2.Header.Set("Accept", accept)
+						}
+						if resp2, err2 := (&http.Client{Timeout: 600 * time.Second}).Do(httpReq2); err2 == nil {
+							defer resp2.Body.Close()
+							upstreamModel2, _ := bodyMap["model"].(string)
+							log.Printf("openai-compat: tool retry done for model %s, upstream status=%d", upstreamModel2, resp2.StatusCode)
+							if ct := resp2.Header.Get("Content-Type"); ct != "" {
+								w.Header().Set("Content-Type", ct)
+							}
+							w.WriteHeader(resp2.StatusCode)
+							_, _ = io.Copy(w, resp2.Body)
+							return
+						}
+					}
+					writeJSON(w, http.StatusBadGateway, map[string]any{"error": "meta unreachable on tool retry"})
+					return
+				}
+			}
+		}
+		if ct := resp.Header.Get("Content-Type"); ct != "" {
+			w.Header().Set("Content-Type", ct)
+		}
+		w.WriteHeader(resp.StatusCode)
+		_, _ = w.Write(respBody)
 		return
 	}
 	defer resp.Body.Close()

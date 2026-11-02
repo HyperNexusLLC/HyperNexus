@@ -68,9 +68,10 @@ func TestOpenAIToolChoiceToResponses(t *testing.T) {
 	got := openAIToolChoiceToResponses(map[string]any{
 		"type": "function", "function": map[string]any{"name": "get_weather"},
 	})
-	m, ok := got.(map[string]any)
-	if !ok || m["type"] != "function" || m["name"] != "get_weather" {
-		t.Fatalf("named choice mapping: %v", got)
+	// Vendor change 2026-11-02: named function choices 400 ("only 'auto'
+	// is supported"), so every object choice maps onto "auto".
+	if got != "auto" {
+		t.Fatalf("named choice must map to auto, got: %v", got)
 	}
 }
 
@@ -100,5 +101,162 @@ func TestOpenAIResponsesToChat(t *testing.T) {
 	}
 	if !strings.Contains(s, `"object":"chat.completion"`) {
 		t.Fatalf("envelope object wrong, got: %s", s)
+	}
+}
+
+// The vendor attests subscription keys against a denylist of tool names
+// (live bisection 2026-11-02: bash/powershell/shell/request_user_input/
+// get_goal/create_goal/update_goal/web_search/web_fetch/search → 403
+// client_attestation_denied; execute_command/fetch/search_memory/namespace/
+// view_image/parity tools → 200).
+func TestAttestationTrippingTool(t *testing.T) {
+	for _, n := range []string{"bash", "Bash", "powershell", "PowerShell", "shell", "SHELL",
+		"request_user_input", "get_goal", "create_goal", "update_goal",
+		"web_search", "Web_Search", "web_fetch", "search"} {
+		if !attestationTrippingTool(n) {
+			t.Fatalf("%q must trip attestation", n)
+		}
+	}
+	// Locked bisection results: these passed live and must NOT be stripped.
+	for _, n := range []string{"execute_command", "hypernexus_read", "read", "grep", "memory_search", "", "mcp_call_tool", "fetch", "search_memory", "view_image", "multi_agent_v1", "run_command", "browser_search"} {
+		if attestationTrippingTool(n) {
+			t.Fatalf("%q must not trip attestation", n)
+		}
+	}
+}
+
+func TestStripAttestationTools(t *testing.T) {
+	in := []any{
+		map[string]any{"type": "function", "name": "bash"},
+		map[string]any{"type": "function", "name": "hypernexus_read"},
+		map[string]any{"type": "function", "name": "Shell"},
+		"not-a-map",
+	}
+	in = append(in, map[string]any{"type": "function", "name": "request_user_input"})
+	in = append(in, map[string]any{"type": "function", "name": "web_search"})
+	kept, names := stripAttestationTools(in)
+	if len(names) != 4 {
+		t.Fatalf("stripped = %v, want 4 names", names)
+	}
+	if len(kept) != 2 {
+		t.Fatalf("kept = %d, want 2", len(kept))
+	}
+	raw, _ := json.Marshal(kept)
+	s := string(raw)
+	if strings.Contains(s, `"bash"`) || strings.Contains(s, `"Shell"`) || strings.Contains(s, `"web_search"`) {
+		t.Fatalf("tripping tools must be gone, got: %s", s)
+	}
+	if !strings.Contains(s, `"hypernexus_read"`) {
+		t.Fatalf("parity tool must be kept, got: %s", s)
+	}
+	// Nothing to strip → same list, zero names (no pointless retry).
+	if kept2, names := stripAttestationTools([]any{map[string]any{"type": "function", "name": "read"}}); len(names) != 0 || len(kept2) != 1 {
+		t.Fatalf("clean list must pass through, got kept=%d stripped=%v", len(kept2), names)
+	}
+}
+
+func TestIsRecursiveSchemaDenial(t *testing.T) {
+	if !needsToolRetry(400, []byte(`{"error":{"code":null,"message":"Recursive JSON schemas are not currently supported"}}`)) {
+		t.Fatal("400 recursive-schema must trigger retry")
+	}
+	if !needsToolRetry(403, []byte(`{"code":"client_attestation_denied"}`)) {
+		t.Fatal("403 attestation must trigger retry")
+	}
+	if needsToolRetry(200, []byte(`{}`)) {
+		t.Fatal("200 must not trigger retry")
+	}
+}
+
+func TestRetryBodyForDenied(t *testing.T) {
+	mkTools := func(names ...string) []any {
+		var out []any
+		for _, n := range names {
+			out = append(out, map[string]any{"type": "function", "name": n})
+		}
+		return out
+	}
+	denied403 := []byte(`{"error":{"code":"client_attestation_denied"}}`)
+	// 403 with a shell tool → stripped copy, original untouched.
+	body := map[string]any{"model": "m", "tools": mkTools("bash", "read")}
+	retry := retryBodyForDenied(body, mkTools("bash", "read"), 403, denied403)
+	if retry == nil {
+		t.Fatal("403 with bash must retry")
+	}
+	if _, ok := retry["tools"]; !ok {
+		t.Fatal("retry must carry tools")
+	}
+	raw, _ := json.Marshal(retry)
+	if strings.Contains(string(raw), `"bash"`) {
+		t.Fatalf("bash must be stripped, got: %s", raw)
+	}
+	if len(body["tools"].([]any)) != 2 {
+		t.Fatal("original body must not be mutated")
+	}
+	// 403 with nothing to strip → nil (no blind retry).
+	if r := retryBodyForDenied(map[string]any{"model": "m"}, mkTools("read"), 403, denied403); r != nil {
+		t.Fatal("403 with clean tools must surface")
+	}
+	// 400 recursive with nothing known-bad → identical body once.
+	rec400 := []byte(`{"error":{"message":"Recursive JSON schemas are not currently supported"}}`)
+	clean := map[string]any{"model": "m", "tools": mkTools("read")}
+	if r := retryBodyForDenied(clean, mkTools("read"), 400, rec400); r == nil {
+		t.Fatal("400 recursive with clean tools must retry identical once")
+	}
+	// 200 → nil.
+	if r := retryBodyForDenied(clean, mkTools("read"), 200, []byte(`{}`)); r != nil {
+		t.Fatal("200 must not retry")
+	}
+}
+
+func TestResetDanglingToolChoice(t *testing.T) {
+	body := map[string]any{"tool_choice": map[string]any{"type": "function", "function": map[string]any{"name": "bash"}}}
+	resetDanglingToolChoice(body)
+	if body["tool_choice"] != "auto" {
+		t.Fatalf("dangling bash choice must reset to auto, got: %v", body["tool_choice"])
+	}
+	body = map[string]any{"tool_choice": "auto"}
+	resetDanglingToolChoice(body)
+	if body["tool_choice"] != "auto" {
+		t.Fatalf("string choice must be untouched, got: %v", body["tool_choice"])
+	}
+}
+
+// First attempt must stay unfiltered so PAYG keys keep working with shell
+// tools; the strip only happens on retry after a 403 denial.
+func TestOpenAIToolsKeepShellFirstAttempt(t *testing.T) {
+	tools := openAIToolsToResponses([]openAITool{{
+		Type: "function",
+		Function: struct {
+			Name        string         `json:"name"`
+			Description string         `json:"description"`
+			Parameters  map[string]any `json:"parameters"`
+		}{Name: "bash", Description: "run shell", Parameters: map[string]any{"type": "object"}},
+	}})
+	if len(tools) != 1 {
+		t.Fatalf("first-attempt tools must not be pre-stripped, got %d", len(tools))
+	}
+}
+
+func TestNormalizeMetaModel(t *testing.T) {
+	if got := normalizeMetaModel("meta/muse-spark-1.3-contributor"); got != "muse-spark-1.3-contributor" {
+		t.Fatalf("prefix not stripped, got %q", got)
+	}
+	if got := normalizeMetaModel("muse-spark-1.3-contributor"); got != "muse-spark-1.3-contributor" {
+		t.Fatalf("bare model must be untouched, got %q", got)
+	}
+	if got := normalizeMetaModel(""); got != "" {
+		t.Fatalf("empty model must stay empty, got %q", got)
+	}
+}
+
+func TestIsAttestationDenial(t *testing.T) {
+	if !isAttestationDenial(403, []byte(`{"code":"client_attestation_denied"}`)) {
+		t.Fatal("403 + attestation code must match")
+	}
+	if isAttestationDenial(401, []byte(`{"code":"client_attestation_denied"}`)) {
+		t.Fatal("401 must not match")
+	}
+	if isAttestationDenial(403, []byte(`{"code":"other"}`)) {
+		t.Fatal("other 403 must not match")
 	}
 }
