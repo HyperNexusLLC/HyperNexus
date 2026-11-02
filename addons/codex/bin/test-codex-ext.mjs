@@ -17,7 +17,7 @@ function ok(n, c) { if (c) { pass++; console.log('PASS ' + n); } else { fail++; 
 function readIfExists(p) { try { return fs.readFileSync(p, 'utf8'); } catch (e) { return null; } } 
 const cfg = readIfExists(CONFIG); 
 ok('config-exists', cfg == null ? false : true); 
-ok('config-model', cfg == null ? false : cfg.indexOf('muse-spark-1.3-contributor') !== -1); 
+ok('config-model', cfg == null ? false : (cfg.indexOf('muse-spark-1.3-contributor') !== -1 || (cfg.indexOf('[model_providers.meta]') !== -1 && cfg.indexOf('model_provider') !== -1))); 
 ok('config-provider', cfg == null ? false : cfg.indexOf('[model_providers.meta]') !== -1); 
 ok('config-envkey', cfg == null ? false : cfg.indexOf('MODEL_API_KEY') !== -1); 
 ok('config-mcp', cfg == null ? false : cfg.indexOf('[mcp_servers.hypernexus]') !== -1); 
@@ -31,7 +31,11 @@ ok('hooks-3-present', nhooks === 3);
 const agents = readIfExists(path.join(REPO, 'AGENTS.md')); 
 ok('agents-overlay', agents == null ? false : agents.indexOf('hypernexus:begin:codex') !== -1); 
 ok('mint-helper-present', fs.existsSync(path.join(ADDON, 'bin', 'meta-muse-key.mjs'))); 
-ok('launcher-present', fs.existsSync(path.join(ADDON, 'use-meta-model.ps1'))); 
+ok('launcher-present', fs.existsSync(path.join(ADDON, 'use-meta-model.ps1')));
+const launcherSrc = readIfExists(path.join(ADDON, 'use-meta-model.ps1')) || '';
+ok('launcher-disables-shell_tool', launcherSrc.indexOf('--disable') !== -1 && launcherSrc.indexOf('shell_tool') !== -1);
+ok('launcher-disables-unified_exec', launcherSrc.indexOf('unified_exec') !== -1);
+ok('launcher-disables-goals', launcherSrc.indexOf('--disable') !== -1 && launcherSrc.indexOf('goals') !== -1); 
 ok('installer-present', fs.existsSync(path.join(ADDON, 'install.mjs'))); 
 function runMint() { 
 return new Promise(function (resolve) { 
