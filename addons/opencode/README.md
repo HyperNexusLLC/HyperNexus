@@ -11,7 +11,7 @@ HyperNexus control plane (Go kernel, default `http://127.0.0.1:7778`).
 | **13 commands** | `/hn-status` `/hn-store` `/hn-remember` `/hn-search` `/hn-tools` `/hn-session` `/hn-context` `/hn-plan` `/hn-summary` `/hn-restore` `/hn-purge` `/hn-auth` `/hn-models` |
 | **4 skills** | `hypernexus`, `hypernexus-ops`, `hypernexus-workflows`, `hypernexus-orchestrator` (registered programmatically + shipped as SKILL.md) |
 | **2 reminders** | `hn-memory-first`, `hn-verify-ops` (`reminders/*.md`, installed to `.opencode/reminders/`; OpenCode has no reminder API so they also ship as skill/compaction discipline text) |
-| **Meta model** | native `meta/muse-spark-1.3-contributor` provider registration (`@opencode/ai/providers/openai-compatible` → `https://api.meta.ai/v1`, key from `META_MUSE_API_KEY`); pi-OAuth integration method (`node bin/meta-muse-key.mjs --check`); session-default preference when unpinned; `/hn-auth` + `/hn-models` commands; Meta 401/403 clears the minted-key cache (pi re-mints) |
+| **Meta model** | collision-free `meta-hn/muse-spark-1.3-contributor` provider registration (`npm: @opencode/ai/providers/openai-compatible` → kernel proxy `http://127.0.0.1:7778/v1`, key from `META_MUSE_API_KEY`; id is NOT `meta` — opencode's built-in `meta` images provider would shadow it and 403); pi-OAuth integration method (`node bin/meta-muse-key.mjs --check`); session-default preference when unpinned; `/hn-auth` + `/hn-models` commands; Meta 401/403 clears the minted-key cache (pi re-mints) |
 | **Session hooks** | prompt admission (`@memory:key` expansion, suggestion feed, session priming with active goal), per-turn context injection (fast FTS recall + status + proactive tool suggestions), compaction enrichment, generate/title parity, model-request + native HTTP identity headers, retry observability with hard-fail caps |
 | **Tool hooks** | destructive-pattern RBAC pre-check, fire-and-forget audit trail, structured file-change/file-read observations for the knowledge graph, auto-store of substantial results to L2 |
 | **Permission hook** | kernel-aware RBAC (`HYPERNEXUS_RBAC=audit\|ask\|deny`) |
@@ -66,10 +66,17 @@ $env:META_MUSE_API_KEY = "$(node addons/opencode/bin/meta-muse-key.mjs)"
 .\addons\opencode\use-meta-model.ps1 "hello"         # or no args for the TUI
 ```
 
-Config shape is V2 (`providers.meta` + `env: ["META_MUSE_API_KEY"]` — see
+Config shape is V2 (`providers["meta-hn"]` + `env: ["META_MUSE_API_KEY"]` — see
 `meta-model.opencode.jsonc`); the installer migrates a retired V1 singular
 `provider.meta` block automatically. The key lives in the process environment
 only — never in config files, logs, or transcripts.
+
+Subscription-key rule: Meta attests DENIED (403 `client_attestation_denied`)
+for requests carrying shell-named tools (`bash`, `powershell`, `shell`).
+The jsonc snippet above disables native `bash` for this reason — leave it off
+and use the hypernexus/* plugin tools instead. (Live-bisected 2026-11-01:
+parity tools and shell-worded descriptions pass; only the tool NAME trips
+attestation. `execute_command` also passes and is left alone.)
 
 ## Troubleshooting
 
@@ -100,7 +107,7 @@ addons/opencode/
   plugin/hypernexus/package.json
   plugin/hypernexus/meta-muse-key.mjs  installed copy of the pi-OAuth key minter
   bin/meta-muse-key.mjs       Meta Model API key minter (pi auth.json → api.meta.ai, stdout only)
-  meta-model.opencode.jsonc   drop-in V2 providers.meta wiring (no secrets)
+  meta-model.opencode.jsonc   drop-in V2 providers["meta-hn"] wiring (no secrets)
   use-meta-model.ps1          live-mint launcher (process env only)
   skills/*/SKILL.md           skill docs (hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator)
   reminders/*.md              reminder duty files (hn-memory-first, hn-verify-ops)

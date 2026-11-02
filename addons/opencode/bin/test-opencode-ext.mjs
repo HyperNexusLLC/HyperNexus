@@ -33,13 +33,14 @@ check("thin minter shim delegates to shared canonical minter", () => {
   assert.match(canonical, /stdout/i);
 });
 
-check("V2 meta-model config pins meta/muse-spark with env key", () => {
+check("V2 meta-model config pins meta-hn/muse-spark with env key", () => {
   const cfg = src("meta-model.opencode.jsonc");
-  assert.match(cfg, /"meta"/);
+  assert.match(cfg, /"meta-hn"/);
   assert.match(cfg, /muse-spark-1\.3-contributor/);
   assert.match(cfg, /META_MUSE_API_KEY/);
-  assert.match(cfg, /api\.meta\.ai\/v1/);
+  assert.match(cfg, /127\.0\.0\.1:7778\/v1/);
   assert.doesNotMatch(cfg, /"key"\s*:/);
+  assert.doesNotMatch(cfg, /"package"\s*:/);
 });
 
 check("plugin registers tools incl meta_auth", () => {

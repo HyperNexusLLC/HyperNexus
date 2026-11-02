@@ -294,6 +294,14 @@ check("worktree strategy registered", state.worktrees.length === 1 && typeof sta
 check("session hooks registered (prompt/context/compaction/model.request/retry)", ["prompt", "context", "compaction", "model.request", "retry"].every((h) => state.hooks.session.has(h)));
 check("aux hooks registered (generate/title/http.request/http.response)", ["generate", "title", "http.request", "http.response"].every((h) => state.hooks.session.has(h)));
 check("meta provider registered via provider.transform", [...(state.providers?.keys?.() ?? [])].some((k) => String(k).includes("meta")));
+const metaModelDoc = fs.readFileSync(path.join(ROOT, "addons", "opencode", "meta-model.opencode.jsonc"), "utf8");
+check("meta-model jsonc disables native bash (attestation rule)", /"tools"\s*:\s*\{[^}]*"bash"\s*:\s*false/.test(metaModelDoc));
+check("plugin registers no shell-named tools", ![...state.tools.keys()].some((n) => /^(hypernexus_)?(bash|powershell|shell)$/i.test(n)), [...state.tools.keys()].filter((n) => /bash|powershell|shell/i.test(n)).join(","));
+const metaRec = state.providers?.get?.("meta-hn");
+const sparkModel = metaRec?.models?.find?.((m) => m?.id === "muse-spark-1.3-contributor");
+check("meta provider model carries time.released (Model.snapshot sort guard)", typeof sparkModel?.time?.released === "number" && sparkModel.time.released > 0, JSON.stringify(sparkModel?.time));
+check("meta provider model is enabled with limits", sparkModel?.enabled === true && typeof sparkModel?.limit?.context === "number" && typeof sparkModel?.limit?.output === "number", JSON.stringify(sparkModel?.limit));
+check("meta-model jsonc pins releaseDate for muse-spark (config overlay time source)", /"muse-spark-1\.3-contributor"[\s\S]*?"releaseDate"\s*:\s*"\d{4}-\d{2}(-\d{2})?"/.test(metaModelDoc), metaModelDoc.slice(0, 120));
 check("tool hooks registered (execute.before/execute.after)", ["execute.before", "execute.after"].every((h) => state.hooks.tool.has(h)));
 check("permission hook registered (evaluate)", state.hooks.permission.has("evaluate"));
 check("shell hook registered (create.before)", state.hooks.shell.has("create.before"));

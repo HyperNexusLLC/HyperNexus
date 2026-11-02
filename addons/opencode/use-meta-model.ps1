@@ -30,14 +30,14 @@ if ([string]::IsNullOrEmpty($env:META_MUSE_API_KEY)) {
   Write-Error 'META_MUSE_API_KEY is not set and live mint from pi auth.json failed. Run /login meta in pi, or set $env:META_MUSE_API_KEY in this shell, then re-run. The value is never displayed or stored by this script.'
   exit 1
 }
-Write-Host '[hypernexus] META_MUSE_API_KEY is set (value hidden). Starting OpenCode with meta/muse-spark-1.3-contributor ...'
+Write-Host '[hypernexus] META_MUSE_API_KEY is set (value hidden). Starting OpenCode with meta-hn/muse-spark-1.3-contributor ...'
 
 $opencode = Get-Command opencode -ErrorAction SilentlyContinue
 if (-not $opencode) { $opencode = 'C:\Users\hyper\AppData\Roaming\npm\opencode.cmd' }
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & $opencode run --model 'meta/muse-spark-1.3-contributor' -- $Prompt
+  & $opencode run --model 'meta-hn/muse-spark-1.3-contributor' -- $Prompt
 } else {
-  $env:OPENCODE_MODEL = 'meta/muse-spark-1.3-contributor'
+  $env:OPENCODE_MODEL = 'meta-hn/muse-spark-1.3-contributor'
   & $opencode
 }
