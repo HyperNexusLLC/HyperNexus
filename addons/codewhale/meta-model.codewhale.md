@@ -17,6 +17,11 @@ codewhale auth status --provider meta     # active source: secret store
 codewhale exec --provider meta --model muse-spark-1.3-contributor "hi"
 ```
 
+> Transport note (verified live 2026-11-03): headless `exec` over the proxy
+> route needs `$env:CODEWHALE_FORCE_HTTP1 = '1'` — codewhale's HTTP/2 SSE
+> stream otherwise fails before response headers (not a 403; auth is fine).
+> `use-meta-model.ps1` sets this automatically.
+
 ## Subscription/OAuth path: kernel proxy + secret-store key
 
 `codewhale auth external-consent` reports `meta has no supported external CLI

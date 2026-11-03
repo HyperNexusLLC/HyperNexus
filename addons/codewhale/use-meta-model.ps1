@@ -35,6 +35,10 @@ try {
 & (Join-Path $root 'scripts\sync-meta-oauth-codewhale.ps1') 2>&1 | ForEach-Object { Write-Host $_ }
 
 # 3. Launch Codewhale on the subscriber model (proxy route from config.toml).
+# Transport: codewhale's HTTP/2 SSE stream fails to open response headers on
+# this route ("connection failed before response headers", both HTTP/2+1.1
+# attempted); forcing HTTP/1.1 is verified with a live PONG (2026-11-03).
+$env:CODEWHALE_FORCE_HTTP1 = '1'
 Write-Host '[hypernexus] launching codewhale on meta/muse-spark-1.3-contributor ...'
 if ($Prompt -and $Prompt.Count -gt 0) {
   & codewhale --provider meta --model muse-spark-1.3-contributor -- $Prompt
