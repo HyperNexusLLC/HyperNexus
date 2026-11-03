@@ -52,8 +52,18 @@ const SUG_TTL = 60_000;
 const MAX_STORE_CHARS = 4000;
 const MAX_SYSTEM_BLOCK = 1400; // chars of injected context per turn
 const META_MODEL_ID = "muse-spark-1.3-contributor";
-const META_PROVIDER_ID = "meta";
-const META_BASE_URL = "https://api.meta.ai/v1";
+const META_PROVIDER_ID = "meta-hn";
+// Provider id MUST be "meta-hn", never "meta", and the default baseURL goes
+// through the kernel proxy, NOT direct Meta. Root-caused 2026-11-02: opencode
+// ships a built-in "meta" (images) provider hardcoded to
+// https://api.meta.ai/v1, which shadows/ignores a custom "meta" entry —
+// packet trace showed serve --stdio POSTing there despite a proxy baseURL in
+// every config file, and subscription keys 403 outside attested clients.
+// The proxy substitutes pi OAuth and strips attestation-tripping tools.
+// options.metaBaseUrl still overrides (PAYG direct use).
+const META_PROXY_BASE_URL = "http://127.0.0.1:7778/v1";
+// Direct Meta base, used ONLY by the manual meta_auth/hn-auth key check.
+const META_DIRECT_BASE_URL = "https://api.meta.ai/v1";
 const META_KEY_TTL_MS = 50 * 60 * 1000; // minted Model API keys live ~1h; refresh at 50min
 
 function metaToolState() {
@@ -1482,7 +1492,7 @@ const TOOLS = [
       const cached = metaKeyIsFresh();
       if (act === "status") {
         const lines = [
-          `provider: ${META_PROVIDER_ID}/${META_MODEL_ID} @ ${META_BASE_URL}`,
+          `provider: ${META_PROVIDER_ID}/${META_MODEL_ID} @ ${META_PROXY_BASE_URL}`,
           `pi OAuth identity: ${presence.present ? `present (${presence.bytes} bytes, mtime ${presence.mtime})` : `absent (${presence.path})`}`,
           `key source: ${envSet ? "env META_MUSE_API_KEY" : cached ? "in-memory minted cache (fresh)" : "none"}`,
         ];
@@ -1518,7 +1528,7 @@ const TOOLS = [
         let okResp = false;
         let detail = "";
         try {
-          const res = await fetch(`${META_BASE_URL}/models`, {
+          const res = await fetch(`${META_DIRECT_BASE_URL}/models`, {
             headers: { Authorization: `Bearer ${key}` },
             signal: AbortSignal.timeout(15000),
           });
@@ -1529,7 +1539,7 @@ const TOOLS = [
           detail = String(err?.message || err).slice(0, 160);
         }
         const verdict = okResp
-          ? `Meta API key VALID (source: ${ensured.source}; HTTP 200 from ${META_BASE_URL}/models).`
+          ? `Meta API key VALID (source: ${ensured.source}; HTTP 200 from ${META_DIRECT_BASE_URL}/models).`
           : `Meta API key check FAILED (source: ${ensured.source}; HTTP ${status}${detail ? ` — ${detail}` : ""}).`;
         return { content: redactMetaKey(verdict), metadata: { ok: okResp, source: ensured.source, httpStatus: status } };
       } catch (err) {
@@ -1804,7 +1814,7 @@ const COMMANDS = [
       const presence = piOAuthPresence();
       const envSet = !!process.env.META_MUSE_API_KEY;
       const statusLine = [
-        `provider: ${META_PROVIDER_ID}/${META_MODEL_ID} @ ${META_BASE_URL}`,
+        `provider: ${META_PROVIDER_ID}/${META_MODEL_ID} @ ${META_PROXY_BASE_URL}`,
         `pi OAuth identity: ${presence.present ? `present (${presence.bytes} bytes, ${presence.mtime})` : `absent (${presence.path})`}`,
         `key source: ${envSet ? "env META_MUSE_API_KEY" : metaKeyIsFresh() ? "in-memory minted cache (fresh)" : "none"}`,
       ].join("\n");
@@ -1823,11 +1833,11 @@ const COMMANDS = [
         const ensured = await ensureMetaKey().catch((e) => ({ ok: false, error: String(e?.message || e) }));
         if (!ensured.ok) return `${statusLine}\n\nCheck: no key (${ensured.reason || ensured.error}).`;
         try {
-          const res = await fetch(`${META_BASE_URL}/models`, {
+          const res = await fetch(`${META_DIRECT_BASE_URL}/models`, {
             headers: { Authorization: `Bearer ${process.env.META_MUSE_API_KEY}` },
             signal: AbortSignal.timeout(15000),
           });
-          return redactMetaKey(`${statusLine}\n\nCheck: HTTP ${res.status} from ${META_BASE_URL}/models (${res.ok ? "VALID" : "FAILED"}).`);
+          return redactMetaKey(`${statusLine}\n\nCheck: HTTP ${res.status} from ${META_DIRECT_BASE_URL}/models (${res.ok ? "VALID" : "FAILED"}).`);
         } catch (err) {
           return redactMetaKey(`${statusLine}\n\nCheck failed: ${err?.message || err}`);
         }
@@ -2350,13 +2360,35 @@ async function setup(ctx) {
                 name: "Meta (muse-spark, HyperNexus pi-OAuth)",
                 activation: "enabled",
                 package: "@opencode/ai/providers/openai-compatible",
-                settings: { baseURL: options.metaBaseUrl || META_BASE_URL },
+                settings: { baseURL: options.metaBaseUrl || META_PROXY_BASE_URL },
                 env: ["META_MUSE_API_KEY"],
               },
               models: [
                 {
+                  // Complete Model.Info: opencode core Model.snapshot sorts
+                  // `right.time.released - left.time.released` with direct
+                  // access, and editor.add stores models raw (no Info.default).
+                  // A time-less entry crashes startup with
+                  // "undefined is not an object (evaluating 'ae.time.released')".
+                  // Values mirror the models.dev catalog entry for
+                  // muse-spark-1.3-contributor (release_date 2026-09-02).
                   id: META_MODEL_ID,
+                  modelID: META_MODEL_ID,
+                  providerID: META_PROVIDER_ID,
                   name: "Muse Spark 1.3 Contributor",
+                  type: "chat",
+                  family: "muse",
+                  capabilities: {
+                    tools: true,
+                    input: ["text", "image", "video", "pdf", "audio"],
+                    output: ["text"],
+                    temperature: true,
+                  },
+                  variants: [],
+                  time: { released: Date.parse("2026-09-02") },
+                  cost: [],
+                  status: "active",
+                  enabled: true,
                   limit: { context: 1048576, output: 131072 },
                 },
               ],

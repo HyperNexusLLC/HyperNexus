@@ -1,39 +1,59 @@
 ---
 name: hypernexus-workflows
-description: Reusable HyperNexus orchestration workflows for maki.
+description: Reusable HyperNexus orchestration workflows for maki — MEM-FIRST, DISCOVER, HARVEST, HANDOFF, OPS, and the RECALL to VERIFY loop, mapped to the hypernexus MCP tools.
 ---
 
-# HyperNexus Workflows
+# HyperNexus Workflows (maki)
 
 Loop: **RECALL → DISCOVER → EXECUTE → PERSIST → VERIFY**
 
 ## MEM-FIRST (any multi-step task)
 
-1. `hypernexus_context_harvest` (task = the task)
-2. `hypernexus_memory_search` for prior decisions/gotchas
-3. Execute
-4. `hypernexus_memory_store` the non-obvious outcomes
+1. `search_memory` (or `hypernexus_memory_search`) with the task topic — prior decisions/gotchas
+2. Execute the task
+3. `add_memory` (or `hypernexus_memory_add`) the non-obvious outcomes (tags: `task,<topic>`)
+4. `memory_extract_relations` on important findings (knowledge graph)
 
 ## DISCOVER (capability gap)
 
-1. `hypernexus_suggest_tools`
-2. `hypernexus_tool_search`
-3. `hypernexus_mcp_call`
-4. Store what worked
+1. `mcp_list_tools` — what the bridge has assimilated
+2. `mcp_call_tool` (or `hypernexus_mcp_call`) — route the call (`serverName`, `toolName`, `arguments`)
+3. `add_memory` — remember which tool worked
 
-## HARVEST (resuming)
+## HARVEST (resuming after a break)
 
-1. `hypernexus_context_harvest`
-2. `hypernexus_session_context`
-3. `hypernexus_memory_handoff` (pickup)
-4. `hypernexus_memory_list` (recent vault)
+1. `search_memory` (empty query → recent; then topic query)
+2. `memory_scratchpad_get` key `goal` — active goal if set
+3. `hypernexus_session_bootstrap` (or `GET /api/memory/session-bootstrap`)
+4. `memory_stats` — vault activity overview
 
-## HANDOFF (end of session)
+## HANDOFF (end of session / context switch)
 
-1. `hypernexus_memory_handoff` (write)
-2. `hypernexus_memory_store` with tags `["session", "summary"]`
-3. `/project:hn-summary`
+1. `add_memory` with a session summary, tags `session,summary`
+2. `memory_scratchpad_set` key `goal` — what the next session should pick up
+3. Append the summary to `HANDOFF.md` (multi-agent handoff protocol)
 
-## OPS
+## Subagent persistence (workers)
 
-See `hypernexus-ops`: verify → act → verify → persist.
+Workers sharing this workspace kernel must persist findings, not just report:
+
+- Before multi-step work: `search_memory` for prior decisions/gotchas.
+- After non-obvious outcomes: `add_memory` with tags including the
+  task label (append-only; safe to retry).
+- End of assignment: `add_memory` a short summary tagged
+  `session,summary,<worker-label>`; set scratchpad key `goal` if work continues.
+- If MCP tools are unavailable, degrade silently and complete locally.
+
+## OPS (deployments / incidents)
+
+See the `hypernexus-ops` skill: verify → act → verify → persist.
+
+## Memory hygiene (periodic)
+
+Manual or scheduled: `memory_extract_relations_batch` (limit 100)
+to keep the knowledge graph fresh, and `memory_stats` to watch growth.
+
+## Degradation
+
+Every workflow degrades gracefully: if any kernel call fails, continue
+the task with local tools and skip persistence (never stall the turn).

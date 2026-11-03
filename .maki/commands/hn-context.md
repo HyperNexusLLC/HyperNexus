@@ -1,10 +1,8 @@
 ---
-description: Harvest L2 context for a task
-argument-hint: <task>
+description: Show HyperNexus saved context state
+argument-hint: [context-id]
 ---
-
-Call the `hypernexus_context_harvest` tool with task set to:
-
-$ARGUMENTS
-
-Present the harvested memories + recent sessions compactly. This is the RECALL step before work.
+List saved contexts via `GET http://127.0.0.1:7778/api/memory/contexts`.
+If `$ARGUMENTS` names an id, fetch it via
+`GET http://127.0.0.1:7778/api/memory/context/get?id=<id>` and report
+its contents. If unreachable, say so and stop.

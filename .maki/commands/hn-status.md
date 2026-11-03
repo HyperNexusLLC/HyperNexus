@@ -1,5 +1,8 @@
 ---
-description: HyperNexus kernel health + memory counts
+description: Report HyperNexus kernel health
+argument-hint: none
 ---
-
-Call the `hypernexus_system_overview` tool and summarize: kernel version, ok status, L2 total, peers, workflows. If the kernel is offline, say so in one sentence and continue with local tools.
+Query `GET http://127.0.0.1:7778/health` and report `ok`, `service`,
+`version`, and `uptimeSec`. Also query `GET /api/system/status` for the
+startup summary. If unreachable, say the kernel is down and stop — do
+not invent values.

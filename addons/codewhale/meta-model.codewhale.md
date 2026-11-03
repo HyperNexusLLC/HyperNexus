@@ -25,7 +25,7 @@ paths cover it instead:
 
 1. **Kernel proxy (primary, zero stale copies).** `~/.codewhale/config.toml`
    points the meta route at the HyperNexus kernel, which proxies
-   `/v1/chat/completions` to `api.meta.ai` with the Bearer token re-read from
+   `/v1/chat/completions` to `api.meta.ai/v1/responses` with the Bearer token re-read from
    pi's `auth.json` on EVERY request (see `go/internal/httpapi/openai_compat.go`):
    ```toml
    [providers.meta]

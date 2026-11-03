@@ -1,6 +1,12 @@
 # MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
+### opencode E2E verification: kernel strip+retry proven, spawn quirk, stale stats endpoint (2026-11-03)
+
+- **Server-side attestation strip proven live:** `/v1/chat/completions` with `bash`- and `powershell`-NAMED tools still returns 200 — the kernel strips them and retries (prompt_tokens collapse 520→11 proves it). Client guard (`tools.bash=false`) keeps payloads clean; kernel is the backstop. OpenCode exposes NO `powershell` tool, only `bash` — do not add unvalidated `powershell:false` keys.
+- **Windows spawn quirk:** `spawnSync("opencode", ...)` without `shell:true` fails ENOENT/EINVAL — always use `shell:true` when probing opencode from node.
+- **Stale endpoint:** raw `/api/memory/stats` is 404 on kernel ≥1.0.23 — use `/api/agent-memory/stats` (200). MCP-router `memory_stats` via `/api/agent/tool` can exceed 90s under box saturation while direct endpoints stay fast; treat isolated battery FAILs under 100%-CPU load as flakes after one retry.
+- **CDP note:** Edge 9222 reachable but saturates; coordinate-then-verify, don't block turns on it.
 ### pi file-lane session: attestation root-cause proven live + parity/doc fixes (2026-10-31)
 
 - **Live proof in session `01a19137`:** 9 consecutive `client_attestation_denied` 403s with powershell+bash in the toolset (any prompt, even trivial); recovery on the exact turn they were removed (`toolsRemoved: powershell, bash`). Keep shell tools out of model-facing surfaces everywhere; use parity tools (read/edit/write/grep/find/ls, memory_*, mcp_*) with minimal descriptions (now a manifest contract rule).

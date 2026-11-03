@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-10-28T07:34:26.275604+00:00",
+  "savedAt": "2026-11-01T02:04:39.075238+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -531,6 +531,28 @@
       },
       "createdAt": "2026-10-28T07:34:26.274606+00:00",
       "accessedAt": "2026-10-28T07:34:26.274606+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "fcd5f0607c496b0f",
+      "content": "Added minimal static batteries addons/pi/bin/test-pi-ext.mjs (10 checks) and addons/opencode/bin/test-opencode-ext.mjs (9 checks); all pass. Copilot battery 16/16 pass, kernel v1.0.22 live. pi storeTools bash entry is an auto-store observation filter, not a tool grant — left intact. opencode plugin header comment says 36 tools/11 commands but actual is 13 hn-* commands (counted) — comment-only drift, README correct. copilot has no minter shim by design (kernel-proxy, battery-enforced); pi has none by design (OAuth owner). HyperNexus MCP stdio pipe was closed this session; used local reads + direct kernel curl instead.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "pi",
+          "copilot",
+          "opencode",
+          "audit",
+          "battery"
+        ],
+        "title": "pi/copilot/opencode audit: batteries + attestation findings"
+      },
+      "createdAt": "2026-11-01T02:04:39.075238+00:00",
+      "accessedAt": "2026-11-01T02:04:39.075238+00:00",
       "accessCount": 0,
       "ttl": null
     }

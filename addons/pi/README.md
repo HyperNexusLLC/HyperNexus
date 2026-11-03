@@ -8,9 +8,9 @@ every other harness mints through pi's `~/.pi/agent/auth.json` identity.
 
 | Surface | Mechanism | Detail |
 |---|---|---|
-| **Tools** | `hypernexus.ts` ExtensionAPI | 33 custom tools: memory store/search/list/vector, tool search + suggestions, sessions, skills, code search, repomap, knowledge graph, context harvest, scratchpad, system + billing status, subagent dispatcher |
+| **Tools** | `hypernexus.ts` ExtensionAPI | 34 custom tools: memory store/search/list/vector, tool search + suggestions, sessions, skills, code search, repomap, knowledge graph, context harvest, scratchpad, system + billing status, subagent dispatcher |
 | **Hooks** | same file | session priming, per-turn harvest, FTS injection (hot-path budgeted), tool-suggestion monitor, RBAC, tool-result auto-storage, model-select tracking, `@memory:key` expansion |
-| **Commands** | same file | 7 slash commands (`/tn-store`, `/tn-search`, `/tn-status`, `/tn-plan`, `/tn-purge`, `/tn-summary`, `/tn-orchestrate`) |
+| **Commands** | same file | 12 slash commands (`/tn-store`, `/tn-search`, `/tn-status`, `/tn-plan`, `/tn-purge`, `/tn-summary`, `/tn-orchestrate`, `/tn-tools`, `/tn-session`, `/tn-context`, `/tn-remember`, `/tn-restore`) |
 | **UI** | same file | live editor widget, footer, `Ctrl+Shift+M/T/P` shortcuts, inter-extension event bus |
 | **MCP** | `mcp.pi.json` → `~/.pi/agent/mcp.json` | `mcpServers.hypernexus` stdio via `bin/hypernexus.exe mcp` |
 | **Skills** | `~/.pi/agent/skills/` (auto-loaded) | hypernexus, hypernexus-ops, hypernexus-workflows |

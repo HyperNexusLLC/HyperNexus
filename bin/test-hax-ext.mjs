@@ -256,11 +256,11 @@ function haxRun(args) {
 }
 function live(name, args, want, detailLen = 60) {
   const r = haxRun(args);
-  // Proven vendor boundary (proxy matrix A–G + bash-name bisection): Meta
-  // attests DENIED for subscription-key Responses requests carrying a tool
-  // literally named `bash`, however it is spelled or shaped. Tool-offering
-  // runs therefore cannot pass on this key; a PAYG key would exercise them.
-  // Any OTHER error still fails loudly below.
+  // Proven vendor boundary (live bisection 2026-11-01: tools named bash,
+  // powershell, or shell → 403 client_attestation_denied; parity tools,
+  // shell-worded descriptions, and execute_command → 200). Shell-offering
+  // runs SKIP on this key; a PAYG key would exercise them. Any OTHER error
+  // still fails loudly below.
   if (!r.ok && /HAX_NOSHELL/.test(r.out)) { skip(name, "no sh interpreter to launch hax on this box"); return; }
   // hax renders the policy denial as prose (no JSON code on stdout). Match
   // regardless of exit code: the denial is about the request, not the run.

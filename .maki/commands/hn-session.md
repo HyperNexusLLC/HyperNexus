@@ -1,10 +1,7 @@
 ---
-description: Resume from imported sessions
-argument-hint: <query>
+description: Summarize HyperNexus sessions and context
+argument-hint: none
 ---
-
-Call the `hypernexus_session_search` tool with query set to:
-
-$ARGUMENTS
-
-Then call `hypernexus_session_context` for the bootstrap. Summarize the active goal and cross-session links.
+Query `GET http://127.0.0.1:7778/api/sessions/summary` and
+`GET http://127.0.0.1:7778/api/sessions/context`, then report active
+sessions and current context. If unreachable, say so and stop.

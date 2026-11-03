@@ -1,10 +1,8 @@
 ---
-description: Semantic search across kernel tools
-argument-hint: <natural language need>
+description: List HyperNexus MCP bridge servers and tools
+argument-hint: none
 ---
-
-Call the `hypernexus_tool_search` tool with query set to:
-
-$ARGUMENTS
-
-Present the top matches with server + one-line description each.
+Query `GET http://127.0.0.1:7778/api/mcp/status` and
+`GET http://127.0.0.1:7778/api/mcp/servers`, then report connected
+server count, tool count, and any degraded servers. If unreachable, say
+the kernel is down and stop.

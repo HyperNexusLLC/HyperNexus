@@ -8,7 +8,7 @@ const TN_BASE = "http://127.0.0.1:7778";
  *
  * Full bridge: pi ↔ HyperNexus
  * ───────────────────────────────────────────
- * - 33 custom tools (memory store/search/list/vector, tool search + suggestions, sessions, skills,
+ * - 34 custom tools (memory store/search/list/vector, tool search + suggestions, sessions, skills,
  *   code, repomap, knowledge graph, context harvest, scratchpad, system status, billing,
  *   session context, universal tool call, add-fact, subagent)
  * - Session priming + per-turn context harvesting + compaction hooks
@@ -19,7 +19,8 @@ const TN_BASE = "http://127.0.0.1:7778";
  * - user_bash audit logging through TN
  * - model_select tracking to L2
  * - Input transformation: @memory:key expansions
- * - 7 slash commands (/tn-store, /tn-search, /tn-status, /tn-plan, /tn-purge, /tn-summary, /tn-orchestrate)
+ * - 12 slash commands (/tn-store, /tn-search, /tn-status, /tn-plan, /tn-purge, /tn-summary, /tn-orchestrate,
+ *   /tn-tools, /tn-session, /tn-context, /tn-remember, /tn-restore)
  * - Live editor widget with memory/mesh stats
  * - Custom footer with TN status
  * - Keyboard shortcuts (Ctrl+Shift+M, Ctrl+Shift+T, Ctrl+Shift+P)
@@ -140,6 +141,12 @@ You have access to HyperNexus — a local AI control plane running on port 7778 
 - \`/tn-plan\` — Create/edit/view project plans in L2 memory
 - \`/tn-summary\` — Summarize current session using TN context
 - \`/tn-purge\` — Remove stale memories from L2
+- \`/tn-orchestrate\` — RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY loop
+- \`/tn-tools\` — Semantic tool discovery across MCP servers
+- \`/tn-session\` — Session context summary
+- \`/tn-context\` — Manual context harvest from L2
+- \`/tn-remember\` — Quick single-shot memory store
+- \`/tn-restore\` — Restore last session handoff
 
 ### Enterprise Security
 All tool calls are checked against HyperNexus enterprise RBAC. Blocked tools show a security notice.
@@ -990,7 +997,7 @@ export default function (pi: ExtensionAPI) {
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     outputSchema: Type.Object({ ok: Type.Boolean(), result: Type.Optional(Type.String()) }),
     parameters: Type.Object({
-      tool: Type.String({ description: "Tool name (e.g. 'repomap', 'bash', 'memory_stats')" }),
+      tool: Type.String({ description: "Tool name (e.g. 'repomap', 'read', 'memory_stats')" }),
       args: Type.Optional(Type.Any({ description: "Arguments object for the tool" })),
     }),
     async execute(_toolCallId, params, signal) {
@@ -1923,6 +1930,29 @@ export default function (pi: ExtensionAPI) {
         body: JSON.stringify({ content: JSON.stringify({ content, tags: ["quick"], category: "general", timestamp: now() }) }),
       });
       ctx.ui.notify(ok ? "✅ Remembered" : "Failed to store", ok ? "info" : "error");
+    },
+  });
+
+  // 12. /tn-restore — pick up last session handoff (goal + next steps)
+  // Parity with claude-code /hn-restore, jcode, hax: reads via
+  // POST /api/agent-memory/pickup (artifact id optional; empty restores latest).
+  // Why pickup-by-artifact: kernel restores BY ARTIFACT ID, empty artifact restores nothing
+  // on some builds — so we surface the artifact id for follow-up reads.
+  pi.registerCommand("tn-restore", {
+    description: "Restore last HyperNexus handoff (goal + next steps)",
+    handler: async (args, ctx) => {
+      const artifact = args?.trim() || undefined;
+      const body: any = await tnJson("/api/agent-memory/pickup", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(artifact ? { artifact } : {}),
+      });
+      const handoff = body?.handoff ?? body?.data ?? body;
+      if (!handoff || (typeof handoff === "object" && Object.keys(handoff).length === 0)) {
+        ctx.ui.notify("No handoff found — nothing to restore.", "warning");
+        return;
+      }
+      const text = typeof handoff === "string" ? handoff : JSON.stringify(handoff, null, 2);
+      ctx.ui.notify(`📥 Handoff restored:\n${text.slice(0, 2000)}`, "info");
     },
   });
 

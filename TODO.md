@@ -7,7 +7,7 @@
 - [x] ~~Dashboard consolidation~~ — **verified already consolidated** (nav = 7 value-ordered sections, all tooltips present, all hrefs → home-view anchors). Remaining polish below.
 - [x] **Flesh out 3 thin home-view sections** — `health-metrics`, `skills-workflows`, `security-audit` now carry tooltips (`title`), `aria-label`, `data-testid` wraps, and truth-pass copy (loading/error/empty, never mocked) in `dashboard-home-view.tsx`. Remaining: per-card forms/filters live in sub-pages.
 - [ ] **Decompose `dashboard-home-view.tsx`** (4958 lines) → one lazy-loaded component per section.
-- [ ] **Retire 99 legacy `dashboard/*` pages** (not in nav) — redirect to home anchors to remove dead weight.
+- [ ] **Retire 99 legacy `dashboard/*` pages** (not in nav) — progress 2026-10-31: ~53 already `RedirectPage` stubs; `health|metrics|pulse`→`#health-metrics`, `skills|workflows`→`#skills-workflows`, `security|audit`→`#security-audit` deep-linked (7/7 verified). Remaining `GenericDashboardPage` stubs (logs-metrics, healer, memory-analytics, mcp) carry unique fetches — review before stubbing.
 - [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
 - [x] ~~Watchdog as scheduled task~~ — **verified done 2026-10-23**: `HyperNexus-KernelWatchdog` is registered and Running (spawns the kernel with an elevated token — see HANDOFF session 9 for the swap implications).
 - [x] **Port pi tools to opencode** — `hypernexus_workflow`, `hypernexus_orchestrate`, `hypernexus_browser` added to the OpenCode plugin (33 tools total; gauntlet 10/10). **mimo port still pending.**

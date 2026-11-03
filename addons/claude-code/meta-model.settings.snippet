@@ -5,7 +5,7 @@
 #
 # NATIVE PATH (no minting, no key handling): the kernel reads the pi Meta OAuth
 # identity ITSELF per request (~/.pi/agent/auth.json -> meta.refresh/access) and
-# forwards to https://api.meta.ai/v1/chat/completions. Pi owns OAuth refresh,
+# forwards to https://api.meta.ai/v1/responses (Responses API — chat/completions is rejected with client_attestation_denied). Pi owns OAuth refresh,
 # so the identity auto-renews; nothing is stored anywhere in Claude config.
 #
 #   ~/.claude/settings.json:

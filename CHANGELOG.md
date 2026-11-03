@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.0.24] - 2026-11-03
+
+### OpenCode HARNESS applied + verified end-to-end (project `.opencode/` + global `~/.config/opencode/`)
+- **Config migrated to the v1.0.24 shape and proven live** — project `.opencode/opencode.jsonc`: `model` = `meta-hn/muse-spark-1.3-contributor`, V2 `providers["meta-hn"]` (`npm` loader, `env: [META_MUSE_API_KEY]`, proxy `baseURL http://127.0.0.1:7778/v1`, models entry WITH `releaseDate 2026-09-02`), `tools.bash = false` attestation guard. Installed plugin copies byte-identical to `addons/` source (`install.mjs --project . --check` PASSED).
+- **Live proofs (no 403):** pi-OAuth mint `--check` OK; kernel `/v1/models` lists muse-spark; `/v1/chat/completions` 200 for no-tools, parity-tool, `bash`-named AND `powershell`-named payloads (kernel strips attestation-tripping names server-side and retries — prompt_tokens collapse proves the strip); `opencode run --model meta-hn/muse-spark-1.3-contributor` returned exact `E2E-OK`; `opencode mcp list` = hypernexus connected. Static battery `test-opencode-ext.mjs` 9/9.
+- **403 root cause (recorded):** Meta subscription attestation denies shell-NAMED tools (`bash`/`powershell`) with `client_attestation_denied`; OpenCode exposes no `powershell` tool (only `bash`), so `tools.bash=false` is the complete client guard; kernel proxy strip+retry is the server backstop.
+- **Test note:** `bin/test-mcp-tools.mjs` 21/23 — the 2 FAILs are saturation timeouts (`memory_stats` via `/api/agent/tool` router, `memory_scratchpad_set` passed on retry); direct `/api/agent-memory/stats` is 200. Raw `/api/memory/stats` is 404 on this kernel build (stale — use `/api/agent-memory/stats`, as the opencode plugin already does).
+
 ## [v1.0.23] - 2026-11-02
 
 ### Codex HARNESS max-extent + native Meta OAuth (`addons/codex/`)

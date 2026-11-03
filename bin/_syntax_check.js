@@ -94,6 +94,12 @@ You have access to HyperNexus \u2014 a local AI control plane running on port 77
 - \`/tn-plan\` \u2014 Create/edit/view project plans in L2 memory
 - \`/tn-summary\` \u2014 Summarize current session using TN context
 - \`/tn-purge\` \u2014 Remove stale memories from L2
+- \`/tn-orchestrate\` \u2014 RECALL\u2192DISCOVER\u2192EXECUTE\u2192PERSIST\u2192VERIFY loop
+- \`/tn-tools\` \u2014 Semantic tool discovery across MCP servers
+- \`/tn-session\` \u2014 Session context summary
+- \`/tn-context\` \u2014 Manual context harvest from L2
+- \`/tn-remember\` \u2014 Quick single-shot memory store
+- \`/tn-restore\` \u2014 Restore last session handoff
 
 ### Enterprise Security
 All tool calls are checked against HyperNexus enterprise RBAC. Blocked tools show a security notice.
@@ -850,7 +856,7 @@ ${results.join("\n\n")}` }], structuredContent: { found: true, sections: results
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     outputSchema: Type.Object({ ok: Type.Boolean(), result: Type.Optional(Type.String()) }),
     parameters: Type.Object({
-      tool: Type.String({ description: "Tool name (e.g. 'repomap', 'bash', 'memory_stats')" }),
+      tool: Type.String({ description: "Tool name (e.g. 'repomap', 'read', 'memory_stats')" }),
       args: Type.Optional(Type.Any({ description: "Arguments object for the tool" }))
     }),
     async execute(_toolCallId, params, signal) {
@@ -1741,6 +1747,25 @@ ${lines.join("\n")}`, "info");
         body: JSON.stringify({ content: JSON.stringify({ content, tags: ["quick"], category: "general", timestamp: now() }) })
       });
       ctx.ui.notify(ok ? "\u2705 Remembered" : "Failed to store", ok ? "info" : "error");
+    }
+  });
+  pi.registerCommand("tn-restore", {
+    description: "Restore last HyperNexus handoff (goal + next steps)",
+    handler: async (args, ctx) => {
+      const artifact = args?.trim() || void 0;
+      const body = await tnJson("/api/agent-memory/pickup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(artifact ? { artifact } : {})
+      });
+      const handoff = body?.handoff ?? body?.data ?? body;
+      if (!handoff || typeof handoff === "object" && Object.keys(handoff).length === 0) {
+        ctx.ui.notify("No handoff found \u2014 nothing to restore.", "warning");
+        return;
+      }
+      const text = typeof handoff === "string" ? handoff : JSON.stringify(handoff, null, 2);
+      ctx.ui.notify(`\u{1F4E5} Handoff restored:
+${text.slice(0, 2e3)}`, "info");
     }
   });
   pi.registerShortcut("ctrl+shift+m", {

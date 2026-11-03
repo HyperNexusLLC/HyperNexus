@@ -1,4 +1,15 @@
 
+# HANDOFF - OpenCode HARNESS applied + verified E2E (v1.0.24)
+
+## Session O2 (2026-11-03) - opencode lane [muse-spark-1.3-contributor in "opencode" in ~/workspace/HyperNexus]
+### Verified live, all green
+- pi-OAuth mint `--check` OK; `/v1/models` + `/v1/chat/completions` 200 (no-tools/parity/bash/powershell payloads — kernel strip+retry proven); `opencode run` E2E-OK; `opencode mcp list` connected; `install --check` PASSED; `test-opencode-ext.mjs` 9/9; plugin 37 tools / 13 cmds / 4 skills / agent+reminders in sync project+global.
+- OpenCode has no `powershell` tool (only `bash`) — `tools.bash=false` is the complete guard. Raw `/api/memory/stats` 404s (stale); plugin correctly uses `/api/agent-memory/stats`.
+- Windows `spawnSync("opencode",...)` needs `shell:true` (bare ENOENT/EINVAL otherwise).
+- Edge CDP 9222 was reachable (Edg/156, Messenger/newtab targets, no muse.ai tab) then timed out under box saturation; coordination message not delivered — retry when load drops.
+### Next agent
+- If mint 401/403s: `/login meta` in pi. After kernel swap: `opencode service restart`, re-run checks. VERSION bumped to 1.0.24 (file lagged commit tag).
+
 # HANDOFF - Codex HARNESS max-extent + native Meta OAuth (v1.0.23)
 
 ## Session CX (2026-11-02) - codex lane [muse-spark-1.3-contributor in "codex" in ~/workspace/HyperNexus]

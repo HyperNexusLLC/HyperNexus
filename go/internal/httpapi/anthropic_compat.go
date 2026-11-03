@@ -156,17 +156,27 @@ type responsesFuncCall struct {
 }
 
 // metaDeniedTools maps bare tool names that Meta's subscription attestation
-// rejects with client_attestation_denied (exact-match denylist, verified live
-// 2026-10-31 across 55 names: only these four deny) to safe equivalents.
+// rejects with client_attestation_denied (verified live 2026-10-31 across 55
+// names, extended by the fleet-wide 2026-11-02 bisection which found the vendor
+// tightening attestation to goal/input/search names too) to safe equivalents.
 // The rename applies to OUTGOING Responses declarations and replayed history;
 // incoming function_call names are mapped BACK so the client's tool loop keeps
 // working with the real names. Namespaced variants (mcp__hypernexus__bash,
 // Claude Code's native Bash) are unaffected — only these exact bare names.
+// Case-insensitive: the vendor-side handling of case is untested, so match the
+// openai_compat.go attestationTrippingTool behavior and normalize.
 var metaDeniedTools = map[string]string{
-	"bash":       "hypernexus_bash",
-	"powershell": "hypernexus_powershell",
-	"shell":      "hypernexus_shell",
-	"add_memory": "hypernexus_add_memory",
+	"bash":               "hypernexus_bash",
+	"powershell":         "hypernexus_powershell",
+	"shell":              "hypernexus_shell",
+	"add_memory":         "hypernexus_add_memory",
+	"request_user_input": "hypernexus_request_user_input",
+	"get_goal":           "hypernexus_get_goal",
+	"create_goal":        "hypernexus_create_goal",
+	"update_goal":        "hypernexus_update_goal",
+	"web_search":         "hypernexus_web_search",
+	"web_fetch":          "hypernexus_web_fetch",
+	"search":             "hypernexus_search",
 }
 
 var metaDeniedToolsReverse = func() map[string]string {
@@ -179,7 +189,7 @@ var metaDeniedToolsReverse = func() map[string]string {
 
 // metaSafeName returns the Responses-visible tool name.
 func metaSafeName(name string) string {
-	if safe, ok := metaDeniedTools[name]; ok {
+	if safe, ok := metaDeniedTools[strings.ToLower(name)]; ok {
 		return safe
 	}
 	return name

@@ -72,8 +72,10 @@ func TestAnthropicTextOf(t *testing.T) {
 }
 
 // Regression: Meta subscription attestation denies exact bare tool names
-// (bash/powershell/shell/add_memory — verified live 2026-10-31, 55 names).
-// The shim renames them on the way out and maps them back on the way in.
+// (bash/powershell/shell/add_memory — verified live 2026-10-31, 55 names;
+// extended 2026-11-02 by the fleet bisection: goal/input/search names too,
+// case-insensitive). The shim renames them on the way out and maps them back
+// on the way in.
 func TestMetaDeniedToolRenameRoundTrip(t *testing.T) {
 	if got := metaSafeName("bash"); got != "hypernexus_bash" {
 		t.Fatalf("bash must rename, got %q", got)
@@ -81,14 +83,32 @@ func TestMetaDeniedToolRenameRoundTrip(t *testing.T) {
 	if got := metaSafeName("add_memory"); got != "hypernexus_add_memory" {
 		t.Fatalf("add_memory must rename, got %q", got)
 	}
+	for _, tc := range []struct{ in, want string }{
+		{"web_search", "hypernexus_web_search"},
+		{"web_fetch", "hypernexus_web_fetch"},
+		{"search", "hypernexus_search"},
+		{"request_user_input", "hypernexus_request_user_input"},
+		{"get_goal", "hypernexus_get_goal"},
+		{"create_goal", "hypernexus_create_goal"},
+		{"update_goal", "hypernexus_update_goal"},
+		{"Bash", "hypernexus_bash"},     // case-insensitive, matches openai_compat.go
+		{"Web_Search", "hypernexus_web_search"},
+	} {
+		if got := metaSafeName(tc.in); got != tc.want {
+			t.Fatalf("metaSafeName(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
 	// Untouched: everything else passes through, incl. namespaced variants.
-	for _, n := range []string{"Bash", "read", "mcp__hypernexus__bash", "mcp__hypernexus__add_memory", "run_shell_command"} {
+	for _, n := range []string{"read", "mcp__hypernexus__bash", "mcp__hypernexus__add_memory", "run_shell_command", "execute_command", "fetch"} {
 		if got := metaSafeName(n); got != n {
 			t.Fatalf("name %q must pass through, got %q", n, got)
 		}
 	}
 	if got := metaRealName("hypernexus_bash"); got != "bash" {
 		t.Fatalf("reverse map broken, got %q", got)
+	}
+	if got := metaRealName("hypernexus_web_search"); got != "web_search" {
+		t.Fatalf("reverse map broken for web_search, got %q", got)
 	}
 
 	// Declaration path: bare bash declared -> renamed in Responses tools.
