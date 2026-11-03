@@ -531,3 +531,16 @@ State: config.toml canonical (untouched by installer); kernel 1.0.21 ok:true; mi
 Temp files removed (runcheck/runbatt/runchk/runcdp bats, _chk/_batt/_patch/_setmsg/_cdp_*). VERSION 1.0.22. 
 Next: install Codex CLI on PATH for live model smoke; optional live codex exec test with minted MODEL_API_KEY; keep page-id fresh (muse.ai rotated 79AC.. to 3821..). 
 
+
+# HANDOFF - Multi-harness sweep: GUI full-featured + 403 guard everywhere (v1.0.25)
+
+## Session M (2026-11-03) - sweep lane [muse-spark-1.3-contributor in multi-harness sweep in ~/workspace/HyperNexus]
+### Built + verified
+- 7 GUI harnesses full-featured: meta-model doc, bin/meta-muse-key.mjs shim (mint OK), install.mjs, bin/test battery 8/8 hermetic green x7, skills/commands/hooks, README, manifest entries (32 harnesses).
+- 12 CLI harnesses gained preferred-tools.md 403 guard (maki, prime-agent, copilot-cli, codex-cli, droid, agy, atom, harness2, mimo, mini-swe-agent, reasonix) + freebuff appended.
+- Live: shared mint OK, /v1/models lists muse-spark, kernel-proxy PONG 200 no-403 (kernel 1.0.23).
+- Muse coordinated via Edge CDP 9222: opened muse.ai tab, drafted + sent sweep summary (send clicked, len 706).
+### Scope
+- addons/{codex,claude,openwebui,deepseek-harness,mimocode,antigravity,juggler}-gui/, 11x preferred-tools.md, addons/shared/hypernexus.manifest.json, VERSION, CHANGELOG.md, MEMORY.md, HANDOFF.md.
+### Next agent
+- Run GUI --live batteries + install --check when box is quiet; if mint 401/403s, /login meta in pi. Re-verify PONG after any kernel swap.

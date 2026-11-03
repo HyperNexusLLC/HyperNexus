@@ -296,3 +296,10 @@ Memories should be stored both:
 
 **Live proofs (kernel 1.0.22, mint OK):** battery 25/25; proxy `POST /v1/responses` with parity-only `code_interpreter` tool -> HTTP 200, no `client_attestation_denied`; `codex exec --disable shell_tool --disable unified_exec --disable goals` on `meta/muse-spark-1.3-contributor` -> exact `PONG` (reasoning low). 403 root cause stands: shell-named tools + codex `request_user_input`/`get/create/update_goal` trip Meta attestation; kernel `stripAttestationTools` + `retryBodyForDenied` strips on retry as backstop. Keep `node_repl` out of Meta-path CODEX_HOME (recursive-schema 400).
 
+
+## 2026-11-03 multi-harness sweep (v1.0.25)
+
+- GUI harnesses (codex/claude/openwebui/deepseek/mimocode/antigravity/juggler-gui) upgraded to full-featured with shared-minter shim, install.mjs, 8/8 hermetic batteries, skills/commands/hooks, manifest entries.
+- Meta 403 root cause re-confirmed live: attestation denies shell-named/described tools (bash/powershell/shell); parity tools with minimal descriptions pass; kernel proxy PONG 200 on meta/muse-spark-1.3-contributor.
+- Edge CDP 9222 usable from pure-node WS client (no ws/playwright deps): Runtime.evaluate draft+send-click works on muse.ai tab.
+- Windows runner saturates under parallel execs; run ONE light command per turn, never parallel batteries.
