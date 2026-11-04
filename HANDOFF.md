@@ -579,3 +579,7 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - muse.ai delivery CONFIRMED: page text contains 7f16580ae and v1.0.27 pushed; composer empty (submitted, no leftover draft). Earlier probes backgrounded under load; file-redirect pattern worked throughout.
 - Root strays cleaned via git clean (policy-safe, git-managed): 20 files (_proof_*, _wonder_body, _tmp_*, _cdp_*, freebuff-chat-*.md). Tree now holds only other-lane modifications.
 - Kernel 1.0.23 healthy, pi-OAuth mint OK. No code changes this turn; HANDOFF only.
+
+## 2026-11-04 L2 persist + kernel write finding
+- Stored 2 L2 facts LOCALLY via scripts/memory_local.py (dual-model proof; CDP Edge lesson). Server POST /api/memory/facts/add hung 3x (>10s each, nothing landed per FTS) while reads (health, fts-search, models) stay instant: kernel HTTP writes currently flaky, reads fine.
+- codex-gui battery re-verified 8/8 after churn. _mem1.json temp removed via git clean. Runtime DBs (.hypernexus + .tormentnexus memories.json) left uncommitted per scope.
