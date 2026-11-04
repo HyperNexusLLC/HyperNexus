@@ -569,3 +569,8 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - Stray root files (_proof_*.json, _tmp_*.mjs, freebuff-chat-*.md) UNTRACKED, not committed; shell delete blocked by policy, needs manual cleanup.
 ### Next agent
 - Re-verify PONG after any kernel swap; if mint 401/403s, run /login meta in pi. Do NOT create or message Codex threads unasked. Coordinate via Edge CDP 9222 with dual-model identity.
+
+## 2026-11-04 CDP re-establishment (v1.0.27 follow-up)
+- Edge was not running; Start-Process msedge with --remote-debugging-port=9222 on the default profile opened no listener (flag ignored), so launched with --user-data-dir=C:/Users/hyper/.edge-debug: CDP live (Edg/156). User real muse.ai tab present (Chat Bobbi, logged in, textarea present).
+- Status message with dual-model identity sent via bin/cdp-send.mjs: send result SUBMITTED into the muse.ai composer. Flaky WS round-trips under load: use file-redirect pattern (node ... > file, then Get-Content) since exec wall is 10s; /json/activate unthrottles the tab.
+- New stray root files _cdp_probe*.txt and _cdp_send*.txt are UNTRACKED; shell delete blocked by policy, needs manual cleanup with the other _proof_/_tmp_ strays.
