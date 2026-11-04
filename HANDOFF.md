@@ -583,3 +583,8 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 ## 2026-11-04 L2 persist + kernel write finding
 - Stored 2 L2 facts LOCALLY via scripts/memory_local.py (dual-model proof; CDP Edge lesson). Server POST /api/memory/facts/add hung 3x (>10s each, nothing landed per FTS) while reads (health, fts-search, models) stay instant: kernel HTTP writes currently flaky, reads fine.
 - codex-gui battery re-verified 8/8 after churn. _mem1.json temp removed via git clean. Runtime DBs (.hypernexus + .tormentnexus memories.json) left uncommitted per scope.
+
+## 2026-11-04 kernel write stall diagnosed: SLOW not hung
+- Timed POST facts/add: HTTP 200 in 24.17s. Write path works. Slowness from 24MB memories.json read-modify-write plus embedding upstream unavailable (bridge fallback go-local-memory, reason upstream unavailable; persisted locally). Earlier attempts looked like hangs due to 10s exec wall and 25s curl caps.
+- Verified end-to-end: diag fact in L2 via fts-search (tier l2). Diag strays removed via git clean. Diagnosis stored to local L2.
+- Advice: callers allow 60s on memory writes (file-redirect pattern); kernel-side fix is persist-first then embed async, compact memories.json, restore embedding upstream. Four idle hypernexus.exe clients hold ESTABLISHED conns to listener 17744; harmless. No code changes; HANDOFF only.
