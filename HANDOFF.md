@@ -555,3 +555,17 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - addons/codex-gui/, addons/shared/hypernexus.manifest.json, VERSION, CHANGELOG.md, MEMORY.md, HANDOFF.md.
 ### Next agent
 - Re-run battery after edits; re-verify PONG after kernel swap; if mint 401/403s, /login meta in pi. Do NOT create/message Codex threads unasked - fan-out needs per-task user go-ahead.
+
+# HANDOFF - Dual-model 30-harness sweep: wonder primary + 5 new GUIs + tool proofs (v1.0.27)
+
+## Session D (2026-11-03) - dual-model sweep lane [meta/muse-wonder-1.0-contributor + meta/muse-spark-1.3-contributor in 30-harness sweep in ~/workspace/HyperNexus]
+### Built + verified
+- Dual-model pins in all 12 GUI connection.json files (model wonder + altModel spark; codex-gui mirrored). Same pi-OAuth minter serves both; mint --check OK.
+- 5 new GUI harnesses (openchamber, paseo, paradev, omnigent, opencode-gui) scaffolded from template; 8/8 batteries x5. 6 existing GUIs backfilled with swarm agents, hn-swarm/hn-report, orchestrator skill, overlay, altModel wonder; 8/8 x6. codex-gui battery 8/8. Total 12/12 green.
+- Live proofs: kernel-proxy PONG 200 on wonder AND spark; parity tool round-trip finish_reason tool_calls on BOTH (minimal-description get_status, no 403). Direct Meta calls 403 client_attestation_denied, proxy mandatory.
+- Manifest 37 harnesses, dual-model + swarm notes, version 1.0.27. CLI command-count batteries untouched (copilot 11, muse-code 11, opencode 13); CLI swarm reuses the same kernel protocol.
+### Scope
+- addons/openchamber-gui, paseo-gui, paradev-gui, omnigent-gui, opencode-gui (new); 6 backfilled GUI dirs; codex-gui connection.json; addons/shared/hypernexus.manifest.json; VERSION; CHANGELOG.md; MEMORY.md; HANDOFF.md.
+- Stray root files (_proof_*.json, _tmp_*.mjs, freebuff-chat-*.md) UNTRACKED, not committed; shell delete blocked by policy, needs manual cleanup.
+### Next agent
+- Re-verify PONG after any kernel swap; if mint 401/403s, run /login meta in pi. Do NOT create or message Codex threads unasked. Coordinate via Edge CDP 9222 with dual-model identity.

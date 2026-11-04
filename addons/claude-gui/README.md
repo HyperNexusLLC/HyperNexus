@@ -16,3 +16,10 @@ Minimal HyperNexus integration for the Claude web GUI harness (NEW files only; n
 - Hooks: `hooks/hn-pre-tool.mjs` allow-gate (denies bash/powershell/shell; parity tools only).
 - Model: `meta/muse-spark-1.3-contributor`, minted live via `bin/meta-muse-key.mjs` (pi owns refresh).
 - Install: `node addons/claude-gui/install.mjs [--global|--check|--uninstall]`; test: `node addons/claude-gui/bin/test-claude-gui-ext.mjs [--live]`.
+
+## Swarm orchestration (one session controls the rest)
+
+- Leader: `agent/swarm-leader.md` (main session fans out disjoint subtasks via per-thread messages, tracks roster, collects reports).
+- Workers: `agent/swarm-worker.md` (execute assigned scope, report back in-thread ending `STATUS: DONE` / `STATUS: BLOCKED`).
+- Skill: `skills/hypernexus-orchestrator/SKILL.md`; commands `commands/hn-swarm.md` + `commands/hn-report.md`; overlay `prompt-overlay.md`.
+- Dual models: `connection.json` pins `model` + `altModel` (wonder + spark); both verified live via kernel proxy.

@@ -16,6 +16,7 @@ check("connection pins meta model via kernel proxy", () => {
   assert.equal(c.model, "meta/muse-spark-1.3-contributor");
   assert.match(c.baseUrl, /127\.0\.0\.1:7778\/v1/);
   assert.ok(c.envKey, "envKey required");
+  assert.ok(c.altModel, "altModel required (dual-model)");
 });
 check("mcp.json registers hypernexus stdio server", () => {
   const m = JSON.parse(src("mcp.json"));
@@ -45,9 +46,15 @@ check("README documents model, mcp, parity policy", () => {
   assert.match(r, /parity tools/);
   assert.match(r, /shell tools disabled/i);
 });
-check("skills + commands present", () => {
+check("skills + commands + swarm present", () => {
   assert.ok(fs.existsSync(path.join(DIR, "skills", "hypernexus", "SKILL.md")), "skills/hypernexus/SKILL.md");
   assert.ok(fs.existsSync(path.join(DIR, "commands", "hn-status.md")), "commands/hn-status.md");
+  assert.ok(fs.existsSync(path.join(DIR, "commands", "hn-swarm.md")), "commands/hn-swarm.md");
+  assert.ok(fs.existsSync(path.join(DIR, "commands", "hn-report.md")), "commands/hn-report.md");
+  assert.ok(fs.existsSync(path.join(DIR, "skills", "hypernexus-orchestrator", "SKILL.md")), "skills/hypernexus-orchestrator/SKILL.md");
+  assert.ok(fs.existsSync(path.join(DIR, "agent", "swarm-leader.md")), "agent/swarm-leader.md");
+  assert.ok(fs.existsSync(path.join(DIR, "agent", "swarm-worker.md")), "agent/swarm-worker.md");
+  assert.ok(fs.existsSync(path.join(DIR, "prompt-overlay.md")), "prompt-overlay.md");
 });
 check("no shell tool names in mcp/connection config", () => {
   const all = src("mcp.json") + src("connection.json");

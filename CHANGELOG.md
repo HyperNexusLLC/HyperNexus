@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.0.27] - 2026-11-03
+
+### Dual-model sweep: wonder primary, 5 new GUIs, tool round-trips proven
+- Dual-model pins: every GUI connection.json carries model meta/muse-wonder-1.0-contributor + altModel meta/muse-spark-1.3-contributor (codex-gui mirrored). Same pi-OAuth minter serves both models.
+- 5 new GUI harnesses (openchamber, paseo, paradev, omnigent, opencode-gui): connection, mcp, minter shim, meta-model doc, install.mjs, 8 commands incl hn-swarm and hn-report, 2 skills, 2 swarm agents, hook, overlay, README. Batteries 8/8 green x5.
+- Swarm backfilled into 6 existing GUIs (claude, openwebui, deepseek-harness, mimocode, antigravity, juggler): agents, hn-swarm and hn-report, orchestrator skill, overlay, altModel wonder. All GUI batteries 8/8 green (12 of 12).
+- Live proofs BOTH models: kernel-proxy PONG 200 on wonder AND spark; parity tool round-trip with finish_reason tool_calls and minimal-description tool and no 403 on both. Direct Meta calls 403 client_attestation_denied, proxy path mandatory.
+- Manifest: 37 harnesses with dual-model and swarm notes, version 1.0.27. CLI swarm reuses the same kernel protocol (per-harness command-count batteries untouched).
+
 ## [v1.0.26] - 2026-11-03
 
 ### Codex GUI: model switched to muse-wonder-1.0-contributor + autonomous swarm control

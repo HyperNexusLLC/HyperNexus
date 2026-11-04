@@ -309,3 +309,10 @@ Memories should be stored both:
 - muse-wonder-1.0-contributor live via kernel proxy (PONG 200); direct Meta 403 attestation-denied, proxy mandatory. Model switch is config-only in connection.json.
 - Swarm pattern: leader fans out via per-thread messages, workers report STATUS in-thread; Codex thread MCP tools not exposed to this runtime, so control plane is protocol files + thread picker, not API calls.
 - Box discipline stands: one light command per turn; curl -o file + poll beats long yields; Start-Process blocked by policy.
+
+## 2026-11-03 dual-model sweep (v1.0.27)
+
+- Wonder PONG 200 AND spark PONG 200 via kernel proxy; parity tool round-trip finish_reason tool_calls on both models with minimal-description tool, no 403. Kernel models list shows spark ids only, proxy forwards wonder fine.
+- 5 new GUI harnesses from openchamber template; batteries 8/8 x5. 6 existing GUIs backfilled with swarm + altModel wonder; all 12 GUI batteries 8/8.
+- Manifest 37 harnesses with dual-model and swarm notes. CLI command-count batteries untouched; CLI swarm reuses the same kernel protocol.
+- Stray root proof files are UNTRACKED and excluded from commits; shell delete blocked by policy, needs manual cleanup.
