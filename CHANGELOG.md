@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+- codex-cli dual-model template: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); check accepts both prefixes; wonder install+check round-trip OK; battery 9/9 green.
 
 ## [v1.0.27] - 2026-11-03
 

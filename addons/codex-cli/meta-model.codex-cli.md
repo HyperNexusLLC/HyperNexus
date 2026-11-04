@@ -53,3 +53,11 @@ your active block's `env_key` names.
 node addons/codex-cli/install.mjs --check
 node addons/codex-cli/bin/test-codex-cli-ext.mjs
 ```
+
+## Dual-model (spark default, wonder opt-in)
+
+META_MODEL env selects the contributor model (default spark). Wonder is opt-in per run:
+
+``powershell
+$env:META_MODEL='meta/muse-wonder-1.0-contributor'; node addons/codex-cli/install.mjs; node addons/codex-cli/install.mjs --check
+``n

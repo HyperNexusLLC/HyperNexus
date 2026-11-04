@@ -588,3 +588,11 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - Timed POST facts/add: HTTP 200 in 24.17s. Write path works. Slowness from 24MB memories.json read-modify-write plus embedding upstream unavailable (bridge fallback go-local-memory, reason upstream unavailable; persisted locally). Earlier attempts looked like hangs due to 10s exec wall and 25s curl caps.
 - Verified end-to-end: diag fact in L2 via fts-search (tier l2). Diag strays removed via git clean. Diagnosis stored to local L2.
 - Advice: callers allow 60s on memory writes (file-redirect pattern); kernel-side fix is persist-first then embed async, compact memories.json, restore embedding upstream. Four idle hypernexus.exe clients hold ESTABLISHED conns to listener 17744; harmless. No code changes; HANDOFF only.
+
+## 2026-11-04 codex-cli dual-model template done
+- install.mjs: META_MODELS/META_MODEL + META_NORM (meta/ prefix tolerated); check accepts spark|wonder with optional meta/ prefix.
+- Docs: meta-model.codex-cli.md + README dual-model notes.
+- Verified: node --check, install --check (real + wonder temp HOME), battery 9/9.
+- llama-server PID 19684 set to Idle priority (was stalling shell).
+- Next: replicate META_MODEL pattern to next CLI harness.
+

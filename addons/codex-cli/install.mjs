@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// HyperNexus addon: codex-cli — native meta/muse-spark-1.3-contributor + hypernexus MCP + skills/hooks.
+// HyperNexus addon: codex-cli — native meta dual-model (spark default, wonder opt-in) + hypernexus MCP + skills/hooks.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -36,11 +36,14 @@ function findKernel() {
 }
 function exe() { return findKernel(); }
 function wsRoot() { return process.env.HYPERNEXUS_WORKSPACE_ROOT || REPO; }
+const META_MODELS = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"];
+const META_NORM = String(process.env.META_MODEL || "").replace(/^meta\//, "");
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
 function ensureToml(t) {
   let s = t ?? "";
   const need = (re, block) => { if (!re.test(s)) s += (s.endsWith("\n") || s === "" ? "" : "\n") + block; };
-  if (!/^model\s*=/m.test(s)) s = `model = "muse-spark-1.3-contributor"\n` + s;
-  else s = s.replace(/^model\s*=.*$/m, `model = "muse-spark-1.3-contributor"`);
+  if (!/^model\s*=/m.test(s)) s = `model = "${META_MODEL}"\n` + s;
+  else s = s.replace(/^model\s*=.*$/m, `model = "${META_MODEL}"`);
   if (!/^model_provider\s*=/m.test(s)) s = s.replace(/^model\s*=.*$/m, (m) => `${m}\nmodel_provider = "meta"`);
   else s = s.replace(/^model_provider\s*=.*$/m, `model_provider = "meta"`);
   need(/\[model_providers\.meta\]/, `\n[model_providers.meta]\nname = "Meta Model API (via HyperNexus kernel: live pi-OAuth token, no stale copies)"\nbase_url = "http://127.0.0.1:7778/v1"\nenv_key = "META_API_KEY"\nwire_api = "responses"\n`);
@@ -88,7 +91,7 @@ function check() {
   const raw = read(CFG);
   if (!raw) gaps.push(`missing ${CFG}`);
   else {
-    if (!/^model\s*=\s*"muse-spark-1\.3-contributor"/m.test(raw)) gaps.push("model is not muse-spark-1.3-contributor");
+    if (!/^model\s*=\s*"(meta\/)?muse-(spark-1\.3|wonder-1\.0)-contributor"/m.test(raw)) gaps.push("model is not spark|wonder contributor");
     if (!/^model_provider\s*=\s*"meta"/m.test(raw)) gaps.push("model_provider is not meta");
     if (!/\[mcp_servers\.hypernexus\]/.test(raw)) gaps.push("no [mcp_servers.hypernexus]");
   }

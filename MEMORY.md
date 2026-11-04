@@ -316,3 +316,5 @@ Memories should be stored both:
 - 5 new GUI harnesses from openchamber template; batteries 8/8 x5. 6 existing GUIs backfilled with swarm + altModel wonder; all 12 GUI batteries 8/8.
 - Manifest 37 harnesses with dual-model and swarm notes. CLI command-count batteries untouched; CLI swarm reuses the same kernel protocol.
 - Stray root proof files are UNTRACKED and excluded from commits; shell delete blocked by policy, needs manual cleanup.
+
+- codex-cli dual-model template (2026-11-04): META_MODEL env override with meta/-prefix normalization; check regex must escape slash as \/ inside /.../ literal; battery 9/9; wonder round-trip OK via temp CODEX_HOME.
