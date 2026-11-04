@@ -303,3 +303,9 @@ Memories should be stored both:
 - Meta 403 root cause re-confirmed live: attestation denies shell-named/described tools (bash/powershell/shell); parity tools with minimal descriptions pass; kernel proxy PONG 200 on meta/muse-spark-1.3-contributor.
 - Edge CDP 9222 usable from pure-node WS client (no ws/playwright deps): Runtime.evaluate draft+send-click works on muse.ai tab.
 - Windows runner saturates under parallel execs; run ONE light command per turn, never parallel batteries.
+
+## 2026-11-03 codex-gui wonder+swarm (v1.0.26)
+
+- muse-wonder-1.0-contributor live via kernel proxy (PONG 200); direct Meta 403 attestation-denied, proxy mandatory. Model switch is config-only in connection.json.
+- Swarm pattern: leader fans out via per-thread messages, workers report STATUS in-thread; Codex thread MCP tools not exposed to this runtime, so control plane is protocol files + thread picker, not API calls.
+- Box discipline stands: one light command per turn; curl -o file + poll beats long yields; Start-Process blocked by policy.

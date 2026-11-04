@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.0.26] - 2026-11-03
+
+### Codex GUI: model switched to muse-wonder-1.0-contributor + autonomous swarm control
+- **Model switch**: `connection.json`, meta-model doc, README, battery, manifest now pin `meta/muse-wonder-1.0-contributor` (Meta lists it on the subscription; kernel strips `meta/` prefix).
+- **Live verified**: kernel-proxy `PONG` HTTP 200 on wonder. Direct Meta call 403s (`client_attestation_denied`: Muse Code subscription keys only work via the attested proxy) - proxy path is mandatory, documented.
+- **Swarm control**: new `agent/swarm-leader.md` (main session fans out disjoint subtasks via per-thread messages, tracks roster, collects reports), `agent/swarm-worker.md` (execute scope, report `STATUS: DONE/BLOCKED` in-thread), `skills/hypernexus-orchestrator/SKILL.md`, `commands/hn-swarm.md` + `commands/hn-report.md`, `prompt-overlay.md`. Battery extended, **8/8 green**.
+
 ## [v1.0.25] - 2026-11-03
 
 ### Multi-harness sweep: GUI harnesses full-featured + Meta 403 guard everywhere

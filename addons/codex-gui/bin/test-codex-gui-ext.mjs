@@ -13,7 +13,7 @@ function check(name, fn) { fn(); passed += 1; process.stdout.write("PASS " + nam
 function src(f) { return fs.readFileSync(path.join(DIR, f), "utf8"); }
 check("connection pins meta model via kernel proxy", () => {
   const c = JSON.parse(src("connection.json"));
-  assert.equal(c.model, "meta/muse-spark-1.3-contributor");
+  assert.equal(c.model, "meta/muse-wonder-1.0-contributor");
   assert.match(c.baseUrl, /127\.0\.0\.1:7778\/v1/);
   assert.ok(c.envKey, "envKey required");
 });
@@ -31,7 +31,7 @@ check("minter shim delegates to canonical shared minter", () => {
 });
 check("meta-model doc pins model + 403 guard, no secrets", () => {
   const d = src("meta-model.codex-gui.md");
-  assert.match(d, /meta\/muse-spark-1\.3-contributor/);
+  assert.match(d, /meta\/muse-wonder-1.0-contributor/);
   assert.match(d, /client_attestation_denied/);
   assert.match(d, /MINIMAL|minimal/i);
 });
@@ -41,13 +41,19 @@ check("installer supports install/check/uninstall", () => {
 });
 check("README documents model, mcp, parity policy", () => {
   const r = src("README.md");
-  assert.match(r, /muse-spark-1\.3-contributor/);
+  assert.match(r, /muse-wonder-1.0-contributor/);
   assert.match(r, /parity tools/);
   assert.match(r, /shell tools disabled/i);
 });
-check("skills + commands present", () => {
+check("skills + commands + swarm present", () => {
   assert.ok(fs.existsSync(path.join(DIR, "skills", "hypernexus", "SKILL.md")), "skills/hypernexus/SKILL.md");
   assert.ok(fs.existsSync(path.join(DIR, "commands", "hn-status.md")), "commands/hn-status.md");
+  assert.ok(fs.existsSync(path.join(DIR, "commands", "hn-swarm.md")), "commands/hn-swarm.md");
+  assert.ok(fs.existsSync(path.join(DIR, "commands", "hn-report.md")), "commands/hn-report.md");
+  assert.ok(fs.existsSync(path.join(DIR, "skills", "hypernexus-orchestrator", "SKILL.md")), "skills/hypernexus-orchestrator/SKILL.md");
+  assert.ok(fs.existsSync(path.join(DIR, "agent", "swarm-leader.md")), "agent/swarm-leader.md");
+  assert.ok(fs.existsSync(path.join(DIR, "agent", "swarm-worker.md")), "agent/swarm-worker.md");
+  assert.ok(fs.existsSync(path.join(DIR, "prompt-overlay.md")), "prompt-overlay.md");
 });
 check("no shell tool names in mcp/connection config", () => {
   const all = src("mcp.json") + src("connection.json");
@@ -60,4 +66,5 @@ if (process.argv.includes("--live")) {
   passed += 1;
 }
 process.stdout.write("RESULT pass=" + passed + " fail=0\n");
+
 

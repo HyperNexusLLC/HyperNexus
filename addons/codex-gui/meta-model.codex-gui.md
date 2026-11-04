@@ -1,6 +1,6 @@
 # HyperNexus -- Meta model wiring for Codex GUI (REFERENCE, no secrets inside)
 
-Model: `meta/muse-spark-1.3-contributor` via Meta Model API (1M context).
+Model: `meta/muse-wonder-1.0-contributor` via Meta Model API (1M context).
 Auth is read LIVE from pi `auth.json` at every mint (pi owns OAuth refresh;
 nothing is stored in this file or any config).
 
@@ -9,7 +9,7 @@ nothing is stored in this file or any config).
 `connection.json` pins the provider:
 
 - `baseUrl`: `http://127.0.0.1:7778/v1` (local HyperNexus kernel proxy)
-- `model`: `meta/muse-spark-1.3-contributor`
+- `model`: `meta/muse-wonder-1.0-contributor`
 - `envKey`: `META_API_KEY` (minted live per run, stdout only, never stored)
 
 ## Subscription/OAuth path: mint a Model API key live from pi
@@ -43,4 +43,4 @@ additionally strips risky tools on a 403 retry as backstop.
 - This file and all configs NEVER contain the token or key.
 - `auth.json` is read at call time, every time; pi rotation is automatic.
 - Kernel proxy inference verified: no-tools `PONG` round-trip 200 via
-  `POST /v1/chat/completions` on `meta/muse-spark-1.3-contributor`.
+  `POST /v1/chat/completions` on `meta/muse-wonder-1.0-contributor`.

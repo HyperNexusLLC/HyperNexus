@@ -544,3 +544,14 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - addons/{codex,claude,openwebui,deepseek-harness,mimocode,antigravity,juggler}-gui/, 11x preferred-tools.md, addons/shared/hypernexus.manifest.json, VERSION, CHANGELOG.md, MEMORY.md, HANDOFF.md.
 ### Next agent
 - Run GUI --live batteries + install --check when box is quiet; if mint 401/403s, /login meta in pi. Re-verify PONG after any kernel swap.
+
+# HANDOFF - Codex GUI wonder model + swarm control (v1.0.26)
+
+## Session W (2026-11-03) - codex-gui lane [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
+### Built + verified
+- Model switched to meta/muse-wonder-1.0-contributor (connection.json, meta-model, README, battery, manifest). Live: proxy PONG 200; direct Meta 403 (attestation) - proxy mandatory.
+- Swarm: agent/swarm-leader.md + agent/swarm-worker.md + skills/hypernexus-orchestrator + hn-swarm/hn-report + prompt-overlay.md; battery 8/8 green.
+### Scope
+- addons/codex-gui/, addons/shared/hypernexus.manifest.json, VERSION, CHANGELOG.md, MEMORY.md, HANDOFF.md.
+### Next agent
+- Re-run battery after edits; re-verify PONG after kernel swap; if mint 401/403s, /login meta in pi. Do NOT create/message Codex threads unasked - fan-out needs per-task user go-ahead.
