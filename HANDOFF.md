@@ -710,3 +710,9 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - install.mjs: meta preset follows META_MODEL + pinned meta-wonder preset, hn-worker spark; meta doc + README noted; install --check + idempotence green (live H6+ kernel-flaky, unrelated).
 - Next: reasonix in harness order.
 
+
+## 2026-11-05 reasonix dual-model done
+- use-meta-model.ps1 resolves META_MODEL; provider lists both models; check accepts spark|wonder; node --check clean, PSParser 0.
+- Battery: 81 pass / 44 fail; all fails pre-existing + unrelated (T1 runtime manifest 0 tools from v1.39.4 compat work, /health VERSION drift, kernel timeouts); T4 installer-check + T8 meta/launcher + T9 wiring all PASS.
+- Next: open-interpreter in harness order.
+

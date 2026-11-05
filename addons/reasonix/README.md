@@ -101,3 +101,6 @@ addons/reasonix/
 ```bash
 node bin/test-reasonix-ext.mjs    # plugin battery: manifest, sidecar, skills, commands, hooks, MCP, kernel
 ```
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor); launcher resolves both routes, provider lists both, check accepts either.
+
