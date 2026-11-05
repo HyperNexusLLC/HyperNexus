@@ -73,3 +73,6 @@ node addons/freebuff/bin/meta-muse-key.mjs --check   # mint OK?
 - `bin/meta-muse-key.mjs` — Meta key mint (also mirrored for BYOK `env:META_MUSE_API_KEY`)
 
 Hooks (`hooks/`, by-convention — freebuff has no hook API): `hn-session.sh`, `hn-rbac.sh`, `hn-pre-tool.sh` — see `hooks/README.md`. Meta launcher: `use-meta-model.ps1` (mints a fresh key per run — minter pattern, never a pasted snapshot). BYOK connection: `~/.config/freebuff/byok/connections.json` (managed by `scripts/sync-meta-harness.ps1`, not this addon).
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor; both launcher routes).
+

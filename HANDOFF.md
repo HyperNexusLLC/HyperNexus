@@ -690,3 +690,8 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - use-meta-model.ps1 resolves META_MODEL; meta-model.prime.json catalog gains wonder; README noted.
 - Battery test_prime_agent_ext.py started slow; confirm before next harness.
 
+
+## 2026-11-05 freebuff dual-model launcher done
+- use-meta-model.ps1 resolves META_MODEL; meta doc + README noted; PSParser 0 errors.
+- Next: crush in harness order.
+

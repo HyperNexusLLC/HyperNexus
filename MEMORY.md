@@ -338,3 +338,6 @@ Memories should be stored both:
 - maki dual-model launcher (2026-11-04): META_MODEL env override on one-shot flag; live-store check accepts both; live check OK.
 
 - prime-agent dual-model launcher (2026-11-04): META_MODEL env override both routes; wonder in models catalog (presence-check battery safe).
+
+- freebuff dual-model launcher (2026-11-05): META_MODEL env override both routes; PSParser 0 errors.
+

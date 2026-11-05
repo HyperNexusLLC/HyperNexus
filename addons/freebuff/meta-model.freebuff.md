@@ -69,3 +69,8 @@ harnesses: snapshot bridges must move to the minter pattern on expiry.)
 - `auth.json` is read at call time, every time — rotation in pi is picked up
   automatically.
 - `META_AUTH_PATH` / `META_KEY_MINT_URL` env overrides exist for tests.
+
+## Dual-model (spark default, wonder opt-in)
+
+Launcher resolves META_MODEL env: default meta/muse-spark-1.3-contributor, opt-in meta/muse-wonder-1.0-contributor (meta/ prefix optional, others fall back to spark). Both one-shot and TUI routes use the resolved model.
+
