@@ -324,3 +324,5 @@ Memories should be stored both:
 - muse-code dual-model installer (2026-11-04): META_MODEL/META_NORM consts; wantSettings uses META_MODEL; check accepts both; stale gap text fixed; battery 7/7.
 
 - codewhale dual-model launcher (2026-11-04): META_MODEL env override in use-meta-model.ps1; no battery/test dir in harness; muse-code live --check OK (validator-clean).
+
+- mini-swe-agent dual-model installer (2026-11-04): META_MODEL env override into MSWEA_MODEL_NAME (openai/ prefix); check accepts both; battery green incl live --check.

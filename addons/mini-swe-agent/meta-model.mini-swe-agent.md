@@ -68,3 +68,11 @@ Minted keys die in ~24h; a snapshot rots, so re-run before long sessions.
 - `auth.json` is read at mint time, every time — rotation in pi is picked up
   on the next mint.
 - `META_AUTH_PATH` / `META_KEY_MINT_URL` env overrides exist for tests.
+
+## Dual-model (spark default, wonder opt-in)
+
+META_MODEL env selects the model (openai/ and meta/ prefixes tolerated):
+
+``powershell
+$env:META_MODEL='muse-wonder-1.0-contributor'; node install.mjs; node install.mjs --check
+``

@@ -34,3 +34,5 @@ node addons/mini-swe-agent/bin/test-mini-swe-agent-ext.mjs   # canonical wrapper
 
 - `.env` holds a live-minted key copy (dotenv cannot reference env vars); refresh with `install.mjs` after pi re-login.
 - Kernel down ⇒ calls fail fast with a clear error, never fiction (degradation contract).
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor).

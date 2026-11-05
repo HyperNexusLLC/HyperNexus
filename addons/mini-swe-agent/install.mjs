@@ -8,6 +8,9 @@ import { execFileSync } from "node:child_process";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HOME = os.homedir() || process.env.USERPROFILE || "";
 const MODE = process.argv.includes("--uninstall") ? "uninstall" : process.argv.includes("--check") ? "check" : "install";
+const META_MODELS = ['muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor'];
+const META_NORM = String(process.env.META_MODEL || '').replace(/^(meta|openai)\//, '');
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
 const TAG = "[hypernexus-mini-swe-agent]";
 const log = (m) => console.log(`${TAG} ${m}`);
 const read = (p) => { try { return fs.readFileSync(p, "utf8"); } catch { return null; } };
@@ -32,7 +35,7 @@ function setLine(s, k, v) {
 }
 function install() {
   let s = read(ENVF) ?? "# mini-swe-agent global config\n";
-  s = setLine(s, "MSWEA_MODEL_NAME", "openai/muse-spark-1.3-contributor");
+  s = setLine(s, "MSWEA_MODEL_NAME", "openai/" + META_MODEL);
   s = setLine(s, "OPENAI_API_BASE", "http://127.0.0.1:7778/v1");
   const tok = mintLiveKey();
   if (tok) s = setLine(s, "OPENAI_API_KEY", tok);
@@ -46,7 +49,7 @@ function check() {
   const raw = read(ENVF);
   if (!raw) gaps.push(`missing ${ENVF}`);
   else {
-    if (!/^MSWEA_MODEL_NAME=openai\/muse-spark-1\.3-contributor/m.test(raw)) gaps.push("model not set");
+    if (!/^MSWEA_MODEL_NAME=openai\/muse-(spark-1\.3|wonder-1\.0)-contributor/m.test(raw)) gaps.push("model not set");
     if (!/^OPENAI_API_BASE=(http:\/\/127\.0\.0\.1:7778\/v1|https:\/\/api\.meta\.ai\/v1)/m.test(raw)) gaps.push("base not meta (want kernel http://127.0.0.1:7778/v1 or direct api.meta.ai/v1)");
   }
   if (gaps.length) { console.log(`${TAG} CHECK FAILED:\n  - ${gaps.join("\n  - ")}`); process.exit(1); }

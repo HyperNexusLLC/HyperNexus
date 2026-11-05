@@ -614,3 +614,8 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - muse-code pending live --check resolved: CHECK OK (11 commands, validator-clean).
 - Next: mini-swe-agent-cli equivalent in harness order.
 
+
+## 2026-11-04 mini-swe-agent dual-model installer done
+- install.mjs: META_MODELS/META_NORM (openai|meta prefix strip); wonder .env round-trip OK via temp LOCALAPPDATA; battery green.
+- Next: jcode-cli equivalent in harness order.
+
