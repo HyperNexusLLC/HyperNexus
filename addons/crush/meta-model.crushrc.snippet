@@ -23,7 +23,7 @@
 
 provider add meta --type openai-compat \
   --name "Meta" \
-  --base-url "https://api.meta.ai/v1" \
+  --base-url "http://127.0.0.1:7778/v1" \
   --api-key "$(node \"$(node -e \"const p=require('path');console.log(p.join(process.env.HOME||process.env.USERPROFILE,'workspace','HyperNexus','addons','crush','bin','meta-muse-key.mjs'))\")\")"
 # --- Muse Spark 1.3 Contributor as both large and small model ---
 # muse-spark is a thinking model: max_tokens must cover reasoning + answer.

@@ -364,10 +364,11 @@ function ensureMetaProvider(file) {
       return false;
     }
   }
-  if (config && typeof config === "object" && config.providers && typeof config.providers === "object" && config.providers["meta-hn"]) return false; // already seeded
+  const alreadySeeded = !!(config && typeof config === "object" && config.providers && typeof config.providers === "object" && config.providers["meta-hn"]);
+  if (alreadySeeded && config.provider && config.provider["meta-hn"]) return false; // both generations seeded
   if (!config || typeof config !== "object") config = {};
   if (!config.providers || typeof config.providers !== "object") config.providers = {};
-  config.providers["meta-hn"] = {
+  if (!alreadySeeded) config.providers["meta-hn"] = {
     name: "Meta (muse-spark via HyperNexus proxy)",
     env: ["META_MUSE_API_KEY"],
     npm: "@opencode/ai/providers/openai-compatible",
@@ -388,6 +389,22 @@ function ensureMetaProvider(file) {
       },
     },
   };
+  // V1 (opencode 1.x) mirror: singular "provider" + ai-sdk loader. V2 omits
+  // the singular key; V1 omits the plural block. Seeding both keeps meta-hn
+  // resolvable on either generation (1.19.5 threw ProviderModelNotFoundError
+  // with only the plural block present).
+  if (!config.provider || typeof config.provider !== "object") config.provider = {};
+  if (!config.provider["meta-hn"]) {
+    config.provider["meta-hn"] = {
+      npm: "@ai-sdk/openai-compatible",
+      name: "Meta (muse-spark via HyperNexus proxy)",
+      options: { baseURL: "http://127.0.0.1:7778/v1" },
+      models: {
+        "muse-spark-1.3-contributor": { name: "Muse Spark 1.3 Contributor", limit: { context: 1048576, output: 131072 } },
+        "muse-wonder-1.0-contributor": { name: "Muse Wonder 1.0 Contributor", limit: { context: 1048576, output: 131072 } },
+      },
+    };
+  }
   writeUtf8(file, JSON.stringify(config, null, 2) + "\n");
   log(`seeded providers["meta-hn"] (spark + wonder; META_MODEL=${META_MODEL} selects the launcher default) in ${file}.`);
   return true;

@@ -131,7 +131,7 @@ function crushrcBlock(exe) {
 # Mint helper probe: node "${minter}" --check   (expect: mint OK, key hidden)
 provider add meta --type openai-compat \\
   --name "Meta" \\
-  --base-url "https://api.meta.ai/v1" \\
+  --base-url "http://127.0.0.1:7778/v1" \\
   --api-key "$(node \"${minter}\")"
 
 # --- Meta dual-model: spark + wonder registered, META_MODEL selects large/small default ---

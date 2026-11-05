@@ -50,4 +50,7 @@
 - [ ] Install missing GUI apps or accept staged configs: juggler, openchamber, paseo, paradev, omnigent, t3code, conductor, openwebui; retarget antigravity-gui installer at the real Antigravity `mcp.json`.
 - [ ] Native cross-session execution: kernel `/api/agent/orchestrate` 404 - needs TS upstream (:4000) or native Go orchestrate; memory-facts control plane works meanwhile.
 - [ ] Rotate the pre-existing plaintext provider apiKey in `~/.config/mimocode/mimocode.jsonc` to an env ref.
-- [ ] prime-agent CLI has no documented one-command install; hax CLI likewise (addons hermetic-only until binaries exist).
+- [x] prime-agent 0.10.2 + paseo 0.15.2 + omnigent + Open WebUI + Juggler + T3 Code + OpenChamber + hax (WSL) installed 2026-11-05; conductor/paradev are macOS-only (no Windows build exists).
+- [ ] Re-run `/login meta` in pi when minted-key routes are needed (mint 401s since mid-session 2026-11-05; kernel OAuth path unaffected). Prefer kernel-proxy routing everywhere.
+- [ ] jcode 0.11.6: custom `[providers.meta]` in `~/.jcode/config.toml` does not surface in `run -p`; live exec pending a jcode build with meta-muse in the provider enum.
+- [ ] Build `packages/cli` (monorepo) to bring up the TS upstream on :4000 for kernel-native orchestrate/swarm/supervisor endpoints.

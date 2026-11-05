@@ -155,7 +155,7 @@ function modelDrift() {
   if (!m) problems.push("custom model muse-spark-1.3-contributor missing");
   else {
     if (!(m.apiKeyHelper && /meta-muse-key\.mjs/.test(m.apiKeyHelper))) problems.push("model apiKeyHelper not live-mint");
-    if (m.baseUrl !== "https://api.meta.ai/v1") problems.push("model baseUrl drift");
+    if (m.baseUrl !== "http://127.0.0.1:7778/v1") problems.push("model baseUrl drift");
     if (m.provider !== "generic-chat-completion-api") problems.push("model provider drift");
     if (m.maxContextLimit !== 1048576) problems.push("model context drift");
   }
@@ -200,7 +200,7 @@ function ensureModel() {
     name: m === "muse-wonder-1.0-contributor" ? "Meta-Muse-Wonder" : "Meta-Muse-Spark",
     model: m,
     provider: "generic-chat-completion-api",
-    baseUrl: "https://api.meta.ai/v1",
+    baseUrl: "http://127.0.0.1:7778/v1",
     apiKeyHelper: `node ${minter}`,
     maxContextLimit: 1048576,
   }));
