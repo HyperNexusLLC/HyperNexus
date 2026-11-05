@@ -344,3 +344,6 @@ Memories should be stored both:
 
 - crush dual-model installer+launcher (2026-11-05): META_MODEL env override; installer registers spark+wonder, large/small follow META_MODEL; PSParser 0 errors, node --check clean.
 
+
+- droid dual-model installer (2026-11-05): META_MODEL env override; spark+wonder custom models registered, session default follows META_MODEL when unset; node --check clean.
+
