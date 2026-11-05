@@ -8,6 +8,9 @@
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Prompt)
 
 $mintScript = Join-Path $PSScriptRoot 'bin/meta-muse-key.mjs'
+# Dual-model: META_MODEL env override (default spark, opt-in wonder).
+$MetaWanted = if ($env:META_MODEL) { $env:META_MODEL.Replace('meta/','') } else { 'muse-spark-1.3-contributor' }
+$Model = if ($MetaWanted -in 'muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor') { $MetaWanted } else { 'muse-spark-1.3-contributor' }
 try {
   $fresh = & node $mintScript 2>$null
 } catch {
@@ -20,8 +23,8 @@ if ([string]::IsNullOrWhiteSpace($fresh)) {
 $env:META_MUSE_API_KEY = $fresh.Trim()
 $env:OPENAI_API_KEY = $env:META_MUSE_API_KEY
 $env:OPENAI_BASE_URL = 'https://api.meta.ai/v1'
-$env:OPENAI_MODEL = 'meta/muse-spark-1.3-contributor'
-Write-Host '[hypernexus] minted fresh META_MUSE_API_KEY for this run only (value hidden, never stored). Starting open-interpreter with meta/muse-spark-1.3-contributor ...'
+$env:OPENAI_MODEL = ('meta/' + $Model)
+Write-Host '[hypernexus] minted fresh META_MUSE_API_KEY for this run only (value hidden, never stored). Starting open-interpreter with meta/'' + $Model + '' ...'
 
 $oi = Get-Command interpreter -ErrorAction SilentlyContinue
 if (-not $oi) { $oi = Get-Command open-interpreter -ErrorAction SilentlyContinue }

@@ -716,3 +716,8 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - Battery: 81 pass / 44 fail; all fails pre-existing + unrelated (T1 runtime manifest 0 tools from v1.39.4 compat work, /health VERSION drift, kernel timeouts); T4 installer-check + T8 meta/launcher + T9 wiring all PASS.
 - Next: open-interpreter in harness order.
 
+
+## 2026-11-05 open-interpreter dual-model done
+- use-meta-model.ps1 resolves META_MODEL into OPENAI_MODEL; meta doc + README noted; PSParser 0.
+- Next: grok in harness order.
+

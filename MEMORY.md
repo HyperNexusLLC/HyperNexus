@@ -353,3 +353,6 @@ Memories should be stored both:
 
 - reasonix dual-model launcher (2026-11-05): META_MODEL env override both routes; provider lists spark+wonder; PSParser 0, node --check clean.
 
+
+- open-interpreter dual-model launcher (2026-11-05): META_MODEL env override both routes via OPENAI_MODEL; PSParser 0 errors.
+
