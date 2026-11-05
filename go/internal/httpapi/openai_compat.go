@@ -185,7 +185,7 @@ func attestationTrippingTool(name string) bool {
 	case "bash", "powershell", "shell",
 		"request_user_input",
 		"get_goal", "create_goal", "update_goal",
-		"apply_patch", "update_plan",
+		"apply_patch", "update_plan", "todowrite",
 		"web_search", "web_fetch", "search":
 		return true
 	}

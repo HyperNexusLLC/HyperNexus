@@ -53,4 +53,6 @@
 - [x] prime-agent 0.10.2 + paseo 0.15.2 + omnigent + Open WebUI + Juggler + T3 Code + OpenChamber + hax (WSL) installed 2026-11-05; conductor/paradev are macOS-only (no Windows build exists).
 - [ ] Re-run `/login meta` in pi when minted-key routes are needed (mint 401s since mid-session 2026-11-05; kernel OAuth path unaffected). Prefer kernel-proxy routing everywhere.
 - [ ] jcode 0.11.6: custom `[providers.meta]` in `~/.jcode/config.toml` does not surface in `run -p`; live exec pending a jcode build with meta-muse in the provider enum.
-- [ ] Build `packages/cli` (monorepo) to bring up the TS upstream on :4000 for kernel-native orchestrate/swarm/supervisor endpoints.
+- [ ] Kernel-native orchestrate: TS upstream on :4000 no longer exists in-tree (`packages/cli/` removed; root `start` script stale). Needs a Go-native `/api/agent/orchestrate` implementation or restoring the TS core. Paseo + memory-facts are the working control plane meanwhile.
+- [ ] `claude` command still crashes on system Node 26 - either downgrade global Node to 22/24 LTS or put `%LOCALAPPDATA%\node22` first in PATH; `~/bin/claude.cmd` wrapper does not shadow in PowerShell.
+- [ ] droid 0.71.0 does not surface `customModels` (schema mismatch); copilot-cli Meta route needs the mint revived (`/login meta` in pi).
