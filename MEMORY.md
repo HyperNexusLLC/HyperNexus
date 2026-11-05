@@ -341,3 +341,6 @@ Memories should be stored both:
 
 - freebuff dual-model launcher (2026-11-05): META_MODEL env override both routes; PSParser 0 errors.
 
+
+- crush dual-model installer+launcher (2026-11-05): META_MODEL env override; installer registers spark+wonder, large/small follow META_MODEL; PSParser 0 errors, node --check clean.
+

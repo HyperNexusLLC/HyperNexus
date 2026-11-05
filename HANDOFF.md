@@ -695,3 +695,8 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - use-meta-model.ps1 resolves META_MODEL; meta doc + README noted; PSParser 0 errors.
 - Next: crush in harness order.
 
+
+## 2026-11-05 crush dual-model done
+- install.mjs registers spark+wonder (META_MODEL selects large/small); use-meta-model.ps1 resolves META_MODEL; snippet+README noted; PSParser 0, node --check clean.
+- Next: droid in harness order.
+

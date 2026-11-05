@@ -55,6 +55,9 @@ function argValue(flag) {
 }
 const TARGET_OVERRIDE = argValue("--target");
 const TARGET = TARGET_OVERRIDE || (GLOBAL ? path.join(HOME, ".config", "crush") : path.join(REPO_ROOT, ".crush"));
+const META_MODELS = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"];
+const META_NORM = String(process.env.META_MODEL || "").replace(/^meta\//, "");
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
 
 const MD_BEGIN = "<!-- hypernexus:begin";
 const MD_END = "<!-- hypernexus:end -->";
@@ -131,7 +134,7 @@ provider add meta --type openai-compat \\
   --base-url "https://api.meta.ai/v1" \\
   --api-key "$(node \"${minter}\")"
 
-# --- Muse Spark 1.3 Contributor as both large and small model ---
+# --- Meta dual-model: spark + wonder registered, META_MODEL selects large/small default ---
 # muse-spark is a thinking model: max_tokens must cover reasoning + answer.
 # Pi-verified floor for short replies is max-tokens 1024 (32 tokens truncates
 # mid-reasoning and yields empty content). The model requests below reflect that.
@@ -143,8 +146,16 @@ model add meta/muse-spark-1.3-contributor \\
   --supports-images true \\
   --reasoning-effort high
 
-model large meta/muse-spark-1.3-contributor --max-tokens 131072 --reasoning-effort high
-model small meta/muse-spark-1.3-contributor --max-tokens 16384
+model add meta/muse-wonder-1.0-contributor \\
+  --name "Muse Wonder 1.0 Contributor" \\
+  --context-window 1048576 \\
+  --default-max-tokens 131072 \\
+  --can-reason true \\
+  --supports-images true \\
+  --reasoning-effort high
+
+model large meta/${META_MODEL} --max-tokens 131072 --reasoning-effort high
+model small meta/${META_MODEL} --max-tokens 16384
 
 # --- HyperNexus MCP: full control-plane tool access (58 tools) ---
 # NOTE: forward slashes are REQUIRED — backslash paths break the MCP handshake.
@@ -268,7 +279,7 @@ if (MODE === "install") {
   console.log(`HyperNexus → Crush check (${TARGET})`);
   let gaps = 0;
   const rc = readIfExists(path.join(TARGET, "crushrc")) ?? "";
-  const rcOk = rc.includes(RC_BEGIN) && rc.includes("provider add meta") && rc.includes("mcp add hypernexus") && rc.includes("muse-spark-1.3-contributor");
+  const rcOk = rc.includes(RC_BEGIN) && rc.includes("provider add meta") && rc.includes("mcp add hypernexus") && (rc.includes("muse-spark-1.3-contributor") || rc.includes("muse-wonder-1.0-contributor"));
   console.log(`  ${rcOk ? "ok " : "GAP"} crushrc (meta provider + hypernexus mcp + hooks)`);
   if (!rcOk) gaps++;
   const sect = rc.slice(rc.indexOf(RC_BEGIN), rc.indexOf(RC_END));

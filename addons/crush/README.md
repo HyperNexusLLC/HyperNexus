@@ -54,3 +54,6 @@ node addons/crush/install.mjs --global --check
 - `commands/hn-*.md` — 11 slash-command prompt files (+ `hn-plan`, `hn-remember`, `hn-restore` for parity with droid/pi)
 - `agent/hypernexus-researcher.md` — read-only researcher agent (parity with droid/freebuff)
 - `skills/*/SKILL.md` — 3 skills with `user-invocable: true`
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor; installer registers both, launcher resolves both routes).
+

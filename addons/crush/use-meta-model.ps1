@@ -8,6 +8,9 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $minter = Join-Path $here 'bin\meta-muse-key.mjs'
 $repoRoot = Split-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -Parent
 if (-not (Test-Path $minter)) { $minter = Join-Path $repoRoot 'addons\crush\bin\meta-muse-key.mjs' }
+# Dual-model: META_MODEL env override (default spark, opt-in wonder).
+$MetaWanted = if ($env:META_MODEL) { $env:META_MODEL.Replace('meta/','') } else { 'muse-spark-1.3-contributor' }
+$Model = if ($MetaWanted -in 'muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor') { $MetaWanted } else { 'muse-spark-1.3-contributor' }
 
 try {
   $key = (node $minter) 2>$null
@@ -20,13 +23,13 @@ if ([string]::IsNullOrWhiteSpace($key)) {
   exit 1
 }
 $env:META_MUSE_API_KEY = $key.Trim()
-Write-Host '[hypernexus] META_MUSE_API_KEY minted fresh for this run (value hidden). Starting crush with meta/muse-spark-1.3-contributor ...'
+Write-Host '[hypernexus] META_MUSE_API_KEY minted fresh for this run (value hidden). Starting crush with meta/'' + $Model + '' ...'
 
 $crush = Get-Command crush -ErrorAction SilentlyContinue
 if (-not $crush) { Write-Error 'crush not found on PATH.'; exit 1 }
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & crush run -m 'meta/muse-spark-1.3-contributor' ($Prompt -join ' ')
+  & crush run -m ('meta/' + $Model) ($Prompt -join ' ')
 } else {
-  & crush --model 'meta/muse-spark-1.3-contributor'
+  & crush --model ('meta/' + $Model)
 }
