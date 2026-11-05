@@ -64,3 +64,6 @@ turn scripts, 5 live hax runs, doc accuracy, and kernel-down degradation.
   5s-busy-timeout opens inside the handler): it answers at normal load (battery
   H6 green at 70/70 baseline) but is the first to time out on a wedged box.
   Treat a billing timeout as load signal, not integration failure.
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor); installer pins spark+wonder presets, meta preset follows the env.
+

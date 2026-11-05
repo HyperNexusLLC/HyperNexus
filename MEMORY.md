@@ -347,3 +347,6 @@ Memories should be stored both:
 
 - droid dual-model installer (2026-11-05): META_MODEL env override; spark+wonder custom models registered, session default follows META_MODEL when unset; node --check clean.
 
+
+- hax dual-model installer (2026-11-05): META_MODEL env override; meta preset follows env + pinned meta-wonder preset; node --check clean, install --check + idempotence green.
+

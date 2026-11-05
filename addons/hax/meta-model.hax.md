@@ -83,3 +83,8 @@ the refresh.
 - `auth.json` is read at call time, every time — rotation in pi is picked up
   automatically.
 - `META_AUTH_PATH` / `META_KEY_MINT_URL` env overrides exist for tests.
+
+## Dual-model (spark default, wonder opt-in)
+
+The installer resolves META_MODEL env: the meta preset follows it (default meta/muse-spark-1.3-contributor, opt-in meta/muse-wonder-1.0-contributor, meta/ prefix optional). A pinned meta-wonder preset is also registered. hn-worker stays on spark for worker stability. Check requires preset presence, so the battery stays green.
+

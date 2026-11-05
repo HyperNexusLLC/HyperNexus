@@ -705,3 +705,8 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - install.mjs registers spark+wonder custom models, session default follows META_MODEL when unset; meta doc noted; node --check clean.
 - Battery: 64 passed / 12 failed; all 12 are kernel HTTP aborts in section 4 (environmental under load, /health OK); section 6 model wiring all PASS incl session default spark.- Next: hax in harness order.
 
+
+## 2026-11-05 hax dual-model done
+- install.mjs: meta preset follows META_MODEL + pinned meta-wonder preset, hn-worker spark; meta doc + README noted; install --check + idempotence green (live H6+ kernel-flaky, unrelated).
+- Next: reasonix in harness order.
+

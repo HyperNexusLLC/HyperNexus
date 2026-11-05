@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - freebuff dual-model launcher: META_MODEL env override on both routes (default spark, opt-in wonder).
 - crush dual-model installer+launcher: META_MODEL env override (default spark, opt-in wonder); installer registers both models, check accepts either; launcher resolves both routes.
 - droid dual-model installer: META_MODEL env override (default spark, opt-in wonder); installer registers spark+wonder custom models, session default follows META_MODEL when unset; drift check keeps spark requirement (battery safe).
+- hax dual-model installer: META_MODEL env override (default spark, opt-in wonder); meta preset follows env, pinned meta-wonder preset added, hn-worker stays spark; battery H1-H3 green (live sections kernel-flaky).
 - maki dual-model launcher: META_MODEL env override on one-shot -m flag (default spark, opt-in wonder); live-store check accepts either; live check OK.
 - jcode dual-model launcher: META_MODEL env override on both native and bridge routes (default spark, opt-in wonder); wonder added to legacy toml catalog; no battery in harness.
 - mini-swe-agent dual-model installer: META_MODEL env override (default spark, opt-in wonder; openai/ and meta/ prefixes tolerated); wonder .env round-trip OK; battery green.
