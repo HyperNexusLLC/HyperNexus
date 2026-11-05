@@ -12,3 +12,11 @@ via live mint per shell — see `bin/meta-muse-key.mjs` and `use-meta-model.ps1`
   `/login meta` in pi).
 - `muse --provider meta --model muse-spark-1.3-contributor` pins the model per run;
   `~/.config/muse/settings.json` pins it by default (installer ensures it).
+
+## Dual-model (spark default, wonder opt-in)
+
+META_MODEL env selects the model (default muse-spark-1.3-contributor, meta/ prefix tolerated):
+
+``powershell
+$env:META_MODEL='muse-wonder-1.0-contributor'; node install.mjs; node install.mjs --check
+``

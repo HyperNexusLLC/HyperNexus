@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+- muse-code dual-model installer: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); battery 7/7 green.
 - claude-code dual-model launcher: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); battery 8/8 green.
 - codex-cli dual-model template: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); check accepts both prefixes; wonder install+check round-trip OK; battery 9/9 green.
 

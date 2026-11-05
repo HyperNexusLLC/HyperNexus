@@ -57,3 +57,5 @@ stored, printed, or committed — `--check` prints key-hidden confirmation only.
 
 ## Binary
 `muse` = `C:\Users\hyper\AppData\Local\Programs\muse\muse.cmd` (Meta distribution, not npm, not on PATH by default). Headless: `muse.cmd exec "<prompt>"`. Verified live: MUSE-CODE-OK (meta/muse-spark-1.3-contributor) + MUSE-MCP-OK (hypernexus MCP system_status via native MCP client). MCP OAuth (if needed): `muse mcp login hypernexus`.
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor).

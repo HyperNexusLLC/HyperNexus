@@ -3,7 +3,7 @@
 // via pi OAuth (pi owns refresh) + full native plugin bundle.
 //
 // Installs:
-//   1. ~/.config/muse/settings.json provider=meta model=muse-spark-1.3-contributor
+//   1. ~/.config/muse/settings.json provider=meta model=${META_MODEL}
 //      (merge-only; never removes user keys)
 //   2. Native plugin addons/muse-code/plugin/hypernexus
 //      (3 skills + 11 commands + 5 hooks + 1 stdio MCP server)
@@ -33,6 +33,9 @@
 // diagnostics). Re-run the install command below after a muse upgrade; the
 // battery records the exact outcome.
 import { spawnSync } from "node:child_process";
+const META_MODELS = ['muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor'];
+const META_NORM = String(process.env.META_MODEL || '').replace(/^meta\//, '');
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -72,7 +75,7 @@ function kernelBin() {
 
 function wantSettings() {
   return {
-    schema_version: 1, provider: "meta", model: "muse-spark-1.3-contributor",
+    schema_version: 1, provider: "meta", model: META_MODEL,
     model_reasoning_efforts: { "muse-spark-1.3": "high", "muse-spark-1.3-contributor": "high" },
     contributor_mode_enabled: true, contributor_mode_disclosure_acknowledged: true,
   };
@@ -100,7 +103,7 @@ function ensureSettings() {
   obj.mcpServers = obj.mcpServers || {};
   obj.mcpServers.hypernexus = wantMcpServer();
   write(SETTINGS, JSON.stringify(obj, null, 2) + "\n");
-  log(`provider=meta model=muse-spark-1.3-contributor + mcpServers.hypernexus ensured in ${SETTINGS} (auth stays in pi auth.json).`);
+  log(`provider=meta model=${META_MODEL} + mcpServers.hypernexus ensured in ${SETTINGS} (auth stays in pi auth.json).`);
   return true;
 }
 
@@ -192,7 +195,7 @@ if (check) {
     try {
       const o = JSON.parse(raw);
       if (o.provider !== "meta") gaps.push("provider is not meta");
-      if (o.model !== "muse-spark-1.3-contributor") gaps.push("model is not muse-spark-1.3-contributor");
+      if (!META_MODELS.includes(o.model)) gaps.push("model is not spark|wonder contributor");
       if (!o.mcpServers?.hypernexus?.command) gaps.push("settings mcpServers.hypernexus missing");
     } catch { gaps.push(`${SETTINGS}: invalid JSON`); }
   }

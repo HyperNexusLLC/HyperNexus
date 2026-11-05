@@ -602,3 +602,9 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - llama-server set to BelowNormal per standing instruction.
 - Next: muse-cli equivalent in harness order.
 
+
+## 2026-11-04 muse-code dual-model installer done
+- install.mjs: META_MODELS/META_NORM/META_MODEL; check relaxed; docs updated; battery 7/7 green.
+- Note: install.mjs --check shells out to muse plugins validate (180s timeout); live check pending slow muse CLI.
+- Next: codewhale-cli equivalent in harness order.
+
