@@ -25,6 +25,9 @@ param(
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 $Minter = Join-Path $PSScriptRoot 'bin\meta-muse-key.mjs'
 $NativeCreds = Join-Path $HOME '.jcode\muse_subscription.json'
+# Dual-model: META_MODEL env override (default spark, opt-in wonder).
+$MetaWanted = if ($env:META_MODEL) { $env:META_MODEL.Replace('meta/','') } else { 'muse-spark-1.3-contributor' }
+$Model = if ($MetaWanted -in 'muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor') { $MetaWanted } else { 'muse-spark-1.3-contributor' }
 
 function Start-Jcode($ExtraArgs) {
   $jcode = Get-Command jcode -ErrorAction SilentlyContinue
@@ -42,9 +45,9 @@ if (-not $Bridge) {
   # Route 1: native subscription. Presence-check the jcode-owned credential;
   # never read or print token contents.
   if (Test-Path $NativeCreds) {
-    Write-Host '[hypernexus] native muse-subscription credential found. Starting jcode on muse-spark-1.3-contributor (subscription billing via jcode native route) ...'
+    Write-Host ('[hypernexus] native muse-subscription credential found. Starting jcode on ' + $Model + ' (subscription billing via jcode native route) ...')
     $env:JCODE_EXPERIMENTAL_MUSE_SUBSCRIPTION = '1'
-    Start-Jcode @('-p', 'muse-subscription', '-m', 'muse-spark-1.3-contributor')
+    Start-Jcode @('-p', 'muse-subscription', '-m', $Model)
     return
   }
   Write-Host '[hypernexus] no native muse-subscription credential yet.'
@@ -65,5 +68,5 @@ if ([string]::IsNullOrEmpty($minted)) {
 }
 $env:META_MUSE_API_KEY = $minted
 $minted = $null
-Write-Host '[hypernexus] META_MUSE_API_KEY is set for this shell only (value hidden). Starting jcode with meta/muse-spark-1.3-contributor ...'
-Start-Jcode @('-p', 'meta-muse', '-m', 'muse-spark-1.3-contributor')
+Write-Host ('[hypernexus] META_MUSE_API_KEY is set for this shell only (value hidden). Starting jcode with meta/' + $Model + ' ...')
+Start-Jcode @('-p', 'meta-muse', '-m', $Model)

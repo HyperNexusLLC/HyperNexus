@@ -326,3 +326,5 @@ Memories should be stored both:
 - codewhale dual-model launcher (2026-11-04): META_MODEL env override in use-meta-model.ps1; no battery/test dir in harness; muse-code live --check OK (validator-clean).
 
 - mini-swe-agent dual-model installer (2026-11-04): META_MODEL env override into MSWEA_MODEL_NAME (openai/ prefix); check accepts both; battery green incl live --check.
+
+- jcode dual-model launcher (2026-11-04): META_MODEL env override on both routes; toml catalog gains wonder; PSParser 0 errors.

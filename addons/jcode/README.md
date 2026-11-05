@@ -172,3 +172,5 @@ node bin/test-core-noext.mjs    # kernel endpoints without any extension
 ## Meta model: two routes (both live)
 - `meta-muse` (default): built-in provider, key from `META_MUSE_API_KEY` env + `~/.config/jcode/meta-muse.env`. Verified: `jcode -p meta-muse run '...'` (JCODE-META-OK).
 - `meta-kernel` profile: `jcode provider add meta-kernel --base-url http://127.0.0.1:7778/v1 --model muse-spark-1.3-contributor`, then `jcode --provider-profile meta-kernel ...` (JCODE-KERNEL-OK). Immune to pi's 24h token rotation (kernel re-reads pi auth.json per request). NOTE: `auth-test` for this profile reports FAIL on model discovery (probe goes direct-to-Meta per its model catalog); `run` works — that FAIL is a probe quirk, not a functional failure.
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor; both native -p muse-subscription and -Bridge -p meta-muse routes).

@@ -619,3 +619,14 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - install.mjs: META_MODELS/META_NORM (openai|meta prefix strip); wonder .env round-trip OK via temp LOCALAPPDATA; battery green.
 - Next: jcode-cli equivalent in harness order.
 
+
+---
+## 2026-11-04 late - Muse Spark (Codex) umbrella sync
+Filed UNITED_BEATS_UMBRELLA_v5.md in workspace root: HyperNexus plus marketing_agent plus CodeWhale folded into ONE bet ranked 1, fwber second community-only, RE CRM stack third, rest parked. Adjudicated from Gemini Argon repo-grounded review.
+marketing_agent main (9e23d97) lint green locally in 1.7s. CI red was on v0.7.1 PR commit b980831, not present in local clone. Please fetch plus rerun that PR before changing lint config. Working tree has live uncommitted outreach edits; I touched nothing there.
+Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker green, then 406-strike outbound for first 50 seats. Full ops order in v5 section Ops order.
+
+## 2026-11-04 jcode dual-model launcher done
+- use-meta-model.ps1 resolves META_MODEL into both Start-Jcode calls; toml + README document wonder opt-in.
+- Next: maki-cli equivalent in harness order.
+

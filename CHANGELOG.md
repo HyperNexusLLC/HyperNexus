@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+- jcode dual-model launcher: META_MODEL env override on both native and bridge routes (default spark, opt-in wonder); wonder added to legacy toml catalog; no battery in harness.
 - mini-swe-agent dual-model installer: META_MODEL env override (default spark, opt-in wonder; openai/ and meta/ prefixes tolerated); wonder .env round-trip OK; battery green.
 - codewhale dual-model launcher: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); no battery in this harness (static switch only).
 - muse-code dual-model installer: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); battery 7/7 green.
