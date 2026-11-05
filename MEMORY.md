@@ -361,3 +361,6 @@ Memories should be stored both:
 
 
 - pi dual-model verifier+check (2026-11-05): META_MODEL env override with actual-vs-expected intent enforcement in both ps1 and install.mjs; default path OK, wonder-mismatch FAIL verified live; battery 10/10.
+- copilot slot audit (2026-11-05): no code change by design — Meta terms prohibit pi-subscription relay into Copilot; launcher fails closed (b0edae04b); battery 18/18.
+- copilot-cli dual-model launcher (2026-11-05): META_MODEL intent export; live mint OK; battery 12/12; PSParser 0.
+- opencode dual-model (2026-11-05): launcher both routes + installer seeds/backfills both models + jsonc sample; battery 9/9; temp-project round-trip green; kernel lists spark only (wonder pending upstream).

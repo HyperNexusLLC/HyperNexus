@@ -37,3 +37,13 @@ Env overrides: `META_AUTH_PATH`, `META_KEY_MINT_URL` (see `--help`).
 
 Note: Copilot CLI login itself is interactive (`copilot login --device-code`)
 and Copilot models are GitHub-side; the Meta provider above is opt-in.
+
+## Dual-model (spark default, wonder opt-in)
+
+`use-meta-model.ps1` resolves META_MODEL env: default
+meta/muse-spark-1.3-contributor, opt-in meta/muse-wonder-1.0-contributor
+(meta/ prefix optional) and exports the resolved short name back into
+`$env:META_MODEL` as session intent. The minted `META_API_KEY` is
+model-agnostic (pi identity union key); META_MODEL declares which Meta model
+the session targets. Copilot-side models stay GitHub-side; the Meta provider
+above remains opt-in.

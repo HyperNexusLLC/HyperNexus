@@ -32,6 +32,10 @@ const SRC_SKILLS = path.join(HERE, "skills");
 const SRC_AGENT = path.join(HERE, "agent", "hypernexus-orchestrator.md");
 const SRC_BIN = path.join(HERE, "bin", "meta-muse-key.mjs");
 const SRC_REMINDERS = path.join(HERE, "reminders");
+const META_MODELS = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"];
+const META_RAW = process.env.META_MODEL || "";
+const META_NORM = META_RAW.startsWith("meta/") ? META_RAW.slice(5) : META_RAW;
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
 
 const args = process.argv.slice(2);
 const has = (flag) => args.includes(flag);
@@ -249,6 +253,14 @@ function migrateV1Provider(file) {
           releaseDate: "2026-09-02",
           limit: { context: 1048576, output: 131072 },
         },
+        // Dual-model opt-in: wonder shares the spark seed shape. releaseDate
+        // is ordering-only for core Model.snapshot (time-less entries crash
+        // startup); refresh from models.dev once wonder catalog date publishes.
+        "muse-wonder-1.0-contributor": {
+          name: "Muse Wonder 1.0 Contributor",
+          releaseDate: "2026-09-02",
+          limit: { context: 1048576, output: 131072 },
+        },
       },
     };
   }
@@ -305,19 +317,21 @@ function migrateMetaProviderId(file) {
     // model time-less → startup crash "ae.time.released". Backfill the
     // models.dev catalog release_date; preserve any user-customized fields.
     if (!hnEntry.models || typeof hnEntry.models !== "object") hnEntry.models = {};
-    const m = hnEntry.models["muse-spark-1.3-contributor"];
-    if (m && typeof m === "object") {
-      if (m.releaseDate === void 0) {
-        m.releaseDate = "2026-09-02";
+    for (const [id, display] of [["muse-spark-1.3-contributor", "Muse Spark 1.3 Contributor"], ["muse-wonder-1.0-contributor", "Muse Wonder 1.0 Contributor"]]) {
+      const m = hnEntry.models[id];
+      if (m && typeof m === "object") {
+        if (m.releaseDate === void 0) {
+          m.releaseDate = "2026-09-02"; // seed (wonder date: refresh from models.dev once published)
+          dirty = true;
+        }
+      } else {
+        hnEntry.models[id] = {
+          name: display,
+          releaseDate: "2026-09-02",
+          limit: { context: 1048576, output: 131072 },
+        };
         dirty = true;
       }
-    } else {
-      hnEntry.models["muse-spark-1.3-contributor"] = {
-        name: "Muse Spark 1.3 Contributor",
-        releaseDate: "2026-09-02",
-        limit: { context: 1048576, output: 131072 },
-      };
-      dirty = true;
     }
   }
   if (typeof config?.model === "string" && config.model.startsWith("meta/")) {
@@ -364,10 +378,18 @@ function ensureMetaProvider(file) {
         releaseDate: "2026-09-02",
         limit: { context: 1048576, output: 131072 },
       },
+      // Dual-model opt-in: wonder shares the spark seed shape. releaseDate
+      // is ordering-only for core Model.snapshot (time-less entries crash
+      // startup); refresh from models.dev once wonder catalog date publishes.
+      "muse-wonder-1.0-contributor": {
+        name: "Muse Wonder 1.0 Contributor",
+        releaseDate: "2026-09-02",
+        limit: { context: 1048576, output: 131072 },
+      },
     },
   };
   writeUtf8(file, JSON.stringify(config, null, 2) + "\n");
-  log(`seeded providers["meta-hn"] (proxy baseURL, models with releaseDate) in ${file}.`);
+  log(`seeded providers["meta-hn"] (spark + wonder; META_MODEL=${META_MODEL} selects the launcher default) in ${file}.`);
   return true;
 }
 
@@ -466,7 +488,7 @@ function checkAll() {
     }
   }
   if (!mcpOk) log(`NOTE: MCP server 'hypernexus' not present in ${file} (register with: node install.mjs${globalMode ? " --global" : ""})`);
-  if (!metaOk) log(`NOTE: V2 providers["meta-hn"] (muse-spark-1.3-contributor, env META_MUSE_API_KEY, proxy baseURL) not present in ${file} (see meta-model.opencode.jsonc)`);
+  if (!metaOk) log(`NOTE: V2 providers["meta-hn"] (muse-spark-1.3-contributor + muse-wonder-1.0-contributor, env META_MUSE_API_KEY, proxy baseURL) not present in ${file} (see meta-model.opencode.jsonc)`);
   if (!bashGuardOk) log(`NOTE: tools.bash=false attestation guard not present in ${file} (run install (no flags) to enable; subscription 403s otherwise)`);
   log(ok ? "CHECK PASSED" : "CHECK FAILED");
   process.exit(ok ? 0 : 1);

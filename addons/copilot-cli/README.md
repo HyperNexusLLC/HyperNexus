@@ -7,4 +7,5 @@ Native meta/muse-spark-1.3-contributor via pi OAuth subscription plus full Hyper
 - Notes: Login is interactive: 'copilot login --device-code'. Models are GitHub-side.
 - Token policy: keys are minted live from `~/.pi/agent/auth.json` via `bin/meta-muse-key.mjs` into `META_API_KEY` (union key; pi owns refresh; stdout only, never stored); see `meta-model.copilot-cli.md`.
 - Hooks: Copilot CLI has no hook API — hooks are not registered. Verify manually: `node bin/test-copilot-cli-ext.mjs`.
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor); launcher resolves intent into process env.
 - Sample `mcp.json` is illustrative (`hypernexus` on `PATH`, `<absolute-path-to-repo>` placeholder) — `node install.mjs` writes resolved absolute paths into `~/.copilot/mcp-config.json`.
