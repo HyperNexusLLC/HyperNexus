@@ -359,3 +359,5 @@ Memories should be stored both:
 
 - grok dual-model launcher (2026-11-05): META_MODEL env override both routes via OPENAI_MODEL; PSParser 0 errors.
 
+
+- pi dual-model verifier+check (2026-11-05): META_MODEL env override with actual-vs-expected intent enforcement in both ps1 and install.mjs; default path OK, wonder-mismatch FAIL verified live; battery 10/10.

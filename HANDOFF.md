@@ -726,3 +726,7 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - use-meta-model.ps1 resolves META_MODEL into OPENAI_MODEL; meta doc + README noted; PSParser 0.
 - Ordered CLIs done: codex-cli, claude-code, muse-code, codewhale, mini-swe-agent, jcode, maki, prime-agent, freebuff, crush, droid, hax, reasonix, open-interpreter, grok. Remaining: pi, copilot, copilot-cli, opencode.
 
+
+## 2026-11-05 pi dual-model done
+- use-meta-model.ps1 resolves META_MODEL and enforces actual-vs-expected pin (FAIL with exact fix on mismatch: set defaultModel or unset META_MODEL); install.mjs --check mirrors intent check; meta doc + README noted; PSParser 0, battery 10/10, live default/wonder paths verified (wonder correctly FAILs while settings pins spark).
+- Ordered CLIs done: codex-cli, claude-code, muse-code, codewhale, mini-swe-agent, jcode, maki, prime-agent, freebuff, crush, droid, hax, reasonix, open-interpreter, grok, pi. Remaining: copilot, copilot-cli, opencode.
