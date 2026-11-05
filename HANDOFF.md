@@ -608,3 +608,9 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - Note: install.mjs --check shells out to muse plugins validate (180s timeout); live check pending slow muse CLI.
 - Next: codewhale-cli equivalent in harness order.
 
+
+## 2026-11-04 codewhale dual-model launcher done
+- use-meta-model.ps1 resolves META_MODEL into --model flags + startup message; PSParser 0 errors; resolution verified both ways.
+- muse-code pending live --check resolved: CHECK OK (11 commands, validator-clean).
+- Next: mini-swe-agent-cli equivalent in harness order.
+

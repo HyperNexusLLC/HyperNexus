@@ -322,3 +322,5 @@ Memories should be stored both:
 - claude-code dual-model launcher (2026-11-04): META_MODEL env override in use-meta-model.ps1 (ANTHROPIC_MODEL + --model); Replace(meta/,'') normalization; battery 8/8.
 
 - muse-code dual-model installer (2026-11-04): META_MODEL/META_NORM consts; wantSettings uses META_MODEL; check accepts both; stale gap text fixed; battery 7/7.
+
+- codewhale dual-model launcher (2026-11-04): META_MODEL env override in use-meta-model.ps1; no battery/test dir in harness; muse-code live --check OK (validator-clean).

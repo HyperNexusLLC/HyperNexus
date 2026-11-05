@@ -99,3 +99,5 @@ node bin/test-codewhale-ext.mjs   # full battery: config, bundle, installer, std
                                   # round-trips, concurrency, parity, memory features,
                                   # doc accuracy, core-without-extension
 ```
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor).

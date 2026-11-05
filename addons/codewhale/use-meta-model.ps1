@@ -15,6 +15,9 @@ param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Prompt)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $kernel = Join-Path $root 'bin\hypernexus.exe'
+# Dual-model: META_MODEL env override (default spark, opt-in wonder).
+$MetaWanted = if ($env:META_MODEL) { $env:META_MODEL.Replace('meta/','') } else { 'muse-spark-1.3-contributor' }
+$Model = if ($MetaWanted -in 'muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor') { $MetaWanted } else { 'muse-spark-1.3-contributor' }
 
 # 1. Kernel must be up — it owns the proxy route.
 try {
@@ -39,9 +42,9 @@ try {
 # this route ("connection failed before response headers", both HTTP/2+1.1
 # attempted); forcing HTTP/1.1 is verified with a live PONG (2026-11-03).
 $env:CODEWHALE_FORCE_HTTP1 = '1'
-Write-Host '[hypernexus] launching codewhale on meta/muse-spark-1.3-contributor ...'
+Write-Host ('[hypernexus] launching codewhale on meta/' + $Model + ' ...')
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & codewhale --provider meta --model muse-spark-1.3-contributor -- $Prompt
+  & codewhale --provider meta --model $Model -- $Prompt
 } else {
-  & codewhale --provider meta --model muse-spark-1.3-contributor
+  & codewhale --provider meta --model $Model
 }

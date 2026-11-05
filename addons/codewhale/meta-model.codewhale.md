@@ -58,3 +58,11 @@ then runs Codewhale on `meta/muse-spark-1.3-contributor`.
 - `auth.json` is read at call time, every time; pi rotation is picked up
   automatically (proxy) or via the sync script (secret store).
 - If the kernel proxy reports no credential, re-login in pi (`/login meta`).
+
+## Dual-model (spark default, wonder opt-in)
+
+META_MODEL env selects the model (meta/ prefix tolerated):
+
+``powershell
+$env:META_MODEL='muse-wonder-1.0-contributor'; .\addons\codewhale\use-meta-model.ps1 "hi"
+``
