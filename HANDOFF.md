@@ -721,3 +721,8 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - use-meta-model.ps1 resolves META_MODEL into OPENAI_MODEL; meta doc + README noted; PSParser 0.
 - Next: grok in harness order.
 
+
+## 2026-11-05 grok dual-model done (ordered CLI sweep complete)
+- use-meta-model.ps1 resolves META_MODEL into OPENAI_MODEL; meta doc + README noted; PSParser 0.
+- Ordered CLIs done: codex-cli, claude-code, muse-code, codewhale, mini-swe-agent, jcode, maki, prime-agent, freebuff, crush, droid, hax, reasonix, open-interpreter, grok. Remaining: pi, copilot, copilot-cli, opencode.
+

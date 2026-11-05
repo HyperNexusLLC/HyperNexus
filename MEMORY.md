@@ -356,3 +356,6 @@ Memories should be stored both:
 
 - open-interpreter dual-model launcher (2026-11-05): META_MODEL env override both routes via OPENAI_MODEL; PSParser 0 errors.
 
+
+- grok dual-model launcher (2026-11-05): META_MODEL env override both routes via OPENAI_MODEL; PSParser 0 errors.
+
