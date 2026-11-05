@@ -29,6 +29,15 @@
           "input": ["text", "image"],
           "contextWindow": 1048576,
           "maxTokens": 131072
+        },
+{
+          "id": "muse-wonder-1.0-contributor",
+          "name": "Muse Wonder 1.0 Contributor",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1048576,
+          "maxTokens": 131072
         }
       ]
     }

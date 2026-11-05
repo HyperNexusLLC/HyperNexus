@@ -336,3 +336,5 @@ Memories should be stored both:
 - jcode dual-model launcher (2026-11-04): META_MODEL env override on both routes; toml catalog gains wonder; PSParser 0 errors.
 
 - maki dual-model launcher (2026-11-04): META_MODEL env override on one-shot flag; live-store check accepts both; live check OK.
+
+- prime-agent dual-model launcher (2026-11-04): META_MODEL env override both routes; wonder in models catalog (presence-check battery safe).
