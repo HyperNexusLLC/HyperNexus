@@ -6,3 +6,6 @@ Native meta/muse-spark-1.3-contributor via pi OAuth subscription plus full Hyper
 - Install: `node install.mjs` · verify: `node install.mjs --check` · remove: `node install.mjs --uninstall`
 - Notes: MCP via 'interpreter mcp add' when CLI present.
 - Token policy: keys are read live from `~/.pi/agent/auth.json` (pi owns refresh); nothing secret is stored here.
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor); launcher resolves both routes via OPENAI_MODEL.
+

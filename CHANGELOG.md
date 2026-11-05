@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `go/NUL` (Windows reserved device name) remains untracked; it cannot be committed from Windows and was previously removed from the index for CI.
 
 ## [Unreleased]
+- prime-agent dual-model launcher: META_MODEL env override on both routes (default spark, opt-in wonder); wonder added to models catalog.
+- freebuff dual-model launcher: META_MODEL env override on both routes (default spark, opt-in wonder).
+- crush dual-model installer+launcher: META_MODEL env override (default spark, opt-in wonder); installer registers both models, check accepts either; launcher resolves both routes.
+- droid dual-model installer: META_MODEL env override (default spark, opt-in wonder); installer registers spark+wonder custom models, session default follows META_MODEL when unset; drift check keeps spark requirement (battery safe).
+- hax dual-model installer: META_MODEL env override (default spark, opt-in wonder); meta preset follows env, pinned meta-wonder preset added, hn-worker stays spark; battery H1-H3 green (live sections kernel-flaky).
+- reasonix dual-model launcher+check: META_MODEL env override (default spark, opt-in wonder); launcher resolves both routes, provider lists both models, check accepts either.
+- open-interpreter dual-model launcher: META_MODEL env override (default spark, opt-in wonder); OPENAI_MODEL follows resolved model on both routes.
+- grok dual-model launcher: META_MODEL env override (default spark, opt-in wonder); OPENAI_MODEL follows resolved model on both routes.
+- pi dual-model verifier+check: META_MODEL env override (default spark, opt-in wonder); use-meta-model.ps1 + install.mjs --check extract actual defaultModel pin and FAIL on intent mismatch (pi owns config, verifiers never edit); PSParser 0, battery 10/10.
 - maki dual-model launcher: META_MODEL env override on one-shot -m flag (default spark, opt-in wonder); live-store check accepts either; live check OK.
 - jcode dual-model launcher: META_MODEL env override on both native and bridge routes (default spark, opt-in wonder); wonder added to legacy toml catalog; no battery in harness.
 - mini-swe-agent dual-model installer: META_MODEL env override (default spark, opt-in wonder; openai/ and meta/ prefixes tolerated); wonder .env round-trip OK; battery green.
@@ -28,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - muse-code dual-model installer: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); battery 7/7 green.
 - claude-code dual-model launcher: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); battery 8/8 green.
 - codex-cli dual-model template: META_MODEL env override (default spark, opt-in wonder, meta/ prefix tolerated); check accepts both prefixes; wonder install+check round-trip OK; battery 9/9 green.
+- copilot slot audited, intentionally untouched: Meta Model Terms 3.2/10.1(i) prohibit relaying the pi subscription credential into Copilot; use-meta-model.ps1 fails closed by design (b0edae04b); battery 18/18 green.
+- copilot-cli dual-model launcher: META_MODEL env override (default spark, opt-in wonder) resolved + exported as session intent; mint still live model-agnostic pi-OAuth key; PSParser 0, battery 12/12, default/wonder paths live-verified.
+- opencode dual-model launcher+installer+config: META_MODEL env override (default spark, opt-in wonder); launcher resolves both routes via meta-hn/; installer seeds + backfills BOTH models in all three meta-hn sites (releaseDate seed noted ordering-only); jsonc sample gains wonder; PSParser 0, node --check clean, battery 9/9, temp-project seed round-trip live-verified (both models + bash guard + CHECK PASSED).
 
 ## [v1.0.27] - 2026-11-03
 

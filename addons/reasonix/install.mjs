@@ -247,8 +247,8 @@ if (MODE === "check") {
   const hasMcp = /^\s*name\s*=\s*"hypernexus"/m.test(raw);
   console.log(`  ${hasMcp ? "ok " : "GAP"} config.toml [[plugins]] hypernexus MCP`);
   if (!hasMcp) gaps++;
-  const hasDefault = /^\s*default_model\s*=\s*"meta\/muse-spark-1\.3-contributor"/m.test(raw);
-  console.log(`  ${hasDefault ? "ok " : "GAP"} config.toml default_model meta/muse-spark-1.3-contributor`);
+  const hasDefault = /^\s*default_model\s*=\s*"meta\/muse-(spark-1\.3|wonder-1\.0)-contributor"/m.test(raw);
+  console.log(`  ${hasDefault ? "ok " : "GAP"} config.toml default_model meta/muse-spark|wonder contributor`);
   if (!hasDefault) gaps++;
   const sraw = readIfExists(settingsPath);
   let hooksOk = false;

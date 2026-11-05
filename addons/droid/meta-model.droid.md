@@ -105,3 +105,8 @@ If the mint reports an expired session (401/403), re-login in pi
 - This file and the installer NEVER write the token or key anywhere.
 - `auth.json` is read at call time, every time; pi rotation is picked up
   automatically via the helper.
+
+## Dual-model (spark default, wonder opt-in)
+
+The installer registers both models (Meta-Muse-Spark + Meta-Muse-Wonder) and resolves META_MODEL env: default meta/muse-spark-1.3-contributor, opt-in meta/muse-wonder-1.0-contributor (meta/ prefix optional, others fall back to spark). A fresh session default follows META_MODEL only when none was set; existing user defaults are untouched. The drift check still requires the spark entry, so the existing battery stays green.
+

@@ -64,6 +64,10 @@ function haxBlockSpan(existing) {
   return { b: -1, e: -1, endLen: 0 };
 }
 const SKILLS = ["hypernexus", "hypernexus-ops", "hypernexus-workflows"];
+const META_MODELS = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"];
+const META_RAW = process.env.META_MODEL || "";
+const META_NORM = META_RAW.startsWith("meta/") ? META_RAW.slice(5) : META_RAW;
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
 
 function repoVersion() {
   try { return fs.readFileSync(path.join(REPO_ROOT, "VERSION"), "utf8").trim(); }
@@ -135,10 +139,16 @@ const META_PROVIDER = {
 };
 const META_PRESETS = {
   meta: {
-    description: "Meta Muse Spark 1.3 Contributor via pi OAuth subscription (key from HAX_META_API_KEY, read live from pi auth.json)",
+    description: "Meta Muse dual-model via pi OAuth subscription (META_MODEL selects spark default / wonder opt-in; key from HAX_META_API_KEY, read live from pi auth.json)",
     provider: "meta",
-    model: "muse-spark-1.3-contributor",
+    model: META_MODEL,
     tint: "teal",
+  },
+  "meta-wonder": {
+    description: "Meta Muse Wonder 1.0 Contributor via pi OAuth subscription (opt-in wonder preset)",
+    provider: "meta",
+    model: "muse-wonder-1.0-contributor",
+    tint: "violet",
   },
   "hn-worker": {
     description: "HyperNexus subagent worker: memory-first RECALL→DISCOVER→EXECUTE→PERSIST loop via addons/hax/hn.mjs",

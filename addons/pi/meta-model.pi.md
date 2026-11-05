@@ -29,3 +29,11 @@ mints from anywhere else; they all read through pi's identity.
   the bash tool schema flips 200→403.) Workarounds: drop shell tools from
   `-t` (e.g. `-t 'read,edit,write,grep,find,ls'`), or set a pay-as-you-go
   `META_API_KEY` for full tool use outside Muse Code.
+
+## Dual-model (spark default, wonder opt-in)
+
+`use-meta-model.ps1` and `install.mjs --check` resolve META_MODEL env:
+default meta/muse-spark-1.3-contributor, opt-in
+meta/muse-wonder-1.0-contributor (meta/ prefix optional). Both verify the
+actual settings.json defaultModel pin matches the expected model and fail
+with the exact fix when drifted (pi owns the config; verifiers never edit it).

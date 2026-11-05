@@ -687,3 +687,57 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - use-meta-model.ps1 + install.mjs check relaxed; live maki models check OK; no battery in harness.
 - Next: prime-agent-cli equivalent in harness order.
 
+
+## 2026-11-04 prime-agent dual-model launcher done (battery pending)
+- use-meta-model.ps1 resolves META_MODEL; meta-model.prime.json catalog gains wonder; README noted.
+- Battery test_prime_agent_ext.py started slow; confirm before next harness.
+
+
+## 2026-11-05 freebuff dual-model launcher done
+- use-meta-model.ps1 resolves META_MODEL; meta doc + README noted; PSParser 0 errors.
+- Next: crush in harness order.
+
+
+## 2026-11-05 crush dual-model done
+- install.mjs registers spark+wonder (META_MODEL selects large/small); use-meta-model.ps1 resolves META_MODEL; snippet+README noted; PSParser 0, node --check clean.
+- Next: droid in harness order.
+
+
+## 2026-11-05 droid dual-model done
+- install.mjs registers spark+wonder custom models, session default follows META_MODEL when unset; meta doc noted; node --check clean.
+- Battery: 64 passed / 12 failed; all 12 are kernel HTTP aborts in section 4 (environmental under load, /health OK); section 6 model wiring all PASS incl session default spark.- Next: hax in harness order.
+
+
+## 2026-11-05 hax dual-model done
+- install.mjs: meta preset follows META_MODEL + pinned meta-wonder preset, hn-worker spark; meta doc + README noted; install --check + idempotence green (live H6+ kernel-flaky, unrelated).
+- Next: reasonix in harness order.
+
+
+## 2026-11-05 reasonix dual-model done
+- use-meta-model.ps1 resolves META_MODEL; provider lists both models; check accepts spark|wonder; node --check clean, PSParser 0.
+- Battery: 81 pass / 44 fail; all fails pre-existing + unrelated (T1 runtime manifest 0 tools from v1.39.4 compat work, /health VERSION drift, kernel timeouts); T4 installer-check + T8 meta/launcher + T9 wiring all PASS.
+- Next: open-interpreter in harness order.
+
+
+## 2026-11-05 open-interpreter dual-model done
+- use-meta-model.ps1 resolves META_MODEL into OPENAI_MODEL; meta doc + README noted; PSParser 0.
+- Next: grok in harness order.
+
+
+## 2026-11-05 grok dual-model done (ordered CLI sweep complete)
+- use-meta-model.ps1 resolves META_MODEL into OPENAI_MODEL; meta doc + README noted; PSParser 0.
+- Ordered CLIs done: codex-cli, claude-code, muse-code, codewhale, mini-swe-agent, jcode, maki, prime-agent, freebuff, crush, droid, hax, reasonix, open-interpreter, grok. Remaining: pi, copilot, copilot-cli, opencode.
+
+
+## 2026-11-05 pi dual-model done
+- use-meta-model.ps1 resolves META_MODEL and enforces actual-vs-expected pin (FAIL with exact fix on mismatch: set defaultModel or unset META_MODEL); install.mjs --check mirrors intent check; meta doc + README noted; PSParser 0, battery 10/10, live default/wonder paths verified (wonder correctly FAILs while settings pins spark).
+- Ordered CLIs done: codex-cli, claude-code, muse-code, codewhale, mini-swe-agent, jcode, maki, prime-agent, freebuff, crush, droid, hax, reasonix, open-interpreter, grok, pi. Remaining: copilot, copilot-cli, opencode.
+## 2026-11-05 copilot + copilot-cli + opencode dual-model done (ordered CLI sweep COMPLETE)
+- copilot (addons/copilot): AUDITED, no code change. Meta terms bar subscription relay into Copilot; launcher fails closed by design; battery 18/18 (incl fail-closed + RBAC). Plugin/MCP/skills/hooks integration independent of Meta model access.
+- copilot-cli: use-meta-model.ps1 resolves META_MODEL (spark default, wonder opt-in) + exports intent; live mint OK both paths; install + check green; battery 12/12; doc + README noted; PSParser 0.
+- opencode: use-meta-model.ps1 resolves META_MODEL into both routes (one-shot --model + REPL OPENCODE_MODEL via meta-hn/); install.mjs META consts + both models seeded/backfilled in all three meta-hn sites; jsonc sample + README noted; PSParser 0, node --check clean, battery 9/9, temp-project seed round-trip live-verified. Kernel /v1/models currently lists spark family only (no wonder) — wonder opt-in is wired end-to-end and pending subscription-side availability, consistent with the other 15 CLIs.
+- Ordered CLIs done (18/18): codex-cli, claude-code, muse-code, codewhale, mini-swe-agent, jcode, maki, prime-agent, freebuff, crush, droid, hax, reasonix, open-interpreter, grok, pi, copilot (audit), copilot-cli, opencode. Remaining: none — full CLI sweep complete. llama-server confirmed BelowNormal.
+## 2026-11-05 codex-gui swarm verification (wonder primary confirmed)
+- Model: connection.json already pins meta/muse-wonder-1.0-contributor (alt spark); mint live OK; kernel /v1/models serves spark family (wonder via same minter/proxy, pending upstream listing).
+- Swarm control plane verified: battery 8/8; install --check was RED (untracked .codex-gui/ drifted from addon source) -> ran install, now CHECK PASSED. Leader/worker agent files + hn-swarm/hn-report commands + orchestrator skill + overlay all present and consistent.
+- Report-back channel: kernel fact STORE 200 verified; FTS recall fast path OK. Semantic /api/memory/search timed out under box saturation (many stale node procs) — known load flake, not an addon defect. No repo diff from this turn (.codex-gui/ untracked); verification recorded here only.

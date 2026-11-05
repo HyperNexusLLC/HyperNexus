@@ -31,6 +31,8 @@ No mint helper lives here — pi **is** the mint source. Other harnesses call
 https://api.meta.ai/muse-code/key`, stdout only). If that reports a dead
 session, re-auth inside pi with `/login meta`.
 
+Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor); verifier + --check enforce actual pin matches expected.
+
 ## Tests
 
 ```powershell
@@ -38,3 +40,4 @@ node bin/test-pi-ext-hooks.mjs
 node bin/test-pi-ext-edge.mjs
 node bin/test-pi-tools-all.mjs
 ```
+

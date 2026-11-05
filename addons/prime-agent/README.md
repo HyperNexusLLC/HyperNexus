@@ -176,3 +176,5 @@ Meta env-reference-only wiring, agent brief, schedule template).
 
 ## Binary
 `prime-agent` = `C:\Users\hyper\.local\bin\prime-agent` (v0.10.1-beta.40). Headless: `prime-agent -p --model meta/muse-spark-1.3-contributor "<prompt>"`. Verified live: PRIME2 via kernel proxy (models.json baseUrl http://127.0.0.1:7778/v1).
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor; both launcher routes).

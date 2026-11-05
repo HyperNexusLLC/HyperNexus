@@ -6,6 +6,10 @@ import path from "node:path";
 const HOME = os.homedir() || process.env.USERPROFILE || process.env.HOME || "";
 const MODE = process.argv.includes("--uninstall") ? "uninstall" : process.argv.includes("--check") ? "check" : "install";
 const TAG = "[hypernexus-pi]";
+const META_MODELS = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"];
+const META_RAW = process.env.META_MODEL || "";
+const META_NORM = META_RAW.startsWith("meta/") ? META_RAW.slice(5) : META_RAW;
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
 const log = (m) => console.log(`${TAG} ${m}`);
 const read = (p) => { try { return fs.readFileSync(p, "utf8"); } catch { return null; } };
 const write = (f, c) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, c, "utf8"); };
@@ -33,7 +37,7 @@ function install() {
   if (raw) write(MCP_FILE, JSON.stringify(mcp, null, 2) + "\n");
   else log(`NOTE: ${MCP_FILE} does not exist; snippet lives in mcp.pi.json (pi creates mcp.json on first MCP use).`);
   log(`extension installed -> ${DST_EXT} (+ MCP snippet merged where possible).`);
-  log("Meta model is pi-native: defaultProvider meta / defaultModel muse-spark-1.3-contributor (see meta-model.pi.md).");
+  log(`Meta model is pi-native: defaultProvider meta / defaultModel ${META_MODEL} (see meta-model.pi.md). META_MODEL env selects spark (default) or wonder (opt-in).`);
   return true;
 }
 function check() {
@@ -53,7 +57,9 @@ function check() {
   if (!sraw) gaps.push(`missing ${SETTINGS_FILE}`);
   else {
     if (!/"defaultProvider"\s*:\s*"meta"/.test(sraw)) gaps.push('settings.json: defaultProvider is not "meta"');
-    if (!/"defaultModel"\s*:\s*"muse-spark-1\.3-contributor"/.test(sraw)) gaps.push('settings.json: defaultModel is not "muse-spark-1.3-contributor"');
+    const _mm = /"defaultModel"\s*:\s*"([^"]+)"/.exec(sraw);
+    if (!_mm || !META_MODELS.includes(_mm[1])) gaps.push(`settings.json: defaultModel is not a Meta contributor model (expected ${META_MODEL} per META_MODEL)`);
+    else if (_mm[1] !== META_MODEL) gaps.push(`settings.json: defaultModel is "${_mm[1]}" but META_MODEL expects "${META_MODEL}" -- update settings.json or unset META_MODEL`);
   }
   if (gaps.length) { console.log(`${TAG} CHECK FAILED:\n  - ${gaps.join("\n  - ")}`); process.exit(1); }
   console.log(`${TAG} CHECK OK: extension + MCP + meta OAuth + model pin.`);

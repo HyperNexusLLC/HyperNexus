@@ -336,3 +336,32 @@ Memories should be stored both:
 - jcode dual-model launcher (2026-11-04): META_MODEL env override on both routes; toml catalog gains wonder; PSParser 0 errors.
 
 - maki dual-model launcher (2026-11-04): META_MODEL env override on one-shot flag; live-store check accepts both; live check OK.
+
+- prime-agent dual-model launcher (2026-11-04): META_MODEL env override both routes; wonder in models catalog (presence-check battery safe).
+
+- freebuff dual-model launcher (2026-11-05): META_MODEL env override both routes; PSParser 0 errors.
+
+
+- crush dual-model installer+launcher (2026-11-05): META_MODEL env override; installer registers spark+wonder, large/small follow META_MODEL; PSParser 0 errors, node --check clean.
+
+
+- droid dual-model installer (2026-11-05): META_MODEL env override; spark+wonder custom models registered, session default follows META_MODEL when unset; node --check clean.
+
+
+- hax dual-model installer (2026-11-05): META_MODEL env override; meta preset follows env + pinned meta-wonder preset; node --check clean, install --check + idempotence green.
+
+
+- reasonix dual-model launcher (2026-11-05): META_MODEL env override both routes; provider lists spark+wonder; PSParser 0, node --check clean.
+
+
+- open-interpreter dual-model launcher (2026-11-05): META_MODEL env override both routes via OPENAI_MODEL; PSParser 0 errors.
+
+
+- grok dual-model launcher (2026-11-05): META_MODEL env override both routes via OPENAI_MODEL; PSParser 0 errors.
+
+
+- pi dual-model verifier+check (2026-11-05): META_MODEL env override with actual-vs-expected intent enforcement in both ps1 and install.mjs; default path OK, wonder-mismatch FAIL verified live; battery 10/10.
+- copilot slot audit (2026-11-05): no code change by design — Meta terms prohibit pi-subscription relay into Copilot; launcher fails closed (b0edae04b); battery 18/18.
+- copilot-cli dual-model launcher (2026-11-05): META_MODEL intent export; live mint OK; battery 12/12; PSParser 0.
+- opencode dual-model (2026-11-05): launcher both routes + installer seeds/backfills both models + jsonc sample; battery 9/9; temp-project round-trip green; kernel lists spark only (wonder pending upstream).
+- codex-gui swarm verify (2026-11-05): wonder pinned, mint live, battery 8/8, .codex-gui/ drift fixed via reinstall; memory STORE 200 + FTS OK, semantic search slow under load (flake).

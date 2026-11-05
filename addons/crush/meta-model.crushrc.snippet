@@ -38,3 +38,13 @@ model add meta/muse-spark-1.3-contributor \
   --reasoning-effort high
 model large meta/muse-spark-1.3-contributor --max-tokens 131072 --reasoning-effort high
 model small meta/muse-spark-1.3-contributor --max-tokens 16384
+
+# --- Meta dual-model: META_MODEL env selects large/small default (spark default, wonder opt-in); both registered ---
+model add meta/muse-wonder-1.0-contributor \\
+  --name "Muse Wonder 1.0 Contributor" \\
+  --context-window 1048576 \\
+  --default-max-tokens 131072 \\
+  --can-reason true \\
+  --supports-images true \\
+  --reasoning-effort high
+

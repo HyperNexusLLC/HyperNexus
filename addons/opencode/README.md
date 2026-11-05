@@ -68,7 +68,9 @@ $env:META_MUSE_API_KEY = "$(node addons/opencode/bin/meta-muse-key.mjs)"
 
 Config shape is V2 (`providers["meta-hn"]` + `env: ["META_MUSE_API_KEY"]` — see
 `meta-model.opencode.jsonc`); the installer migrates a retired V1 singular
-`provider.meta` block automatically. The key lives in the process environment
+`provider.meta` block automatically.
+
+Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor); launcher resolves both routes via meta-hn/, installer seeds both models. The key lives in the process environment
 only — never in config files, logs, or transcripts.
 
 Subscription-key rule: Meta attests DENIED (403 `client_attestation_denied`)

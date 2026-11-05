@@ -8,6 +8,9 @@
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Prompt)
 
 $mintScript = Join-Path $PSScriptRoot 'bin/meta-muse-key.mjs'
+# Dual-model: META_MODEL env override (default spark, opt-in wonder).
+$MetaWanted = if ($env:META_MODEL) { $env:META_MODEL.Replace('meta/','') } else { 'muse-spark-1.3-contributor' }
+$Model = if ($MetaWanted -in 'muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor') { $MetaWanted } else { 'muse-spark-1.3-contributor' }
 try {
   $fresh = & node $mintScript 2>$null
 } catch {
@@ -18,15 +21,15 @@ if ([string]::IsNullOrWhiteSpace($fresh)) {
   exit 1
 }
 $env:META_MUSE_API_KEY = $fresh.Trim()
-Write-Host '[hypernexus] minted fresh META_MUSE_API_KEY for this run only (value hidden, never stored). Starting freebuff with meta/muse-spark-1.3-contributor ...'
+Write-Host '[hypernexus] minted fresh META_MUSE_API_KEY for this run only (value hidden, never stored). Starting freebuff with meta/' + $Model + ' ...'
 
 $freebuff = Get-Command freebuff -ErrorAction SilentlyContinue
 if (-not $freebuff) { $freebuff = 'C:\Users\hyper\AppData\Roaming\npm\freebuff.ps1' }
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & $freebuff --model 'meta/muse-spark-1.3-contributor' -- $Prompt
+  & $freebuff --model ('meta/' + $Model) -- $Prompt
 } else {
-  $env:FREEBUFF_MODEL = 'meta/muse-spark-1.3-contributor'
+  $env:FREEBUFF_MODEL = ('meta/' + $Model)
   & $freebuff
 }
 # Key dies with this process env. Next run mints fresh again.

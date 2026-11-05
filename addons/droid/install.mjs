@@ -9,7 +9,7 @@
  * Usage:
  *   node install.mjs [--marketplace <dir>] [--uninstall] [--check] [--no-mcp] [--no-model]
  *
- * Also merges the Meta muse-spark-1.3-contributor custom-model default into
+ * Also merges the Meta dual-model custom-model defaults (spark + wonder) into
  * ~/.factory/settings.json (apiKeyHelper live-mint, no secrets — see
  * addons/droid/meta-model.droid.md). Skip with --no-model.
  *
@@ -33,6 +33,11 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC_PLUGIN = path.join(HERE, "plugin", "hypernexus");
+const META_MODELS = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"];
+const META_RAW = process.env.META_MODEL || "";
+const META_NORM = META_RAW.startsWith("meta/") ? META_RAW.slice(5) : META_RAW;
+const META_MODEL = META_MODELS.includes(META_NORM) ? META_NORM : META_MODELS[0];
+const META_ENTRY_NAME = META_MODEL === "muse-wonder-1.0-contributor" ? "Meta-Muse-Wonder" : "Meta-Muse-Spark";
 
 const args = process.argv.slice(2);
 const has = (f) => args.includes(f);
@@ -191,21 +196,23 @@ function ensureModel() {
   }
   cfg.customModels = Array.isArray(cfg.customModels) ? cfg.customModels : [];
   const minter = path.join(HERE, "bin", "meta-muse-key.mjs").split(path.sep).join("/");
-  const entry = {
-    name: "Meta-Muse-Spark",
-    model: "muse-spark-1.3-contributor",
+  const metaEntries = META_MODELS.map((m) => ({
+    name: m === "muse-wonder-1.0-contributor" ? "Meta-Muse-Wonder" : "Meta-Muse-Spark",
+    model: m,
     provider: "generic-chat-completion-api",
     baseUrl: "https://api.meta.ai/v1",
     apiKeyHelper: `node ${minter}`,
     maxContextLimit: 1048576,
-  };
-  const i = cfg.customModels.findIndex((x) => x && x.model === entry.model);
-  if (i >= 0) cfg.customModels[i] = { ...cfg.customModels[i], ...entry };
-  else cfg.customModels.push(entry);
+  }));
+  for (const entry of metaEntries) {
+    const i = cfg.customModels.findIndex((x) => x && x.model === entry.model);
+    if (i >= 0) cfg.customModels[i] = { ...cfg.customModels[i], ...entry };
+    else cfg.customModels.push(entry);
+  }
   cfg.sessionDefaultSettings = cfg.sessionDefaultSettings || {};
   if (!cfg.sessionDefaultSettings.model) {
-    cfg.sessionDefaultSettings.model = "Meta-Muse-Spark";
-    log("session default model -> Meta-Muse-Spark (only because none was set)");
+    cfg.sessionDefaultSettings.model = META_ENTRY_NAME;
+    log(`session default model -> ${META_ENTRY_NAME} (only because none was set)`);
   } else {
     log("session default model already set — untouched");
   }
