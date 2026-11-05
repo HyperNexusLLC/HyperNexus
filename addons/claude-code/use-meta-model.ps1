@@ -19,6 +19,9 @@ param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Prompt)
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $minter = Join-Path $here 'bin\meta-muse-key.mjs'
+# Dual-model: META_MODEL env override (default spark, opt-in wonder).
+$MetaWanted = if ($env:META_MODEL) { $env:META_MODEL.Replace('meta/','') } else { 'muse-spark-1.3-contributor' }
+$Model = if ($MetaWanted -in 'muse-spark-1.3-contributor', 'muse-wonder-1.0-contributor') { $MetaWanted } else { 'muse-spark-1.3-contributor' }
 
 try {
   $key = (node $minter) 2>$null
@@ -31,13 +34,13 @@ if ([string]::IsNullOrWhiteSpace($key)) {
   exit 1
 }
 $env:META_MUSE_API_KEY = $key.Trim()
-Write-Host '[hypernexus] META_MUSE_API_KEY minted fresh for this run (value hidden). Starting Claude Code with muse-spark-1.3-contributor ...'
+Write-Host ('[hypernexus] META_MUSE_API_KEY minted fresh for this run (value hidden). Starting Claude Code with ' + $Model + ' ...')
 
 $kernel = $env:HYPERNEXUS_URL
 if ([string]::IsNullOrEmpty($kernel)) { $kernel = 'http://127.0.0.1:7778' }
 $env:ANTHROPIC_BASE_URL = $kernel
 $env:ANTHROPIC_API_KEY = 'hypernexus-local'
-$env:ANTHROPIC_MODEL = 'muse-spark-1.3-contributor'
+$env:ANTHROPIC_MODEL = $Model
 
 $claude = Get-Command claude -ErrorAction SilentlyContinue
 if (-not $claude) { $claude = 'C:\Users\hyper\AppData\Roaming\npm\claude.ps1' }
@@ -45,7 +48,7 @@ if (-not $claude) { $claude = 'C:\Users\hyper\AppData\Roaming\npm\claude.ps1' }
 $pluginDir = Join-Path $here 'plugin' 'hypernexus'
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & $claude --plugin-dir $pluginDir -p --model muse-spark-1.3-contributor --disallowedTools Bash -- $Prompt
+  & $claude --plugin-dir $pluginDir -p --model $Model --disallowedTools Bash -- $Prompt
 } else {
-  & $claude --plugin-dir $pluginDir --model muse-spark-1.3-contributor --disallowedTools Bash
+  & $claude --plugin-dir $pluginDir --model $Model --disallowedTools Bash
 }

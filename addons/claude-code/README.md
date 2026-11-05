@@ -73,3 +73,5 @@ even with a fresh key. Route shell needs through the HyperNexus
 `code_interpreter` parity tool with a minimal description instead. The
 `PreToolUse` Bash gate above stays as a destructive-pattern guard, not as a
 default shell allowlist.
+
+- Dual-model: META_MODEL env (default muse-spark-1.3-contributor, opt-in muse-wonder-1.0-contributor).

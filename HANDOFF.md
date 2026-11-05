@@ -596,3 +596,9 @@ Next: install Codex CLI on PATH for live model smoke; optional live codex exec t
 - llama-server PID 19684 set to Idle priority (was stalling shell).
 - Next: replicate META_MODEL pattern to next CLI harness.
 
+
+## 2026-11-04 claude-code dual-model launcher done
+- use-meta-model.ps1 resolves META_MODEL (wonder opt-in verified, spark default); snippet+README document it; battery 8/8 green.
+- llama-server set to BelowNormal per standing instruction.
+- Next: muse-cli equivalent in harness order.
+

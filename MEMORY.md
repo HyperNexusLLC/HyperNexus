@@ -318,3 +318,5 @@ Memories should be stored both:
 - Stray root proof files are UNTRACKED and excluded from commits; shell delete blocked by policy, needs manual cleanup.
 
 - codex-cli dual-model template (2026-11-04): META_MODEL env override with meta/-prefix normalization; check regex must escape slash as \/ inside /.../ literal; battery 9/9; wonder round-trip OK via temp CODEX_HOME.
+
+- claude-code dual-model launcher (2026-11-04): META_MODEL env override in use-meta-model.ps1 (ANTHROPIC_MODEL + --model); Replace(meta/,'') normalization; battery 8/8.
