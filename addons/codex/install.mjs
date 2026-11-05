@@ -54,6 +54,17 @@ const ei = src.indexOf(end);
 if (bi !== -1) { if (ei !== -1) { return src.slice(0, bi) + block + src.slice(ei + end.length); } return src; } 
 const tail = src.trimEnd(); 
 if (tail === '') { return block + '\n'; } return tail + '\n\n' + block + '\n'; } 
+function upsertTopLevel(src, begin, end, block) {
+// Bare top-level keys must precede the first [table] header in TOML; appending
+// them at EOF would nest them inside the last table (e.g. tui.* expects u32).
+let cur = src;
+const bi = cur.indexOf(begin);
+const ei = cur.indexOf(end);
+if (bi !== -1 && ei !== -1) { cur = (cur.slice(0, bi) + cur.slice(ei + end.length)).replace(/\n{3,}/g, '\n\n'); }
+const m = cur.match(/^\s*\[/m);
+if (m) { const head = cur.slice(0, m.index).trimEnd(); const rest = cur.slice(m.index); return (head ? head + '\n\n' : '') + block + '\n\n' + rest; }
+const tail = cur.trimEnd();
+return (tail === '' ? block + '\n' : tail + '\n\n' + block + '\n'); }
 function removeBlock(src, begin, end) { 
 const bi = src.indexOf(begin); 
 const ei = src.indexOf(end); 
@@ -63,8 +74,8 @@ function installConfig() {
 let raw = readIfExists(CONFIG); 
 if (raw == null) { raw = ''; } 
 let dirty = false; 
-if (raw.indexOf(TD_BEGIN) !== -1) { raw = upsertBlock(raw, TD_BEGIN, TD_END, defaultsBlock()); dirty = true; } 
-else { if (hasKey(raw, 'model =') === false) { if (hasKey(raw, 'model_provider =') === false) { raw = upsertBlock(raw, TD_BEGIN, TD_END, defaultsBlock()); dirty = true; } } } 
+if (raw.indexOf(TD_BEGIN) !== -1) { raw = upsertTopLevel(raw, TD_BEGIN, TD_END, defaultsBlock()); dirty = true; } 
+else { if (hasKey(raw, 'model =') === false) { if (hasKey(raw, 'model_provider =') === false) { raw = upsertTopLevel(raw, TD_BEGIN, TD_END, defaultsBlock()); dirty = true; } } } 
 if (raw.indexOf(TP_BEGIN) !== -1) { raw = upsertBlock(raw, TP_BEGIN, TP_END, providerBlock()); dirty = true; } 
 else { if (hasKey(raw, '[model_providers.meta]') === false) { raw = upsertBlock(raw, TP_BEGIN, TP_END, providerBlock()); dirty = true; } } 
 if (raw.indexOf(TM_BEGIN) !== -1) { raw = upsertBlock(raw, TM_BEGIN, TM_END, mcpBlock()); dirty = true; } 
