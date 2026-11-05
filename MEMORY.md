@@ -1,6 +1,12 @@
 # MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
+### Repo sync: unrelated-history feature branch + DB push limits (2026-11-05, v1.0.28)
+
+- **`feature/cloud-dashboard-mcp-sse-*` is an unrelated history** (root `c3993a0a` vs main `3b787366`, no merge base; local tip `775605d4b` also differs from gitlab tip `8d597c328`). Never merge it into main (16k-file regression); its features already landed via the main line. Local variant preserved as remote branch `archive/cloud-dashboard-mcp-sse-775605d`.
+- **Runtime DBs cannot be git-pushed**: GitHub hard-rejects files >100MB (`data/tormentnexus.db` is 210MB). Memory/session *files* are tracked; DBs await a Git LFS decision. `go/NUL` (Windows device name) breaks stash/index resets - keep it untracked.
+- **Stale remote-tracking refs** (`origin-tormentnexus/*`, `robertpelloni/*`) outlive their remotes; `git branch -r` alone overstates the remote set - always cross-check `git remote -v`.
+
 ### opencode E2E verification: kernel strip+retry proven, spawn quirk, stale stats endpoint (2026-11-03)
 
 - **Server-side attestation strip proven live:** `/v1/chat/completions` with `bash`- and `powershell`-NAMED tools still returns 200 — the kernel strips them and retries (prompt_tokens collapse 520→11 proves it). Client guard (`tools.bash=false`) keeps payloads clean; kernel is the backstop. OpenCode exposes NO `powershell` tool, only `bash` — do not add unvalidated `powershell:false` keys.
