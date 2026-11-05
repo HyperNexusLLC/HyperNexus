@@ -1,7 +1,7 @@
 {
   "apiVersion": "reasonix.io/plugin/v2",
   "name": "hypernexus",
-  "version": "1.0.22",
+  "version": "1.0.28",
   "description": "HyperNexus AI control plane for Reasonix: persistent L2/L3 memory, semantic MCP tool discovery across 26k+ tools, knowledge graph, sessions, skills, billing, and agent orchestration. Uses tools, intercepts, skills, commands, agents, hooks, and MCP server config.",
   "requires": [],
   "provides": [
@@ -13,9 +13,15 @@
     }
   ],
   "contributes": {
-    "skills": ["skills"],
-    "agents": ["agents"],
-    "commands": ["commands"],
+    "skills": [
+      "skills"
+    ],
+    "agents": [
+      "agents"
+    ],
+    "commands": [
+      "commands"
+    ],
     "hooks": {
       "SessionStart": [
         {
@@ -33,7 +39,9 @@
     "mcpServers": {
       "hypernexus": {
         "command": "hypernexus.exe",
-        "args": ["mcp"],
+        "args": [
+          "mcp"
+        ],
         "env": {
           "HYPERNEXUS_URL": "http://127.0.0.1:7778"
         }
@@ -42,7 +50,9 @@
   },
   "runtime": {
     "command": "node",
-    "args": ["${REASONIX_PLUGIN_ROOT}/runtime/bin/hypernexus-reasonix.mjs"],
+    "args": [
+      "${REASONIX_PLUGIN_ROOT}/runtime/bin/hypernexus-reasonix.mjs"
+    ],
     "env": {
       "HYPERNEXUS_URL": "http://127.0.0.1:7778"
     },
@@ -61,438 +71,8 @@
       "agent.before_start"
     ],
     "replaces": [],
-    "capabilities": ["interceptors", "tools"],
-    "tools": [
-      {
-        "name": "status",
-        "description": "Kernel health, version, uptime, MCP bridge status.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "system_overview",
-        "description": "Kernel health, MCP inventory, memory tiers, mesh.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "memory_store",
-        "description": "Store a fact in L2 memory with tags.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "content": { "type": "string", "description": "The memory content." },
-            "title": { "type": "string", "description": "Optional short title." },
-            "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags, e.g. reasoning,fix." },
-            "namespace": { "type": "string", "description": "Namespace: project, global, user." }
-          },
-          "required": ["content"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "memory_search",
-        "description": "Search L2 memory (keyword + semantic).",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Search query." },
-            "limit": { "type": "number", "description": "Max results (default 8)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "memory_fts_search",
-        "description": "Fast FTS keyword search over L2 memory.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Search query." },
-            "limit": { "type": "number", "description": "Max results (default 8)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "memory_vector_search",
-        "description": "Semantic vector search over L2 + L3.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Natural-language query." },
-            "limit": { "type": "number", "description": "Max results (default 6)." },
-            "cold": { "type": "boolean", "description": "Also search L3 cold archive (default true)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "memory_list",
-        "description": "List recent L2 memories.",
-        "inputSchema": {
-          "type": "object",
-          "properties": { "limit": { "type": "number", "description": "How many (default 10)." } },
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "memory_delete",
-        "description": "Delete an L2 memory by id or tag.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "string", "description": "Memory id." },
-            "tag": { "type": "string", "description": "Alternative: delete all memories with this tag (max 20)." }
-          },
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "memory_relate",
-        "description": "Link two memories in the knowledge graph.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "source_id": { "type": "string", "description": "Source memory id." },
-            "target_id": { "type": "string", "description": "Target memory id." },
-            "relation_type": { "type": "string", "description": "Relation, e.g. uses, fixes, supersedes." },
-            "weight": { "type": "number", "description": "Strength 0..1 (default 0.8)." }
-          },
-          "required": ["source_id", "target_id", "relation_type"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "scratchpad",
-        "description": "Read/write the L1 scratchpad working state.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "action": { "type": "string", "enum": ["get", "set", "append"], "description": "Operation." },
-            "key": { "type": "string", "description": "Scratchpad key, e.g. current_task." },
-            "value": { "type": "string", "description": "Value for set/append." }
-          },
-          "required": ["action", "key"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "context_harvest",
-        "description": "Harvest prior context for a task topic.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "topic": { "type": "string", "description": "Task topic or description." },
-            "limit": { "type": "number", "description": "Max items per source (default 5)." }
-          },
-          "required": ["topic"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "record_observation",
-        "description": "Record a structured L2 observation.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "content": { "type": "string", "description": "Observation content." },
-            "type": { "type": "string", "enum": ["discovery", "decision", "progress", "warning", "fix"] },
-            "title": { "type": "string", "description": "Short title." },
-            "concepts": { "type": "array", "items": { "type": "string" } },
-            "filesRead": { "type": "array", "items": { "type": "string" } },
-            "filesModified": { "type": "array", "items": { "type": "string" } }
-          },
-          "required": ["content"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "tool_search",
-        "description": "Semantic search across the MCP tool catalog.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "What you need, e.g. browser automation." },
-            "limit": { "type": "number", "description": "Max results (default 10)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "tool_discover",
-        "description": "Query the native MCP router working set.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Capability you are looking for." },
-            "limit": { "type": "number", "description": "Max results (default 10)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "suggest_tools",
-        "description": "Proactive tool suggestions for this chat.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "mcp_status",
-        "description": "MCP bridge status: servers and counts.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "mcp_servers",
-        "description": "List MCP servers with status and counts.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "mcp_tools",
-        "description": "List tools exposed by the kernel bridge.",
-        "inputSchema": {
-          "type": "object",
-          "properties": { "limit": { "type": "number", "description": "Max rows (default 25)." } },
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "mcp_search",
-        "description": "Search the live MCP tool inventory.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Search text." },
-            "limit": { "type": "number", "description": "Max results (default 10)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "mcp_call",
-        "description": "Invoke an MCP tool via the kernel router.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "tool": { "type": "string", "description": "Tool name, e.g. filesystem/read_file." },
-            "args": { "type": "object", "description": "Tool arguments.", "additionalProperties": true }
-          },
-          "required": ["tool"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "session_search",
-        "description": "Search imported coding sessions.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Search text." },
-            "limit": { "type": "number", "description": "Max results (default 10)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "session_context",
-        "description": "Session bootstrap: goal and workspace links.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "session_handoff",
-        "description": "Write or restore a session handoff artifact.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "action": { "type": "string", "enum": ["write", "pickup"] },
-            "summary": { "type": "string", "description": "Handoff summary (required for write)." },
-            "artifact": { "type": "string", "description": "Artifact name to restore (optional for pickup)." }
-          },
-          "required": ["action"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "skill_search",
-        "description": "Search the HyperNexus skill registry.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Search text." },
-            "limit": { "type": "number", "description": "Max results (default 8)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "skill_manage",
-        "description": "List, read, or create HyperNexus skills.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "action": { "type": "string", "enum": ["list", "read", "create"] },
-            "name": { "type": "string", "description": "Skill name (for read/create)." },
-            "content": { "type": "string", "description": "SKILL.md content (for create)." }
-          },
-          "required": ["action"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "code_search",
-        "description": "Search code: symbols, refs, files.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "query": { "type": "string", "description": "Symbol, path pattern, or concept." },
-            "mode": { "type": "string", "enum": ["symbols", "definitions", "references", "files"] },
-            "limit": { "type": "number", "description": "Max results (default 10)." }
-          },
-          "required": ["query"],
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "knowledge_graph",
-        "description": "Read memory knowledge graph nodes/edges.",
-        "inputSchema": {
-          "type": "object",
-          "properties": { "focus": { "type": "string", "description": "Optional entity or concept to focus on." } },
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "billing_status",
-        "description": "Provider billing, quotas, fallback chain.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "audit_log",
-        "description": "Record an action to the audit trail.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "action": { "type": "string", "description": "Action name, e.g. deploy." },
-            "target": { "type": "string", "description": "Target: file path, URL, tool name." },
-            "result": { "type": "string", "description": "Outcome." }
-          },
-          "required": ["action", "target"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "subagent",
-        "description": "Track a task in L2 memory as a subagent.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "task": { "type": "string", "description": "Task description." },
-            "context": { "type": "string", "description": "Optional context." }
-          },
-          "required": ["task"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "workflow",
-        "description": "List or run HyperNexus workflows.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "action": { "type": "string", "description": "list or run." },
-            "id": { "type": "string", "description": "Workflow id (required for run)." }
-          },
-          "required": ["action"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "orchestrate",
-        "description": "Harvest memory, find tools, record a task.",
-        "inputSchema": {
-          "type": "object",
-          "properties": { "task": { "type": "string", "description": "The task to orchestrate." } },
-          "required": ["task"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "browser",
-        "description": "Scrape a URL or check browser status.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "action": { "type": "string", "description": "status or scrape." },
-            "url": { "type": "string", "description": "URL to scrape (required for scrape)." }
-          },
-          "required": ["action"],
-          "additionalProperties": false
-        },
-        "readOnly": false
-      },
-      {
-        "name": "memory_stats",
-        "description": "Memory tier counts: L2, scratchpad, graph.",
-        "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-        "readOnly": true
-      },
-      {
-        "name": "session_list",
-        "description": "List recent sessions across harnesses.",
-        "inputSchema": {
-          "type": "object",
-          "properties": { "limit": { "type": "number", "description": "Max sessions (default 10)." } },
-          "additionalProperties": false
-        },
-        "readOnly": true
-      },
-      {
-        "name": "repomap",
-        "description": "Ranked repo map with symbol summaries.",
-        "inputSchema": {
-          "type": "object",
-          "properties": { "dir": { "type": "string", "description": "Directory to map (default workspace root)." } },
-          "additionalProperties": false
-        },
-        "readOnly": true
-      }
+    "capabilities": [
+      "interceptors"
     ]
   }
 }

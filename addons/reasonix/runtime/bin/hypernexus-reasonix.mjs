@@ -6,8 +6,9 @@
  *
  * Surfaces
  * --------
- *  - 36 model-callable tools (served as ext__hypernexus__<name>, declared in
- *    reasonix-plugin.json `runtime.tools`)
+ *  - 36 model-callable tools (served as ext__hypernexus__<name>, declared by
+ *    TOOL_NAMES in the extension/initialize handshake; reasonix v1.39+
+ *    strict-decodes reasonix-plugin.json and rejects a runtime.tools field)
  *  - 10 intercept points (input.receive, context.prepare, tool.before/after,
  *    permission.decision, session.start/end, compaction.prepare,
  *    system_prompt.build, agent.before_start)

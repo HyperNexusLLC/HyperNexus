@@ -1,4 +1,26 @@
 
+# HANDOFF - 36-harness dual-model rollout (v1.0.28)
+
+## Session HR (2026-11-05) - harness rollout [meta/muse-wonder-1.0-contributor in muse-cli in ~/workspace/HyperNexus]
+
+### Done
+- Audited all 36 requested harnesses (18 CLI + 18 GUI) via parallel workflow; hermetic batteries green nearly everywhere (pi 10/10, copilot-cli 12/12, opencode 9/9, codex-cli 9/9, claude 8/8, muse 7/7, jcode check OK, droid 73 pass, all 15 GUI addons 8/8 + 9/9 live-health). 403 rule verified: no bash/powershell tool definitions in any harness config; parity tools only.
+- Live proof: `muse exec` -> `HN-LIVE-OK` (spark, muse-cli own auth path). Kernel swapped from month-old 1.0.0-b1 (pid 30972, stopped via its own `/api/shutdown`) to workspace v1.0.28 build (pid 28660): `/v1/models` now 200 listing muse-spark models (was 404 for every /v1 route).
+- Fixes: maki Lua crash fixes (`extensions/maki-hypernexus/lua/` - pcall nil provider + permission_scopes), reasonix v1.39.4 compat (`addons/reasonix/`), copilot plugin version 1.0.28, 6 GUI README `healthz`->`health`, open-interpreter installed via `uv tool` (py3.12).
+- New addons: `addons/t3code-gui/`, `addons/conductor-gui/`, `addons/cursor-glass-gui/` (mirroring mimocode-gui, batteries 8/8). Manifest now 40 harnesses @ 1.0.28 with battery-path corrections (maki/hax = repo-root `bin/`, prime-agent battery files do not exist).
+- Cross-session control: kernel memory-facts dispatch + readback verified (fact round-trip 200/201). CDP 9222 Edge up with muse.ai tab; coordination message composed (identity: "meta/muse-wonder-1.0-contributor" in "muse-cli").
+
+### Single human blocker
+- **Run `/login meta` in pi once.** `~/.pi/agent/auth.json` has no `meta` entry, so every `meta-muse-key.mjs` mint fails and kernel inference returns 503 `no Meta credential`. This blocks live spark/wonder proofs in all harnesses except muse-cli. After login: re-run any battery `--live`, plus POST `/v1/chat/completions` (a) bash-named tool vs (b) parity-only tools for the live 403 bisection (documented claim in `addons/codex/meta-model.codex.md`, not re-verified this run).
+
+### Known gaps (see TODO)
+- Installed-path exe `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` still the old build - file locked by a pre-existing `hypernexus.exe mcp` process (pid 26812, not ours, left running). Running kernel is the workspace `bin\hypernexus.exe` v1.0.28. Replace the installed exe after pid 26812 ends.
+- Native cross-session execution still 404 (`/api/agent/orchestrate`); TS upstream on :4000 down. Control plane = memory facts + per-harness orchestrator skills.
+- GUI apps not installed: juggler, openchamber, paseo, paradev, omnigent, t3code, conductor, openwebui (staged configs ready). Antigravity real config still points at legacy tormentnexus MCP.
+- mimocode.jsonc contains a pre-existing plaintext provider apiKey - rotate/move to env.
+
+---
+
 # HANDOFF - Repo sync & intelligent merge (v1.0.28)
 
 ## Session RS (2026-11-05) - repo synchronization [muse-code in ~/workspace/HyperNexus]

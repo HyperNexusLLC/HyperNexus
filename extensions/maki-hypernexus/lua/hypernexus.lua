@@ -183,6 +183,12 @@ end
 local TOOLS = {}
 
 local function reg(spec)
+  -- maki >=0.5.6: a tool declaring `permission` must also declare
+  -- `permission_scopes`. HyperNexus tools only call the loopback kernel
+  -- (no filesystem paths), so the default scope set is empty.
+  if spec.permission and spec.permission_scopes == nil then
+    spec.permission_scopes = function(input) return {} end
+  end
   TOOLS[#TOOLS + 1] = spec
   maki.api.register_tool(spec)
 end
@@ -599,7 +605,7 @@ reg({
     type = "object",
     properties = {
       tool = { type = "string", description = "Tool name, e.g. mcp__docs__read" },
-      args = { type = "object", description = "Tool arguments object" },
+      args = { type = "object", properties = {}, description = "Tool arguments object" },
     },
     required = { "tool" },
   },

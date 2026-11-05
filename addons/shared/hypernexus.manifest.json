@@ -2,7 +2,7 @@
  "$schema": "https://hypernexus.site/schemas/extension-manifest.v1.json",
  "name": "hypernexus",
  "displayName": "HyperNexus",
- "version": "1.0.27",
+ "version": "1.0.28",
  "description": "Universal AI control plane integration: persistent multi-tier memory (L1/L2/L3), semantic MCP tool discovery across 26k+ tools, knowledge graph, session import, skill registry, code search, and agent orchestration.",
  "kind": "harness-extension",
  "generatedFor": "multi-harness + autonomous-orchestration",
@@ -75,7 +75,7 @@
    "status": "active",
    "api": "Jcode MCP manager (mcpServers stdio config) + skills / commands / hooks / prompt-overlay / preferred-tools / swarm-prompt surfaces",
    "adapter": "addons/jcode/",
-   "install": "<project>/.jcode/ or ~/.jcode/ \u00e2\u20ac\u201d mcp.json, skills/, prompt-overlay.md, preferred-tools.md, swarm-prompt.md block",
+   "install": "<project>/.jcode/ or ~/.jcode/ â€” mcp.json, skills/, prompt-overlay.md, preferred-tools.md, swarm-prompt.md block",
    "installer": "addons/jcode/install.mjs",
    "surfaces": [
     "mcp",
@@ -117,7 +117,7 @@
    "status": "active",
    "api": "Codewhale MCP manager (mcpServers stdio config) + Agent Plugins v1.0.0 bundle (commands/skills/mcp.json) + skills / prompt-overlay surfaces",
    "adapter": "addons/codewhale/",
-   "install": "<project>/.codewhale/ or ~/.codewhale/ \u00e2\u20ac\u201d mcp.json, plugins/hypernexus/ bundle (plugin.json + plugin.toml + commands/ + skills/), skills/ mirror, AGENTS.md managed block",
+   "install": "<project>/.codewhale/ or ~/.codewhale/ â€” mcp.json, plugins/hypernexus/ bundle (plugin.json + plugin.toml + commands/ + skills/), skills/ mirror, AGENTS.md managed block",
    "installer": "addons/codewhale/install.mjs",
    "surfaces": [
     "mcp",
@@ -132,7 +132,7 @@
    "status": "active",
    "api": "Crush crushrc (Bash config) + MCP stdio + skills + PreToolUse/SessionStart hooks",
    "adapter": "addons/crush/",
-   "install": "~/.config/crush/ (global) or <project>/.crush/ \u00e2\u20ac\u201d crushrc managed block, skills/, commands/, hooks/, prompt-overlay.md, preferred-tools.md",
+   "install": "~/.config/crush/ (global) or <project>/.crush/ â€” crushrc managed block, skills/, commands/, hooks/, prompt-overlay.md, preferred-tools.md",
    "installer": "addons/crush/install.mjs",
    "surfaces": [
     "mcp",
@@ -149,7 +149,7 @@
    "status": "active",
    "api": "Freebuff/Codebuff platform (.agents/mcp.json stdio + .agents/skills SKILL.md + AGENTS.md overlay; no provider/hook API)",
    "adapter": "addons/freebuff/",
-   "install": "<project>/.agents/ or ~/.agents/ (global) \u00e2\u20ac\u201d mcp.json merge, 16 skills, HYPERNEXUS.md, AGENTS.md managed block",
+   "install": "<project>/.agents/ or ~/.agents/ (global) â€” mcp.json merge, 16 skills, HYPERNEXUS.md, AGENTS.md managed block",
    "installer": "addons/freebuff/install.mjs",
    "surfaces": [
     "mcp",
@@ -202,7 +202,7 @@
    "status": "active",
    "api": "Claude Code native plugin (.claude-plugin/plugin.json: commands/skills/agents/hooks/mcpServers) + settings.json env (ANTHROPIC_BASE_URL) + kernel Anthropic shim (/v1/messages, /v1/models)",
    "adapter": "addons/claude-code/plugin/hypernexus/",
-   "install": "`node addons/claude-code/install.mjs [--project <dir>|--global]` (plugin + project .mcp.json) \u00e2\u20ac\u201d or `claude --plugin-dir plugin/hypernexus` direct",
+   "install": "`node addons/claude-code/install.mjs [--project <dir>|--global]` (plugin + project .mcp.json) â€” or `claude --plugin-dir plugin/hypernexus` direct",
    "installer": "addons/claude-code/install.mjs",
    "surfaces": [
     "model",
@@ -281,7 +281,8 @@
     "mcp:hypernexus stdio",
     "skills:4",
     "provider:meta"
-   ]
+   ],
+   "notes": " [2026-11-05 audit: battery actually at repo-root bin/test-maki-ext.mjs (60 checks).]"
   },
   "harness2": {
    "status": "active",
@@ -294,7 +295,7 @@
     "mcp",
     "meta-model"
    ],
-   "notes": "Solver/improver/codex/judge model env (meta/muse-spark-1.3-contributor, judge via kernel proxy http://127.0.0.1:7778/v1). Judge key minted LIVE per shell via bin/meta-muse-key.mjs into META_API_KEY/HARNESS2_JUDGE_API_KEY (never setx/stored; .meta.access is short-lived). MCP stdio sample in mcp.json for bridges; harness2 itself consumes the kernel over HTTP. No hook API \u00e2\u20ac\u201d hooks not registered. ~/workspace/harness2; jb/oc Ready. Battery addons/harness2/bin/test-harness2-ext.mjs."
+   "notes": "Solver/improver/codex/judge model env (meta/muse-spark-1.3-contributor, judge via kernel proxy http://127.0.0.1:7778/v1). Judge key minted LIVE per shell via bin/meta-muse-key.mjs into META_API_KEY/HARNESS2_JUDGE_API_KEY (never setx/stored; .meta.access is short-lived). MCP stdio sample in mcp.json for bridges; harness2 itself consumes the kernel over HTTP. No hook API â€” hooks not registered. ~/workspace/harness2; jb/oc Ready. Battery addons/harness2/bin/test-harness2-ext.mjs."
   },
   "atom": {
    "status": "active",
@@ -308,7 +309,7 @@
     "skills",
     "meta-model"
    ],
-   "notes": "58 tools via hypernexus mcp stdio server in ~/.atomcode/mcp.json (kernel exe + root resolved dynamically). 4 skills from plugins/hypernexus/skills. Meta muse-spark-1.3-contributor via [providers.meta] (api_key ${META_API_KEY} union key, base_url kernel proxy http://127.0.0.1:7778/v1, live-minted via bin/meta-muse-key.mjs; pi owns refresh). No hook API \u00e2\u20ac\u201d hooks not registered; /hn-* commands MCP-only. Proof ATOM-META-OK. Battery addons/atom/bin/test-atom-ext.mjs. Core works without the extension over HTTP http://127.0.0.1:7778."
+   "notes": "58 tools via hypernexus mcp stdio server in ~/.atomcode/mcp.json (kernel exe + root resolved dynamically). 4 skills from plugins/hypernexus/skills. Meta muse-spark-1.3-contributor via [providers.meta] (api_key ${META_API_KEY} union key, base_url kernel proxy http://127.0.0.1:7778/v1, live-minted via bin/meta-muse-key.mjs; pi owns refresh). No hook API â€” hooks not registered; /hn-* commands MCP-only. Proof ATOM-META-OK. Battery addons/atom/bin/test-atom-ext.mjs. Core works without the extension over HTTP http://127.0.0.1:7778."
   },
   "agy": {
    "status": "active",
@@ -334,7 +335,7 @@
     "commands",
     "meta-model"
    ],
-   "notes": "58 tools via hypernexus mcp stdio server in ~/.copilot/mcp-config.json (kernel exe + root resolved dynamically). 3 skills + 11 hn-* command-skills from the copilot plugin bundle. Meta muse-spark-1.3-contributor opt-in via META_API_KEY union key (live-minted via bin/meta-muse-key.mjs; pi owns refresh). No hook API \u00e2\u20ac\u201d hooks not registered. Login interactive; models GitHub-side. Battery addons/copilot-cli/bin/test-copilot-cli-ext.mjs. Core works without the extension over HTTP http://127.0.0.1:7778."
+   "notes": "58 tools via hypernexus mcp stdio server in ~/.copilot/mcp-config.json (kernel exe + root resolved dynamically). 3 skills + 11 hn-* command-skills from the copilot plugin bundle. Meta muse-spark-1.3-contributor opt-in via META_API_KEY union key (live-minted via bin/meta-muse-key.mjs; pi owns refresh). No hook API â€” hooks not registered. Login interactive; models GitHub-side. Battery addons/copilot-cli/bin/test-copilot-cli-ext.mjs. Core works without the extension over HTTP http://127.0.0.1:7778."
   },
   "copilot": {
    "status": "active",
@@ -394,7 +395,7 @@
     "subagents",
     "sessions-jsonl"
    ],
-   "notes": "Meta Muse Spark via pi OAuth (HAX_META_API_KEY live-read from pi auth.json by scripts/meta-env.sh; key never in config.json). hn.mjs CLI covers all 31 manifest capabilities (true published endpoints; stale /api/memory/stats, /api/routes, /api/memory/update, /api/memory/delete, /api/memory/handoff remapped). 11 @-mentionable command files. hn-worker subagent preset. Turn scripts mirror the 10 hook contracts outside-process. Battery: bin/test-hax-ext.mjs (70 checks)."
+   "notes": "Meta Muse Spark via pi OAuth (HAX_META_API_KEY live-read from pi auth.json by scripts/meta-env.sh; key never in config.json). hn.mjs CLI covers all 31 manifest capabilities (true published endpoints; stale /api/memory/stats, /api/routes, /api/memory/update, /api/memory/delete, /api/memory/handoff remapped). 11 @-mentionable command files. hn-worker subagent preset. Turn scripts mirror the 10 hook contracts outside-process. Battery: bin/test-hax-ext.mjs (70 checks). [2026-11-05 audit: battery actually at repo-root bin/test-hax-ext.mjs; addons/hax/bin contains only meta-muse-key.mjs.]"
   },
   "prime-agent": {
    "status": "active",
@@ -412,7 +413,7 @@
     "prompt-overlay",
     "meta-model"
    ],
-   "notes": "35 typed async skill calls + 58 MCP stdio tools; 9 skill dirs + 8 hn commands + hn-observe/hn-gate hooks + dispatcher agent + standup schedule. Meta muse-spark-1.3-contributor via sync-meta-oauth.py (pi auth.json OAuth block verbatim, kernel proxy POST /api.meta.ai/v1/responses). Battery: bin/test-prime-agent-ext.mjs + tests/test_prime_agent_ext.py."
+   "notes": "35 typed async skill calls + 58 MCP stdio tools; 9 skill dirs + 8 hn commands + hn-observe/hn-gate hooks + dispatcher agent + standup schedule. Meta muse-spark-1.3-contributor via sync-meta-oauth.py (pi auth.json OAuth block verbatim, kernel proxy POST /api.meta.ai/v1/responses). Battery: bin/test-prime-agent-ext.mjs + tests/test_prime_agent_ext.py. [2026-11-05 audit: manifest-listed battery files bin/test-prime-agent-ext.mjs and tests/test_prime_agent_ext.py do not exist on disk; hermetic install/check verified, battery pending.]"
   },
   "codex-gui": {
    "status": "active",
@@ -617,18 +618,66 @@
     "swarm"
    ],
    "notes": "Dual-model: meta/muse-wonder-1.0-contributor primary, meta/muse-spark-1.3-contributor alt via kernel proxy with live pi-OAuth mint; 8 hn-* commands incl hn-swarm/hn-report; shell tools disabled (Meta 403), parity tools minimal."
+  },
+  "t3code-gui": {
+   "status": "active",
+   "api": "T3 Code GUI (OpenAI-compatible provider + MCP stdio)",
+   "adapter": "addons/t3code-gui/",
+   "install": "<project>/.t3code-gui/ or ~/.t3code-gui/ via addons/t3code-gui/install.mjs",
+   "installer": "addons/t3code-gui/install.mjs",
+   "surfaces": [
+    "mcp",
+    "provider",
+    "skills",
+    "commands",
+    "hooks",
+    "meta-model"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server (staged .t3code-gui/ config; real app config format not discoverable in-repo, import staged files after installing the app). Spark default + wonder altModel via kernel proxy http://127.0.0.1:7778/v1; pi-OAuth live mint via minter shim (pi owns refresh). Shell (bash/powershell) tools disabled - HyperNexus parity tools only (403 attestation rule). Battery addons/t3code-gui/bin/test-t3code-gui-ext.mjs 8/8 hermetic + 9/9 --live kernel health."
+  },
+  "conductor-gui": {
+   "status": "active",
+   "api": "Conductor GUI (OpenAI-compatible provider + MCP stdio)",
+   "adapter": "addons/conductor-gui/",
+   "install": "<project>/.conductor-gui/ or ~/.conductor-gui/ via addons/conductor-gui/install.mjs",
+   "installer": "addons/conductor-gui/install.mjs",
+   "surfaces": [
+    "mcp",
+    "provider",
+    "skills",
+    "commands",
+    "hooks",
+    "meta-model"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server (staged .conductor-gui/ config; real app config format not discoverable in-repo, import staged files after installing the app). Spark default + wonder altModel via kernel proxy http://127.0.0.1:7778/v1; pi-OAuth live mint via minter shim (pi owns refresh). Shell (bash/powershell) tools disabled - HyperNexus parity tools only (403 attestation rule). Battery addons/conductor-gui/bin/test-conductor-gui-ext.mjs 8/8 hermetic + 9/9 --live kernel health."
+  },
+  "cursor-glass-gui": {
+   "status": "active",
+   "api": "Cursor Glass GUI (OpenAI-compatible provider + MCP stdio)",
+   "adapter": "addons/cursor-glass-gui/",
+   "install": "<project>/.cursor-glass-gui/ or ~/.cursor-glass-gui/ via addons/cursor-glass-gui/install.mjs",
+   "installer": "addons/cursor-glass-gui/install.mjs",
+   "surfaces": [
+    "mcp",
+    "provider",
+    "skills",
+    "commands",
+    "hooks",
+    "meta-model"
+   ],
+   "notes": "58 tools via hypernexus mcp stdio server (staged .cursor-glass-gui/ config; real app config format not discoverable in-repo, import staged files after installing the app). Spark default + wonder altModel via kernel proxy http://127.0.0.1:7778/v1; pi-OAuth live mint via minter shim (pi owns refresh). Shell (bash/powershell) tools disabled - HyperNexus parity tools only (403 attestation rule). Battery addons/cursor-glass-gui/bin/test-cursor-glass-gui-ext.mjs 8/8 hermetic + 9/9 --live kernel health."
   }
  },
  "contract": {
   "hotPathBudgetMs": 400,
   "defaultBudgetMs": 2500,
   "rules": [
-   "Every kernel call is budgeted (AbortSignal.timeout) and never throws \u00e2\u20ac\u201d a hung kernel degrades to a short note, never stalls a turn.",
+   "Every kernel call is budgeted (AbortSignal.timeout) and never throws â€” a hung kernel degrades to a short note, never stalls a turn.",
    "Hot-path hooks (before_agent_start / context / input) use FTS-only search (/api/memory/fts-search, ~15ms) within hotPathBudgetMs. Never call the full /api/memory/search (~800ms vector+embed) on a hot path.",
-   "Side-effect writes on per-event hooks (audit log, memory store) are fire-and-forget \u00e2\u20ac\u201d do not await them in the turn path.",
+   "Side-effect writes on per-event hooks (audit log, memory store) are fire-and-forget â€” do not await them in the turn path.",
    "Explicit user-invoked tools may use the full semantic search and defaultBudgetMs.",
    "Normalize kernel response shapes at the adapter boundary so harness code never reads `data[].record` vs `data[]` differences.",
-   "Meta subscription attestation (muse-spark): never include bash/powershell/shell-execution tools in model requests \u00e2\u20ac\u201d attestation denies them with 403 client_attestation_denied even with a fresh key. Use HyperNexus parity tools (read/edit/write/grep/find/ls, memory_*, mcp_*) with minimal descriptions instead."
+   "Meta subscription attestation (muse-spark): never include bash/powershell/shell-execution tools in model requests â€” attestation denies them with 403 client_attestation_denied even with a fresh key. Use HyperNexus parity tools (read/edit/write/grep/find/ls, memory_*, mcp_*) with minimal descriptions instead."
   ]
  },
  "capabilities": [
@@ -796,7 +845,7 @@
    "id": "tool_search",
    "name": "Tool discovery (semantic)",
    "category": "discovery",
-   "description": "Describe what you need \u00e2\u20ac\u201d find the best tool across 26k+ MCP tools by meaning.",
+   "description": "Describe what you need â€” find the best tool across 26k+ MCP tools by meaning.",
    "kernel": {
     "method": "GET",
     "path": "/api/mcp/native/search?query=<query>"

@@ -42,3 +42,12 @@
 - [ ] **Git LFS for runtime DBs**: `data/tormentnexus.db` (210MB), `data/catalog.db` (52MB), `.tormentnexus/skills.db` (49MB) exceed GitHub's 100MB file limit and stay untracked until LFS is adopted.
 - [ ] **Archive or delete** `feature/cloud-dashboard-mcp-sse-389806464713532918` (unrelated history, superseded layout, features already in main) once archival need lapses; kept for now per retention policy.
 - [ ] Prune stale remote-tracking refs `origin-tormentnexus/*` and `robertpelloni/*` (remotes no longer configured).
+
+## Harness Rollout (2026-11-05, v1.0.28)
+
+- [ ] **`/login meta` in pi** (human, interactive): unblocks live Meta inference in all harnesses except muse-cli; then re-run one `--live` battery + the bash-tool vs parity-tool 403 bisection against `/v1/chat/completions`.
+- [ ] Replace `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` with the v1.0.28 build once the pre-existing `hypernexus.exe mcp` process (pid 26812) ends; running kernel is workspace `bin\hypernexus.exe` (pid 28660).
+- [ ] Install missing GUI apps or accept staged configs: juggler, openchamber, paseo, paradev, omnigent, t3code, conductor, openwebui; retarget antigravity-gui installer at the real Antigravity `mcp.json`.
+- [ ] Native cross-session execution: kernel `/api/agent/orchestrate` 404 - needs TS upstream (:4000) or native Go orchestrate; memory-facts control plane works meanwhile.
+- [ ] Rotate the pre-existing plaintext provider apiKey in `~/.config/mimocode/mimocode.jsonc` to an env ref.
+- [ ] prime-agent CLI has no documented one-command install; hax CLI likewise (addons hermetic-only until binaries exist).

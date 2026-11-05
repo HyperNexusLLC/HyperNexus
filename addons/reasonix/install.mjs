@@ -190,8 +190,11 @@ function checkTree() {
   if (manifest) {
     ok("reasonix-plugin.json apiVersion", manifest.apiVersion === "reasonix.io/plugin/v2", manifest?.apiVersion);
     ok("reasonix-plugin.json name", manifest.name === "hypernexus", manifest?.name);
-    const tools = (manifest.runtime?.tools ?? []).map((t) => t.name);
-    for (const t of EXPECTED_TOOLS) ok(`runtime.tools[] ${t}`, tools.includes(t), "missing from manifest");
+    // reasonix v1.39+ strict-decodes the manifest and rejects runtime.tools;
+    // the sidecar declares its tools in the extension/initialize handshake.
+    const sidecarSrc = readIfExists(path.join(__dirname, "runtime", "bin", "hypernexus-reasonix.mjs")) ?? "";
+    const tools = [...(sidecarSrc.match(/const TOOL_NAMES = \[([^\]]*)\]/)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+    for (const t of EXPECTED_TOOLS) ok(`sidecar TOOL_NAMES ${t}`, tools.includes(t), "missing from sidecar");
     const intercepts = manifest.runtime?.intercepts ?? [];
     for (const i of ["input.receive", "tool.before", "tool.after", "permission.decision", "session.start"]) {
       ok(`runtime.intercepts[] ${i}`, intercepts.includes(i), "missing");
@@ -203,12 +206,12 @@ function checkTree() {
   ok("runtime/bin/hypernexus-reasonix.mjs", fs.existsSync(path.join(__dirname, "runtime", "bin", "hypernexus-reasonix.mjs")));
   for (const s of SKILLS) {
     const p = path.join(__dirname, "skills", s, "SKILL.md");
-    const body = readIfExists(p) ?? "";
+    const body = (readIfExists(p) ?? "").replace(/\r\n/g, "\n");
     ok(`skills/${s}/SKILL.md`, body.startsWith("---\nname: ") && /description:/.test(body.slice(0, 600)), "bad frontmatter");
   }
   for (const c of COMMANDS) {
     const p = path.join(__dirname, "commands", `${c}.md`);
-    const body = readIfExists(p) ?? "";
+    const body = (readIfExists(p) ?? "").replace(/\r\n/g, "\n");
     ok(`commands/${c}.md`, body.startsWith("---\n") && /description:/.test(body.slice(0, 600)), "bad frontmatter");
   }
   ok("agents/hypernexus-orchestrator.md", fs.existsSync(path.join(__dirname, "agents", "hypernexus-orchestrator.md")));

@@ -256,7 +256,7 @@ end
 
 -- Guard: global + project init.lua both require this module.
 -- maki sandboxes _G readonly, so pcall-skip on duplicate registration.
-local ok_reg, err_reg = pcall(maki.provider.register, {
+local ok_reg, err_reg = pcall(function() return maki.provider.register({
   slug = "meta",
   display_name = "Meta (Muse subscription)",
   codec = "openai-responses",
@@ -280,10 +280,12 @@ local ok_reg, err_reg = pcall(maki.provider.register, {
     end
     return nil
   end,
-})
+}) end)
 if not ok_reg then
   if tostring(err_reg):find("already registered") then
     log_info("meta provider already registered (global+project double-load skipped)")
+  elseif tostring(err_reg):find("attempt to index") then
+    log_info("meta provider API unavailable in this maki context; registration skipped")
   else
     error(err_reg)
   end
