@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.28] - 2026-11-05
+
+### Changed
+- **Repository synchronization**: fast-forwarded local `main` to remote `main` (258 commits, v1.0.27 line); preserved local cloud-dev fallback WIP on top.
+- **Feature-branch audit**: `feature/cloud-dashboard-mcp-sse-389806464713532918` has unrelated history (no merge base) and a superseded pre-restructure layout; its headline features (L3 cold archive, P2P gossip, skill evolution, remote MCP SSE) already exist in `main`. Branch retained unmerged as archival reference; `clean-main` confirmed fully merged (ancestor).
+- **Submodule bump**: `vendor/deepseek-harness` updated to upstream HEAD `fcc0ad4621` (dsh 0.2.2-rc.1 merge); `vendor/grok-build` and `lumbros.me` already at latest. Structural map regenerated in `docs/SUBMODULES.md`.
+- **Memory/session tracking**: `go/.hypernexus/` session archives (2,750 files, credential-scanned clean), `.tormentnexus/` session state, and `.memory/branches/` are now tracked; `.gitignore` no longer hides memory branches.
+- **Version sync**: VERSION 1.0.27 -> 1.0.28 propagated to 35 package/buildinfo references via `scripts/sync-versions.mjs`.
+
+### Notes
+- Runtime databases (`data/tormentnexus.db` 210MB, `data/catalog.db` 52MB, `.tormentnexus/skills.db` 49MB) remain untracked: they exceed or approach GitHub's 100MB per-file push limit. Git LFS migration is tracked in TODO.md.
+- `go/NUL` (Windows reserved device name) remains untracked; it cannot be committed from Windows and was previously removed from the index for CI.
+
 ## [Unreleased]
 - maki dual-model launcher: META_MODEL env override on one-shot -m flag (default spark, opt-in wonder); live-store check accepts either; live check OK.
 - jcode dual-model launcher: META_MODEL env override on both native and bridge routes (default spark, opt-in wonder); wonder added to legacy toml catalog; no battery in harness.

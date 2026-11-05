@@ -1,0 +1,506 @@
+[
+  {
+    "id": "hyd-1782932766650",
+    "section": "project_context",
+    "key": "go.mod",
+    "content": "module github.com/MDMAtk/HyperNexus\n\ngo 1.26\n\nreplace github.com/NexusSoftMDMA/HyperNexus =\u003e ./\n\nrequire (\n\tgithub.com/NexusSoftMDMA/HyperNexus v0.0.0\n\tgithub.com/charmbracelet/bubbles v1.0.0\n\tgithub.com/charmbracelet/bubbletea v1.3.10\n\tgithub.com/charmbracelet/lipgloss v1.1.0\n\tgithub.com/glebarez/sqlite v1.11.0\n\tgithub.com/go-git/go-git/v5 v5.19.1\n\tgithub.com/gofiber/fiber/v2 v2.52.13\n\tgithub.com/gofiber/websocket/v2 v2.2.1\n\tgithub.com/google/uuid v1.6.0\n\tgithub.com/gorilla/websocket v1.5.3\n\tgithub.com/mark3labs/mcp-go v0.46.0\n\tgithub.com/sashabaranov/go-openai v1.41.2\n\tgithub.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3\n\tgithub.com/spf13/cobra v1.10.2\n\tgithub.com/wailsapp/wails/v2 v2.12.0\n\tgolang.org/x/sys v0.44.0\n\tgorm.io/gorm v1.31.2\n\tmodernc.org/sqlite v1.48.0\n)\n\nrequire (\n\tdario.cat/mergo v1.0.0 // indirect\n\tgit.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect\n\tgithub.com/Microsoft/go-winio v0.6.2 // indirect\n\tgithub.com/ProtonMail/go-crypto v1.1.6 // indirect\n\tgithub.com/andybalholm/brotli v1.1.0 // indirect\n\tgithub.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect\n\tgithub.com/bep/debounce v1.2.1 // indirect\n\tgithub.com/charmbracelet/colorprofile v0.4.1 // indirect\n\tgithub.com/charmbracelet/x/ansi v0.11.6 // indirect\n\tgithub.com/charmbracelet/x/cellbuf v0.0.15 // indirect\n\tgithub.com/charmbracelet/x/term v0.2.2 // indirect\n\tgithub.com/clipperhouse/displaywidth v0.9.0 // indirect\n\tgithub.com/clipperhouse/stringish v0.1.1 // indirect\n\tgithub.com/clipperhouse/uax29/v2 v2.5.0 // indirect\n\tgithub.com/cloudflare/circl v1.6.3 // indirect\n\tgithub.com/cyphar/filepath-securejoin v0.6.1 // indirect\n\tgithub.com/dustin/go-humanize v1.0.1 // indirect\n\tgithub.com/emirpasic/gods v1.18.1 // indirect\n\tgithub.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect\n\tgithub.com/fasthttp/websocket v1.5.3 // indirect\n\tgithub.com/glebarez/go-sqlite v1.21.2 // indirect\n\tgithub.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect\n\tgithub.com/go-git/go-billy/v5 v5.9.0 // indirect\n\tgithub.com/go-ole/go-ole v1.3.0 // indirect\n\tgithub.com/godbus/dbus/v5 v5.1.0 // indirect\n\tgithub.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect\n\tgithub.com/google/jsonschema-go v0.4.2 // indirect\n\tgithub.com/inconshreveable/mousetrap v1.1.0 // indirect\n\tgithub.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect\n\tgithub.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect\n\tgithub.com/jinzhu/inflection v1.0.0 // indirect\n\tgithub.com/jinzhu/now v1.1.5 // indirect\n\tgithub.com/kevinburke/ssh_config v1.2.0 // indirect\n\tgithub.com/klauspost/compress v1.17.9 // indirect\n\tgithub.com/klauspost/cpuid/v2 v2.3.0 // indirect\n\tgithub.com/labstack/echo/v4 v4.13.3 // indirect\n\tgithub.com/labstack/gommon v0.4.2 // indirect\n\tgithub.com/leaanthony/go-ansi-parser v1.6.1 // indirect\n\tgithub.com/leaanthony/gosod v1.0.4 // indirect\n\tgithub.com/leaanthony/slicer v1.6.0 // indirect\n\tgithub.com/leaanthony/u v1.1.1 // indirect\n\tgithub.com/lucasb-eyer/go-colorful v1.3.0 // indirect\n\tgithub.com/mattn/go-colorable v0.1.13 // indirect\n\tgithub.com/mattn/go-isatty v0.0.20 // indirect\n\tgithub.com/mattn/go-localereader v0.0.1 // indirect\n\tgithub.com/mattn/go-runewidth v0.0.19 // indirect\n\tgithub.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect\n\tgithub.com/muesli/cancelreader v0.2.2 // indirect\n\tgithub.com/muesli/termenv v0.16.0 // indirect\n\tgithub.com/ncruces/go-strftime v1.0.0 // indirect\n\tgithub.com/pjbgf/sha1cd v0.6.0 // indirect\n\tgithub.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect\n\tgithub.com/pkg/errors v0.9.1 // indirect\n\tgithub.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect\n\tgithub.com/rivo/uniseg v0.4.7 // indirect\n\tgithub.com/samber/lo v1.49.1 // indirect\n\tgithub.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect\n\tgithub.com/skeema/knownhosts v1.3.1 // indirect\n\tgithub.com/spf13/cast v1.7.1 // indirect\n\tgithub.com/spf13/pflag v1.0.9 // indirect\n\tgithub.com/tkrajina/go-reflector v0.5.8 // indirect\n\tgithub.com/valyala/bytebufferpool v1.0.0 // indirect\n\tgithub.com/valyala/fasthttp v1.51.0 // indirect\n\tgithub.com/valyala/fasttemplate v1.2.2 // indirect\n\tgithub.com/valyala/tcplisten v1.0.0 // indirect\n\tgithub.com/wailsapp/go-webview2 v1.0.22 // indirect\n\tgithub.com/wailsapp/mimetype v1.4.1 // indirect\n\tgithub.com/xanzy/ssh-agent v0.3.3 // indirect\n\tgithub.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect\n\tgithub.com/yosida95/uritemplate/v3 v3.0.2 // indirect\n\tgolang.org/x/crypto v0.50.0 // indirect\n\tgolang.org/x/net v0.53.0 // indirect\n\tgolang.org/x/text v0.36.0 // indirect\n\tgopkg.in/warnings.v0 v0.1.2 // indirect\n\tmodernc.org/libc v1.70.0 // indirect\n\tmodernc.org/mathutil v1.7.1 // indirect\n\tmodernc.org/memory v1.11.0 // indirect\n)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "module",
+      "dependencies"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766651",
+    "section": "project_context",
+    "key": "package.json",
+    "content": "Project: hypernexus-monorepo, Version: 1.0.0-alpha.209",
+    "source": "file-scan",
+    "tags": [
+      "node",
+      "package",
+      "version"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766656",
+    "section": "architecture",
+    "key": "top-level-structure",
+    "content": "Workspace top-level directories: __pycache__, apps, auth, bin, browser-use, cli, cli-tools, context_portal, data, docs, go, hermes-addons, lancedb, landing, logs, mcp-all, mcp-assimilation, mcp-servers, memory-bank, misc, node_modules, opencode-core, packages, research, scratch, scripts, skill-registry, taskplane-tasks",
+    "source": "directory-scan",
+    "tags": [
+      "architecture",
+      "structure"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766657",
+    "section": "architecture",
+    "key": "go-internal-packages",
+    "content": "Go internal packages: _mcpcheck, ai, autotest, buffer, buildinfo, cache, catalogingestor, catalogvalidator, citation, codeexec, config, connectionpool, contextpruner, controlplane, ctxharvester, enterprise, eventbus, flightrecorder, git, gitservice, googleworkspace, gossip, graph, harnesses, healer, hsync, httpapi, interop, knowledge, license, llm, lockfile, marketplace, mcp, mcpimpl, memory, memorystore, mesh, metrics, orchestration, process, projects, projecttracker, protocol, providers, repograph, research, session, sessionimport, skillregistry, submodules, supervisor, symbolpin, sync, systray, toolregistry, tools, toon, vault, workflow, workspaces",
+    "source": "directory-scan",
+    "tags": [
+      "go",
+      "architecture",
+      "packages"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766657",
+    "section": "architecture",
+    "key": "nextjs-routes",
+    "content": "Next.js dashboard routes: api, auth, dashboard, docs, forgot-password, guide, login, reset-password, signup",
+    "source": "directory-scan",
+    "tags": [
+      "nextjs",
+      "routes",
+      "dashboard"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766658",
+    "section": "agent_instructions",
+    "key": "AGENTS.md",
+    "content": "# AGENTS — HyperNexus Kernel \u0026 HyperNexus Contributor Guide\r\n\r\n\u003e **CRITICAL: ALL AGENTS MUST READ `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` BEFORE PROCEEDING.**\r\n\r\nThis file serves as the primary coordination point for multi-agent workflows and human operators.\r\n\r\n---\r\n\r\n## 1. Multi-Agent Handoff Protocol\r\n- Agents communicate primarily through `HANDOFF.md`.\r\n- Document exactly what you did, what failed, and what the next agent must do.\r\n- Update `MEMORY.md` with new systemic observations or recurring bugs.\r\n- **Cycle**: Read → Strategize → Execute → Validate → Commit → Handoff.\r\n\r\n---\r\n\r\n## 2. Model Specializations\r\n\r\n| Model | Strengths | Focus Areas |\r\n|---|---|---|\r\n| **Gemini** | Speed, massive context processing, repo maintenance | Bulk refactoring, recursive scripts, context analysis |\r\n| **Claude** | UI/UX perfection, documentation, deep feature execution | Responsive layouts, type safety, precise documentation |\r\n| **GPT** | Systemic architecture, distributed debugging, race conditions | Go/TS bridge contracts, DB migration, concurrency safety |\r\n\r\n---\r\n\r\n## 3. Session Protocol\r\n\r\n### Session Start\r\n1. Read `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` to load canonical rules.\r\n2. Read the `VERSION` file to check dashboard synchronization.\r\n3. Read `HANDOFF.md` to resume exactly where the previous agent left off.\r\n4. Read `MEMORY.md` to review accumulated multi-agent insights.\r\n5. Run git checks to ensure workspace cleanliness.\r\n\r\n### During Execution\r\n- Work autonomously unless changes are destructive or highly ambiguous.\r\n- Prefer small, incremental, easily verifiable commits.\r\n- Ensure loading, error, and empty states are represented across all dashboard interfaces.\r\n- After any `pnpm install`, run `pnpm rebuild better-sqlite3` on Node 24.\r\n\r\n### Session End\r\n1. Update `HANDOFF.md` with a complete, detailed session summary.\r\n2. Update `MEMORY.md` with new developer observations or gotchas.\r\n3. Bump the `VERSION` file and synchronize workspaces using `node scripts/sync-versions.mjs`.\r\n4. Update `CHANGELOG.md` with recent feature implementations.\r\n5. Commit clean changes with version tag: `feat: description (v1.0.0-alpha.X)`.\r\n6. Push commits to `origin` and `hypernexus-upstream` remotes.\r\n\r\n---\r\n\r\n## 4. Required Runtime Ports\r\n\r\n| Service | Port | Purpose |\r\n|---|---|---|\r\n| Next.js Dashboard | 3000 | Web observation deck |\r\n| Socket.io | 3001 | Real-time swarm signals |\r\n| tRPC Bridge | 4100 | TypeScript Control Plane API |\r\n| HyperNexus Go Kernel | 4300 | Authoritative native sidecar |\r\n\r\n*Praise the LORD! Keep on going! Don't ever stop! Don't stop the party!!!*\r\n",
+    "source": "file-scan",
+    "tags": [
+      "agents",
+      "instructions",
+      "guidelines"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766660",
+    "section": "configuration",
+    "key": "go-main-entrypoint",
+    "content": "package main\n\nimport (\n\t\"bytes\"\n\t\"context\"\n\t\"encoding/json\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io\"\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"strings\"\n\t\"time\"\n\n\t\"github.com/MDMAtk/HyperNexus/internal/buildinfo\"\n\t\"github.com/MDMAtk/HyperNexus/internal/config\"\n\t\"github.com/MDMAtk/HyperNexus/internal/controlplane\"\n\t\"github.com/MDMAtk/HyperNexus/internal/httpapi\"\n\t\"github.com/MDMAtk/HyperNexus/internal/license\"\n\t\"github.com/MDMAtk/HyperNexus/internal/lockfile\"\n\t\"github.com/MDMAtk/HyperNexus/internal/protocol\"\n\t\"github.com/MDMAtk/HyperNexus/internal/sessionimport\"\n\t\"path/filepath\"\n)\n\nfunc main() {\n\tos.Exit(run(os.Args[1:]))\n}\n\nfunc run(args []string) int {\n\tcommand := \"serve\"\n\tif len(args) \u003e 0 {\n\t\tif strings.HasPrefix(args[0], \"hypernexus://\") {\n\t\t\treturn runDeepLink(args[0])\n\t\t}\n\t\tswitch args[0] {\n\t\tcase \"serve\", \"version\", \"start\", \"stop\", \"status\", \"mcp\", \"register-protocol\":\n\t\t\tcommand = args[0]\n\t\t\targs = args[1:]\n\t\t}\n\t}\n\n\tswitch command {\n\tcase \"version\":\n\t\tfmt.Println(buildinfo.Version)\n\t\treturn 0\n\tcase \"serve\":\n\t\treturn runServe(args)\n\tcase \"start\":\n\t\treturn cmdStart(args)\n\tcase \"stop\":\n\t\treturn cmdStop(args)\n\tcase \"status\":\n\t\treturn cmdStatus(args)\n\tcase \"mcp\":\n\t\treturn cmdMCP(args)\n\tcase \"register-protocol\":\n\t\treturn cmdRegisterProtocol(args)\n\tdefault:\n\t\tlog.Printf(\"unknown command %q\", command)\n\t\treturn 1\n\t}\n}\n\nfunc cmdRegisterProtocol(args []string) int {\n\tlog.Printf(\"Registering hypernexus:// protocol handler...\")\n\tif err := protocol.RegisterProtocol(); err != nil {\n\t\tlog.Printf(\"[ERROR] failed to register protocol handler: %v\", err)\n\t\treturn 1\n\t}\n\tlog.Printf(\"Successfully registered hypernexus:// protocol handler in Windows registry.\")\n\treturn 0\n}\n\nfunc runDeepLink(deepLink string) int {\n\tcfg := config.Default()\n\trecord, err := lockfile.Read(cfg.LockPath())\n\tif err != nil {\n\t\tlog.Printf(\"HyperNexus sidecar server is not currently running. Please start it using 'torment\n... (truncated)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "entrypoint"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766661",
+    "section": "configuration",
+    "key": "nextjs-config",
+    "content": "const isDev = process.env.NODE_ENV === \"development\";\nconst isExport = process.env.NEXT_EXPORT === \"true\";\n\n/** @type {import('next').NextConfig} */\nconst nextConfig = {\n\t// Skip static generation for pages that need runtime data\n\toutput: isExport ? \"export\" : \"standalone\",\n\tdistDir: isExport ? \"out\" : (isDev ? \".next-dev\" : \".next-build\"),\n\n\t// Skip static page generation\n\tskipTrailingSlashRedirect: true,\n\t// Allow cross-origin dev requests from Go sidecar proxy\n\tallowedDevOrigins: [\"127.0.0.1\"],\n\n\t// Disable static optimization for all pages\n\timages: {\n\t\tunoptimized: true,\n\t},\n\n\t// Disable strict mode to avoid double renders\n\treactStrictMode: false,\n\n\t// Transpile packages\n\ttranspilePackages: [\"@hypernexus/ui\"],\n\n\t// Turbopack config (Next.js 16 default)\n\tturbopack: {\n\t\troot: require(\"path\").resolve(__dirname, \"..\", \"..\"),\n\t},\n\n\t// Silence type errors during build\n\ttypescript: {\n\t\tignoreBuildErrors: false,\n\t},\n};\n\nmodule.exports = nextConfig;\n",
+    "source": "file-scan",
+    "tags": [
+      "nextjs",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766664",
+    "section": "configuration",
+    "key": "go-config",
+    "content": "package config\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n)\n\ntype Config struct {\n\tHost          string\n\tPort          int\n\tConfigDir     string\n\tMainConfigDir string\n\tWorkspaceRoot string\n}\n\nfunc Default() Config {\n\treturn Config{\n\t\tHost:          \"127.0.0.1\",\n\t\tPort:          7778,\n\t\tConfigDir:     DefaultConfigDir(),\n\t\tMainConfigDir: DefaultMainConfigDir(),\n\t\tWorkspaceRoot: DefaultWorkspaceRoot(),\n\t}\n}\n\nfunc DefaultConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_GO_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus-go\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus-go\")\n}\n\nfunc DefaultMainConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_MAIN_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus\")\n}\n\nfunc DefaultWorkspaceRoot() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_WORKSPACE_ROOT\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\tworkingDir, err := os.Getwd()\n\tif err != nil {\n\t\treturn \".\"\n\t}\n\n\treturn workingDir\n}\n\nfunc (c Config) BaseURL() string {\n\treturn fmt.Sprintf(\"http://%s:%d\", browserHost(c.Host), c.Port)\n}\n\nfunc (c Config) LockPath() string {\n\treturn filepath.Join(c.ConfigDir, \"lock\")\n}\n\nfunc (c Config) MainLockPath() string {\n\treturn filepath.Join(c.MainConfigDir, \"lock\")\n}\n\nfunc (c Config) ImportedInstructionsPath() string {\n\treturn filepath.Join(c.WorkspaceRoot, \".hypernexus\", \"imported_sessions\", \"docs\", \"auto-imported-agent-instructions.md\")\n}\n\nfunc browserHost(host string) string {\n\tswitch host {\n\tcase \"\", \"0.0.0.0\", \"::\", \"[::]\":\n\t\treturn \"127.0.0.1\"\n\tdefault:\n\t\treturn host\n\t}\n}\n",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932766665",
+    "section": "environment",
+    "key": "runtime-context",
+    "content": "{\"arch\":\"amd64\",\"cpuCount\":\"32\",\"os\":\"windows\"}",
+    "source": "runtime-probe",
+    "tags": [
+      "environment",
+      "runtime",
+      "system"
+    ],
+    "createdAt": "2026-07-01T19:06:06Z"
+  },
+  {
+    "id": "hyd-1782932777024",
+    "section": "project_context",
+    "key": "go.mod",
+    "content": "module github.com/MDMAtk/HyperNexus\n\ngo 1.26\n\nreplace github.com/NexusSoftMDMA/HyperNexus =\u003e ./\n\nrequire (\n\tgithub.com/NexusSoftMDMA/HyperNexus v0.0.0\n\tgithub.com/charmbracelet/bubbles v1.0.0\n\tgithub.com/charmbracelet/bubbletea v1.3.10\n\tgithub.com/charmbracelet/lipgloss v1.1.0\n\tgithub.com/glebarez/sqlite v1.11.0\n\tgithub.com/go-git/go-git/v5 v5.19.1\n\tgithub.com/gofiber/fiber/v2 v2.52.13\n\tgithub.com/gofiber/websocket/v2 v2.2.1\n\tgithub.com/google/uuid v1.6.0\n\tgithub.com/gorilla/websocket v1.5.3\n\tgithub.com/mark3labs/mcp-go v0.46.0\n\tgithub.com/sashabaranov/go-openai v1.41.2\n\tgithub.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3\n\tgithub.com/spf13/cobra v1.10.2\n\tgithub.com/wailsapp/wails/v2 v2.12.0\n\tgolang.org/x/sys v0.44.0\n\tgorm.io/gorm v1.31.2\n\tmodernc.org/sqlite v1.48.0\n)\n\nrequire (\n\tdario.cat/mergo v1.0.0 // indirect\n\tgit.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect\n\tgithub.com/Microsoft/go-winio v0.6.2 // indirect\n\tgithub.com/ProtonMail/go-crypto v1.1.6 // indirect\n\tgithub.com/andybalholm/brotli v1.1.0 // indirect\n\tgithub.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect\n\tgithub.com/bep/debounce v1.2.1 // indirect\n\tgithub.com/charmbracelet/colorprofile v0.4.1 // indirect\n\tgithub.com/charmbracelet/x/ansi v0.11.6 // indirect\n\tgithub.com/charmbracelet/x/cellbuf v0.0.15 // indirect\n\tgithub.com/charmbracelet/x/term v0.2.2 // indirect\n\tgithub.com/clipperhouse/displaywidth v0.9.0 // indirect\n\tgithub.com/clipperhouse/stringish v0.1.1 // indirect\n\tgithub.com/clipperhouse/uax29/v2 v2.5.0 // indirect\n\tgithub.com/cloudflare/circl v1.6.3 // indirect\n\tgithub.com/cyphar/filepath-securejoin v0.6.1 // indirect\n\tgithub.com/dustin/go-humanize v1.0.1 // indirect\n\tgithub.com/emirpasic/gods v1.18.1 // indirect\n\tgithub.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect\n\tgithub.com/fasthttp/websocket v1.5.3 // indirect\n\tgithub.com/glebarez/go-sqlite v1.21.2 // indirect\n\tgithub.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect\n\tgithub.com/go-git/go-billy/v5 v5.9.0 // indirect\n\tgithub.com/go-ole/go-ole v1.3.0 // indirect\n\tgithub.com/godbus/dbus/v5 v5.1.0 // indirect\n\tgithub.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect\n\tgithub.com/google/jsonschema-go v0.4.2 // indirect\n\tgithub.com/inconshreveable/mousetrap v1.1.0 // indirect\n\tgithub.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect\n\tgithub.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect\n\tgithub.com/jinzhu/inflection v1.0.0 // indirect\n\tgithub.com/jinzhu/now v1.1.5 // indirect\n\tgithub.com/kevinburke/ssh_config v1.2.0 // indirect\n\tgithub.com/klauspost/compress v1.17.9 // indirect\n\tgithub.com/klauspost/cpuid/v2 v2.3.0 // indirect\n\tgithub.com/labstack/echo/v4 v4.13.3 // indirect\n\tgithub.com/labstack/gommon v0.4.2 // indirect\n\tgithub.com/leaanthony/go-ansi-parser v1.6.1 // indirect\n\tgithub.com/leaanthony/gosod v1.0.4 // indirect\n\tgithub.com/leaanthony/slicer v1.6.0 // indirect\n\tgithub.com/leaanthony/u v1.1.1 // indirect\n\tgithub.com/lucasb-eyer/go-colorful v1.3.0 // indirect\n\tgithub.com/mattn/go-colorable v0.1.13 // indirect\n\tgithub.com/mattn/go-isatty v0.0.20 // indirect\n\tgithub.com/mattn/go-localereader v0.0.1 // indirect\n\tgithub.com/mattn/go-runewidth v0.0.19 // indirect\n\tgithub.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect\n\tgithub.com/muesli/cancelreader v0.2.2 // indirect\n\tgithub.com/muesli/termenv v0.16.0 // indirect\n\tgithub.com/ncruces/go-strftime v1.0.0 // indirect\n\tgithub.com/pjbgf/sha1cd v0.6.0 // indirect\n\tgithub.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect\n\tgithub.com/pkg/errors v0.9.1 // indirect\n\tgithub.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect\n\tgithub.com/rivo/uniseg v0.4.7 // indirect\n\tgithub.com/samber/lo v1.49.1 // indirect\n\tgithub.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect\n\tgithub.com/skeema/knownhosts v1.3.1 // indirect\n\tgithub.com/spf13/cast v1.7.1 // indirect\n\tgithub.com/spf13/pflag v1.0.9 // indirect\n\tgithub.com/tkrajina/go-reflector v0.5.8 // indirect\n\tgithub.com/valyala/bytebufferpool v1.0.0 // indirect\n\tgithub.com/valyala/fasthttp v1.51.0 // indirect\n\tgithub.com/valyala/fasttemplate v1.2.2 // indirect\n\tgithub.com/valyala/tcplisten v1.0.0 // indirect\n\tgithub.com/wailsapp/go-webview2 v1.0.22 // indirect\n\tgithub.com/wailsapp/mimetype v1.4.1 // indirect\n\tgithub.com/xanzy/ssh-agent v0.3.3 // indirect\n\tgithub.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect\n\tgithub.com/yosida95/uritemplate/v3 v3.0.2 // indirect\n\tgolang.org/x/crypto v0.50.0 // indirect\n\tgolang.org/x/net v0.53.0 // indirect\n\tgolang.org/x/text v0.36.0 // indirect\n\tgopkg.in/warnings.v0 v0.1.2 // indirect\n\tmodernc.org/libc v1.70.0 // indirect\n\tmodernc.org/mathutil v1.7.1 // indirect\n\tmodernc.org/memory v1.11.0 // indirect\n)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "module",
+      "dependencies"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777024",
+    "section": "project_context",
+    "key": "package.json",
+    "content": "Project: hypernexus-monorepo, Version: 1.0.0-alpha.209",
+    "source": "file-scan",
+    "tags": [
+      "node",
+      "package",
+      "version"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777028",
+    "section": "architecture",
+    "key": "top-level-structure",
+    "content": "Workspace top-level directories: __pycache__, apps, auth, bin, browser-use, cli, cli-tools, context_portal, data, docs, go, hermes-addons, lancedb, landing, logs, mcp-all, mcp-assimilation, mcp-servers, memory-bank, misc, node_modules, opencode-core, packages, research, scratch, scripts, skill-registry, taskplane-tasks",
+    "source": "directory-scan",
+    "tags": [
+      "architecture",
+      "structure"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777028",
+    "section": "architecture",
+    "key": "go-internal-packages",
+    "content": "Go internal packages: _mcpcheck, ai, autotest, buffer, buildinfo, cache, catalogingestor, catalogvalidator, citation, codeexec, config, connectionpool, contextpruner, controlplane, ctxharvester, enterprise, eventbus, flightrecorder, git, gitservice, googleworkspace, gossip, graph, harnesses, healer, hsync, httpapi, interop, knowledge, license, llm, lockfile, marketplace, mcp, mcpimpl, memory, memorystore, mesh, metrics, orchestration, process, projects, projecttracker, protocol, providers, repograph, research, session, sessionimport, skillregistry, submodules, supervisor, symbolpin, sync, systray, toolregistry, tools, toon, vault, workflow, workspaces",
+    "source": "directory-scan",
+    "tags": [
+      "go",
+      "architecture",
+      "packages"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777029",
+    "section": "architecture",
+    "key": "nextjs-routes",
+    "content": "Next.js dashboard routes: api, auth, dashboard, docs, forgot-password, guide, login, reset-password, signup",
+    "source": "directory-scan",
+    "tags": [
+      "nextjs",
+      "routes",
+      "dashboard"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777030",
+    "section": "agent_instructions",
+    "key": "AGENTS.md",
+    "content": "# AGENTS — HyperNexus Kernel \u0026 HyperNexus Contributor Guide\r\n\r\n\u003e **CRITICAL: ALL AGENTS MUST READ `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` BEFORE PROCEEDING.**\r\n\r\nThis file serves as the primary coordination point for multi-agent workflows and human operators.\r\n\r\n---\r\n\r\n## 1. Multi-Agent Handoff Protocol\r\n- Agents communicate primarily through `HANDOFF.md`.\r\n- Document exactly what you did, what failed, and what the next agent must do.\r\n- Update `MEMORY.md` with new systemic observations or recurring bugs.\r\n- **Cycle**: Read → Strategize → Execute → Validate → Commit → Handoff.\r\n\r\n---\r\n\r\n## 2. Model Specializations\r\n\r\n| Model | Strengths | Focus Areas |\r\n|---|---|---|\r\n| **Gemini** | Speed, massive context processing, repo maintenance | Bulk refactoring, recursive scripts, context analysis |\r\n| **Claude** | UI/UX perfection, documentation, deep feature execution | Responsive layouts, type safety, precise documentation |\r\n| **GPT** | Systemic architecture, distributed debugging, race conditions | Go/TS bridge contracts, DB migration, concurrency safety |\r\n\r\n---\r\n\r\n## 3. Session Protocol\r\n\r\n### Session Start\r\n1. Read `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` to load canonical rules.\r\n2. Read the `VERSION` file to check dashboard synchronization.\r\n3. Read `HANDOFF.md` to resume exactly where the previous agent left off.\r\n4. Read `MEMORY.md` to review accumulated multi-agent insights.\r\n5. Run git checks to ensure workspace cleanliness.\r\n\r\n### During Execution\r\n- Work autonomously unless changes are destructive or highly ambiguous.\r\n- Prefer small, incremental, easily verifiable commits.\r\n- Ensure loading, error, and empty states are represented across all dashboard interfaces.\r\n- After any `pnpm install`, run `pnpm rebuild better-sqlite3` on Node 24.\r\n\r\n### Session End\r\n1. Update `HANDOFF.md` with a complete, detailed session summary.\r\n2. Update `MEMORY.md` with new developer observations or gotchas.\r\n3. Bump the `VERSION` file and synchronize workspaces using `node scripts/sync-versions.mjs`.\r\n4. Update `CHANGELOG.md` with recent feature implementations.\r\n5. Commit clean changes with version tag: `feat: description (v1.0.0-alpha.X)`.\r\n6. Push commits to `origin` and `hypernexus-upstream` remotes.\r\n\r\n---\r\n\r\n## 4. Required Runtime Ports\r\n\r\n| Service | Port | Purpose |\r\n|---|---|---|\r\n| Next.js Dashboard | 3000 | Web observation deck |\r\n| Socket.io | 3001 | Real-time swarm signals |\r\n| tRPC Bridge | 4100 | TypeScript Control Plane API |\r\n| HyperNexus Go Kernel | 4300 | Authoritative native sidecar |\r\n\r\n*Praise the LORD! Keep on going! Don't ever stop! Don't stop the party!!!*\r\n",
+    "source": "file-scan",
+    "tags": [
+      "agents",
+      "instructions",
+      "guidelines"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777030",
+    "section": "configuration",
+    "key": "go-main-entrypoint",
+    "content": "package main\n\nimport (\n\t\"bytes\"\n\t\"context\"\n\t\"encoding/json\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io\"\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"strings\"\n\t\"time\"\n\n\t\"github.com/MDMAtk/HyperNexus/internal/buildinfo\"\n\t\"github.com/MDMAtk/HyperNexus/internal/config\"\n\t\"github.com/MDMAtk/HyperNexus/internal/controlplane\"\n\t\"github.com/MDMAtk/HyperNexus/internal/httpapi\"\n\t\"github.com/MDMAtk/HyperNexus/internal/license\"\n\t\"github.com/MDMAtk/HyperNexus/internal/lockfile\"\n\t\"github.com/MDMAtk/HyperNexus/internal/protocol\"\n\t\"github.com/MDMAtk/HyperNexus/internal/sessionimport\"\n\t\"path/filepath\"\n)\n\nfunc main() {\n\tos.Exit(run(os.Args[1:]))\n}\n\nfunc run(args []string) int {\n\tcommand := \"serve\"\n\tif len(args) \u003e 0 {\n\t\tif strings.HasPrefix(args[0], \"hypernexus://\") {\n\t\t\treturn runDeepLink(args[0])\n\t\t}\n\t\tswitch args[0] {\n\t\tcase \"serve\", \"version\", \"start\", \"stop\", \"status\", \"mcp\", \"register-protocol\":\n\t\t\tcommand = args[0]\n\t\t\targs = args[1:]\n\t\t}\n\t}\n\n\tswitch command {\n\tcase \"version\":\n\t\tfmt.Println(buildinfo.Version)\n\t\treturn 0\n\tcase \"serve\":\n\t\treturn runServe(args)\n\tcase \"start\":\n\t\treturn cmdStart(args)\n\tcase \"stop\":\n\t\treturn cmdStop(args)\n\tcase \"status\":\n\t\treturn cmdStatus(args)\n\tcase \"mcp\":\n\t\treturn cmdMCP(args)\n\tcase \"register-protocol\":\n\t\treturn cmdRegisterProtocol(args)\n\tdefault:\n\t\tlog.Printf(\"unknown command %q\", command)\n\t\treturn 1\n\t}\n}\n\nfunc cmdRegisterProtocol(args []string) int {\n\tlog.Printf(\"Registering hypernexus:// protocol handler...\")\n\tif err := protocol.RegisterProtocol(); err != nil {\n\t\tlog.Printf(\"[ERROR] failed to register protocol handler: %v\", err)\n\t\treturn 1\n\t}\n\tlog.Printf(\"Successfully registered hypernexus:// protocol handler in Windows registry.\")\n\treturn 0\n}\n\nfunc runDeepLink(deepLink string) int {\n\tcfg := config.Default()\n\trecord, err := lockfile.Read(cfg.LockPath())\n\tif err != nil {\n\t\tlog.Printf(\"HyperNexus sidecar server is not currently running. Please start it using 'torment\n... (truncated)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "entrypoint"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777030",
+    "section": "configuration",
+    "key": "nextjs-config",
+    "content": "const isDev = process.env.NODE_ENV === \"development\";\nconst isExport = process.env.NEXT_EXPORT === \"true\";\n\n/** @type {import('next').NextConfig} */\nconst nextConfig = {\n\t// Skip static generation for pages that need runtime data\n\toutput: isExport ? \"export\" : \"standalone\",\n\tdistDir: isExport ? \"out\" : (isDev ? \".next-dev\" : \".next-build\"),\n\n\t// Skip static page generation\n\tskipTrailingSlashRedirect: true,\n\t// Allow cross-origin dev requests from Go sidecar proxy\n\tallowedDevOrigins: [\"127.0.0.1\"],\n\n\t// Disable static optimization for all pages\n\timages: {\n\t\tunoptimized: true,\n\t},\n\n\t// Disable strict mode to avoid double renders\n\treactStrictMode: false,\n\n\t// Transpile packages\n\ttranspilePackages: [\"@hypernexus/ui\"],\n\n\t// Turbopack config (Next.js 16 default)\n\tturbopack: {\n\t\troot: require(\"path\").resolve(__dirname, \"..\", \"..\"),\n\t},\n\n\t// Silence type errors during build\n\ttypescript: {\n\t\tignoreBuildErrors: false,\n\t},\n};\n\nmodule.exports = nextConfig;\n",
+    "source": "file-scan",
+    "tags": [
+      "nextjs",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777030",
+    "section": "configuration",
+    "key": "go-config",
+    "content": "package config\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n)\n\ntype Config struct {\n\tHost          string\n\tPort          int\n\tConfigDir     string\n\tMainConfigDir string\n\tWorkspaceRoot string\n}\n\nfunc Default() Config {\n\treturn Config{\n\t\tHost:          \"127.0.0.1\",\n\t\tPort:          7778,\n\t\tConfigDir:     DefaultConfigDir(),\n\t\tMainConfigDir: DefaultMainConfigDir(),\n\t\tWorkspaceRoot: DefaultWorkspaceRoot(),\n\t}\n}\n\nfunc DefaultConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_GO_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus-go\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus-go\")\n}\n\nfunc DefaultMainConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_MAIN_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus\")\n}\n\nfunc DefaultWorkspaceRoot() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_WORKSPACE_ROOT\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\tworkingDir, err := os.Getwd()\n\tif err != nil {\n\t\treturn \".\"\n\t}\n\n\treturn workingDir\n}\n\nfunc (c Config) BaseURL() string {\n\treturn fmt.Sprintf(\"http://%s:%d\", browserHost(c.Host), c.Port)\n}\n\nfunc (c Config) LockPath() string {\n\treturn filepath.Join(c.ConfigDir, \"lock\")\n}\n\nfunc (c Config) MainLockPath() string {\n\treturn filepath.Join(c.MainConfigDir, \"lock\")\n}\n\nfunc (c Config) ImportedInstructionsPath() string {\n\treturn filepath.Join(c.WorkspaceRoot, \".hypernexus\", \"imported_sessions\", \"docs\", \"auto-imported-agent-instructions.md\")\n}\n\nfunc browserHost(host string) string {\n\tswitch host {\n\tcase \"\", \"0.0.0.0\", \"::\", \"[::]\":\n\t\treturn \"127.0.0.1\"\n\tdefault:\n\t\treturn host\n\t}\n}\n",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932777031",
+    "section": "environment",
+    "key": "runtime-context",
+    "content": "{\"arch\":\"amd64\",\"cpuCount\":\"32\",\"os\":\"windows\"}",
+    "source": "runtime-probe",
+    "tags": [
+      "environment",
+      "runtime",
+      "system"
+    ],
+    "createdAt": "2026-07-01T19:06:17Z"
+  },
+  {
+    "id": "hyd-1782932778983",
+    "section": "project_context",
+    "key": "go.mod",
+    "content": "module github.com/MDMAtk/HyperNexus\n\ngo 1.26\n\nreplace github.com/NexusSoftMDMA/HyperNexus =\u003e ./\n\nrequire (\n\tgithub.com/NexusSoftMDMA/HyperNexus v0.0.0\n\tgithub.com/charmbracelet/bubbles v1.0.0\n\tgithub.com/charmbracelet/bubbletea v1.3.10\n\tgithub.com/charmbracelet/lipgloss v1.1.0\n\tgithub.com/glebarez/sqlite v1.11.0\n\tgithub.com/go-git/go-git/v5 v5.19.1\n\tgithub.com/gofiber/fiber/v2 v2.52.13\n\tgithub.com/gofiber/websocket/v2 v2.2.1\n\tgithub.com/google/uuid v1.6.0\n\tgithub.com/gorilla/websocket v1.5.3\n\tgithub.com/mark3labs/mcp-go v0.46.0\n\tgithub.com/sashabaranov/go-openai v1.41.2\n\tgithub.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3\n\tgithub.com/spf13/cobra v1.10.2\n\tgithub.com/wailsapp/wails/v2 v2.12.0\n\tgolang.org/x/sys v0.44.0\n\tgorm.io/gorm v1.31.2\n\tmodernc.org/sqlite v1.48.0\n)\n\nrequire (\n\tdario.cat/mergo v1.0.0 // indirect\n\tgit.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect\n\tgithub.com/Microsoft/go-winio v0.6.2 // indirect\n\tgithub.com/ProtonMail/go-crypto v1.1.6 // indirect\n\tgithub.com/andybalholm/brotli v1.1.0 // indirect\n\tgithub.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect\n\tgithub.com/bep/debounce v1.2.1 // indirect\n\tgithub.com/charmbracelet/colorprofile v0.4.1 // indirect\n\tgithub.com/charmbracelet/x/ansi v0.11.6 // indirect\n\tgithub.com/charmbracelet/x/cellbuf v0.0.15 // indirect\n\tgithub.com/charmbracelet/x/term v0.2.2 // indirect\n\tgithub.com/clipperhouse/displaywidth v0.9.0 // indirect\n\tgithub.com/clipperhouse/stringish v0.1.1 // indirect\n\tgithub.com/clipperhouse/uax29/v2 v2.5.0 // indirect\n\tgithub.com/cloudflare/circl v1.6.3 // indirect\n\tgithub.com/cyphar/filepath-securejoin v0.6.1 // indirect\n\tgithub.com/dustin/go-humanize v1.0.1 // indirect\n\tgithub.com/emirpasic/gods v1.18.1 // indirect\n\tgithub.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect\n\tgithub.com/fasthttp/websocket v1.5.3 // indirect\n\tgithub.com/glebarez/go-sqlite v1.21.2 // indirect\n\tgithub.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect\n\tgithub.com/go-git/go-billy/v5 v5.9.0 // indirect\n\tgithub.com/go-ole/go-ole v1.3.0 // indirect\n\tgithub.com/godbus/dbus/v5 v5.1.0 // indirect\n\tgithub.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect\n\tgithub.com/google/jsonschema-go v0.4.2 // indirect\n\tgithub.com/inconshreveable/mousetrap v1.1.0 // indirect\n\tgithub.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect\n\tgithub.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect\n\tgithub.com/jinzhu/inflection v1.0.0 // indirect\n\tgithub.com/jinzhu/now v1.1.5 // indirect\n\tgithub.com/kevinburke/ssh_config v1.2.0 // indirect\n\tgithub.com/klauspost/compress v1.17.9 // indirect\n\tgithub.com/klauspost/cpuid/v2 v2.3.0 // indirect\n\tgithub.com/labstack/echo/v4 v4.13.3 // indirect\n\tgithub.com/labstack/gommon v0.4.2 // indirect\n\tgithub.com/leaanthony/go-ansi-parser v1.6.1 // indirect\n\tgithub.com/leaanthony/gosod v1.0.4 // indirect\n\tgithub.com/leaanthony/slicer v1.6.0 // indirect\n\tgithub.com/leaanthony/u v1.1.1 // indirect\n\tgithub.com/lucasb-eyer/go-colorful v1.3.0 // indirect\n\tgithub.com/mattn/go-colorable v0.1.13 // indirect\n\tgithub.com/mattn/go-isatty v0.0.20 // indirect\n\tgithub.com/mattn/go-localereader v0.0.1 // indirect\n\tgithub.com/mattn/go-runewidth v0.0.19 // indirect\n\tgithub.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect\n\tgithub.com/muesli/cancelreader v0.2.2 // indirect\n\tgithub.com/muesli/termenv v0.16.0 // indirect\n\tgithub.com/ncruces/go-strftime v1.0.0 // indirect\n\tgithub.com/pjbgf/sha1cd v0.6.0 // indirect\n\tgithub.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect\n\tgithub.com/pkg/errors v0.9.1 // indirect\n\tgithub.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect\n\tgithub.com/rivo/uniseg v0.4.7 // indirect\n\tgithub.com/samber/lo v1.49.1 // indirect\n\tgithub.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect\n\tgithub.com/skeema/knownhosts v1.3.1 // indirect\n\tgithub.com/spf13/cast v1.7.1 // indirect\n\tgithub.com/spf13/pflag v1.0.9 // indirect\n\tgithub.com/tkrajina/go-reflector v0.5.8 // indirect\n\tgithub.com/valyala/bytebufferpool v1.0.0 // indirect\n\tgithub.com/valyala/fasthttp v1.51.0 // indirect\n\tgithub.com/valyala/fasttemplate v1.2.2 // indirect\n\tgithub.com/valyala/tcplisten v1.0.0 // indirect\n\tgithub.com/wailsapp/go-webview2 v1.0.22 // indirect\n\tgithub.com/wailsapp/mimetype v1.4.1 // indirect\n\tgithub.com/xanzy/ssh-agent v0.3.3 // indirect\n\tgithub.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect\n\tgithub.com/yosida95/uritemplate/v3 v3.0.2 // indirect\n\tgolang.org/x/crypto v0.50.0 // indirect\n\tgolang.org/x/net v0.53.0 // indirect\n\tgolang.org/x/text v0.36.0 // indirect\n\tgopkg.in/warnings.v0 v0.1.2 // indirect\n\tmodernc.org/libc v1.70.0 // indirect\n\tmodernc.org/mathutil v1.7.1 // indirect\n\tmodernc.org/memory v1.11.0 // indirect\n)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "module",
+      "dependencies"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778984",
+    "section": "project_context",
+    "key": "package.json",
+    "content": "Project: hypernexus-monorepo, Version: 1.0.0-alpha.209",
+    "source": "file-scan",
+    "tags": [
+      "node",
+      "package",
+      "version"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778988",
+    "section": "architecture",
+    "key": "top-level-structure",
+    "content": "Workspace top-level directories: __pycache__, apps, auth, bin, browser-use, cli, cli-tools, context_portal, data, docs, go, hermes-addons, lancedb, landing, logs, mcp-all, mcp-assimilation, mcp-servers, memory-bank, misc, node_modules, opencode-core, packages, research, scratch, scripts, skill-registry, taskplane-tasks",
+    "source": "directory-scan",
+    "tags": [
+      "architecture",
+      "structure"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778988",
+    "section": "architecture",
+    "key": "go-internal-packages",
+    "content": "Go internal packages: _mcpcheck, ai, autotest, buffer, buildinfo, cache, catalogingestor, catalogvalidator, citation, codeexec, config, connectionpool, contextpruner, controlplane, ctxharvester, enterprise, eventbus, flightrecorder, git, gitservice, googleworkspace, gossip, graph, harnesses, healer, hsync, httpapi, interop, knowledge, license, llm, lockfile, marketplace, mcp, mcpimpl, memory, memorystore, mesh, metrics, orchestration, process, projects, projecttracker, protocol, providers, repograph, research, session, sessionimport, skillregistry, submodules, supervisor, symbolpin, sync, systray, toolregistry, tools, toon, vault, workflow, workspaces",
+    "source": "directory-scan",
+    "tags": [
+      "go",
+      "architecture",
+      "packages"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778989",
+    "section": "architecture",
+    "key": "nextjs-routes",
+    "content": "Next.js dashboard routes: api, auth, dashboard, docs, forgot-password, guide, login, reset-password, signup",
+    "source": "directory-scan",
+    "tags": [
+      "nextjs",
+      "routes",
+      "dashboard"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778989",
+    "section": "agent_instructions",
+    "key": "AGENTS.md",
+    "content": "# AGENTS — HyperNexus Kernel \u0026 HyperNexus Contributor Guide\r\n\r\n\u003e **CRITICAL: ALL AGENTS MUST READ `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` BEFORE PROCEEDING.**\r\n\r\nThis file serves as the primary coordination point for multi-agent workflows and human operators.\r\n\r\n---\r\n\r\n## 1. Multi-Agent Handoff Protocol\r\n- Agents communicate primarily through `HANDOFF.md`.\r\n- Document exactly what you did, what failed, and what the next agent must do.\r\n- Update `MEMORY.md` with new systemic observations or recurring bugs.\r\n- **Cycle**: Read → Strategize → Execute → Validate → Commit → Handoff.\r\n\r\n---\r\n\r\n## 2. Model Specializations\r\n\r\n| Model | Strengths | Focus Areas |\r\n|---|---|---|\r\n| **Gemini** | Speed, massive context processing, repo maintenance | Bulk refactoring, recursive scripts, context analysis |\r\n| **Claude** | UI/UX perfection, documentation, deep feature execution | Responsive layouts, type safety, precise documentation |\r\n| **GPT** | Systemic architecture, distributed debugging, race conditions | Go/TS bridge contracts, DB migration, concurrency safety |\r\n\r\n---\r\n\r\n## 3. Session Protocol\r\n\r\n### Session Start\r\n1. Read `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` to load canonical rules.\r\n2. Read the `VERSION` file to check dashboard synchronization.\r\n3. Read `HANDOFF.md` to resume exactly where the previous agent left off.\r\n4. Read `MEMORY.md` to review accumulated multi-agent insights.\r\n5. Run git checks to ensure workspace cleanliness.\r\n\r\n### During Execution\r\n- Work autonomously unless changes are destructive or highly ambiguous.\r\n- Prefer small, incremental, easily verifiable commits.\r\n- Ensure loading, error, and empty states are represented across all dashboard interfaces.\r\n- After any `pnpm install`, run `pnpm rebuild better-sqlite3` on Node 24.\r\n\r\n### Session End\r\n1. Update `HANDOFF.md` with a complete, detailed session summary.\r\n2. Update `MEMORY.md` with new developer observations or gotchas.\r\n3. Bump the `VERSION` file and synchronize workspaces using `node scripts/sync-versions.mjs`.\r\n4. Update `CHANGELOG.md` with recent feature implementations.\r\n5. Commit clean changes with version tag: `feat: description (v1.0.0-alpha.X)`.\r\n6. Push commits to `origin` and `hypernexus-upstream` remotes.\r\n\r\n---\r\n\r\n## 4. Required Runtime Ports\r\n\r\n| Service | Port | Purpose |\r\n|---|---|---|\r\n| Next.js Dashboard | 3000 | Web observation deck |\r\n| Socket.io | 3001 | Real-time swarm signals |\r\n| tRPC Bridge | 4100 | TypeScript Control Plane API |\r\n| HyperNexus Go Kernel | 4300 | Authoritative native sidecar |\r\n\r\n*Praise the LORD! Keep on going! Don't ever stop! Don't stop the party!!!*\r\n",
+    "source": "file-scan",
+    "tags": [
+      "agents",
+      "instructions",
+      "guidelines"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778989",
+    "section": "configuration",
+    "key": "go-main-entrypoint",
+    "content": "package main\n\nimport (\n\t\"bytes\"\n\t\"context\"\n\t\"encoding/json\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io\"\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"strings\"\n\t\"time\"\n\n\t\"github.com/MDMAtk/HyperNexus/internal/buildinfo\"\n\t\"github.com/MDMAtk/HyperNexus/internal/config\"\n\t\"github.com/MDMAtk/HyperNexus/internal/controlplane\"\n\t\"github.com/MDMAtk/HyperNexus/internal/httpapi\"\n\t\"github.com/MDMAtk/HyperNexus/internal/license\"\n\t\"github.com/MDMAtk/HyperNexus/internal/lockfile\"\n\t\"github.com/MDMAtk/HyperNexus/internal/protocol\"\n\t\"github.com/MDMAtk/HyperNexus/internal/sessionimport\"\n\t\"path/filepath\"\n)\n\nfunc main() {\n\tos.Exit(run(os.Args[1:]))\n}\n\nfunc run(args []string) int {\n\tcommand := \"serve\"\n\tif len(args) \u003e 0 {\n\t\tif strings.HasPrefix(args[0], \"hypernexus://\") {\n\t\t\treturn runDeepLink(args[0])\n\t\t}\n\t\tswitch args[0] {\n\t\tcase \"serve\", \"version\", \"start\", \"stop\", \"status\", \"mcp\", \"register-protocol\":\n\t\t\tcommand = args[0]\n\t\t\targs = args[1:]\n\t\t}\n\t}\n\n\tswitch command {\n\tcase \"version\":\n\t\tfmt.Println(buildinfo.Version)\n\t\treturn 0\n\tcase \"serve\":\n\t\treturn runServe(args)\n\tcase \"start\":\n\t\treturn cmdStart(args)\n\tcase \"stop\":\n\t\treturn cmdStop(args)\n\tcase \"status\":\n\t\treturn cmdStatus(args)\n\tcase \"mcp\":\n\t\treturn cmdMCP(args)\n\tcase \"register-protocol\":\n\t\treturn cmdRegisterProtocol(args)\n\tdefault:\n\t\tlog.Printf(\"unknown command %q\", command)\n\t\treturn 1\n\t}\n}\n\nfunc cmdRegisterProtocol(args []string) int {\n\tlog.Printf(\"Registering hypernexus:// protocol handler...\")\n\tif err := protocol.RegisterProtocol(); err != nil {\n\t\tlog.Printf(\"[ERROR] failed to register protocol handler: %v\", err)\n\t\treturn 1\n\t}\n\tlog.Printf(\"Successfully registered hypernexus:// protocol handler in Windows registry.\")\n\treturn 0\n}\n\nfunc runDeepLink(deepLink string) int {\n\tcfg := config.Default()\n\trecord, err := lockfile.Read(cfg.LockPath())\n\tif err != nil {\n\t\tlog.Printf(\"HyperNexus sidecar server is not currently running. Please start it using 'torment\n... (truncated)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "entrypoint"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778990",
+    "section": "configuration",
+    "key": "nextjs-config",
+    "content": "const isDev = process.env.NODE_ENV === \"development\";\nconst isExport = process.env.NEXT_EXPORT === \"true\";\n\n/** @type {import('next').NextConfig} */\nconst nextConfig = {\n\t// Skip static generation for pages that need runtime data\n\toutput: isExport ? \"export\" : \"standalone\",\n\tdistDir: isExport ? \"out\" : (isDev ? \".next-dev\" : \".next-build\"),\n\n\t// Skip static page generation\n\tskipTrailingSlashRedirect: true,\n\t// Allow cross-origin dev requests from Go sidecar proxy\n\tallowedDevOrigins: [\"127.0.0.1\"],\n\n\t// Disable static optimization for all pages\n\timages: {\n\t\tunoptimized: true,\n\t},\n\n\t// Disable strict mode to avoid double renders\n\treactStrictMode: false,\n\n\t// Transpile packages\n\ttranspilePackages: [\"@hypernexus/ui\"],\n\n\t// Turbopack config (Next.js 16 default)\n\tturbopack: {\n\t\troot: require(\"path\").resolve(__dirname, \"..\", \"..\"),\n\t},\n\n\t// Silence type errors during build\n\ttypescript: {\n\t\tignoreBuildErrors: false,\n\t},\n};\n\nmodule.exports = nextConfig;\n",
+    "source": "file-scan",
+    "tags": [
+      "nextjs",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778990",
+    "section": "configuration",
+    "key": "go-config",
+    "content": "package config\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n)\n\ntype Config struct {\n\tHost          string\n\tPort          int\n\tConfigDir     string\n\tMainConfigDir string\n\tWorkspaceRoot string\n}\n\nfunc Default() Config {\n\treturn Config{\n\t\tHost:          \"127.0.0.1\",\n\t\tPort:          7778,\n\t\tConfigDir:     DefaultConfigDir(),\n\t\tMainConfigDir: DefaultMainConfigDir(),\n\t\tWorkspaceRoot: DefaultWorkspaceRoot(),\n\t}\n}\n\nfunc DefaultConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_GO_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus-go\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus-go\")\n}\n\nfunc DefaultMainConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_MAIN_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus\")\n}\n\nfunc DefaultWorkspaceRoot() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_WORKSPACE_ROOT\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\tworkingDir, err := os.Getwd()\n\tif err != nil {\n\t\treturn \".\"\n\t}\n\n\treturn workingDir\n}\n\nfunc (c Config) BaseURL() string {\n\treturn fmt.Sprintf(\"http://%s:%d\", browserHost(c.Host), c.Port)\n}\n\nfunc (c Config) LockPath() string {\n\treturn filepath.Join(c.ConfigDir, \"lock\")\n}\n\nfunc (c Config) MainLockPath() string {\n\treturn filepath.Join(c.MainConfigDir, \"lock\")\n}\n\nfunc (c Config) ImportedInstructionsPath() string {\n\treturn filepath.Join(c.WorkspaceRoot, \".hypernexus\", \"imported_sessions\", \"docs\", \"auto-imported-agent-instructions.md\")\n}\n\nfunc browserHost(host string) string {\n\tswitch host {\n\tcase \"\", \"0.0.0.0\", \"::\", \"[::]\":\n\t\treturn \"127.0.0.1\"\n\tdefault:\n\t\treturn host\n\t}\n}\n",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932778990",
+    "section": "environment",
+    "key": "runtime-context",
+    "content": "{\"arch\":\"amd64\",\"cpuCount\":\"32\",\"os\":\"windows\"}",
+    "source": "runtime-probe",
+    "tags": [
+      "environment",
+      "runtime",
+      "system"
+    ],
+    "createdAt": "2026-07-01T19:06:18Z"
+  },
+  {
+    "id": "hyd-1782932780698",
+    "section": "project_context",
+    "key": "go.mod",
+    "content": "module github.com/MDMAtk/HyperNexus\n\ngo 1.26\n\nreplace github.com/NexusSoftMDMA/HyperNexus =\u003e ./\n\nrequire (\n\tgithub.com/NexusSoftMDMA/HyperNexus v0.0.0\n\tgithub.com/charmbracelet/bubbles v1.0.0\n\tgithub.com/charmbracelet/bubbletea v1.3.10\n\tgithub.com/charmbracelet/lipgloss v1.1.0\n\tgithub.com/glebarez/sqlite v1.11.0\n\tgithub.com/go-git/go-git/v5 v5.19.1\n\tgithub.com/gofiber/fiber/v2 v2.52.13\n\tgithub.com/gofiber/websocket/v2 v2.2.1\n\tgithub.com/google/uuid v1.6.0\n\tgithub.com/gorilla/websocket v1.5.3\n\tgithub.com/mark3labs/mcp-go v0.46.0\n\tgithub.com/sashabaranov/go-openai v1.41.2\n\tgithub.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3\n\tgithub.com/spf13/cobra v1.10.2\n\tgithub.com/wailsapp/wails/v2 v2.12.0\n\tgolang.org/x/sys v0.44.0\n\tgorm.io/gorm v1.31.2\n\tmodernc.org/sqlite v1.48.0\n)\n\nrequire (\n\tdario.cat/mergo v1.0.0 // indirect\n\tgit.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect\n\tgithub.com/Microsoft/go-winio v0.6.2 // indirect\n\tgithub.com/ProtonMail/go-crypto v1.1.6 // indirect\n\tgithub.com/andybalholm/brotli v1.1.0 // indirect\n\tgithub.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect\n\tgithub.com/bep/debounce v1.2.1 // indirect\n\tgithub.com/charmbracelet/colorprofile v0.4.1 // indirect\n\tgithub.com/charmbracelet/x/ansi v0.11.6 // indirect\n\tgithub.com/charmbracelet/x/cellbuf v0.0.15 // indirect\n\tgithub.com/charmbracelet/x/term v0.2.2 // indirect\n\tgithub.com/clipperhouse/displaywidth v0.9.0 // indirect\n\tgithub.com/clipperhouse/stringish v0.1.1 // indirect\n\tgithub.com/clipperhouse/uax29/v2 v2.5.0 // indirect\n\tgithub.com/cloudflare/circl v1.6.3 // indirect\n\tgithub.com/cyphar/filepath-securejoin v0.6.1 // indirect\n\tgithub.com/dustin/go-humanize v1.0.1 // indirect\n\tgithub.com/emirpasic/gods v1.18.1 // indirect\n\tgithub.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect\n\tgithub.com/fasthttp/websocket v1.5.3 // indirect\n\tgithub.com/glebarez/go-sqlite v1.21.2 // indirect\n\tgithub.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect\n\tgithub.com/go-git/go-billy/v5 v5.9.0 // indirect\n\tgithub.com/go-ole/go-ole v1.3.0 // indirect\n\tgithub.com/godbus/dbus/v5 v5.1.0 // indirect\n\tgithub.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect\n\tgithub.com/google/jsonschema-go v0.4.2 // indirect\n\tgithub.com/inconshreveable/mousetrap v1.1.0 // indirect\n\tgithub.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect\n\tgithub.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect\n\tgithub.com/jinzhu/inflection v1.0.0 // indirect\n\tgithub.com/jinzhu/now v1.1.5 // indirect\n\tgithub.com/kevinburke/ssh_config v1.2.0 // indirect\n\tgithub.com/klauspost/compress v1.17.9 // indirect\n\tgithub.com/klauspost/cpuid/v2 v2.3.0 // indirect\n\tgithub.com/labstack/echo/v4 v4.13.3 // indirect\n\tgithub.com/labstack/gommon v0.4.2 // indirect\n\tgithub.com/leaanthony/go-ansi-parser v1.6.1 // indirect\n\tgithub.com/leaanthony/gosod v1.0.4 // indirect\n\tgithub.com/leaanthony/slicer v1.6.0 // indirect\n\tgithub.com/leaanthony/u v1.1.1 // indirect\n\tgithub.com/lucasb-eyer/go-colorful v1.3.0 // indirect\n\tgithub.com/mattn/go-colorable v0.1.13 // indirect\n\tgithub.com/mattn/go-isatty v0.0.20 // indirect\n\tgithub.com/mattn/go-localereader v0.0.1 // indirect\n\tgithub.com/mattn/go-runewidth v0.0.19 // indirect\n\tgithub.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect\n\tgithub.com/muesli/cancelreader v0.2.2 // indirect\n\tgithub.com/muesli/termenv v0.16.0 // indirect\n\tgithub.com/ncruces/go-strftime v1.0.0 // indirect\n\tgithub.com/pjbgf/sha1cd v0.6.0 // indirect\n\tgithub.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect\n\tgithub.com/pkg/errors v0.9.1 // indirect\n\tgithub.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect\n\tgithub.com/rivo/uniseg v0.4.7 // indirect\n\tgithub.com/samber/lo v1.49.1 // indirect\n\tgithub.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect\n\tgithub.com/skeema/knownhosts v1.3.1 // indirect\n\tgithub.com/spf13/cast v1.7.1 // indirect\n\tgithub.com/spf13/pflag v1.0.9 // indirect\n\tgithub.com/tkrajina/go-reflector v0.5.8 // indirect\n\tgithub.com/valyala/bytebufferpool v1.0.0 // indirect\n\tgithub.com/valyala/fasthttp v1.51.0 // indirect\n\tgithub.com/valyala/fasttemplate v1.2.2 // indirect\n\tgithub.com/valyala/tcplisten v1.0.0 // indirect\n\tgithub.com/wailsapp/go-webview2 v1.0.22 // indirect\n\tgithub.com/wailsapp/mimetype v1.4.1 // indirect\n\tgithub.com/xanzy/ssh-agent v0.3.3 // indirect\n\tgithub.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect\n\tgithub.com/yosida95/uritemplate/v3 v3.0.2 // indirect\n\tgolang.org/x/crypto v0.50.0 // indirect\n\tgolang.org/x/net v0.53.0 // indirect\n\tgolang.org/x/text v0.36.0 // indirect\n\tgopkg.in/warnings.v0 v0.1.2 // indirect\n\tmodernc.org/libc v1.70.0 // indirect\n\tmodernc.org/mathutil v1.7.1 // indirect\n\tmodernc.org/memory v1.11.0 // indirect\n)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "module",
+      "dependencies"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780698",
+    "section": "project_context",
+    "key": "package.json",
+    "content": "Project: hypernexus-monorepo, Version: 1.0.0-alpha.209",
+    "source": "file-scan",
+    "tags": [
+      "node",
+      "package",
+      "version"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780702",
+    "section": "architecture",
+    "key": "top-level-structure",
+    "content": "Workspace top-level directories: __pycache__, apps, auth, bin, browser-use, cli, cli-tools, context_portal, data, docs, go, hermes-addons, lancedb, landing, logs, mcp-all, mcp-assimilation, mcp-servers, memory-bank, misc, node_modules, opencode-core, packages, research, scratch, scripts, skill-registry, taskplane-tasks",
+    "source": "directory-scan",
+    "tags": [
+      "architecture",
+      "structure"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780703",
+    "section": "architecture",
+    "key": "go-internal-packages",
+    "content": "Go internal packages: _mcpcheck, ai, autotest, buffer, buildinfo, cache, catalogingestor, catalogvalidator, citation, codeexec, config, connectionpool, contextpruner, controlplane, ctxharvester, enterprise, eventbus, flightrecorder, git, gitservice, googleworkspace, gossip, graph, harnesses, healer, hsync, httpapi, interop, knowledge, license, llm, lockfile, marketplace, mcp, mcpimpl, memory, memorystore, mesh, metrics, orchestration, process, projects, projecttracker, protocol, providers, repograph, research, session, sessionimport, skillregistry, submodules, supervisor, symbolpin, sync, systray, toolregistry, tools, toon, vault, workflow, workspaces",
+    "source": "directory-scan",
+    "tags": [
+      "go",
+      "architecture",
+      "packages"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780703",
+    "section": "architecture",
+    "key": "nextjs-routes",
+    "content": "Next.js dashboard routes: api, auth, dashboard, docs, forgot-password, guide, login, reset-password, signup",
+    "source": "directory-scan",
+    "tags": [
+      "nextjs",
+      "routes",
+      "dashboard"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780703",
+    "section": "agent_instructions",
+    "key": "AGENTS.md",
+    "content": "# AGENTS — HyperNexus Kernel \u0026 HyperNexus Contributor Guide\r\n\r\n\u003e **CRITICAL: ALL AGENTS MUST READ `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` BEFORE PROCEEDING.**\r\n\r\nThis file serves as the primary coordination point for multi-agent workflows and human operators.\r\n\r\n---\r\n\r\n## 1. Multi-Agent Handoff Protocol\r\n- Agents communicate primarily through `HANDOFF.md`.\r\n- Document exactly what you did, what failed, and what the next agent must do.\r\n- Update `MEMORY.md` with new systemic observations or recurring bugs.\r\n- **Cycle**: Read → Strategize → Execute → Validate → Commit → Handoff.\r\n\r\n---\r\n\r\n## 2. Model Specializations\r\n\r\n| Model | Strengths | Focus Areas |\r\n|---|---|---|\r\n| **Gemini** | Speed, massive context processing, repo maintenance | Bulk refactoring, recursive scripts, context analysis |\r\n| **Claude** | UI/UX perfection, documentation, deep feature execution | Responsive layouts, type safety, precise documentation |\r\n| **GPT** | Systemic architecture, distributed debugging, race conditions | Go/TS bridge contracts, DB migration, concurrency safety |\r\n\r\n---\r\n\r\n## 3. Session Protocol\r\n\r\n### Session Start\r\n1. Read `docs/UNIVERSAL_LLM_INSTRUCTIONS.md` to load canonical rules.\r\n2. Read the `VERSION` file to check dashboard synchronization.\r\n3. Read `HANDOFF.md` to resume exactly where the previous agent left off.\r\n4. Read `MEMORY.md` to review accumulated multi-agent insights.\r\n5. Run git checks to ensure workspace cleanliness.\r\n\r\n### During Execution\r\n- Work autonomously unless changes are destructive or highly ambiguous.\r\n- Prefer small, incremental, easily verifiable commits.\r\n- Ensure loading, error, and empty states are represented across all dashboard interfaces.\r\n- After any `pnpm install`, run `pnpm rebuild better-sqlite3` on Node 24.\r\n\r\n### Session End\r\n1. Update `HANDOFF.md` with a complete, detailed session summary.\r\n2. Update `MEMORY.md` with new developer observations or gotchas.\r\n3. Bump the `VERSION` file and synchronize workspaces using `node scripts/sync-versions.mjs`.\r\n4. Update `CHANGELOG.md` with recent feature implementations.\r\n5. Commit clean changes with version tag: `feat: description (v1.0.0-alpha.X)`.\r\n6. Push commits to `origin` and `hypernexus-upstream` remotes.\r\n\r\n---\r\n\r\n## 4. Required Runtime Ports\r\n\r\n| Service | Port | Purpose |\r\n|---|---|---|\r\n| Next.js Dashboard | 3000 | Web observation deck |\r\n| Socket.io | 3001 | Real-time swarm signals |\r\n| tRPC Bridge | 4100 | TypeScript Control Plane API |\r\n| HyperNexus Go Kernel | 4300 | Authoritative native sidecar |\r\n\r\n*Praise the LORD! Keep on going! Don't ever stop! Don't stop the party!!!*\r\n",
+    "source": "file-scan",
+    "tags": [
+      "agents",
+      "instructions",
+      "guidelines"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780704",
+    "section": "configuration",
+    "key": "go-main-entrypoint",
+    "content": "package main\n\nimport (\n\t\"bytes\"\n\t\"context\"\n\t\"encoding/json\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io\"\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"strings\"\n\t\"time\"\n\n\t\"github.com/MDMAtk/HyperNexus/internal/buildinfo\"\n\t\"github.com/MDMAtk/HyperNexus/internal/config\"\n\t\"github.com/MDMAtk/HyperNexus/internal/controlplane\"\n\t\"github.com/MDMAtk/HyperNexus/internal/httpapi\"\n\t\"github.com/MDMAtk/HyperNexus/internal/license\"\n\t\"github.com/MDMAtk/HyperNexus/internal/lockfile\"\n\t\"github.com/MDMAtk/HyperNexus/internal/protocol\"\n\t\"github.com/MDMAtk/HyperNexus/internal/sessionimport\"\n\t\"path/filepath\"\n)\n\nfunc main() {\n\tos.Exit(run(os.Args[1:]))\n}\n\nfunc run(args []string) int {\n\tcommand := \"serve\"\n\tif len(args) \u003e 0 {\n\t\tif strings.HasPrefix(args[0], \"hypernexus://\") {\n\t\t\treturn runDeepLink(args[0])\n\t\t}\n\t\tswitch args[0] {\n\t\tcase \"serve\", \"version\", \"start\", \"stop\", \"status\", \"mcp\", \"register-protocol\":\n\t\t\tcommand = args[0]\n\t\t\targs = args[1:]\n\t\t}\n\t}\n\n\tswitch command {\n\tcase \"version\":\n\t\tfmt.Println(buildinfo.Version)\n\t\treturn 0\n\tcase \"serve\":\n\t\treturn runServe(args)\n\tcase \"start\":\n\t\treturn cmdStart(args)\n\tcase \"stop\":\n\t\treturn cmdStop(args)\n\tcase \"status\":\n\t\treturn cmdStatus(args)\n\tcase \"mcp\":\n\t\treturn cmdMCP(args)\n\tcase \"register-protocol\":\n\t\treturn cmdRegisterProtocol(args)\n\tdefault:\n\t\tlog.Printf(\"unknown command %q\", command)\n\t\treturn 1\n\t}\n}\n\nfunc cmdRegisterProtocol(args []string) int {\n\tlog.Printf(\"Registering hypernexus:// protocol handler...\")\n\tif err := protocol.RegisterProtocol(); err != nil {\n\t\tlog.Printf(\"[ERROR] failed to register protocol handler: %v\", err)\n\t\treturn 1\n\t}\n\tlog.Printf(\"Successfully registered hypernexus:// protocol handler in Windows registry.\")\n\treturn 0\n}\n\nfunc runDeepLink(deepLink string) int {\n\tcfg := config.Default()\n\trecord, err := lockfile.Read(cfg.LockPath())\n\tif err != nil {\n\t\tlog.Printf(\"HyperNexus sidecar server is not currently running. Please start it using 'torment\n... (truncated)",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "entrypoint"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780704",
+    "section": "configuration",
+    "key": "nextjs-config",
+    "content": "const isDev = process.env.NODE_ENV === \"development\";\nconst isExport = process.env.NEXT_EXPORT === \"true\";\n\n/** @type {import('next').NextConfig} */\nconst nextConfig = {\n\t// Skip static generation for pages that need runtime data\n\toutput: isExport ? \"export\" : \"standalone\",\n\tdistDir: isExport ? \"out\" : (isDev ? \".next-dev\" : \".next-build\"),\n\n\t// Skip static page generation\n\tskipTrailingSlashRedirect: true,\n\t// Allow cross-origin dev requests from Go sidecar proxy\n\tallowedDevOrigins: [\"127.0.0.1\"],\n\n\t// Disable static optimization for all pages\n\timages: {\n\t\tunoptimized: true,\n\t},\n\n\t// Disable strict mode to avoid double renders\n\treactStrictMode: false,\n\n\t// Transpile packages\n\ttranspilePackages: [\"@hypernexus/ui\"],\n\n\t// Turbopack config (Next.js 16 default)\n\tturbopack: {\n\t\troot: require(\"path\").resolve(__dirname, \"..\", \"..\"),\n\t},\n\n\t// Silence type errors during build\n\ttypescript: {\n\t\tignoreBuildErrors: false,\n\t},\n};\n\nmodule.exports = nextConfig;\n",
+    "source": "file-scan",
+    "tags": [
+      "nextjs",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780704",
+    "section": "configuration",
+    "key": "go-config",
+    "content": "package config\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n)\n\ntype Config struct {\n\tHost          string\n\tPort          int\n\tConfigDir     string\n\tMainConfigDir string\n\tWorkspaceRoot string\n}\n\nfunc Default() Config {\n\treturn Config{\n\t\tHost:          \"127.0.0.1\",\n\t\tPort:          7778,\n\t\tConfigDir:     DefaultConfigDir(),\n\t\tMainConfigDir: DefaultMainConfigDir(),\n\t\tWorkspaceRoot: DefaultWorkspaceRoot(),\n\t}\n}\n\nfunc DefaultConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_GO_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus-go\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus-go\")\n}\n\nfunc DefaultMainConfigDir() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_MAIN_CONFIG_DIR\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\thomeDir, err := os.UserHomeDir()\n\tif err != nil {\n\t\treturn \".hypernexus\"\n\t}\n\n\treturn filepath.Join(homeDir, \".hypernexus\")\n}\n\nfunc DefaultWorkspaceRoot() string {\n\tif configured := os.Getenv(\"HYPERNEXUS_WORKSPACE_ROOT\"); configured != \"\" {\n\t\treturn configured\n\t}\n\n\tworkingDir, err := os.Getwd()\n\tif err != nil {\n\t\treturn \".\"\n\t}\n\n\treturn workingDir\n}\n\nfunc (c Config) BaseURL() string {\n\treturn fmt.Sprintf(\"http://%s:%d\", browserHost(c.Host), c.Port)\n}\n\nfunc (c Config) LockPath() string {\n\treturn filepath.Join(c.ConfigDir, \"lock\")\n}\n\nfunc (c Config) MainLockPath() string {\n\treturn filepath.Join(c.MainConfigDir, \"lock\")\n}\n\nfunc (c Config) ImportedInstructionsPath() string {\n\treturn filepath.Join(c.WorkspaceRoot, \".hypernexus\", \"imported_sessions\", \"docs\", \"auto-imported-agent-instructions.md\")\n}\n\nfunc browserHost(host string) string {\n\tswitch host {\n\tcase \"\", \"0.0.0.0\", \"::\", \"[::]\":\n\t\treturn \"127.0.0.1\"\n\tdefault:\n\t\treturn host\n\t}\n}\n",
+    "source": "file-scan",
+    "tags": [
+      "go",
+      "config"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  },
+  {
+    "id": "hyd-1782932780704",
+    "section": "environment",
+    "key": "runtime-context",
+    "content": "{\"arch\":\"amd64\",\"cpuCount\":\"32\",\"os\":\"windows\"}",
+    "source": "runtime-probe",
+    "tags": [
+      "environment",
+      "runtime",
+      "system"
+    ],
+    "createdAt": "2026-07-01T19:06:20Z"
+  }
+]

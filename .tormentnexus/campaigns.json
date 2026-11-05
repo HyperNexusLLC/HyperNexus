@@ -1,0 +1,53 @@
+{
+  "executions": [
+    {
+      "campaign": "reddit_outreach",
+      "script": "scripts/reddit_outreach.py",
+      "timestamp": "2026-09-22T17:10:57.947899",
+      "status": "queued"
+    },
+    {
+      "campaign": "reddit_outreach",
+      "script": "scripts/auto_post_reddit.py",
+      "timestamp": "2026-09-22T17:10:57.948237",
+      "status": "queued"
+    },
+    {
+      "campaign": "x_twitter_outreach",
+      "script": "scripts/x_dm_outreach.py",
+      "timestamp": "2026-09-22T17:10:57.948574",
+      "status": "queued"
+    },
+    {
+      "campaign": "x_twitter_outreach",
+      "script": "scripts/auto_twitter_v2.py",
+      "timestamp": "2026-09-22T17:10:57.948942",
+      "status": "queued"
+    },
+    {
+      "campaign": "email_outreach",
+      "script": "scripts/outreach_automation.py",
+      "timestamp": "2026-09-23T15:34:42.012029",
+      "status": "queued"
+    },
+    {
+      "campaign": "email_outreach",
+      "script": "scripts/outreach_top100.py",
+      "timestamp": "2026-09-23T15:34:42.012134",
+      "status": "queued"
+    },
+    {
+      "campaign": "linkedin",
+      "script": "scripts/auto_linkedin_page.py",
+      "timestamp": "2026-09-23T15:34:42.012229",
+      "status": "queued"
+    },
+    {
+      "campaign": "linkedin",
+      "script": "scripts/post_linkedin_article.py",
+      "timestamp": "2026-09-23T15:34:42.012324",
+      "status": "queued"
+    }
+  ],
+  "last_run": "2026-09-23T15:34:42.012329"
+}

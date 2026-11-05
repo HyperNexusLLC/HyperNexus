@@ -1,4 +1,32 @@
 
+# HANDOFF - Repo sync & intelligent merge (v1.0.28)
+
+## Session RS (2026-11-05) - repo synchronization [muse-code in ~/workspace/HyperNexus]
+
+### Done
+- Fetched `github` + `gitlab` (identical `main`); local `main` fast-forwarded 258 commits to v1.0.27 line, then bumped to **1.0.28** (35 refs synced via `scripts/sync-versions.mjs`).
+- Preserved pre-sync WIP through stash + FF + restore: `go/internal/httpapi/clouddev_handlers.go` local Go fallbacks (171 insertions), `go/.hypernexus/agent_memory/memories.json`, imported-sessions doc, rebuilt `go/tormentnexus-linux-amd64`. Backup remains in `stash@{0}` ("pre-sync-wip-2026-11-05") until this commit lands; drop it after verifying.
+- Feature-branch audit (all local/remote branches inspected):
+  - `feature/cloud-dashboard-mcp-sse-389806464713532918` (67 unique commits): **unrelated history** (roots `c3993a0a` vs main `3b787366`, no merge base), pre-restructure layout (`agent/`, `third_party/`, `..go_backup_old/`). Headline features already in main (verified via `git grep`: cold-archive UI, gossip, skill evolution). **Not merged** (16,487-file diff would regress main); branch kept intact locally + on gitlab/origin as archival reference. Reverse merge impossible for the same reason.
+  - `clean-main`: ancestor of main (0 unique) - fully redundant, no action.
+  - `gh-pages-hypernexus` / `gh-pages-tormentnexus`: deploy branches (1 unique deploy commit each) - left alone.
+  - Stale remote-tracking refs `origin-tormentnexus/*`, `robertpelloni/*`: remotes no longer configured; refs left in place (harmless), prune later if desired.
+- Submodules: fetched all; `vendor/deepseek-harness` bumped `5badb1500` -> `fcc0ad4621` (upstream master, dsh 0.2.2-rc.1); `vendor/grok-build`, `lumbros.me` already latest. No nested submodules. Map regenerated in `docs/SUBMODULES.md`.
+- Tracking policy: staged `go/.hypernexus/` (638 paths incl. 2,750 imported-session archives, credential scan 0 hits), `.tormentnexus/` session state, `.memory/branches/`; removed `.memory/branches/` from `.gitignore`.
+- Scripts verified post-FF: `build.bat` already points at `gitlab.com/HyperNexusLLC/HyperNexus` + `cmd/tormentnexus` (fixed upstream); `start.bat` ports 7778/7779 match AGENTS.md.
+
+### Deliberately NOT done (with reasons)
+- Runtime DBs not committed (`data/tormentnexus.db` 210MB, `data/catalog.db` 52MB, `.tormentnexus/skills.db` 49MB, `scripts/atlas.db`, others): GitHub rejects files >100MB; recommend Git LFS. Files remain on disk, nothing deleted.
+- `go/NUL`, `go/.tmp-test.cjs`, `go/context_portal/`, `data/reddit-*`, root stray `0`: device/scratch/generated artifacts left untracked.
+- No processes killed; no binaries purged. Full build run via `build.bat` (result in session log).
+
+### Next agent
+- Drop `stash@{0}` once v1.0.28 push is verified.
+- Re-verify deepseek-harness GUI addon against dsh 0.2.2-rc.1 (pointer bumped without integration test; root kernel does not import it).
+- Consider Git LFS for `data/*.db`; consider pruning stale `origin-tormentnexus`/`robertpelloni` refs.
+
+---
+
 # HANDOFF - OpenCode HARNESS applied + verified E2E (v1.0.24)
 
 ## Session O2 (2026-11-03) - opencode lane [muse-spark-1.3-contributor in "opencode" in ~/workspace/HyperNexus]

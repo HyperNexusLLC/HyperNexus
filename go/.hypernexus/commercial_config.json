@@ -1,0 +1,12 @@
+{
+  "sso": {},
+  "roles": [
+    {
+      "permissions": [
+        "read",
+        "execute"
+      ],
+      "role": "operator"
+    }
+  ]
+}

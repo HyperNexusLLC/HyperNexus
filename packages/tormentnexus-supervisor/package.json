@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/supervisor",
-  "version": "1.0.23",
+  "version": "1.0.28",
   "description": "HyperNexus Supervisor - Watchdog and Automation Agent",
   "type": "module",
   "main": "dist/index.js",

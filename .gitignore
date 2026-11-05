@@ -198,7 +198,7 @@ go_backup/
 scripts/twitter_poster_state.json
 
 # === Memory branches ===
-.memory/branches/
+# .memory/branches/ tracked per repo-sync policy (2026-11-05)
 scripts/linkedin_published.json
 scripts/credentials.json
 scripts/token.json

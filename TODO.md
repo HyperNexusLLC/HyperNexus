@@ -33,3 +33,12 @@
 - [x] Systray: no more ghost icons (NIM_DELETE on shutdown) + survives explorer restarts (TaskbarCreated).
 - [x] Watchdog activated (stall-vs-death aware, won't thrash).
 - [x] Verified tray menu is feature-complete (Dashboard / Logs / Auto-Start / Exit All Processes).
+
+## Repo Sync (2026-11-05, v1.0.28)
+
+- [x] Fast-forward local `main` to remote (258 commits); audit all feature branches (see HANDOFF Session RS).
+- [ ] **Drop `stash@{0}`** ("pre-sync-wip-2026-11-05") after verifying v1.0.28 push landed.
+- [ ] **deepseek-harness 0.2.2-rc.1**: re-verify `addons/deepseek-harness-gui` against bumped `vendor/deepseek-harness` (`fcc0ad4621`); root kernel does not import it, addon untested.
+- [ ] **Git LFS for runtime DBs**: `data/tormentnexus.db` (210MB), `data/catalog.db` (52MB), `.tormentnexus/skills.db` (49MB) exceed GitHub's 100MB file limit and stay untracked until LFS is adopted.
+- [ ] **Archive or delete** `feature/cloud-dashboard-mcp-sse-389806464713532918` (unrelated history, superseded layout, features already in main) once archival need lapses; kept for now per retention policy.
+- [ ] Prune stale remote-tracking refs `origin-tormentnexus/*` and `robertpelloni/*` (remotes no longer configured).
