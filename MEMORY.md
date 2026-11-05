@@ -328,3 +328,5 @@ Memories should be stored both:
 - mini-swe-agent dual-model installer (2026-11-04): META_MODEL env override into MSWEA_MODEL_NAME (openai/ prefix); check accepts both; battery green incl live --check.
 
 - jcode dual-model launcher (2026-11-04): META_MODEL env override on both routes; toml catalog gains wonder; PSParser 0 errors.
+
+- maki dual-model launcher (2026-11-04): META_MODEL env override on one-shot flag; live-store check accepts both; live check OK.

@@ -630,3 +630,8 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - use-meta-model.ps1 resolves META_MODEL into both Start-Jcode calls; toml + README document wonder opt-in.
 - Next: maki-cli equivalent in harness order.
 
+
+## 2026-11-04 maki dual-model launcher done
+- use-meta-model.ps1 + install.mjs check relaxed; live maki models check OK; no battery in harness.
+- Next: prime-agent-cli equivalent in harness order.
+

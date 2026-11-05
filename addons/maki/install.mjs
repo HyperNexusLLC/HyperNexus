@@ -73,7 +73,7 @@ function check() {
     // unauthenticated even when the working API-key path is live (verified MAKI-META-OK/MAKI2).
     // Truth test = model catalog, which maki serves from its live store.
     const models = execFileSync("maki", ["models"], { cwd: os.tmpdir(), encoding: "utf8", timeout: 180000 });
-    if (!/muse-spark-1\.3-contributor/.test(models)) gaps.push("maki models: no muse-spark-1.3-contributor");
+    if (!/muse-(spark-1\.3|wonder-1\.0)-contributor/.test(models)) gaps.push("maki models: no spark|wonder contributor");
   } catch (e) { gaps.push(`maki CLI not runnable (${(e.message || "").split("\n")[0]})`); }
   if (gaps.length) { console.log(`${TAG} CHECK FAILED:\n  - ${gaps.join("\n  - ")}`); process.exit(1); }
   console.log(`${TAG} CHECK OK: meta authenticated + muse-spark listed (live store).`);

@@ -61,3 +61,7 @@ in ~24h and a snapshot rots.
 - `auth.json` is read at call time, every time — rotation in pi is picked up
   automatically.
 - `META_AUTH_PATH` / `META_KEY_MINT_URL` env overrides exist for tests.
+
+## Dual-model (spark default, wonder opt-in)
+
+META_MODEL env selects the model (meta/ prefix tolerated); the one-shot flag becomes -m meta/$Model. Check accepts either model in the live catalog.
