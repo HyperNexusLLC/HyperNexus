@@ -364,3 +364,4 @@ Memories should be stored both:
 - copilot slot audit (2026-11-05): no code change by design — Meta terms prohibit pi-subscription relay into Copilot; launcher fails closed (b0edae04b); battery 18/18.
 - copilot-cli dual-model launcher (2026-11-05): META_MODEL intent export; live mint OK; battery 12/12; PSParser 0.
 - opencode dual-model (2026-11-05): launcher both routes + installer seeds/backfills both models + jsonc sample; battery 9/9; temp-project round-trip green; kernel lists spark only (wonder pending upstream).
+- codex-gui swarm verify (2026-11-05): wonder pinned, mint live, battery 8/8, .codex-gui/ drift fixed via reinstall; memory STORE 200 + FTS OK, semantic search slow under load (flake).
