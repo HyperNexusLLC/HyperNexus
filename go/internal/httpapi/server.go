@@ -1713,6 +1713,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/agent/swarm/transcript", s.handleAgentSwarmTranscript)
 	s.mux.HandleFunc("/api/agent/supervisor/evaluate", s.handleAgentSupervisorEvaluate)
 	s.mux.HandleFunc("/api/agent/director/start", s.handleGoDirectorStart)
+	s.mux.HandleFunc("/api/agent/orchestrate", s.handleAgentOrchestrate)
 	s.mux.HandleFunc("/api/memory/archive-session", s.handleMemoryArchiveSession)
 	s.mux.HandleFunc("/api/memory/fts-search", s.handleMemoryFTSearch)
 	s.mux.HandleFunc("/api/memory/maintenance", s.handleMemoryMaintenance)

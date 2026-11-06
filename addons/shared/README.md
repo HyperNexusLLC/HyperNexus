@@ -61,6 +61,24 @@ An autonomous agent reads `manifest.json`:
 - **Budget** — respect `budgetMs`; never exceed `hotPathBudgetMs` on turn paths.
 - **Degrade** — on kernel failure, return a short note; never throw into the turn.
 
+## Cross-session bus + web-thread bridge
+
+Every session/thread, in any harness, can exchange input and output:
+
+- `session-bus.mjs` — kernel memory-facts bus (generalizes the codex-gui
+  swarm bus): `register` / `sessions` / `send` (input to a session's inbox) /
+  `inbox` / `reply` (output, threaded by msg id) / `thread`. Conventions:
+  `[session-bus] register <id>`, `[bus-msg] <id> -> <to>`, `[bus-out] <id>`.
+- `cdp-bridge.mjs` — drives the web threads that cannot poll the bus
+  (muse.ai, Gemini) through Edge CDP 9222: `tabs` / `send` / `read`.
+  Mirror web-thread exchanges onto the bus with `send`/`reply` so CLI
+  sessions can read them.
+- Kernel-owned sessions already have native routes (`/api/sessions/supervisor/*`,
+  `/api/agent/a2a/*`); the bus covers external harness sessions. Native
+  cross-session execution (`/api/agent/orchestrate`) remains 404 upstream.
+- Battery: `node addons/shared/bin/test-session-bus.mjs` (hermetic always;
+  live round-trip only when `/health` answers, else `SKIP-LIVE`).
+
 ## Keeping adapters in sync
 
 The manifest is generated/validated against the adapters' tool lists. When you add or
