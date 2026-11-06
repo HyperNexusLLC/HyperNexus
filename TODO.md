@@ -45,9 +45,17 @@
 
 ## Harness Rollout (2026-11-05, v1.0.28)
 
-- [ ] **`/login meta` in pi** (human, interactive): unblocks live Meta inference in all harnesses except muse-cli; then re-run one `--live` battery + the bash-tool vs parity-tool 403 bisection against `/v1/chat/completions`.
+- [x] **`/login meta` in pi** - done 2026-11-05; spark+wonder live in pi/codex/muse-cli, 403 bisection reproduced and strip-list fixed (`apply_patch`/`update_plan`). Remaining: spot-check other harnesses' `--live` batteries opportunistically.
 - [ ] Replace `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` with the v1.0.28 build once the pre-existing `hypernexus.exe mcp` process (pid 26812) ends; running kernel is workspace `bin\hypernexus.exe` (pid 28660).
 - [ ] Install missing GUI apps or accept staged configs: juggler, openchamber, paseo, paradev, omnigent, t3code, conductor, openwebui; retarget antigravity-gui installer at the real Antigravity `mcp.json`.
 - [ ] Native cross-session execution: kernel `/api/agent/orchestrate` 404 - needs TS upstream (:4000) or native Go orchestrate; memory-facts control plane works meanwhile.
 - [ ] Rotate the pre-existing plaintext provider apiKey in `~/.config/mimocode/mimocode.jsonc` to an env ref.
-- [ ] prime-agent CLI has no documented one-command install; hax CLI likewise (addons hermetic-only until binaries exist).
+- [x] prime-agent 0.10.2 + paseo 0.15.2 + omnigent + Open WebUI + Juggler + T3 Code + OpenChamber + hax (WSL) installed 2026-11-05; conductor/paradev are macOS-only (no Windows build exists).
+- [ ] Re-run `/login meta` in pi when minted-key routes are needed (mint 401s since mid-session 2026-11-05; kernel OAuth path unaffected). Prefer kernel-proxy routing everywhere.
+- [x] jcode upgraded to 0.99.1 - `meta-muse` surfaces in the provider enum; live exec now only needs a real Meta key (human `/login meta` in pi, or interactive `jcode login --provider muse-subscription`).
+- [ ] maki headless Meta: Lua provider registers only in interactive TUI sessions on 0.5.6; run one TUI session in-repo to seed `maki.provider.auth` for meta.
+- [ ] hax live from WSL needs the kernel reachable (bind `--host 0.0.0.0` or WSL mirrored networking) - user security-posture decision.
+- [ ] droid live needs Factory account auth; reasonix live needs one interactive `reasonix setup` (provider key); freebuff/codebuff BYOK needs the mint revived.
+- [ ] Kernel-native orchestrate: TS upstream on :4000 no longer exists in-tree (`packages/cli/` removed; root `start` script stale). Needs a Go-native `/api/agent/orchestrate` implementation or restoring the TS core. Paseo + memory-facts are the working control plane meanwhile.
+- [ ] `claude` command still crashes on system Node 26 - either downgrade global Node to 22/24 LTS or put `%LOCALAPPDATA%\node22` first in PATH; `~/bin/claude.cmd` wrapper does not shadow in PowerShell.
+- [ ] droid 0.71.0 does not surface `customModels` (schema mismatch); copilot-cli Meta route needs the mint revived (`/login meta` in pi).

@@ -103,7 +103,7 @@ fi
 export HAX_META_API_KEY="$META_KEY"
 # Also satisfy hax's shipped openai-compatible env binding for ad-hoc runs.
 export HAX_OPENAI_API_KEY="$META_KEY"
-export HAX_OPENAI_BASE_URL="${HAX_OPENAI_BASE_URL:-https://api.meta.ai/v1}"
+export HAX_OPENAI_BASE_URL="${HAX_OPENAI_BASE_URL:-http://127.0.0.1:7778/v1}"
 export HAX_OPENAI_API="${HAX_OPENAI_API:-responses}"
 echo "export HAX_META_API_KEY='$META_KEY'"
 echo "export HAX_OPENAI_API_KEY='$META_KEY'"

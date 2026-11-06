@@ -176,7 +176,7 @@ try {
   else {
     m.apiKeyHelper && /meta-muse-key\.mjs/.test(m.apiKeyHelper)
       ? ok("model uses apiKeyHelper (auto-refresh)") : bad("model uses apiKeyHelper", "still static apiKey?");
-    m.baseUrl === "https://api.meta.ai/v1" ? ok("model baseUrl api.meta.ai/v1") : bad("model baseUrl", m.baseUrl);
+    m.baseUrl === "http://127.0.0.1:7778/v1" ? ok("model baseUrl kernel proxy") : bad("model baseUrl", m.baseUrl);
     m.provider === "generic-chat-completion-api" ? ok("model provider generic-chat-completion-api") : bad("model provider", m.provider);
     m.maxContextLimit === 1048576 ? ok("model context 1M") : bad("model context", String(m.maxContextLimit));
     (s.sessionDefaultSettings?.model || "").includes("Meta-Muse-Spark")

@@ -112,6 +112,7 @@ func TestOpenAIResponsesToChat(t *testing.T) {
 func TestAttestationTrippingTool(t *testing.T) {
 	for _, n := range []string{"bash", "Bash", "powershell", "PowerShell", "shell", "SHELL",
 		"request_user_input", "get_goal", "create_goal", "update_goal",
+		"apply_patch", "Apply_Patch", "update_plan", "Update_Plan", "TodoWrite", "todowrite",
 		"web_search", "Web_Search", "web_fetch", "search"} {
 		if !attestationTrippingTool(n) {
 			t.Fatalf("%q must trip attestation", n)

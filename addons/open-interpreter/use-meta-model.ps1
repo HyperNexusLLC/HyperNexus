@@ -22,7 +22,7 @@ if ([string]::IsNullOrWhiteSpace($fresh)) {
 }
 $env:META_MUSE_API_KEY = $fresh.Trim()
 $env:OPENAI_API_KEY = $env:META_MUSE_API_KEY
-$env:OPENAI_BASE_URL = 'https://api.meta.ai/v1'
+$env:OPENAI_BASE_URL = 'http://127.0.0.1:7778/v1'
 $env:OPENAI_MODEL = ('meta/' + $Model)
 Write-Host '[hypernexus] minted fresh META_MUSE_API_KEY for this run only (value hidden, never stored). Starting open-interpreter with meta/'' + $Model + '' ...'
 
