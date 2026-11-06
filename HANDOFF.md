@@ -1,4 +1,21 @@
 
+# HANDOFF - Coordination resume + dashboard restored (v1.0.28)
+
+## Session COORD (2026-11-05) - coordination [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+
+### Done
+- Recalled shared state across lanes: kernel `1.0.28` healthy on :7778 (uptime ~7.6h, `/health` + `/api/system/overview` 200); scratchpad `goal` was empty — re-seeded with the coordinated queue so main/workspace/Gemini sessions resume from the same goal.
+- Dashboard :7779 was DOWN (connection refused); restored from `apps/web` (`next start -p 7779`, pid 36708, logs `apps/dashboard-live.{out,err}.log`). Verified: `/dashboard` 200, `/` 200. Note: `next start` warns the build is `output: standalone` — serving works, but the sanctioned prod path is `node .next-build/standalone/server.js`; switch on next restart.
+- Persisted this checkpoint to L2 (category `coordination`, tags `hypernexus,coordination,session,summary,ops,deploy`) + scratchpad `goal`. MCP inventory confirms `gemini` harness installed (22 harnesses local fallback; upstream bridge unavailable, Go-local routing).
+
+### State for next agent (all lanes)
+- Control plane = kernel memory-facts + this file. TS upstream :4000 does not exist in-tree; `/api/agent/orchestrate` 404 is known — do not rebuild it from this repo.
+- Next dev queue (unblocked): decompose `apps/web/src/app/dashboard/dashboard-home-view.tsx` (4698 lines) into lazy per-section components; retire remaining legacy `dashboard/*` `GenericDashboardPage` stubs (logs-metrics, healer, memory-analytics, mcp — review unique fetches first); embedding cache for sub-second semantic search.
+- Human-gated (unchanged): fresh `/login meta` in pi for the mint; droid Factory auth; hax WSL kernel bind decision; maki TUI seed; installed-exe swap blocked by pre-existing pid 26812 — leave it running.
+- Gemini lane per AGENTS.md: bulk refactoring / recursive scripts / context analysis. Coordinate via scratchpad `goal` + L2 before starting.
+
+---
+
 # HANDOFF - 36-harness dual-model rollout (v1.0.28)
 
 ## Session HR (2026-11-05) - harness rollout [meta/muse-wonder-1.0-contributor in muse-cli in ~/workspace/HyperNexus]
