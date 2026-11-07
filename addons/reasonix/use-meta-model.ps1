@@ -30,7 +30,15 @@ $reasonix = Get-Command reasonix -ErrorAction SilentlyContinue
 if (-not $reasonix) { $reasonix = 'reasonix' }
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & $reasonix run --model ('meta/' + $Model) -- $Prompt
+  # Headless runs must not stall on approvals (-y). NOTE (2026-11-07):
+  # reasonix natively declares read_file/write_file/edit_file, and Meta
+  # subscription attestation denies those names (403 client_attestation_denied
+  # via the kernel proxy; live-bisected). The kernel's attestation strip list
+  # does not yet cover them, and reasonix run has no --disallowed-tools flag
+  # (only --allowed-tools). Until the kernel strip list is extended, live
+  # Meta inference in reasonix is BLOCKED; the HyperNexus MCP parity tools
+  # remain usable for shell/file work through other harnesses.
+  & $reasonix run -y --model ('meta/' + $Model) -- $Prompt
 } else {
   $env:REASONIX_MODEL = ('meta/' + $Model)
   & $reasonix --model ('meta/' + $Model)
