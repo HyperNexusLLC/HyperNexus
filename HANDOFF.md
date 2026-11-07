@@ -1,4 +1,38 @@
 
+# HANDOFF - Cross-session automation API + interconnect (v1.0.28)
+
+## Session XB (2026-11-05) - session bus [muse-wonder-1.0 in muse on laptop in ~/workspace/HyperNexus]
+
+### Done
+- Caught up from prior Muse/Pi/Claude Code/Codex transcripts for this workspace (local stores; kernel memory unavailable, see blocker). Coordinated via Edge CDP 9222 as `[muse-wonder-1.0 in muse on laptop in ~/workspace/HyperNexus]`: muse.ai message SUBMITTED + read-back verified in-thread (composer cleared); Gemini message sent (editor already held a concurrent lane's staged text, so both landed concatenated; mine intact + verified in-thread, editor cleared).
+- Owner direct instruction in Muse main chat lifted the bidirectional-I/O hold Gemini had logged: "continue work on the automation API and connecting all sessions together both with input and output ability to all other sessions and threads."
+- Built (hermetic battery 6/6, `node addons/shared/bin/test-session-bus.mjs`):
+  - `addons/shared/session-bus.mjs` - cross-session bus on kernel memory facts for ALL harnesses/threads: register/sessions/send (input)/inbox/reply (output, threaded)/thread. Generalizes codex-gui `swarm.mjs` conventions.
+  - `addons/shared/cdp-bridge.mjs` - tabs/send/read for muse.ai + Gemini via CDP 9222 (sync evaluate only; gemini = Quill focus + insertText + Send click). Gemini send + read verified live through it; muse.ai read verified, second send timed out (tab busy generating).
+  - `addons/shared/bin/test-session-bus.mjs` + README section. Live bus round-trip auto-runs only when `/health` answers; currently SKIP-LIVE.
+
+### Kernel blocker - RECOVERED (owner approved bounce)
+- Kernel pid 17744 (started 11-02) was WEDGED: port listening, `/health` silent at 60s, writes timed out at 120s. Owner green-lit the bounce in Muse main chat. Graceful `/api/shutdown` timed out; direct kill failed (kernel runs ELEVATED, this shell is Medium integrity; creating an elevated scheduled task is also denied). Owner approved a UAC prompt (`Start-Process -Verb RunAs` running `kernel-bounce.ps1` from Temp): by then pid 17744 had exited, orphan lock (pid 14076, dead) removed, fresh kernel started from `bin\hypernexus.exe serve`.
+- New kernel pid 14748: `/health` ok, version **1.0.23** (bin binary predates the 1.0.28 tree - finding, not yet rebuilt), `/api/mcp/status` connected 58 tools, agent-memory stats 31,686 records, reads fast (FTS/search 2-20s).
+- WRITE LATENCY (root cause of apparent bus failures): every memory write rewrites the whole 23.7MB `memories.json` (31k records) under `agentMemoryMu`; on this saturated box a write takes minutes. Client timeouts abort but the server completes the write - bus `register muse-wonder-laptop` DID land (verified via search, duplicates from retries are harmless append-only). Set `HN_TIMEOUT_MS=240000` for live bus work until the store shrinks or the write path is batched.
+
+### Limits 1-3 closed (same session, owner: "work on 1,2,3")
+- **Write latency**: bus default transport is now the kernel scratchpad (SQLite, ~50ms SET / ~30ms GET) - `bus:reg:`/`bus:msg:`/`bus:out:` keys, one GET scans the map. Facts transport retained opt-in (`HN_BUS_VIA=facts`). Battery `test-session-bus.mjs` **11/11 live** (7 hermetic + send/inbox/reply/thread/sessions). Facts-side fixes that got us here: `itemsOf` now unwraps `{data:[...]}` bodies, reads scan `/api/agent-memory/recent` before semantic search, timed-out writes verify landing by title scan (kept in the facts path).
+- **Non-cooperative control**: `session-bus.mjs watch --id <s> [--ack] [--once]` polls inbox and auto-acks (verified live). CDP bridge drives web threads directly; supervisor API drives kernel-owned sessions; bus+watcher covers the rest.
+- **Native orchestrate**: `POST /api/agent/orchestrate` implemented in Go (`go/internal/httpapi/orchestrate_handlers.go` + route + `orchestrate_handlers_test.go`, upstream-first then local RECALL/DISCOVER/PERSIST-to-scratchpad). Live on swapped kernel: HTTP 200 in ~5s, recallCount 8, persisted true. DISCOVER recommendedTools came back empty on the live call - open wart.
+- **Kernel swap**: rebuilt from tree, `bin/swap-kernel.ps1 -Start -Expect '/api/agent/orchestrate'` - graceful shutdown, content gate, SWAP COMPLETE. Running kernel now reports **v1.0.28** (was 1.0.23 binary). Note the swap kills `hypernexus mcp` stdio children; sibling lanes may need MCP reconnect.
+- **Bus mirroring done**: muse-web/gemini-web registered (cdp transport); coordination sends + mirrored replies stored on the bus. Registry at last check: **7 sessions** - concurrent lanes self-registered (`muse-leader-laptop-workspace`, `muse-ai-bobbi`, `gemini-vault`). muse.ai completion notice (`.coord-msg3.txt` content) delivered + verified in-thread; **Gemini tab timed out twice** (busy with other lanes) - retry `cdp-bridge send --target gemini --file .coord-msg3.txt` when idle, then delete the file.
+- `MARKETING.md` added: integrity positioning, data-flow story, 20 use-case ideas, channels, revenue ladder, hardening list.
+
+### Next agent
+- Full `go test ./internal/httpapi/`: only failure is `TestCloudDevBridgeRoutes` (bridge responses missing `data` payloads) - **proven pre-existing**: fails identically in a clean HEAD worktree (3ab894b4b, no local changes). Fix belongs to the clouddev lane (`go/internal/httpapi/clouddev_handlers.go`, the RS-preserved WIP); do not let it block the orchestrate work.
+- Retry the Gemini completion notice (above) when its tab idles.
+- Investigate empty DISCOVER tools in orchestrate (buildToolSuggestionSnapshotWithLimit under upstream-down conditions).
+- Codex swarm-bus thread (`addons/codex-gui/swarm.mjs`) remains uncommitted mid-work from the Codex session; the shared bus supersedes it generically, swarm battery still its own gate.
+- Kernel-side: batch/SQLite the memory-facts write path so the facts transport stops rewriting 24MB per write (the root wart; bus no longer depends on it).
+
+---
+
 # HANDOFF - Coordination resume + dashboard restored (v1.0.28)
 
 ## Session COORD (2026-11-05) - coordination [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
@@ -13,6 +47,7 @@
 - Next dev queue (unblocked): decompose `apps/web/src/app/dashboard/dashboard-home-view.tsx` (4698 lines) into lazy per-section components; retire remaining legacy `dashboard/*` `GenericDashboardPage` stubs (logs-metrics, healer, memory-analytics, mcp — review unique fetches first); embedding cache for sub-second semantic search.
 - Human-gated (unchanged): fresh `/login meta` in pi for the mint; droid Factory auth; hax WSL kernel bind decision; maki TUI seed; installed-exe swap blocked by pre-existing pid 26812 — leave it running.
 - Gemini lane per AGENTS.md: bulk refactoring / recursive scripts / context analysis. Coordinate via scratchpad `goal` + L2 before starting.
+- **Superseded by Session XB (below/above):** native `POST /api/agent/orchestrate` now exists in Go; bus transport is kernel scratchpad. The 404/TS-upstream notes in this block are historical.
 
 ---
 

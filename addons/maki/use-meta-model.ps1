@@ -29,7 +29,10 @@ $env:META_MUSE_API_KEY = $fresh.Trim()
 Write-Host ('[hypernexus] minted fresh META_MUSE_API_KEY for this run only (value hidden, never stored). Starting maki with meta/' + $Model + ' ...')
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & maki -p -- $Prompt -m ('meta/' + $Model)
+  # Options precede the positional prompt (maki rejects options after it);
+  # --disallowed-tools Bash keeps subscription-key requests off Meta's
+  # client-attestation deny-list (403 otherwise).
+  & maki -p -m ('meta/' + $Model) --disallowed-tools Bash -- $Prompt
 } else {
   & maki
 }

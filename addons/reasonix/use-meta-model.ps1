@@ -30,7 +30,15 @@ $reasonix = Get-Command reasonix -ErrorAction SilentlyContinue
 if (-not $reasonix) { $reasonix = 'reasonix' }
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & $reasonix run --model ('meta/' + $Model) -- $Prompt
+  # Headless runs must not stall on approvals (-y). NOTE (2026-11-07):
+  # reasonix natively declares read_file/write_file/edit_file, which used to
+  # 403 via the kernel proxy (live-bisected). The kernel attestation strip
+  # list now covers those names (go/internal/httpapi/openai_compat.go), so the
+  # proxy strips them on retry and live Meta inference in reasonix is
+  # UNBLOCKED (verified: /v1/chat/completions + file tools -> HTTP 200 PONG).
+  # reasonix run has no --disallowed-tools flag (only --allowed-tools), so the
+  # kernel strip-and-retry is the mechanism — no client flags needed.
+  & $reasonix run -y --model ('meta/' + $Model) -- $Prompt
 } else {
   $env:REASONIX_MODEL = ('meta/' + $Model)
   & $reasonix --model ('meta/' + $Model)

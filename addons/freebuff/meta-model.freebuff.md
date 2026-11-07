@@ -72,5 +72,5 @@ harnesses: snapshot bridges must move to the minter pattern on expiry.)
 
 ## Dual-model (spark default, wonder opt-in)
 
-Launcher resolves META_MODEL env: default meta/muse-spark-1.3-contributor, opt-in meta/muse-wonder-1.0-contributor (meta/ prefix optional, others fall back to spark). Both one-shot and TUI routes use the resolved model.
+Launcher resolves META_MODEL env: default meta/muse-spark-1.3-contributor, opt-in meta/muse-wonder-1.0-contributor (meta/ prefix optional, others fall back to spark). TUI route uses the resolved model via FREEBUFF_MODEL. NOTE (2026-11-07, verified live): this freebuff build is interactive-TUI-only — it accepts no `--model` flag and no one-shot prompt (binary shows a full TUI and waits). Headless Meta inference is BLOCKED on the binary; use the TUI, or another harness with a headless path, for live turns.
 
