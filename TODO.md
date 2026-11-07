@@ -48,10 +48,10 @@
 - [x] **`/login meta` in pi** - done 2026-11-05; spark+wonder live in pi/codex/muse-cli, 403 bisection reproduced and strip-list fixed (`apply_patch`/`update_plan`). Remaining: spot-check other harnesses' `--live` batteries opportunistically.
 - [ ] Replace `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` with the v1.0.28 build once the pre-existing `hypernexus.exe mcp` process (pid 26812) ends; running kernel is workspace `bin\hypernexus.exe` (pid 28660).
 - [ ] Install missing GUI apps or accept staged configs: juggler, openchamber, paseo, paradev, omnigent, t3code, conductor, openwebui; retarget antigravity-gui installer at the real Antigravity `mcp.json`.
-- [ ] Native cross-session execution: kernel `/api/agent/orchestrate` 404 - needs TS upstream (:4000) or native Go orchestrate; memory-facts control plane works meanwhile.
+- [x] Native cross-session execution: `POST /api/agent/orchestrate` implemented natively in Go (2026-11-05, RECALL/DISCOVER/PERSIST, live 200) + cross-session bus (`addons/shared/session-bus.mjs`, scratchpad transport, battery 11/11) + CDP bridge for web threads.
 - [ ] Rotate the pre-existing plaintext provider apiKey in `~/.config/mimocode/mimocode.jsonc` to an env ref.
 - [x] prime-agent 0.10.2 + paseo 0.15.2 + omnigent + Open WebUI + Juggler + T3 Code + OpenChamber + hax (WSL) installed 2026-11-05; conductor/paradev are macOS-only (no Windows build exists).
-- [ ] Re-run `/login meta` in pi when minted-key routes are needed (mint 401s since mid-session 2026-11-05; kernel OAuth path unaffected). Prefer kernel-proxy routing everywhere.
+- [x] Re-run `/login meta` in pi - DONE 2026-11-06 (Robert): meta entry present, `meta-muse-key --check` mint OK (shared + codex), `/v1/models` 200 spark family, live proofs parity-only AND shell-named tools both 200 `LIVE_OK` (403 bisection closed).
 - [x] jcode upgraded to 0.99.1 - `meta-muse` surfaces in the provider enum; live exec now only needs a real Meta key (human `/login meta` in pi, or interactive `jcode login --provider muse-subscription`).
 - [ ] maki headless Meta: Lua provider registers only in interactive TUI sessions on 0.5.6; run one TUI session in-repo to seed `maki.provider.auth` for meta.
 - [ ] hax live from WSL needs the kernel reachable (bind `--host 0.0.0.0` or WSL mirrored networking) - user security-posture decision.

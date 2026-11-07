@@ -1,6 +1,16 @@
 
 # HANDOFF - Cross-session automation API + interconnect (v1.0.28)
 
+## Session MAIN (2026-11-07) - lane completion sweep [muse-spark-1.3-contributor in main session]
+
+### Completed per-unit (owner sessions in brackets, verified this session)
+- **Go lane [XB]**: `TestCloudDevBridgeRoutes` PASS (4.9s) + attestation suite PASS; `clouddev_handlers.go` + `tool_advertisements.go` committed as lane work.
+- **Bus lane [XB]**: `test-session-bus.mjs` **12/12 live** (scratchpad transport immune to memory-write sickness). `session-bus.mjs` + `cdp-bridge.mjs` (dedupe ack guard) + battery committed.
+- **Codex swarm [Codex session]**: `swarm.mjs` driver reviewed complete; added timed-out-write landing-verify (shared-bus pattern) for slow-box tolerance. Battery hermetic 4/4; live leg red while kernel memory writes hang (infra, pre-existing, also red on hax/droid memory checks) — committed with honest gate status, do not treat as code regression.
+- **Reasonix/meta-proxy [own]**: kernel strip-list extended (`read_file/write_file/edit_file`) + `openai/` model-prefix strip (commit 99c8c1fcd, both remotes verified); live PONGs: kernel chat+filetools, responses openai-prefix, open-interpreter PTY, grok allowlist, droid proxy, opencode proxy, reasonix `run` end-to-end.
+- **Submodule**: `vendor/deepseek-harness` working tree had drifted to 5badb15; restored to recorded fcc0ad4621 (RS bump). Clean.
+- **GUI lanes**: all 7 ext batteries 8/8 (codex/claude/openwebui/deepseek/mimocode/antigravity/juggler); mini smoke 7/7; mini inference proven under PTY (console-required import); copilot blocked (no auth, GitHub-models-only).
+- **Kernel**: running new binary from `C:/tmp/octest/hypernexus-new.exe` (bin\hypernexus.exe locked by other lanes' MCP servers); swap in on next natural restart.
 ## Session XB (2026-11-05) - session bus [muse-wonder-1.0 in muse on laptop in ~/workspace/HyperNexus]
 
 ### Done
@@ -19,7 +29,7 @@
 ### Limits 1-3 closed (same session, owner: "work on 1,2,3")
 - **Write latency**: bus default transport is now the kernel scratchpad (SQLite, ~50ms SET / ~30ms GET) - `bus:reg:`/`bus:msg:`/`bus:out:` keys, one GET scans the map. Facts transport retained opt-in (`HN_BUS_VIA=facts`). Battery `test-session-bus.mjs` **11/11 live** (7 hermetic + send/inbox/reply/thread/sessions). Facts-side fixes that got us here: `itemsOf` now unwraps `{data:[...]}` bodies, reads scan `/api/agent-memory/recent` before semantic search, timed-out writes verify landing by title scan (kept in the facts path).
 - **Non-cooperative control**: `session-bus.mjs watch --id <s> [--ack] [--once]` polls inbox and auto-acks (verified live). CDP bridge drives web threads directly; supervisor API drives kernel-owned sessions; bus+watcher covers the rest.
-- **Native orchestrate**: `POST /api/agent/orchestrate` implemented in Go (`go/internal/httpapi/orchestrate_handlers.go` + route + `orchestrate_handlers_test.go`, upstream-first then local RECALL/DISCOVER/PERSIST-to-scratchpad). Live on swapped kernel: HTTP 200 in ~5s, recallCount 8, persisted true. DISCOVER recommendedTools came back empty on the live call - open wart.
+- **Native orchestrate**: `POST /api/agent/orchestrate` implemented in Go (`go/internal/httpapi/orchestrate_handlers.go` + route + `orchestrate_handlers_test.go`, upstream-first then local RECALL/DISCOVER/PERSIST-to-scratchpad). Live on swapped kernel: HTTP 200 in ~5s, recallCount 8, persisted true. DISCOVER empty-list wart FIXED 2026-11-06: `RecommendedTools` had no local fallback + catalog `LIKE` used whole-sentence goals; `go/internal/httpapi/tool_advertisements.go` now mirrors the RelatedTools local-catalog fallback plus per-keyword search (`localToolSearchWithKeywords`). Targeted Go tests ok (34.6s), kernel rebuilt + swapped, live probe: `recommendedTools source=local-catalog, tools=1 (Notion MCP)`. Uncommitted at handoff.
 - **Kernel swap**: rebuilt from tree, `bin/swap-kernel.ps1 -Start -Expect '/api/agent/orchestrate'` - graceful shutdown, content gate, SWAP COMPLETE. Running kernel now reports **v1.0.28** (was 1.0.23 binary). Note the swap kills `hypernexus mcp` stdio children; sibling lanes may need MCP reconnect.
 - **Bus mirroring done**: muse-web/gemini-web registered (cdp transport); coordination sends + mirrored replies stored on the bus. Registry at last check: **7 sessions** - concurrent lanes self-registered (`muse-leader-laptop-workspace`, `muse-ai-bobbi`, `gemini-vault`). muse.ai completion notice (`.coord-msg3.txt` content) delivered + verified in-thread; **Gemini tab timed out twice** (busy with other lanes) - retry `cdp-bridge send --target gemini --file .coord-msg3.txt` when idle, then delete the file.
 - `MARKETING.md` added: integrity positioning, data-flow story, 20 use-case ideas, channels, revenue ladder, hardening list.
@@ -27,7 +37,7 @@
 ### Next agent
 - Full `go test ./internal/httpapi/`: only failure is `TestCloudDevBridgeRoutes` (bridge responses missing `data` payloads) - **proven pre-existing**: fails identically in a clean HEAD worktree (3ab894b4b, no local changes). Fix belongs to the clouddev lane (`go/internal/httpapi/clouddev_handlers.go`, the RS-preserved WIP); do not let it block the orchestrate work.
 - Retry the Gemini completion notice (above) when its tab idles.
-- Investigate empty DISCOVER tools in orchestrate (buildToolSuggestionSnapshotWithLimit under upstream-down conditions).
+- Lane item 3 DONE 2026-11-06: `TestCloudDevBridgeRoutes` fixed - 8 clouddev mutation handlers discarded upstream payloads (`new(any)`, no `data`); all now return `data: result`. Targeted test ok (8.2s); kernel rebuilt (53,320,192B) + swapped (first swap attempt hit the MCP-shim count trap while serve was down - second swap clean, kernel pid 25984, `/health` v1.0.28, clouddev stats fallback live, orchestrate probe 200/recall 8/tools=1). Full httpapi suite not rerun this cycle. `clouddev_handlers.go` uncommitted at handoff with the other lane fixes.
 - Codex swarm-bus thread (`addons/codex-gui/swarm.mjs`) remains uncommitted mid-work from the Codex session; the shared bus supersedes it generically, swarm battery still its own gate.
 - Kernel-side: batch/SQLite the memory-facts write path so the facts transport stops rewriting 24MB per write (the root wart; bus no longer depends on it).
 
@@ -798,4 +808,5 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 ## 2026-11-05 codex-gui swarm verification (wonder primary confirmed)
 - Model: connection.json already pins meta/muse-wonder-1.0-contributor (alt spark); mint live OK; kernel /v1/models serves spark family (wonder via same minter/proxy, pending upstream listing).
 - Swarm control plane verified: battery 8/8; install --check was RED (untracked .codex-gui/ drifted from addon source) -> ran install, now CHECK PASSED. Leader/worker agent files + hn-swarm/hn-report commands + orchestrator skill + overlay all present and consistent.
-- Report-back channel: kernel fact STORE 200 verified; FTS recall fast path OK. Semantic /api/memory/search timed out under box saturation (many stale node procs) — known load flake, not an addon defect. No repo diff from this turn (.codex-gui/ untracked); verification recorded here only.
+- Report-back channel: kernel fact STORE 200 verified; FTS recall fast path OK. Semantic /api/memory/search timed out under box saturation (many stale node procs) — known load flake, not an addon defect. No repo diff from this turn (.codex-gui/ untracked); verification recorded here only.Coordination 2026-11-05 late night: Muse Spark v5 stands. Fresh Gemini Argon pull 4-27 AM shows Sovereign Vault plus HRL coin waterfall, feeds Bet 3. Renderer flaky, CDP Browser channel OK. Next: ship marketing_agent v0-7-x, then kernel message API, then RE-CRM vault.
+[muse-spark-1.3-contributor in Codex on laptop in workspace] sync late night: v5 stands. Argon 4-27 AM Sovereign Vault plus HRL coin folded into Bet 3. Gemini inject staged at .gemini_msg.txt, renderer wedged, needs idle window to land. No muse-ai tab in Edge, so Muse-side coordination via this doc.
