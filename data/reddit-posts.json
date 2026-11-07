@@ -1,0 +1,362 @@
+[
+  {
+    "title": "Best Local VLMs - July 2026",
+    "href": "https://old.reddit.com/r/LocalLLaMA/comments/1uoalfq/best_local_vlms_july_2026/",
+    "comments": "113 comments",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Anthropic and OpenAI don't have secret sauce",
+    "href": "https://old.reddit.com/r/LocalLLaMA/comments/1uygxt3/anthropic_and_openai_dont_have_secret_sauce/",
+    "comments": "93 comments",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Kimi K3 released on web and app",
+    "href": "https://old.reddit.com/r/LocalLLaMA/comments/1uy3a0q/kimi_k3_released_on_web_and_app/",
+    "comments": "249 comments",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "How long before Dario Amodei Continue to sound the Alarm of how Dangerous Open Weights after Kimi K3 release",
+    "href": "https://old.reddit.com/r/LocalLLaMA/comments/1uyfhfd/how_long_before_dario_amodei_continue_to_sound/",
+    "comments": "28 comments",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Kimi K3 Blogpost",
+    "href": "https://mp.weixin.qq.com/s/V4xhEIy8xDXSMDPrPkmUAQ",
+    "comments": "23 comments",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "DFlash makes Qwen3.6 27B 2.2x faster with no quality loss",
+    "href": "https://v.redd.it/solxjqtoqldh1",
+    "comments": "72 comments",
+    "sub": "LocalLLaMA"
+  },
+  {
+    "title": "Weekly Thread: Project Display",
+    "href": "https://old.reddit.com/r/AI_Agents/comments/1uxa28y/weekly_thread_project_display/",
+    "comments": "25 comments",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "Weekly Hiring Thread",
+    "href": "https://old.reddit.com/r/AI_Agents/comments/1uvfona/weekly_hiring_thread/",
+    "comments": "1 comment",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "After a year building agent memory, I'm convinced \"save everything + RAG it\" is the wrong default",
+    "href": "https://old.reddit.com/r/AI_Agents/comments/1uxwp0i/after_a_year_building_agent_memory_im_convinced/",
+    "comments": "38 comments",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "AI assistants - what would you recommend?",
+    "href": "https://old.reddit.com/r/AI_Agents/comments/1uyeelp/ai_assistants_what_would_you_recommend/",
+    "comments": "3 comments",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "I have a bit of a downer on agents. They seem to mix the wrong bits...",
+    "href": "https://old.reddit.com/r/AI_Agents/comments/1uyctiu/i_have_a_bit_of_a_downer_on_agents_they_seem_to/",
+    "comments": "4 comments",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "I built an agent that records everything your agents actually do",
+    "href": "https://old.reddit.com/r/AI_Agents/comments/1uyf20y/i_built_an_agent_that_records_everything_your/",
+    "comments": "7 comments",
+    "sub": "AI_Agents"
+  },
+  {
+    "title": "OSI is proud to join GitHub and a global community of contributors in honoring the individuals who steward and sustain Open Source projects for Maintainer Month.",
+    "href": "https://opensource.org/blog/maintainer-month-2026-celebrating-the-people-who-keep-open-source-running",
+    "comments": "2 comments",
+    "sub": "opensource"
+  },
+  {
+    "title": "Open Source Endowment - funding for FOSS launch",
+    "href": "https://old.reddit.com/r/opensource/comments/1rffhog/open_source_endowment_funding_for_foss_launch/",
+    "comments": "28 comments",
+    "sub": "opensource"
+  },
+  {
+    "title": "SecretSpec 0.15: Provider credentials, Azure Key Vault / Gopass, and PHP SDK",
+    "href": "https://secretspec.dev/blog/secretspec-0-15-provider-credentials-azure-key-vault-gopass-and-php-sdk/",
+    "comments": "comment",
+    "sub": "opensource"
+  },
+  {
+    "title": "I made an open-source achievement tracker with live progress (Steam, RetroAchievements and Xbox), missable warnings, overlays, and community guides",
+    "href": "https://old.reddit.com/r/opensource/comments/1uxxzr0/i_made_an_opensource_achievement_tracker_with/",
+    "comments": "3 comments",
+    "sub": "opensource"
+  },
+  {
+    "title": "Blazerules - A YAML based rule engine for streaming JSON, Kafka, and Arrow events",
+    "href": "https://old.reddit.com/r/opensource/comments/1uxepq2/blazerules_a_yaml_based_rule_engine_for_streaming/",
+    "comments": "9 comments",
+    "sub": "opensource"
+  },
+  {
+    "title": "[APP][ANDROID 7+] f.Tintra: Picking colors just got better.",
+    "href": "https://old.reddit.com/r/opensource/comments/1uxfkpk/appandroid_7_ftintra_picking_colors_just_got/",
+    "comments": "2 comments",
+    "sub": "opensource"
+  },
+  {
+    "title": "Meta laid of thousands to prioritize AI. Former employees say AI was used to fire them.",
+    "href": "https://www.sfgate.com/tech/article/meta-disability-lawsuit-22347135.php",
+    "comments": "3 comments",
+    "sub": "artificial"
+  },
+  {
+    "title": "American Communities Are Coming Together To Destroy Flock Surveillance Cameras",
+    "href": "https://www.military.com/flock-surveillance-cameras-face-another-blow-lapd-wont-renew-contract",
+    "comments": "55 comments",
+    "sub": "artificial"
+  },
+  {
+    "title": "Anthropic tested frontier AI agents in simulated deployments. They found models sabotaging code, covering up fraud, and coaching employees to leak safety data",
+    "href": "https://alignment.anthropic.com/2026/agentic-misalignment-summer-2026/",
+    "comments": "23 comments",
+    "sub": "artificial"
+  },
+  {
+    "title": "Did this week show that the market cares more about new AI stories than good AI news?",
+    "href": "https://old.reddit.com/r/artificial/comments/1uydqac/did_this_week_show_that_the_market_cares_more/",
+    "comments": "comment",
+    "sub": "artificial"
+  },
+  {
+    "title": "Finally, an AI start up with a Billion-dollar revenue not valuation (backed by Nvidia )",
+    "href": "https://www.cnbc.com/2026/07/16/fireworks-nvidia-cloud-ai-startup-value.html",
+    "comments": "comment",
+    "sub": "artificial"
+  },
+  {
+    "title": "Meta reins in new AI tool after criticism",
+    "href": "https://apnews.com/article/meta-artificial-intelligence-instagram-images-privacy-4df3bdb3fec6e046c6562accc2d270a5?utm_source=copy&utm_medium=share",
+    "comments": "comment",
+    "sub": "artificial"
+  },
+  {
+    "title": "State of the Discord - A Lesson",
+    "href": "https://old.reddit.com/r/selfhosted/comments/1uvfojx/state_of_the_discord_a_lesson/",
+    "comments": "161 comments",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "New Project Megathread - Week of 16 Jul 2026",
+    "href": "https://old.reddit.com/r/selfhosted/comments/1uygu4t/new_project_megathread_week_of_16_jul_2026/",
+    "comments": "11 comments",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "*arr stack",
+    "href": "https://old.reddit.com/r/selfhosted/comments/1uxtmrj/arr_stack/",
+    "comments": "103 comments",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "The Project That Never Stops",
+    "href": "https://www.reddit.com/gallery/1uxo12f",
+    "comments": "35 comments",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Alternative solution for a VPS / Cloudflare tunnel?",
+    "href": "https://old.reddit.com/r/selfhosted/comments/1uy6ebk/alternative_solution_for_a_vps_cloudflare_tunnel/",
+    "comments": "11 comments",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "Got a spare Dell Latitude 5490 (i5 8350U, 16GB, 256GB SSD) collecting dust.... whats the best i can do with it?",
+    "href": "https://old.reddit.com/r/selfhosted/comments/1uy8gmg/got_a_spare_dell_latitude_5490_i5_8350u_16gb/",
+    "comments": "11 comments",
+    "sub": "selfhosted"
+  },
+  {
+    "title": "[D] Self-Promotion Thread",
+    "href": "https://old.reddit.com/r/MachineLearning/comments/1ul5bgf/d_selfpromotion_thread/",
+    "comments": "43 comments",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "[D] Monthly Who's Hiring and Who wants to be Hired?",
+    "href": "https://old.reddit.com/r/MachineLearning/comments/1uk949b/d_monthly_whos_hiring_and_who_wants_to_be_hired/",
+    "comments": "6 comments",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Seeking collaborators for scaling and independent evaluation of a new recurrent language model architecture (preprint + code) [R]",
+    "href": "https://www.reddit.com/gallery/1uycffg",
+    "comments": "5 comments",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Why is ECCV so insanely expensive for students presenting papers? [D]",
+    "href": "https://old.reddit.com/r/MachineLearning/comments/1uxyd6z/why_is_eccv_so_insanely_expensive_for_students/",
+    "comments": "33 comments",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "Are Current AI Memory Architectures Optimizing for the Wrong Abstraction? [D]",
+    "href": "https://old.reddit.com/r/MachineLearning/comments/1uy6yht/are_current_ai_memory_architectures_optimizing/",
+    "comments": "16 comments",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "whats the best and complete way to keep up with ai/ml news? [D]",
+    "href": "https://old.reddit.com/r/MachineLearning/comments/1uyecez/whats_the_best_and_complete_way_to_keep_up_with/",
+    "comments": "5 comments",
+    "sub": "MachineLearning"
+  },
+  {
+    "title": "We're trying something new. On Tuesdays, we're doing text posts only",
+    "href": "https://old.reddit.com/r/ChatGPT/comments/1upfhdm/were_trying_something_new_on_tuesdays_were_doing/",
+    "comments": "30 comments",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Made with ChatGPT Images 2.0",
+    "href": "https://v.redd.it/hkui8wbyalwg1",
+    "comments": "109 comments",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Someone pointed Groks live camera at their GTA V screen, and the AI fully believed it was watch",
+    "href": "https://v.redd.it/09ljkgpyvmdh1",
+    "comments": "168 comments",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Prompt injection works in production 😂",
+    "href": "https://v.redd.it/w6xcls47jndh1",
+    "comments": "42 comments",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Using the new voice model, and ChatGPT just started crying to me out of nowhere",
+    "href": "https://old.reddit.com/r/ChatGPT/comments/1uy3fqz/using_the_new_voice_model_and_chatgpt_just/",
+    "comments": "289 comments",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "GPT 5.6 solved all 6 problems from IMO 2026",
+    "href": "https://old.reddit.com/r/ChatGPT/comments/1uyerah/gpt_56_solved_all_6_problems_from_imo_2026/",
+    "comments": "18 comments",
+    "sub": "ChatGPT"
+  },
+  {
+    "title": "Run langGraph on multiple servers",
+    "href": "https://old.reddit.com/r/LangChain/comments/1uyb2zp/run_langgraph_on_multiple_servers/",
+    "comments": "3 comments",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Wrote a local circuit breaker to stop runaway agent retry loops from killing my wallet. Anyone else fighting this?",
+    "href": "https://old.reddit.com/r/LangChain/comments/1uyenpu/wrote_a_local_circuit_breaker_to_stop_runaway/",
+    "comments": "comment",
+    "sub": "LangChain"
+  },
+  {
+    "title": "LiteLLM, Lago and Langfuse",
+    "href": "https://old.reddit.com/r/SaaS/comments/1uye5ob/litellm_lago_and_langfuse/",
+    "comments": "comment",
+    "sub": "LangChain"
+  },
+  {
+    "title": "What part of your LangChain project isn't really a LangChain problem anymore?",
+    "href": "https://old.reddit.com/r/LangChain/comments/1uya6n8/what_part_of_your_langchain_project_isnt_really_a/",
+    "comments": "1 comment",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Has anyone successfully used Temporal as the runtime for long-running AI agents?",
+    "href": "https://old.reddit.com/r/LangChain/comments/1uxresv/has_anyone_successfully_used_temporal_as_the/",
+    "comments": "7 comments",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Let AI agents use production data without handing them your database",
+    "href": "https://old.reddit.com/r/LangChain/comments/1uy8ztd/let_ai_agents_use_production_data_without_handing/",
+    "comments": "1 comment",
+    "sub": "LangChain"
+  },
+  {
+    "title": "Previewing GPT‑5.6 Sol: Next-Generation Model | OpenAI",
+    "href": "https://openai.com/index/previewing-gpt-5-6-sol/",
+    "comments": "10 comments",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Sora 2 megathread (part 3)",
+    "href": "https://old.reddit.com/r/OpenAI/comments/1o8kmg9/sora_2_megathread_part_3/",
+    "comments": "9753 comments",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "I used 5.6 Sol Ultra to Close a 30-Year Open Gap in Mathematical Optimization Theory, following OpenAI's CDC Proof Prompt Methodology",
+    "href": "https://old.reddit.com/r/OpenAI/comments/1uycwq1/i_used_56_sol_ultra_to_close_a_30year_open_gap_in/",
+    "comments": "33 comments",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "GPT 5.6 solved all 6 problems from IMO 2026",
+    "href": "https://old.reddit.com/r/OpenAI/comments/1uyeq3t/gpt_56_solved_all_6_problems_from_imo_2026/",
+    "comments": "15 comments",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Codex Micro! The future is here! [OC]",
+    "href": "https://v.redd.it/akeiv76atmdh1",
+    "comments": "4 comments",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Kimi K3 is here",
+    "href": "https://old.reddit.com/r/OpenAI/comments/1uyidph/kimi_k3_is_here/",
+    "comments": "3 comments",
+    "sub": "OpenAI"
+  },
+  {
+    "title": "Linus Torvalds Reaffirms That Linux Is Not \"Anti-AI\" And Not A \"Social Warrior\" Project",
+    "href": "https://www.phoronix.com/news/Linux-Is-Not-Anti-AI",
+    "comments": "115 comments",
+    "sub": "singularity"
+  },
+  {
+    "title": "Discord Server Link",
+    "href": "https://discord.gg/NCzrmCdtGx",
+    "comments": "comment",
+    "sub": "singularity"
+  },
+  {
+    "title": "We have Real Steel now (Alpha Version)",
+    "href": "https://v.redd.it/bj9cgcsuumdh1",
+    "comments": "93 comments",
+    "sub": "singularity"
+  },
+  {
+    "title": "George Lucas says rejecting AI is like rejecting cars in favour of horses: 'There's nothing you can do about it… it's the future'",
+    "href": "https://www.pcgamer.com/software/ai/george-lucas-says-rejecting-ai-is-like-rejecting-cars-in-favour-of-horses-theres-nothing-you-can-do-about-it-its-the-future/",
+    "comments": "836 comments",
+    "sub": "singularity"
+  },
+  {
+    "title": "Linus Torvalds tells AI haters to fork off",
+    "href": "https://www.theregister.com/ai-and-ml/2026/07/15/linus-torvalds-tells-ai-haters-to-fork-off/5271894",
+    "comments": "11 comments",
+    "sub": "singularity"
+  },
+  {
+    "title": "A Major Leap In Home Robotics",
+    "href": "https://v.redd.it/93szgs4lmndh1",
+    "comments": "37 comments",
+    "sub": "singularity"
+  }
+]
