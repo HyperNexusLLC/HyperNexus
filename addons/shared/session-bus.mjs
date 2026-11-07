@@ -154,7 +154,7 @@ async function scratchSet(key, obj) {
 }
 async function scratchMap() {
   const r = await req("GET", "/api/memory/scratchpad/get", undefined, 30000);
-  if (r.status !== 200) fail("scratchpad get failed (HTTP " + r.status + ")");
+  if (r.status !== 200) throw new Error("scratchpad get failed (HTTP " + r.status + ")");
   return r.data?.scratchpad || {};
 }
 function scratchRecords(map, prefix) {

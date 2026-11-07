@@ -55,6 +55,12 @@ check("cdp-bridge prints usage without args", () => {
   assert.equal(r.status, 1);
   assert.match(r.stderr, /cdp-bridge\.mjs tabs/);
 });
+check("cdp-bridge has dedupe ack guard", () => {
+  const body = src(CDP);
+  assert.match(body, /bus:acked:/);
+  assert.match(body, /ackGuard/);
+  assert.match(body, /--force/);
+});
 check("cdp-bridge validates target", () => {
   assert.match(run(CDP, ["read"]).stderr, /--target/);
   assert.match(run(CDP, ["send", "--target", "other", "--text", "x"]).stderr, /muse\|gemini/);

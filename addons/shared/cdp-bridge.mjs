@@ -20,6 +20,7 @@
  * Prints JSON/text to stdout; errors to stderr with exit 1.
  */
 import { execSync } from "child_process";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 const CDP = (process.env.CDP_URL || "http://127.0.0.1:9222").replace(/\/$/, "");
@@ -60,6 +61,32 @@ function evaluate(tab, expression) {
 }
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 
+// Dedupe/idempotency guard (leader priority): a message body is delivered
+// at most once per target. Before sending, check the kernel scratchpad for
+// bus:acked:<sha256-12>; after a confirmed send, record it. Best-effort:
+// if the kernel is unreachable the send proceeds and says so.
+const KERNEL = (process.env.HYPERNEXUS_URL || "http://127.0.0.1:7778").replace(/\/$/, "");
+const ackKeyOf = (target, text) => "bus:acked:" + createHash("sha256").update(target + "\n" + text).digest("hex").slice(0, 12);
+async function ackGuard(target, text) {
+  const key = ackKeyOf(target, text);
+  try {
+    const r = await fetch(KERNEL + "/api/memory/scratchpad/get");
+    if (r.status === 200) {
+      const map = (await r.json())?.scratchpad || {};
+      if (map[key]) return { blocked: true, key };
+    }
+  } catch { /* kernel down: proceed unguarded */ }
+  return { blocked: false, key };
+}
+async function ackRecord(key, target, chars) {
+  try {
+    await fetch(KERNEL + "/api/memory/scratchpad/set", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value: JSON.stringify({ target, chars, ts: Date.now() }) }),
+    });
+  } catch { /* best-effort */ }
+}
+
 async function cmdTabs() {
   const tabs = listTabs().filter((t) => t.type === "page")
     .map((t) => ({ title: t.title, url: t.url }));
@@ -71,6 +98,10 @@ async function cmdSend() {
   const file = opt("--file");
   const text = file ? readFileSync(file, "utf8").trim() : opt("--text");
   if (!text) fail("send needs --file <path> or --text \"...\"");
+  const guard = await ackGuard(target, text);
+  if (guard.blocked && !process.argv.includes("--force")) {
+    fail(`already delivered to ${target} (${guard.key}); not re-sending. Use --force to override.`);
+  }
   const tab = findTab(target);
   if (target === "muse") {
     const js = `
@@ -112,7 +143,8 @@ async function cmdSend() {
     const r = await evaluate(tab, clickJs);
     if (r !== "CLICKED") fail("gemini send failed: " + r);
   }
-  process.stdout.write(JSON.stringify({ ok: true, target, sent: text.length }) + "\n");
+  await ackRecord(guard.key, target, text.length);
+  process.stdout.write(JSON.stringify({ ok: true, target, sent: text.length, ackKey: guard.key }) + "\n");
 }
 async function cmdRead() {
   const target = opt("--target");
