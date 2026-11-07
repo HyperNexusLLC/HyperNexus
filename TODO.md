@@ -34,6 +34,13 @@
 - [x] Watchdog activated (stall-vs-death aware, won't thrash).
 - [x] Verified tray menu is feature-complete (Dashboard / Logs / Auto-Start / Exit All Processes).
 
+## Repo Sync (2026-11-07, v1.0.30)
+
+- [x] Re-audit all feature branches (0 unique commits each, fully merged) and fast-forward `clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed` to `main` (see HANDOFF Session SYNC3).
+- [x] Repair working-tree regression to 1.0.28-era content (version refs, CHANGELOG/HANDOFF/ROADMAP/TODO/SUBMODULES, dashboard decomposition, supervisor mapping); keep `DashboardConsolidatedSections` as canonical.
+- [ ] **Drop `stash@{0}`** ("pre-sync-wip-2026-11-05") after verifying push landed (carried over).
+- [ ] Quiesce kernel before ever staging `catalog.db`/`hypernexus.db` rewrites or session-archive pruning (live churn left unstaged in SYNC3); `data/tormentnexus.db` (210MB) still needs Git LFS.
+
 ## Repo Sync (2026-11-05, v1.0.28)
 
 - [x] Fast-forward local `main` to remote (258 commits); audit all feature branches (see HANDOFF Session RS).

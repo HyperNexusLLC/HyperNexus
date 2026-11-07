@@ -1,6 +1,12 @@
 # MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
+### Repo sync: working-tree regression + live-churn staging rule (2026-11-07, v1.0.30)
+
+- **Working tree can regress behind HEAD silently**: lane processes overwrote VERSION/buildinfo/35 package.jsons 1.0.29→1.0.28 and reverted CHANGELOG/HANDOFF/ROADMAP/TODO/SUBMODULES + dashboard decomposition + supervisor mapping. Always `git diff HEAD --stat` (excluding `.hypernexus/imported_sessions`) at sync start; restore regressions with `git checkout HEAD -- <paths>` before version-bumping.
+- **Never `git add .` while the kernel runs**: the live kernel rewrites `catalog.db`/`hypernexus.db`, prunes `.hypernexus/imported_sessions` archives, and rotates `.hypernexus/logs/a2a_traffic.jsonl`. Stage version/docs/memory files explicitly; leave DB + archive churn unstaged until a quiesced snapshot.
+- **Dashboard canonical form**: `DashboardConsolidatedSections` (extracted component) beats the inline 9-view version — same sections, decomposition direction preserved. Discard inline duplicates on sight.
+
 ### Repo sync: unrelated-history feature branch + DB push limits (2026-11-05, v1.0.28)
 
 - **`feature/cloud-dashboard-mcp-sse-*` is an unrelated history** (root `c3993a0a` vs main `3b787366`, no merge base; local tip `775605d4b` also differs from gitlab tip `8d597c328`). Never merge it into main (16k-file regression); its features already landed via the main line. Local variant preserved as remote branch `archive/cloud-dashboard-mcp-sse-775605d`.

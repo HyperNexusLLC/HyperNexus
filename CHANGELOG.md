@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.30] - 2026-11-07
+
+### Fixed
+- **Working-tree regression repaired**: the working tree had regressed to a 1.0.28 state (VERSION, Go buildinfo, 35 package.json refs, plus reverted CHANGELOG/HANDOFF/ROADMAP/TODO/SUBMODULES text, a dashboard decomposition revert, and a dropped `claude-code` supervisor mapping). All restored to the committed 1.0.29 state; the inline dashboard duplicate was discarded in favor of the agreed `DashboardConsolidatedSections` extraction, and the `claude-code` → `claude` supervisor mapping retained. Temp artifacts (`_pong_*`, codex-gui swarm out/err logs) deleted; `.claude-flow/` added to `.gitignore` alongside the other harness working dirs.
+- **Branch reconciliation**: all 4 local feature branches (`clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`) verified at 0 unique commits vs `main` (fully merged ancestors) and fast-forwarded to `main` tip (reverse-merge, no drift). Remote-only `feature/cloud-dashboard-mcp-sse-*` and `gh-pages-*` branches left untouched (archival/deploy).
+
+### Changed
+- **Upstream sync**: `git fetch --all --tags` on root + all 3 submodules (no nested submodules). `github/main` trails local `main` by 2 commits (memory/session state); `gitlab/main` in sync. Submodules (`vendor/deepseek-harness` fcc0ad4621, `vendor/grok-build` 2bdd1d6a, `lumbros.me` 16261e0) at upstream tips, no feature branches. Structural map re-verified in `docs/SUBMODULES.md`.
+- **Version sync**: VERSION 1.0.29 -> 1.0.30 propagated to 35 package/buildinfo references via `scripts/sync-versions.mjs`.
+
+### Notes
+- Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
+
 ## [1.0.29] - 2026-11-05
 
 ### Changed

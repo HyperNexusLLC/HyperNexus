@@ -1,3 +1,22 @@
+# HANDOFF - Repository synchronization & intelligent merge (v1.0.30)
+
+## Session SYNC3 (2026-11-07) - repo sync [muse-spark-1.3 in opencode session]
+
+### Done
+- **Fetch**: `git fetch --all --tags` on root + `git submodule foreach git fetch origin` (no nested submodules). github/main trails local main by 2 (memory/session state commits aac4759e6/fddc8e55a); gitlab/main in sync (0/0). No upstream parent to merge (both remotes are HyperNexusLLC push mirrors; no robertpelloni remotes configured).
+- **Branch audit**: unique-vs-main counts — clean-main 0, feat/mimo-plugin-max-surface 0, fix/functionality-hardening 0, fix/test-local-embed 0 (all fully merged ancestors; nothing to forward-merge). Reverse-merged via `git branch -f <branch> main` (all 4 now at fddc8e55a). Remote-only feature/cloud-dashboard-mcp-sse-389806464713532918 (unrelated history, superseded layout) + gh-pages-* left untouched.
+- **Submodules**: deepseek-harness fcc0ad4621, grok-build 2bdd1d6a, lumbros.me 16261e0 — 0/0 vs origin/HEAD, single branch each (detached gitlinks), no feature branches. Map re-verified in docs/SUBMODULES.md.
+- **Working-tree repair** (the load-bearing find): tree had regressed to 1.0.28-era content — VERSION/buildinfo/35 package.jsons downgraded 1.0.29→1.0.28, CHANGELOG lost its 1.0.29 entry, HANDOFF lost SYNC2+COORD blocks, ROADMAP/TODO/SUBMODULES reverted, dashboard-home-view reverted to inline duplicate, supervisor lost claude-code mapping. Restored all to HEAD; kept only genuine runtime churn (memories.json, a2a log, DBs). Batch scripts verified: start.bat/build.bat paths + ports 7778/7779 correct, go/cmd/tormentnexus present — no changes needed.
+- **Version**: 1.0.29 -> 1.0.30 (VERSION + 35 refs via sync-versions.mjs). CHANGELOG/TODO/ROADMAP/SUBMODULES updated. `.gitignore` += `.claude-flow/` (harness working state, consistent with .codewhale/.codex/.pi exclusions); memory/session/DBs stay tracked.
+- **Staging decision (deliberate deviation from `git add .`)**: did NOT stage catalog.db rewrite (31MB→78KB), hypernexus.db rewrite, ~200 pruned imported_sessions archives, or truncated a2a_traffic.jsonl — the running kernel is actively rewriting them; committing unquiesced churn would destroy history. Staged: version bump, docs, .gitignore, memories.json.
+
+### Next agent
+- Push state: see commit for v1.0.30 (main + 4 fast-forwarded branches to both remotes). Kernel NOT restarted (no processes owned by this session; DBs left alone per protocol).
+- `data/tormentnexus.db` (210MB) still untracked: adopt Git LFS with a quiesced snapshot. Same treatment needed before ever staging catalog.db/hypernexus.db rewrites — quiesce kernel first.
+- Continue dashboard decomposition (overview/startup blocks), then legacy dashboard/* retirement.
+
+---
+
 # HANDOFF - Repository synchronization & intelligent merge (v1.0.29)
 
 ## Session SYNC2 (2026-11-05) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
