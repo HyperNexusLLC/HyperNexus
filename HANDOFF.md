@@ -1,3 +1,22 @@
+# HANDOFF - Repository synchronization & intelligent merge (v1.0.29)
+
+## Session SYNC2 (2026-11-05) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+
+### Done
+- **Fetch**: `git fetch --all --tags` on root + all 3 submodules (recursive; no nested submodules). Remote main had advanced 5 commits (Session XB: session bus, CDP bridge, native Go orchestrate, harness fixes).
+- **Preservation**: local work committed before merging (947540f09 coordination, 3105987b1 dashboard decomposition). Recovery-script snapshot unavailable (.git is a gitdir file; script path resolution fails) — merge proceeded only because all code was committed and remote diff touched no dirty paths.
+- **Forward merge**: `github/main` merged into local `main` (7fe550521). Single conflict: HANDOFF.md — both session blocks retained (XB first, COORD second with superseded-note for the orchestrate 404 claim).
+- **Branch audit (all local+remote)**: unique-vs-main counts — clean-main 0, feat/mimo-plugin-max-surface 0, fix/functionality-hardening 0, fix/test-local-embed 0 (all fully merged ancestors; nothing to forward-merge, reverse-merge not applicable to completed branches). feature/cloud-dashboard-mcp-sse-389806464713532918: 67 unique, NO merge base, 7,298 branch-only files in superseded pre-restructure layout; headline features (cold-archive, gossip, skills) grep-verified in main — retained unmerged as archival reference on both remotes (not dropped). gh-pages-* deploy branches left alone.
+- **Submodules**: deepseek-harness fcc0ad4621, grok-build 2bdd1d6a, lumbros.me 16261e0 — at upstream tips, no feature branches; untracked HyperNexus overlays retained. Map refreshed in docs/SUBMODULES.md.
+- **Version**: 1.0.28 -> 1.0.29 (VERSION + 35 refs via sync-versions.mjs), CHANGELOG/TODO/ROADMAP updated.
+- **Syncthing**: L:\transcribeme ignoreDelete=true on this device (remote-laptop deletions no longer propagate here).
+
+### Next agent
+- Push state: see git log (SYNC2 commits). Kernel NOT restarted (pre-existing/elevated owners) — native /api/agent/orchestrate goes live on next sanctioned swap; running kernel still pre-merge binary.
+- data/tormentnexus.db (210MB) still untracked: adopt Git LFS with a quiesced snapshot.
+- Continue dashboard decomposition (overview/startup blocks), then legacy dashboard/* retirement (60 dirs).
+
+---
 
 # HANDOFF - Cross-session automation API + interconnect (v1.0.28)
 
@@ -40,6 +59,24 @@
 - Lane item 3 DONE 2026-11-06: `TestCloudDevBridgeRoutes` fixed - 8 clouddev mutation handlers discarded upstream payloads (`new(any)`, no `data`); all now return `data: result`. Targeted test ok (8.2s); kernel rebuilt (53,320,192B) + swapped (first swap attempt hit the MCP-shim count trap while serve was down - second swap clean, kernel pid 25984, `/health` v1.0.28, clouddev stats fallback live, orchestrate probe 200/recall 8/tools=1). Full httpapi suite not rerun this cycle. `clouddev_handlers.go` uncommitted at handoff with the other lane fixes.
 - Codex swarm-bus thread (`addons/codex-gui/swarm.mjs`) remains uncommitted mid-work from the Codex session; the shared bus supersedes it generically, swarm battery still its own gate.
 - Kernel-side: batch/SQLite the memory-facts write path so the facts transport stops rewriting 24MB per write (the root wart; bus no longer depends on it).
+
+---
+
+# HANDOFF - Coordination resume + dashboard restored (v1.0.28)
+
+## Session COORD (2026-11-05) - coordination [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+
+### Done
+- Recalled shared state across lanes: kernel `1.0.28` healthy on :7778 (uptime ~7.6h, `/health` + `/api/system/overview` 200); scratchpad `goal` was empty — re-seeded with the coordinated queue so main/workspace/Gemini sessions resume from the same goal.
+- Dashboard :7779 was DOWN (connection refused); restored from `apps/web` (`next start -p 7779`, pid 36708, logs `apps/dashboard-live.{out,err}.log`). Verified: `/dashboard` 200, `/` 200. Note: `next start` warns the build is `output: standalone` — serving works, but the sanctioned prod path is `node .next-build/standalone/server.js`; switch on next restart.
+- Persisted this checkpoint to L2 (category `coordination`, tags `hypernexus,coordination,session,summary,ops,deploy`) + scratchpad `goal`. MCP inventory confirms `gemini` harness installed (22 harnesses local fallback; upstream bridge unavailable, Go-local routing).
+
+### State for next agent (all lanes)
+- Control plane = kernel memory-facts + this file. TS upstream :4000 does not exist in-tree; `/api/agent/orchestrate` 404 is known — do not rebuild it from this repo.
+- Next dev queue (unblocked): decompose `apps/web/src/app/dashboard/dashboard-home-view.tsx` (4698 lines) into lazy per-section components; retire remaining legacy `dashboard/*` `GenericDashboardPage` stubs (logs-metrics, healer, memory-analytics, mcp — review unique fetches first); embedding cache for sub-second semantic search.
+- Human-gated (unchanged): fresh `/login meta` in pi for the mint; droid Factory auth; hax WSL kernel bind decision; maki TUI seed; installed-exe swap blocked by pre-existing pid 26812 — leave it running.
+- Gemini lane per AGENTS.md: bulk refactoring / recursive scripts / context analysis. Coordinate via scratchpad `goal` + L2 before starting.
+- **Superseded by Session XB (below/above):** native `POST /api/agent/orchestrate` now exists in Go; bus transport is kernel scratchpad. The 404/TS-upstream notes in this block are historical.
 
 ---
 

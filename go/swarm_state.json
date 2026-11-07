@@ -1,0 +1,35 @@
+{
+  "missions": [
+    {
+      "missionId": "mission-20261003-162202",
+      "status": "started",
+      "createdAt": 1791058922179
+    },
+    {
+      "missionId": "mission-20261003-173547",
+      "status": "started",
+      "createdAt": 1791063347920
+    },
+    {
+      "missionId": "mission-20261003-193031",
+      "status": "started",
+      "createdAt": 1791070231904
+    },
+    {
+      "missionId": "mission-20261004-190305",
+      "status": "started",
+      "createdAt": 1791154985657
+    },
+    {
+      "missionId": "mission-20261005-183014",
+      "status": "started",
+      "createdAt": 1791239414853
+    },
+    {
+      "missionId": "mission-20261006-000807",
+      "status": "started",
+      "createdAt": 1791259687133
+    }
+  ],
+  "updatedAt": 1791259687133
+}

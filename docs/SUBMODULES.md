@@ -1,6 +1,6 @@
 # Submodule Structural Map
 
-Regenerated 2026-11-05 (v1.0.28 repo-sync). Source of truth: `.gitmodules` + `git submodule status --recursive`.
+Regenerated 2026-11-05 (v1.0.29 repo-sync, Session SYNC2). Source of truth: `.gitmodules` + `git submodule status --recursive`. All three re-fetched this session: no new upstream commits, no feature branches, pointers unchanged. Untracked HyperNexus overlays inside `vendor/deepseek-harness` (`README-HYPERNEXUS.md`, `hypernexus.cordis.yml`) and `vendor/grok-build` (`.grok/`, `hypernexus-mcp.toml`) retained as-is.
 
 | Path | Remote URL | Commit | Branch/Describe |
 |---|---|---|---|

@@ -1,0 +1,25 @@
+{
+  "members": [
+    {
+      "id": "member-20261003-173546",
+      "role": "tester",
+      "status": "active",
+      "createdAt": 1791063346230
+    },
+    {
+      "id": "member-20261004-233145",
+      "role": "test",
+      "status": "active",
+      "createdAt": 1791171105263
+    },
+    {
+      "id": "member-20261005-184242",
+      "role": "",
+      "status": "active",
+      "createdAt": 1791240162160
+    }
+  ],
+  "indexerActive": false,
+  "brainActive": false,
+  "updatedAt": 1791240162297
+}

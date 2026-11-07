@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.29] - 2026-11-05
+
+### Changed
+- **Repository synchronization (Session SYNC2)**: merged remote `main` (5 commits: cross-session bus, CDP bridge, native Go `POST /api/agent/orchestrate`, reasonix/freebuff/maki fixes) into local `main`; only conflict was `HANDOFF.md` (both session blocks retained). Local coordination + dashboard work preserved on top.
+- **Dashboard decomposition (step 1)**: extracted the 4 consolidated sections (health-metrics, skills-workflows, security-audit, healer-cognition) from `dashboard-home-view.tsx` (4698→4631 lines) into `dashboard-consolidated-sections.tsx`; `tsc` + `next build` green.
+- **Feature-branch audit (re-verified)**: all branches except `feature/cloud-dashboard-mcp-sse-389806464713532918` and the two `gh-pages` deploy branches have 0 unique commits vs `main` (fully merged). Cloud branch confirmed unrelated history (no merge base, 7,298 branch-only files in superseded layout); headline features verified present in `main`; branch retained unmerged on both remotes. Submodules (`vendor/deepseek-harness` fcc0ad4621, `vendor/grok-build` 2bdd1d6a, `lumbros.me` 16261e0) at upstream tips, no feature branches.
+- **Syncthing**: this device's `L:\transcribeme` share set `ignoreDelete=true` — remote-laptop deletions no longer delete files here.
+- **Version sync**: VERSION 1.0.28 -> 1.0.29 propagated to 35 references via `scripts/sync-versions.mjs`.
+
+### Notes
+- `data/tormentnexus.db` (210MB, live kernel DB) remains untracked pending Git LFS adoption + a quiesced snapshot; all other memory/session/database files are tracked. Kernel processes were not restarted by this sync (pre-existing/elevated owners); the native orchestrate route goes live on the next sanctioned kernel swap.
+
 ## [1.0.28] - 2026-11-05
 
 ### Changed
