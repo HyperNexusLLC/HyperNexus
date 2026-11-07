@@ -28,8 +28,9 @@ func (s *Server) handleCloudDevCreateSession(w http.ResponseWriter, r *http.Requ
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.createSession", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.createSession"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.createSession", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.createSession"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -91,8 +92,9 @@ func (s *Server) handleCloudDevUpdateSessionStatus(w http.ResponseWriter, r *htt
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.updateSessionStatus", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.updateSessionStatus"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.updateSessionStatus", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.updateSessionStatus"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -105,8 +107,9 @@ func (s *Server) handleCloudDevUpdateSessionStatus(w http.ResponseWriter, r *htt
 func (s *Server) handleCloudDevDeleteSession(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.deleteSession", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.deleteSession"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.deleteSession", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.deleteSession"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -122,8 +125,9 @@ func (s *Server) handleCloudDevSendMessage(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.sendMessage", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.sendMessage"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.sendMessage", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.sendMessage"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -139,8 +143,9 @@ func (s *Server) handleCloudDevBroadcastMessage(w http.ResponseWriter, r *http.R
 		writeJSON(w, http.StatusBadRequest, map[string]any{"success": false, "error": "invalid JSON body"})
 		return
 	}
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.broadcastMessage", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.broadcastMessage"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.broadcastMessage", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.broadcastMessage"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -153,8 +158,9 @@ func (s *Server) handleCloudDevBroadcastMessage(w http.ResponseWriter, r *http.R
 func (s *Server) handleCloudDevPreviewBroadcastRecipients(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.previewBroadcastRecipients", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.previewBroadcastRecipients"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.previewBroadcastRecipients", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.previewBroadcastRecipients"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -167,8 +173,9 @@ func (s *Server) handleCloudDevPreviewBroadcastRecipients(w http.ResponseWriter,
 func (s *Server) handleCloudDevAcceptPlan(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.acceptPlan", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.acceptPlan"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.acceptPlan", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.acceptPlan"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -181,8 +188,9 @@ func (s *Server) handleCloudDevAcceptPlan(w http.ResponseWriter, r *http.Request
 func (s *Server) handleCloudDevSetAutoAcceptPlan(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&payload)
-	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.setAutoAcceptPlan", payload, new(any)); err == nil {
-		writeJSON(w, http.StatusOK, map[string]any{"success": true, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.setAutoAcceptPlan"}})
+	var result any
+	if upstreamBase, err := s.callUpstreamJSON(r.Context(), "cloudDev.setAutoAcceptPlan", payload, &result); err == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": true, "data": result, "bridge": map[string]any{"upstreamBase": upstreamBase, "procedure": "cloudDev.setAutoAcceptPlan"}})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{

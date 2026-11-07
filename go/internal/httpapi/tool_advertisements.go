@@ -16,6 +16,45 @@ type ToolSuggestionSnapshot struct {
 	Bridge           map[string]any `json:"bridge"`
 }
 
+// localToolSearchWithKeywords tries the full query first, then falls back
+// to per-keyword search: the catalog/DB matchers use whole-phrase
+// LIKE/Contains, so sentence-length goals would otherwise return nothing.
+func (s *Server) localToolSearchWithKeywords(query string, limit int) ([]map[string]any, error) {
+	if hits, err := s.localDBToolSearch(query, limit); err == nil && len(hits) > 0 {
+		return hits, nil
+	}
+	seen := map[string]struct{}{}
+	results := make([]map[string]any, 0)
+	words := strings.Fields(strings.ToLower(query))
+	tried := 0
+	for _, w := range words {
+		w = strings.Trim(w, ".,:;!?()[]{}\" '`")
+		if len(w) < 4 || tried >= 6 {
+			continue
+		}
+		tried++
+		hits, err := s.localDBToolSearch(w, limit)
+		if err != nil {
+			continue
+		}
+		for _, hit := range hits {
+			id := stringValue(hit["uuid"])
+			if id == "" {
+				id = stringValue(hit["name"])
+			}
+			if _, dup := seen[id]; dup && id != "" {
+				continue
+			}
+			seen[id] = struct{}{}
+			results = append(results, hit)
+			if limit > 0 && len(results) >= limit {
+				return results, nil
+			}
+		}
+	}
+	return results, nil
+}
+
 func (s *Server) buildToolSuggestionSnapshot(r *http.Request, query string) (ToolSuggestionSnapshot, error) {
 	return s.buildToolSuggestionSnapshotWithLimit(r, query, 8)
 }
@@ -46,8 +85,13 @@ func (s *Server) buildToolSuggestionSnapshotWithLimit(r *http.Request, query str
 	var recommendedTools any
 	recommendedToolsBase, err := s.callUpstreamJSON(r.Context(), "mcp.searchTools", searchPayload, &recommendedTools)
 	if err != nil {
-		// If upstream fails, use the local predicted tools or empty list
-		if len(predicted) > 0 {
+		// Upstream is decommissioned in local mode - mirror the related-tools fallback: local catalog/DB hits first, then predictions.
+		if hits, dbErr := s.localToolSearchWithKeywords(normalizedQuery, limit); dbErr == nil && len(hits) > 0 {
+			recommendedTools = map[string]any{
+				"tools":  hits,
+				"source": "local-catalog",
+			}
+		} else if len(predicted) > 0 {
 			recommendedTools = map[string]any{
 				"tools": predicted,
 			}
