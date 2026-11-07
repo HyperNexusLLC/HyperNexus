@@ -179,14 +179,17 @@ func openAIToolsToResponses(tools []openAITool) []map[string]any {
 // Meta's subscription attestation. Live bisection 2026-11-02: the vendor
 // tightened attestation — web_search, web_fetch and search now 403 alongside
 // the shell/input/goal names, while execute_command, fetch and the
-// hypernexus parity tools still pass untouched.
+// hypernexus parity tools still pass untouched. 2026-11-07: reasonix file
+// tools read_file, write_file and edit_file also 403, so they strip-and-
+// retry like the shell names (bare "read" still passes and stays).
 func attestationTrippingTool(name string) bool {
 	switch strings.ToLower(name) {
 	case "bash", "powershell", "shell",
 		"request_user_input",
 		"get_goal", "create_goal", "update_goal",
 		"apply_patch", "update_plan", "todowrite",
-		"web_search", "web_fetch", "search":
+		"web_search", "web_fetch", "search",
+		"read_file", "write_file", "edit_file":
 		return true
 	}
 	return false
@@ -370,10 +373,13 @@ func resetDanglingToolChoice(body map[string]any) {
 	}
 }
 
-// normalizeMetaModel strips a harness provider prefix ("meta/") — the vendor
+// normalizeMetaModel strips harness provider prefixes ("meta/", "openai/") — the vendor
 // only knows the bare model ID (a prefixed ID 404s as model_not_found).
 func normalizeMetaModel(model string) string {
 	if rest, ok := strings.CutPrefix(model, "meta/"); ok && rest != "" {
+		return rest
+	}
+	if rest, ok := strings.CutPrefix(model, "openai/"); ok && rest != "" {
 		return rest
 	}
 	return model

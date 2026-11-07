@@ -113,7 +113,8 @@ func TestAttestationTrippingTool(t *testing.T) {
 	for _, n := range []string{"bash", "Bash", "powershell", "PowerShell", "shell", "SHELL",
 		"request_user_input", "get_goal", "create_goal", "update_goal",
 		"apply_patch", "Apply_Patch", "update_plan", "Update_Plan", "TodoWrite", "todowrite",
-		"web_search", "Web_Search", "web_fetch", "search"} {
+		"web_search", "Web_Search", "web_fetch", "search",
+		"read_file", "Read_File", "write_file", "edit_file"} {
 		if !attestationTrippingTool(n) {
 			t.Fatalf("%q must trip attestation", n)
 		}
