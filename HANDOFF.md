@@ -1,3 +1,22 @@
+# HANDOFF - Repository synchronization & intelligent merge (v1.0.29)
+
+## Session SYNC2 (2026-11-05) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+
+### Done
+- **Fetch**: `git fetch --all --tags` on root + all 3 submodules (recursive; no nested submodules). Remote main had advanced 5 commits (Session XB: session bus, CDP bridge, native Go orchestrate, harness fixes).
+- **Preservation**: local work committed before merging (947540f09 coordination, 3105987b1 dashboard decomposition). Recovery-script snapshot unavailable (.git is a gitdir file; script path resolution fails) — merge proceeded only because all code was committed and remote diff touched no dirty paths.
+- **Forward merge**: `github/main` merged into local `main` (7fe550521). Single conflict: HANDOFF.md — both session blocks retained (XB first, COORD second with superseded-note for the orchestrate 404 claim).
+- **Branch audit (all local+remote)**: unique-vs-main counts — clean-main 0, feat/mimo-plugin-max-surface 0, fix/functionality-hardening 0, fix/test-local-embed 0 (all fully merged ancestors; nothing to forward-merge, reverse-merge not applicable to completed branches). feature/cloud-dashboard-mcp-sse-389806464713532918: 67 unique, NO merge base, 7,298 branch-only files in superseded pre-restructure layout; headline features (cold-archive, gossip, skills) grep-verified in main — retained unmerged as archival reference on both remotes (not dropped). gh-pages-* deploy branches left alone.
+- **Submodules**: deepseek-harness fcc0ad4621, grok-build 2bdd1d6a, lumbros.me 16261e0 — at upstream tips, no feature branches; untracked HyperNexus overlays retained. Map refreshed in docs/SUBMODULES.md.
+- **Version**: 1.0.28 -> 1.0.29 (VERSION + 35 refs via sync-versions.mjs), CHANGELOG/TODO/ROADMAP updated.
+- **Syncthing**: L:\transcribeme ignoreDelete=true on this device (remote-laptop deletions no longer propagate here).
+
+### Next agent
+- Push state: see git log (SYNC2 commits). Kernel NOT restarted (pre-existing/elevated owners) — native /api/agent/orchestrate goes live on next sanctioned swap; running kernel still pre-merge binary.
+- data/tormentnexus.db (210MB) still untracked: adopt Git LFS with a quiesced snapshot.
+- Continue dashboard decomposition (overview/startup blocks), then legacy dashboard/* retirement (60 dirs).
+
+---
 
 # HANDOFF - Cross-session automation API + interconnect (v1.0.28)
 

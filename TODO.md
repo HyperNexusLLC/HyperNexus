@@ -6,7 +6,7 @@
 
 - [x] ~~Dashboard consolidation~~ — **verified already consolidated** (nav = 7 value-ordered sections, all tooltips present, all hrefs → home-view anchors). Remaining polish below.
 - [x] **Flesh out 3 thin home-view sections** — `health-metrics`, `skills-workflows`, `security-audit` now carry tooltips (`title`), `aria-label`, `data-testid` wraps, and truth-pass copy (loading/error/empty, never mocked) in `dashboard-home-view.tsx`. Remaining: per-card forms/filters live in sub-pages.
-- [ ] **Decompose `dashboard-home-view.tsx`** (4958 lines) → one lazy-loaded component per section.
+- [ ] **Decompose `dashboard-home-view.tsx`** → one lazy-loaded component per section. Progress (v1.0.29): consolidated sections extracted to `dashboard-consolidated-sections.tsx` (4698→4631 lines, tsc+build green). Remaining: overview/startup blocks inside `DashboardHomeView` (~lines 1146-4500).
 - [ ] **Retire 99 legacy `dashboard/*` pages** (not in nav) — progress 2026-10-31: ~53 already `RedirectPage` stubs; `health|metrics|pulse`→`#health-metrics`, `skills|workflows`→`#skills-workflows`, `security|audit`→`#security-audit` deep-linked (7/7 verified). Remaining `GenericDashboardPage` stubs (logs-metrics, healer, memory-analytics, mcp) carry unique fetches — review before stubbing.
 - [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
 - [x] ~~Watchdog as scheduled task~~ — **verified done 2026-10-23**: `HyperNexus-KernelWatchdog` is registered and Running (spawns the kernel with an elevated token — see HANDOFF session 9 for the swap implications).
@@ -48,7 +48,7 @@
 - [x] **`/login meta` in pi** - done 2026-11-05; spark+wonder live in pi/codex/muse-cli, 403 bisection reproduced and strip-list fixed (`apply_patch`/`update_plan`). Remaining: spot-check other harnesses' `--live` batteries opportunistically.
 - [ ] Replace `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` with the v1.0.28 build once the pre-existing `hypernexus.exe mcp` process (pid 26812) ends; running kernel is workspace `bin\hypernexus.exe` (pid 28660).
 - [ ] Install missing GUI apps or accept staged configs: juggler, openchamber, paseo, paradev, omnigent, t3code, conductor, openwebui; retarget antigravity-gui installer at the real Antigravity `mcp.json`.
-- [ ] Native cross-session execution: kernel `/api/agent/orchestrate` 404 - needs TS upstream (:4000) or native Go orchestrate; memory-facts control plane works meanwhile.
+- [x] Native cross-session execution: kernel `/api/agent/orchestrate` — **implemented in Go** (`orchestrate_handlers.go`, merged v1.0.29 via Session XB); live after next kernel swap. Scratchpad session bus (`addons/shared/session-bus.mjs`) is the running transport.
 - [ ] Rotate the pre-existing plaintext provider apiKey in `~/.config/mimocode/mimocode.jsonc` to an env ref.
 - [x] prime-agent 0.10.2 + paseo 0.15.2 + omnigent + Open WebUI + Juggler + T3 Code + OpenChamber + hax (WSL) installed 2026-11-05; conductor/paradev are macOS-only (no Windows build exists).
 - [ ] Re-run `/login meta` in pi when minted-key routes are needed (mint 401s since mid-session 2026-11-05; kernel OAuth path unaffected). Prefer kernel-proxy routing everywhere.

@@ -1,0 +1,13 @@
+{
+  "mutations": [
+    {
+      "id": "mut-1",
+      "originalPrompt": "test evolution",
+      "mutatedPrompt": "test evolution",
+      "reasoning": "Native Go Darwin fallback generated a deterministic local mutation scaffold instead of a live LLM-authored mutation.",
+      "timestamp": 1791239669040
+    }
+  ],
+  "experiments": null,
+  "nextId": 2
+}

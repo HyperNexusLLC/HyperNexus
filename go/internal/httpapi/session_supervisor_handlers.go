@@ -672,6 +672,8 @@ func (s *Server) handleSupervisorSessionRestore(w http.ResponseWriter, r *http.R
 
 func defaultLocalSessionCommand(cliType string, providedArgs []string) (string, []string) {
 	switch strings.TrimSpace(cliType) {
+	case "claude-code":
+		return "claude", append([]string(nil), providedArgs...)
 	case "factory-droid":
 		return "droid", append([]string(nil), providedArgs...)
 	default:
@@ -820,4 +822,3 @@ func (s *Server) handleSupervisorSessionRestoreImported(w http.ResponseWriter, r
 		},
 	})
 }
-

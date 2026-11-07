@@ -1,0 +1,1056 @@
+[
+  {
+    "title": "self-hosted team chat/docs/tasks app - AI agents now query real databases, run sandboxed code, and open PRs",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uy72zv/selfhosted_team_chatdocstasks_app_ai_agents_now/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "self-hosted",
+      "ai agent"
+    ],
+    "timestamp": "2026-07-16T19:08:43.524Z",
+    "posted": false
+  },
+  {
+    "title": "Seeking collaborators for scaling and independent evaluation of a new recurrent language model architecture (preprint + code) [R]",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/1uycffg/seeking_collaborators_for_scaling_and_independent/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:17:49.312Z",
+    "posted": false
+  },
+  {
+    "title": "Are Current AI Memory Architectures Optimizing for the Wrong Abstraction? [D]",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/1uy6yht/are_current_ai_memory_architectures_optimizing/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "memory"
+    ],
+    "timestamp": "2026-07-16T19:17:49.314Z",
+    "posted": false
+  },
+  {
+    "title": "ExTernD: Expanded-Rank Ternary Decomposition Ternary LLM PTQ with Accuracy Approaching Any Quantization Level [P]",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/1uy2zb3/externd_expandedrank_ternary_decomposition/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:17:49.316Z",
+    "posted": false
+  },
+  {
+    "title": "PnP-CoSMo: A Multi-Contrast MRI Reconstruction Framework based on Content/Style Modeling [R]",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/1uy2h66/pnpcosmo_a_multicontrast_mri_reconstruction/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "framework",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:17:49.317Z",
+    "posted": false
+  },
+  {
+    "title": "Best current tools for Multi-Objective Surrogate-Based Optimization (MOSBO) on heterogeneous study data meta-analysis?[P]",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/1uxty9v/best_current_tools_for_multiobjective/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "best",
+      "tool"
+    ],
+    "timestamp": "2026-07-16T19:17:49.319Z",
+    "posted": false
+  },
+  {
+    "title": "Looking for JEPA devil advocates [R]",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/1uxcryc/looking_for_jepa_devil_advocates_r/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "looking for"
+    ],
+    "timestamp": "2026-07-16T19:17:49.321Z",
+    "posted": false
+  },
+  {
+    "title": "PyTorch model running 170x slower on T4 vs A100. What could cause a bottleneck this extreme? [D]",
+    "url": "https://www.reddit.com/r/MachineLearning/comments/1ux6a9x/pytorch_model_running_170x_slower_on_t4_vs_a100/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "vs",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:17:49.324Z",
+    "posted": false
+  },
+  {
+    "title": "Best Local VLMs - July 2026\n          \n    \n      \n      \n    \n\n      \n        Megathread\n      \n    \n  \n          67 votes • 113 comments",
+    "url": "https://www.reddit.com/r/LocalLLaMA/comments/1uoalfq/best_local_vlms_july_2026/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "local",
+      "best"
+    ],
+    "timestamp": "2026-07-16T19:18:02.398Z",
+    "posted": false
+  },
+  {
+    "title": "Huggingface/speech-to-speech as a study tool with a completely local LLM/TTS/STT setup.",
+    "url": "https://www.reddit.com/r/LocalLLaMA/comments/1uybhyr/huggingfacespeechtospeech_as_a_study_tool_with_a/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 4,
+    "keywords": [
+      "local llm",
+      "local",
+      "tool",
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:18:02.400Z",
+    "posted": false
+  },
+  {
+    "title": "Looking for a good model (that can fit on 64GB or 128GB unified memory) to upscale images",
+    "url": "https://www.reddit.com/r/LocalLLaMA/comments/1uyb3ch/looking_for_a_good_model_that_can_fit_on_64gb_or/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "memory",
+      "looking for",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:18:02.401Z",
+    "posted": false
+  },
+  {
+    "title": "Surprising results with my own benchmark for local models that I can run on 8GB VRAM",
+    "url": "https://www.reddit.com/r/LocalLLaMA/comments/1uyasd9/surprising_results_with_my_own_benchmark_for/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "local",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:18:02.402Z",
+    "posted": false
+  },
+  {
+    "title": "Meta reins in new AI tool after criticism",
+    "url": "https://www.reddit.com/r/artificial/comments/1uybydj/meta_reins_in_new_ai_tool_after_criticism/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "tool"
+    ],
+    "timestamp": "2026-07-16T19:18:16.042Z",
+    "posted": false
+  },
+  {
+    "title": "How To Get Webdesign Projects?",
+    "url": "https://www.reddit.com/r/artificial/comments/1uxyu8z/how_to_get_webdesign_projects/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "how to"
+    ],
+    "timestamp": "2026-07-16T19:18:16.045Z",
+    "posted": false
+  },
+  {
+    "title": "What’s one boring task you’d trust an AI agent to complete without checking?",
+    "url": "https://www.reddit.com/r/artificial/comments/1uxveo0/whats_one_boring_task_youd_trust_an_ai_agent_to/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:18:16.047Z",
+    "posted": false
+  },
+  {
+    "title": "Any Higgsfield proxy server provider like they have for Anthropic and OpenAI models?",
+    "url": "https://www.reddit.com/r/artificial/comments/1uxv3qs/any_higgsfield_proxy_server_provider_like_they/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "server",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:18:16.050Z",
+    "posted": false
+  },
+  {
+    "title": "Do you think that AI can help create better stories.",
+    "url": "https://www.reddit.com/r/artificial/comments/1uxnx9x/do_you_think_that_ai_can_help_create_better/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "help"
+    ],
+    "timestamp": "2026-07-16T19:18:16.052Z",
+    "posted": false
+  },
+  {
+    "title": "Anthropic tested frontier AI agents in simulated deployments. They found models sabotaging code, covering up fraud, and coaching employees to leak safety data",
+    "url": "https://www.reddit.com/r/artificial/comments/1uxihfy/anthropic_tested_frontier_ai_agents_in_simulated/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "ai agent",
+      "agent",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:18:16.054Z",
+    "posted": false
+  },
+  {
+    "title": "Discord Server Link\n          \n    \n      \n      \n    \n\n      \n        Announcement\n      \n    \n  \n          10 votes • 0 comments",
+    "url": "https://www.reddit.com/r/singularity/comments/1tg1y16/discord_server_link/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "server"
+    ],
+    "timestamp": "2026-07-16T19:18:26.957Z",
+    "posted": false
+  },
+  {
+    "title": "You wake up tomorrow in an alternate reality where AI never happened... and somehow you still have access to all the best models. What do you do?",
+    "url": "https://www.reddit.com/r/singularity/comments/1uyatzk/you_wake_up_tomorrow_in_an_alternate_reality/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "best",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:18:26.960Z",
+    "posted": false
+  },
+  {
+    "title": "Run langGraph on multiple servers",
+    "url": "https://www.reddit.com/r/LangChain/comments/1uyb2zp/run_langgraph_on_multiple_servers/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "server"
+    ],
+    "timestamp": "2026-07-16T19:18:37.170Z",
+    "posted": false
+  },
+  {
+    "title": "Let AI agents use production data without handing them your database",
+    "url": "https://www.reddit.com/r/LangChain/comments/1uy8ztd/let_ai_agents_use_production_data_without_handing/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "ai agent",
+      "database",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:18:37.172Z",
+    "posted": false
+  },
+  {
+    "title": "Made a Next.js RAG starter kit so I'd stop rebuilding the same pipeline every time",
+    "url": "https://www.reddit.com/r/LangChain/comments/1uy3cen/made_a_nextjs_rag_starter_kit_so_id_stop/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "rag"
+    ],
+    "timestamp": "2026-07-16T19:18:37.174Z",
+    "posted": false
+  },
+  {
+    "title": "Made a Next.js RAG starter kit so I'd stop rebuilding the same pipeline every time",
+    "url": "https://www.reddit.com/r/Rag/comments/1uy3bxj/made_a_nextjs_rag_starter_kit_so_id_stop/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "rag"
+    ],
+    "timestamp": "2026-07-16T19:18:37.177Z",
+    "posted": false
+  },
+  {
+    "title": "What's the one thing you wish existed for AI agents that doesn't today?",
+    "url": "https://www.reddit.com/r/LangChain/comments/1uy1m1i/whats_the_one_thing_you_wish_existed_for_ai/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:18:37.179Z",
+    "posted": false
+  },
+  {
+    "title": "Built fast “agentic” apps with FastAPIs. Not a joke post.",
+    "url": "https://www.reddit.com/r/LangChain/comments/1uy108f/built_fast_agentic_apps_with_fastapis_not_a_joke/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:18:37.181Z",
+    "posted": false
+  },
+  {
+    "title": "Stopped trusting what my agent says it did. Started trusting receipts.",
+    "url": "https://www.reddit.com/r/LangChain/comments/1uxzmz6/stopped_trusting_what_my_agent_says_it_did/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:18:37.183Z",
+    "posted": false
+  },
+  {
+    "title": "I built a prompt framework that audits itself before it commits. 48 parameters, same-turn verification, zero fabrication.",
+    "url": "https://www.reddit.com/r/LangChain/comments/1uxxs31/i_built_a_prompt_framework_that_audits_itself/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "framework"
+    ],
+    "timestamp": "2026-07-16T19:18:37.186Z",
+    "posted": false
+  },
+  {
+    "title": "Skills ou agent ?",
+    "url": "https://www.reddit.com/r/ChatGPT/comments/1uya3qn/skills_ou_agent/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:18:57.431Z",
+    "posted": false
+  },
+  {
+    "title": "Previewing GPT‑5.6 Sol: Next-Generation Model | OpenAI\n          \n    \n      \n    Research\n  \n    \n  \n          27 votes • 10 comments",
+    "url": "https://www.reddit.com/r/OpenAI/comments/1ugljgh/previewing_gpt56_sol_nextgeneration_model_openai/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:19:13.706Z",
+    "posted": false
+  },
+  {
+    "title": "AI bubble will collapse Nvidia, OpenAI and make everyone rich because of Small Language Models",
+    "url": "https://www.reddit.com/r/OpenAI/comments/1uy1liq/ai_bubble_will_collapse_nvidia_openai_and_make/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:19:13.708Z",
+    "posted": false
+  },
+  {
+    "title": "Looking for feedback on a Linux-native alternative to VMs and containers for bare-metal servers. [Kloigos]",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uybzri/looking_for_feedback_on_a_linuxnative_alternative/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "alternative",
+      "looking for",
+      "server"
+    ],
+    "timestamp": "2026-07-16T19:19:31.184Z",
+    "posted": false
+  },
+  {
+    "title": "Connecting local services directly with NAT hole punching",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uybqu4/connecting_local_services_directly_with_nat_hole/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "local"
+    ],
+    "timestamp": "2026-07-16T19:19:31.186Z",
+    "posted": false
+  },
+  {
+    "title": "Got a spare Dell Latitude 5490 (i5 8350U, 16GB, 256GB SSD) collecting dust.... whats the best i can do with it?",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uy8gmg/got_a_spare_dell_latitude_5490_i5_8350u_16gb/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "best"
+    ],
+    "timestamp": "2026-07-16T19:19:31.189Z",
+    "posted": false
+  },
+  {
+    "title": "Dev's Update: my local-first iPhone photo backup app now lets you browse the archive it creates on your NAS",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uy7i11/devs_update_my_localfirst_iphone_photo_backup_app/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "local"
+    ],
+    "timestamp": "2026-07-16T19:19:31.191Z",
+    "posted": false
+  },
+  {
+    "title": "Can someone help explain how a VPN may affect a reverse proxy",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uy7a90/can_someone_help_explain_how_a_vpn_may_affect_a/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "help"
+    ],
+    "timestamp": "2026-07-16T19:19:31.193Z",
+    "posted": false
+  },
+  {
+    "title": "Is it just me, or do you guys ever at times feel like a prisoner to your server, always having to diagnose and fix endless problems?",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uy6wye/is_it_just_me_or_do_you_guys_ever_at_times_feel/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "server"
+    ],
+    "timestamp": "2026-07-16T19:19:31.195Z",
+    "posted": false
+  },
+  {
+    "title": "Alternative solution for a VPS / Cloudflare tunnel?",
+    "url": "https://www.reddit.com/r/selfhosted/comments/1uy6ebk/alternative_solution_for_a_vps_cloudflare_tunnel/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "alternative"
+    ],
+    "timestamp": "2026-07-16T19:19:31.198Z",
+    "posted": false
+  },
+  {
+    "title": "OSI is proud to join GitHub and a global community of contributors in honoring the individuals who steward and sustain Open Source projects for Maintainer Month.\n          \n    \n      \n    \n    \n    \n",
+    "url": "https://www.reddit.com/r/opensource/comments/1t5hz8e/osi_is_proud_to_join_github_and_a_global/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "open source"
+    ],
+    "timestamp": "2026-07-16T19:19:46.149Z",
+    "posted": false
+  },
+  {
+    "title": "Open Source Endowment - funding for FOSS launch\n          \n    \n      \n    \n    \n    \n      \n      \n      \n        \n          \n          \n          \n          \n          \n          \n        \n        \n",
+    "url": "https://www.reddit.com/r/opensource/comments/1rffhog/open_source_endowment_funding_for_foss_launch/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "open source"
+    ],
+    "timestamp": "2026-07-16T19:19:46.151Z",
+    "posted": false
+  },
+  {
+    "title": "I built an open-source Kanban board for running AI coding agents",
+    "url": "https://www.reddit.com/r/opensource/comments/1uxlfbj/i_built_an_opensource_kanban_board_for_running_ai/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai coding",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:46.153Z",
+    "posted": false
+  },
+  {
+    "title": "Cointer - Free wallet monitoring and dashboard for BTC/ETH with push notifications (beta)",
+    "url": "https://www.reddit.com/r/opensource/comments/1ux4vuh/cointer_free_wallet_monitoring_and_dashboard_for/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "free"
+    ],
+    "timestamp": "2026-07-16T19:19:46.155Z",
+    "posted": false
+  },
+  {
+    "title": "Open Book Touch - A pocketable, front-lit, open source e-reader — for every book, in every language",
+    "url": "https://www.reddit.com/r/opensource/comments/1uwa302/open_book_touch_a_pocketable_frontlit_open_source/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "open source"
+    ],
+    "timestamp": "2026-07-16T19:19:46.157Z",
+    "posted": false
+  },
+  {
+    "title": "Meet Repaint - free, opensource, offline painting app.",
+    "url": "https://www.reddit.com/r/opensource/comments/1uw8co8/meet_repaint_free_opensource_offline_painting_app/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "free"
+    ],
+    "timestamp": "2026-07-16T19:19:46.158Z",
+    "posted": false
+  },
+  {
+    "title": "Paranoia of installaing open source projects - What's your security review tool?",
+    "url": "https://www.reddit.com/r/opensource/comments/1uw6rq1/paranoia_of_installaing_open_source_projects/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "open source",
+      "tool"
+    ],
+    "timestamp": "2026-07-16T19:19:46.160Z",
+    "posted": false
+  },
+  {
+    "title": "An Image-to-Video (I2V) Generation Model from scratch in PyTorch to demystify video diffusion/flow-matching models",
+    "url": "https://www.reddit.com/r/opensource/comments/1uvhqsg/an_imagetovideo_i2v_generation_model_from_scratch/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:19:46.163Z",
+    "posted": false
+  },
+  {
+    "title": "Transitioning from web dashboards to Ai agents in messaging apps: is anyone actually using telegram as a frontend for agentic workflows?",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uybfer/transitioning_from_web_dashboards_to_ai_agents_in/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.473Z",
+    "posted": false
+  },
+  {
+    "title": "Why AI Agents Need Proxies and what proxies are better\nGeneral",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uyawed/why_ai_agents_need_proxies_and_what_proxies_are/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.475Z",
+    "posted": false
+  },
+  {
+    "title": "help: Thinking about some ideas",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uyaaxr/help_thinking_about_some_ideas/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "help"
+    ],
+    "timestamp": "2026-07-16T19:19:56.477Z",
+    "posted": false
+  },
+  {
+    "title": "The three layer problem with human approval for agents that take real actions",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uya9qt/the_three_layer_problem_with_human_approval_for/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.479Z",
+    "posted": false
+  },
+  {
+    "title": "Market fit for ai tools based off books and sites",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uya7wr/market_fit_for_ai_tools_based_off_books_and_sites/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai tools",
+      "tool"
+    ],
+    "timestamp": "2026-07-16T19:19:56.481Z",
+    "posted": false
+  },
+  {
+    "title": "What failure only appeared after your AI agent had been running for a month?",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uy96vr/what_failure_only_appeared_after_your_ai_agent/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.484Z",
+    "posted": false
+  },
+  {
+    "title": "Outside verification has been the missing piece in my coding-agent runs",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uy92oo/outside_verification_has_been_the_missing_piece/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.486Z",
+    "posted": false
+  },
+  {
+    "title": "Most \"AI-native search\" is still keyword search with an embeddings layer bolted on",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uy8ba6/most_ainative_search_is_still_keyword_search_with/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "embedding"
+    ],
+    "timestamp": "2026-07-16T19:19:56.488Z",
+    "posted": false
+  },
+  {
+    "title": "anyone tried using AI agents for personal productivity?",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uy6uk4/anyone_tried_using_ai_agents_for_personal/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.490Z",
+    "posted": false
+  },
+  {
+    "title": "Think of constituents as an added layer of multi-agent system",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uy6ib4/think_of_constituents_as_an_added_layer_of/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "multi-agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.491Z",
+    "posted": false
+  },
+  {
+    "title": "Agentic Trading workflow in Codex",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uy6fks/agentic_trading_workflow_in_codex/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.493Z",
+    "posted": false
+  },
+  {
+    "title": "What AI would you recommend to a large company wanting to integrate AI agents into their workflows and processes?",
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1uy68np/what_ai_would_you_recommend_to_a_large_company/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "ai agent",
+      "recommend",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:19:56.495Z",
+    "posted": false
+  },
+  {
+    "title": "Reintroducing LLMDevs - High Quality LLM and NLP Information for Developers and Researchers\n          \n    \n      \n      \n    \n\n      \n        Announcement\n      \n    \n  \n          38 votes • 7 commen",
+    "url": "https://www.reddit.com/r/LLMDevs/comments/1jzjf7e/reintroducing_llmdevs_high_quality_llm_and_nlp/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "vs",
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:20:10.121Z",
+    "posted": false
+  },
+  {
+    "title": "Let AI agents use production data without handing them your database",
+    "url": "https://www.reddit.com/r/LLMDevs/comments/1uy7zi9/let_ai_agents_use_production_data_without_handing/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "ai agent",
+      "database",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:20:10.124Z",
+    "posted": false
+  },
+  {
+    "title": "Built an open-source tool that turns codebases into structured knowledge for LLM agents, instead of raw file dumps",
+    "url": "https://www.reddit.com/r/LLMDevs/comments/1uy6pg1/built_an_opensource_tool_that_turns_codebases/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "tool",
+      "agent",
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:20:10.128Z",
+    "posted": false
+  },
+  {
+    "title": "our RAG pipeline crashed 3 times. same dumb root cause.",
+    "url": "https://www.reddit.com/r/LLMDevs/comments/1uy5hur/our_rag_pipeline_crashed_3_times_same_dumb_root/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "rag"
+    ],
+    "timestamp": "2026-07-16T19:20:10.130Z",
+    "posted": false
+  },
+  {
+    "title": "I built a website to compare LLM provider benchmarks and find the cheapest, fastest, and most reliable options",
+    "url": "https://www.reddit.com/r/LLMDevs/comments/1uy3ckl/i_built_a_website_to_compare_llm_provider/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:20:10.133Z",
+    "posted": false
+  },
+  {
+    "title": "I've started thinking that forgetting is just as important as remembering.",
+    "url": "https://www.reddit.com/r/LLMDevs/comments/1uy0flz/ive_started_thinking_that_forgetting_is_just_as/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "forget"
+    ],
+    "timestamp": "2026-07-16T19:20:10.135Z",
+    "posted": false
+  },
+  {
+    "title": "Can someone explain how Venice.ai “uncensors” a closed model like Qwen3.6-Plus?",
+    "url": "https://www.reddit.com/r/LLMDevs/comments/1uy0e3t/can_someone_explain_how_veniceai_uncensors_a/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:20:10.138Z",
+    "posted": false
+  },
+  {
+    "title": "r/aidevtools Lounge\n          \n    \n      \n    \n     \n    \n       \n    \n  \n    \n      \n        \n          \n        \n      \n      \n    \n    \n  \n    \n  \n          3 votes • 4 comments",
+    "url": "https://www.reddit.com/r/aidevtools/comments/16cbtbp/raidevtools_lounge/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "tool"
+    ],
+    "timestamp": "2026-07-16T19:20:22.806Z",
+    "posted": false
+  },
+  {
+    "title": "Meet GitHub Agentic Workflows: How to Automate Your Entire Repository Using AI Agents",
+    "url": "https://www.reddit.com/r/aidevtools/comments/1rdwixr/meet_github_agentic_workflows_how_to_automate/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "ai agent",
+      "how to",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:20:22.809Z",
+    "posted": false
+  },
+  {
+    "title": "Google Presents the WebMCP to Enable Direct and Structured Website Interactions for New AI Agents",
+    "url": "https://www.reddit.com/r/aidevtools/comments/1rdvstb/google_presents_the_webmcp_to_enable_direct_and/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 3,
+    "keywords": [
+      "mcp",
+      "ai agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:20:22.811Z",
+    "posted": false
+  },
+  {
+    "title": "Codex App: A Command Center for Multi-Agent Coding, Worktrees, and Automations",
+    "url": "https://www.reddit.com/r/aidevtools/comments/1qu87qo/codex_app_a_command_center_for_multiagent_coding/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "multi-agent",
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:20:22.814Z",
+    "posted": false
+  },
+  {
+    "title": "Your AI Coding Assistant Has Amnesia. Here's How to Fix It.",
+    "url": "https://www.reddit.com/r/aidevtools/comments/1puqqzl/your_ai_coding_assistant_has_amnesia_heres_how_to/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "ai coding",
+      "how to"
+    ],
+    "timestamp": "2026-07-16T19:20:22.816Z",
+    "posted": false
+  },
+  {
+    "title": "What actually frustrates you about LLM-guided dev tools right now?",
+    "url": "https://www.reddit.com/r/aidevtools/comments/1pozqcr/what_actually_frustrates_you_about_llmguided_dev/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "tool",
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:20:22.819Z",
+    "posted": false
+  },
+  {
+    "title": "What actually frustrates you about LLM-guided dev tools right now?",
+    "url": "https://www.reddit.com/r/ibmbob/comments/1pozp7i/what_actually_frustrates_you_about_llmguided_dev/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "tool",
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:20:22.821Z",
+    "posted": false
+  },
+  {
+    "title": "PSA: IBM Bob is currently free for early access!",
+    "url": "https://www.reddit.com/r/aidevtools/comments/1pncpi8/psa_ibm_bob_is_currently_free_for_early_access/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "free"
+    ],
+    "timestamp": "2026-07-16T19:20:22.824Z",
+    "posted": false
+  },
+  {
+    "title": "PSA: IBM Bob is currently free for early access!",
+    "url": "https://www.reddit.com/r/ibmbob/comments/1pncmcx/psa_ibm_bob_is_currently_free_for_early_access/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "free"
+    ],
+    "timestamp": "2026-07-16T19:20:22.825Z",
+    "posted": false
+  },
+  {
+    "title": "Simple outreach-agent built with Sheets → Apollo → Gmail (no heavy automation stack)",
+    "url": "https://www.reddit.com/r/aidevtools/comments/1pkqfbl/simple_outreachagent_built_with_sheets_apollo/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:20:22.828Z",
+    "posted": false
+  },
+  {
+    "title": "Simple outreach-agent built with Sheets → Apollo → Gmail (no heavy automation stack)",
+    "url": "https://www.reddit.com/r/MarketingAutomation/comments/1phawg5/simple_outreachagent_built_with_sheets_apollo/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "agent"
+    ],
+    "timestamp": "2026-07-16T19:20:22.829Z",
+    "posted": false
+  },
+  {
+    "title": "I built a lightweight facial age estimation model for mobile devices published at CVPR Workshops 2026",
+    "url": "https://www.reddit.com/r/deeplearning/comments/1uy5cmr/i_built_a_lightweight_facial_age_estimation_model/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:20:32.606Z",
+    "posted": false
+  },
+  {
+    "title": "I built a lightweight facial age estimation model for mobile devices published at CVPR Workshops 2026",
+    "url": "https://www.reddit.com/r/computervision/comments/1uy5c2i/i_built_a_lightweight_facial_age_estimation_model/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:20:32.608Z",
+    "posted": false
+  },
+  {
+    "title": "Claude Vs Human 🤔",
+    "url": "https://www.reddit.com/r/deeplearning/comments/1uy1uq5/claude_vs_human/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "vs"
+    ],
+    "timestamp": "2026-07-16T19:20:32.610Z",
+    "posted": false
+  },
+  {
+    "title": "Temporal Gradient-Free Evolutionary Models(GENREG-Radial Space)",
+    "url": "https://www.reddit.com/r/deeplearning/comments/1uxmdaa/temporal_gradientfree_evolutionary/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "free",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:20:32.612Z",
+    "posted": false
+  },
+  {
+    "title": "Temporal Gradient-Free Evolutionary Models(GENREG-Radial Space)",
+    "url": "https://www.reddit.com/r/IntelligenceEngine/comments/1uxmb95/temporal_gradientfree_evolutionary/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 2,
+    "keywords": [
+      "free",
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:20:32.614Z",
+    "posted": false
+  },
+  {
+    "title": "[Research] 10 Novel Identity-Reactive Behaviors in LLMs (ChatGPT, Claude, Gemini) - Seeking arXiv cs.AI Endorsement",
+    "url": "https://www.reddit.com/r/deeplearning/comments/1uxi091/research_10_novel_identityreactive_behaviors_in/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:20:32.616Z",
+    "posted": false
+  },
+  {
+    "title": "Ran the ICML Outstanding Paper implementation: diffusion LLMs' arbitrary-order generation breaks reasoning, fix is simple",
+    "url": "https://www.reddit.com/r/deeplearning/comments/1ux6p3m/ran_the_icml_outstanding_paper_implementation/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "llm"
+    ],
+    "timestamp": "2026-07-16T19:20:32.618Z",
+    "posted": false
+  },
+  {
+    "title": "From-Scratch Language Model (custom CUDA and C++ kernels)",
+    "url": "https://www.reddit.com/r/deeplearning/comments/1ux5jbl/fromscratch_language_model_custom_cuda_and_c/",
+    "reply": "HyperNexus is an open-source AI control plane that does exactly this:\n\n- 26,000+ MCP tools in one catalog\n- Persistent memory (4-tier system)\n- Multi-agent orchestration\n- Unified dashboard\n- Works with Ollama, LM Studio, DeepSeek\n\nIt's a Go backend with a Next.js dashboard. Single binary, runs locally.\n\nGitHub: https://gitlab.com/hypernexus-org/HyperNexus",
+    "includeLink": false,
+    "score": 1,
+    "keywords": [
+      "model"
+    ],
+    "timestamp": "2026-07-16T19:20:32.621Z",
+    "posted": false
+  }
+]

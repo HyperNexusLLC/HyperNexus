@@ -7,7 +7,7 @@
 | Layer | Status |
 |---|---|
 | Go kernel (:7778) | ✅ running, 49+ tools, systray (fixed ghost + TaskbarCreated) |
-| Dashboard (:7779) | ✅ running (Next.js standalone) — **99 pages / 66 components / 4958-line home view** |
+| Dashboard (:7779) | ✅ running (Next.js standalone) — **60 legacy page dirs / 4631-line home view (decomposition started v1.0.29: consolidated sections extracted)** |
 | MCP server (stdio) | ✅ 58 tools, exposure:direct in pi/mimo |
 | pi extension | ✅ 22 tools + 7 commands + 17 hooks (robust, honest, fast) |
 | mimo plugin | ✅ 22 tools + 26 hooks (reliability + our features merged) |
