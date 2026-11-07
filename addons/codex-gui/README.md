@@ -22,3 +22,5 @@ Minimal HyperNexus integration for the Codex web GUI harness (NEW files only; no
 - Leader: `agent/swarm-leader.md` (main session fans out disjoint subtasks via per-thread messages, tracks roster, collects reports).
 - Workers: `agent/swarm-worker.md` (execute assigned scope, report back in-thread ending `STATUS: DONE` / `STATUS: BLOCKED`).
 - Skill: `skills/hypernexus-orchestrator/SKILL.md`; commands `commands/hn-swarm.md` (fan-out) + `commands/hn-report.md` (report-back); overlay `prompt-overlay.md`.
+
+Swarm bus (automation API): node addons/codex-gui/swarm.mjs assign|inbox|report|roster (kernel-memory facts; direct session driving). Battery: node addons/codex-gui/bin/test-swarm-bus.mjs.

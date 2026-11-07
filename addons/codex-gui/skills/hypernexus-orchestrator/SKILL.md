@@ -9,3 +9,5 @@ RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY, extended for multi-session c
 - PERSIST: roster + outcomes via `add_memory` (tags `swarm,codex-gui`); relations via `memory_extract_relations`.
 - VERIFY: `system_status` + `billing_status` before/after production changes; re-run `bin/test-codex-gui-ext.mjs` after addon edits.
 - Tool policy: shell tools DISABLED (Meta 403 `client_attestation_denied`); parity tools with MINIMAL descriptions only.
+
+BUS (automation API): swarm.mjs assign/inbox/report/roster drives sessions directly through kernel memory facts. Battery: node addons/codex-gui/bin/test-swarm-bus.mjs.
