@@ -7,6 +7,15 @@
 #   .\use-meta-model.ps1 "your prompt here"   # or no args for TUI
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Prompt)
 
+# NOTE (2026-11-07, verified live): this freebuff build is interactive-
+# TUI-only (no --model flag, no one-shot prompt; it draws the TUI and waits).
+# Fail fast BEFORE minting so a doomed run never spends a key. Use the TUI
+# branch below (FREEBUFF_MODEL env) for live turns.
+if ($Prompt -and $Prompt.Count -gt 0) {
+  Write-Error 'Headless one-shot is not supported by this freebuff build (interactive TUI only). Run without args for the TUI (model via FREEBUFF_MODEL), or use a harness with a headless path.'
+  exit 2
+}
+
 $mintScript = Join-Path $PSScriptRoot 'bin/meta-muse-key.mjs'
 # Dual-model: META_MODEL env override (default spark, opt-in wonder).
 $MetaWanted = if ($env:META_MODEL) { $env:META_MODEL.Replace('meta/','') } else { 'muse-spark-1.3-contributor' }
@@ -27,7 +36,8 @@ $freebuff = Get-Command freebuff -ErrorAction SilentlyContinue
 if (-not $freebuff) { $freebuff = 'C:\Users\hyper\AppData\Roaming\npm\freebuff.ps1' }
 
 if ($Prompt -and $Prompt.Count -gt 0) {
-  & $freebuff --model ('meta/' + $Model) -- $Prompt
+  # (Unreachable: one-shot prompts exit above before minting.)
+  exit 2
 } else {
   $env:FREEBUFF_MODEL = ('meta/' + $Model)
   & $freebuff
