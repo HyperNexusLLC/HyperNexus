@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
@@ -46,7 +48,9 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 
 	payload := map[string]any{"query": query, "limit": limit}
 	var result any
-	upstreamBase, upstreamErr := s.callUpstreamJSON(r.Context(), "memory.query", payload, &result)
+	sctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+	upstreamBase, upstreamErr := s.callUpstreamJSON(sctx, "memory.query", payload, &result)
 
 	// Always try local results too — addFact may have persisted locally even when
 	// upstream query is available (asymmetric bridge fallback).
@@ -58,7 +62,7 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 	// Also search the VectorStore (Ollama-backed semantic search)
 	var vectorResults []map[string]any
 	if tools.GlobalVectorStore != nil {
-		records, vErr := tools.GlobalVectorStore.SemanticSearch(r.Context(), query, limit)
+		records, vErr := tools.GlobalVectorStore.SemanticSearch(sctx, query, limit)
 		if vErr == nil {
 			for _, rec := range records {
 				vectorResults = append(vectorResults, map[string]any{
