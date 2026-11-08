@@ -1,3 +1,14 @@
+# HANDOFF - v1.0.30 live: kernel swap, bus visibility, priority rule
+
+## Session LIVE (2026-11-08) - go-live [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+
+- **Kernel swapped** via bin/swap-kernel.ps1 to merged v1.0.30 build: /health version 1.0.30, POST /api/agent/orchestrate 200 native Go (persisted:true). All hypernexus + llama-server + dashboard processes set BelowNormal.
+- **Priority rule (standing)**: heavyweight background processes (kernels, llama-server, build/dashboard nodes) run BelowNormal so the box never hangs; re-apply after every swap/start.
+- **Swarm bus fixed**: addons/codex-gui/swarm.mjs gained scratchpad mirror (swarm:task:/swarm:report:) — inbox/roster immediate, facts audit kept; merged with lane FTS-first search. Batteries: swarm 9/9, session-bus 12/12 live post-swap.
+- **Visibility**: codex-gui installer deployed (install --check OK): hn-swarm skill, hn-* commands, swarm-leader/worker agents in .codex-gui/. This session registered on the bus as muse-code-coord and broadcast bm-mw8gyyr3 (visible via session-bus sessions/inbox in every harness).
+- **Git**: main b9fad69581 (v1.0.30) pushed to GitLab; GitHub at e7aba59945 (swarm fix) — GitHub cannot accept the gitlab lane history containing the provider_metrics.db secret blob without the owner unblock/rewrite decision. Stashes memories-ff/ff-blockers hold superseded memories.json snapshots (safe to drop after review).
+
+---
 # HANDOFF - Kernel search timeout fix committed (v1.0.30+)
 
 ## Session SWARM3 (2026-11-08) - kernel timeout fix [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
