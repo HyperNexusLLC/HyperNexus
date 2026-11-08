@@ -1,3 +1,17 @@
+# HANDOFF - Kernel search timeout fix committed (v1.0.30+)
+
+## Session SWARM3 (2026-11-08) - kernel timeout fix [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
+
+### Done
+- Verified the earlier timeout patch never landed (no context/time imports, still raw r.Context()).
+- go/internal/httpapi/missing_handlers.go: 15s context.WithTimeout now bounds upstream memory.query and VSS SemanticSearch in handleMemorySearch.
+- gofmt clean for the touched file (rest of package pre-existing unformatted), go build ./internal/httpapi/ exit 0.
+- Committed 7d00e00f3 (see push verification below).
+
+### Next
+- Coordinate kernel rebuild + restart window (shared kernel, other lanes live). Then drop the swarm battery SKIP and expect a full live round-trip green.
+- Version bump left for the next sync session (35-ref sync is heavy, shared tree).
+
 # HANDOFF - Repository synchronization & intelligent merge (v1.0.30)
 
 ## Session SWARM2 (2026-11-07) - codex-gui swarm resilience [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
