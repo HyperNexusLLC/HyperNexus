@@ -59,22 +59,32 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 		localResults = nil
 	}
 
-	// Also search the VectorStore (Ollama-backed semantic search)
-	var vectorResults []map[string]any
-	if tools.GlobalVectorStore != nil {
-		records, vErr := tools.GlobalVectorStore.SemanticSearch(sctx, query, limit)
-		if vErr == nil {
-			for _, rec := range records {
-				vectorResults = append(vectorResults, map[string]any{
-					"id":       rec.ID,
-					"content":  rec.Content,
-					"category": rec.Category,
-					"kind":     rec.Kind,
-					"tags":     rec.Tags,
-					"source":   "vectorstore",
-				})
+	// Also search the VectorStore (Ollama-backed semantic search).
+	// Hard timeout race: the embedding backend may ignore ctx under llama load.
+	vectorCh := make(chan []map[string]any, 1)
+	go func() {
+		var out []map[string]any
+		if tools.GlobalVectorStore != nil {
+			records, vErr := tools.GlobalVectorStore.SemanticSearch(sctx, query, limit)
+			if vErr == nil {
+				for _, rec := range records {
+					out = append(out, map[string]any{
+						"id":       rec.ID,
+						"content":  rec.Content,
+						"category": rec.Category,
+						"kind":     rec.Kind,
+						"tags":     rec.Tags,
+						"source":   "vectorstore",
+					})
+				}
 			}
 		}
+		vectorCh <- out
+	}()
+	var vectorResults []map[string]any
+	select {
+	case vectorResults = <-vectorCh:
+	case <-time.After(10 * time.Second):
 	}
 
 	if upstreamErr == nil {
