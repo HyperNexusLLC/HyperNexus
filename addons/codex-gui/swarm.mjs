@@ -111,6 +111,23 @@ async function storeFact(body, what) {
   }
   fail(what + " store failed after 2 tries (HTTP " + last.status + "): " + JSON.stringify(last.data).slice(0, 200));
 }
+// Scratchpad mirror (session-bus transport pattern): SQLite-fast writes and
+// one-GET reads, so inbox/roster are immediately consistent even while the
+// facts search index lags on a saturated box. Facts remain the audit trail.
+async function scratchSet(key, obj) {
+  const r = await req("POST", "/api/memory/scratchpad/set", { key, value: JSON.stringify(obj) });
+  if (r.status !== 200) fail("scratchpad set failed (HTTP " + r.status + "): " + JSON.stringify(r.data).slice(0, 200));
+}
+async function scratchMap() {
+  const r = await req("GET", "/api/memory/scratchpad/get");
+  if (r.status !== 200) return {};
+  return r.data?.scratchpad || r.data?.data?.scratchpad || {};
+}
+function scratchRecords(map, prefix) {
+  return Object.keys(map).filter((k) => k.startsWith(prefix)).map((k) => {
+    try { return typeof map[k] === "string" ? JSON.parse(map[k]) : map[k]; } catch { return null; }
+  }).filter(Boolean);
+}
 async function cmdAssign() {
   const worker = opt("--worker");
   const goal = opt("--goal");
@@ -122,15 +139,35 @@ async function cmdAssign() {
     `goal: ${goal}`, `files: ${opt("--files") || "(none)"}`,
     `criteria: ${opt("--criteria") || "report STATUS: DONE with changed files + verification"}`,
   ].join("\n");
+  await scratchSet("swarm:task:" + taskId, { task: taskId, worker, goal, files: opt("--files") || "(none)", criteria: opt("--criteria") || "", title: `[swarm-task] ${taskId} -> ${worker}`, content, ts: Date.now() });
   await storeFact({
     title: `[swarm-task] ${taskId} -> ${worker}`, content,
     tags: [...TAGS, "swarm-task"], category: "swarm-task",
   }, "assign");
   out({ ok: true, task: taskId, worker, goal });
 }
+// Facts writes land asynchronously on a saturated box (the POST can return
+// before the search index sees the record). Poll briefly so a just-assigned
+// task is not reported missing; bounded by HN_POLL_MS (default 90000).
+const POLL_MS = Number(process.env.HN_POLL_MS || 90000);
+async function searchUntil(q, limit, want) {
+  const t0 = Date.now();
+  let items = await search(q, limit);
+  while (!items.some(want) && Date.now() - t0 < POLL_MS) {
+    await new Promise(function (s) { setTimeout(s, 5000); });
+    items = await search(q, limit);
+  }
+  return items;
+}
 async function pendingFor(workerShort) {
+  const map = await scratchMap();
+  const sTasks = scratchRecords(map, "swarm:task:").filter((t) => (t.worker || "").slice(0, 8) === workerShort);
+  if (sTasks.length) {
+    const sReported = new Set(scratchRecords(map, "swarm:report:").map((r) => r.task).filter(Boolean));
+    return sTasks.filter((t) => !sReported.has(t.task)).map((t) => ({ title: t.title, content: t.content }));
+  }
   const [tasks, reports] = await Promise.all([
-    search(`[swarm-task] ${workerShort}`, 50), search(`[swarm-report] ${workerShort}`, 50),
+    searchUntil(`[swarm-task] ${workerShort}`, 50, isTask), search(`[swarm-report] ${workerShort}`, 50),
   ]);
   const reported = new Set(reports.filter(isReport).map(taskIdOf).filter(Boolean));
   return tasks.filter(isTask).filter((t) => !reported.has(taskIdOf(t)));
@@ -155,6 +192,7 @@ async function cmdReport() {
     `worker: ${worker}`, `task: ${task}`, `status: ${status}`,
     `summary: ${opt("--summary") || "(none)"}`, `files: ${opt("--files") || "(none)"}`,
   ].join("\n");
+  await scratchSet("swarm:report:" + task, { task, worker, status, summary: opt("--summary") || "(none)", files: opt("--files") || "(none)", title: `[swarm-report] ${task} ${status}`, content, ts: Date.now() });
   await storeFact({
     title: `[swarm-report] ${task} ${status}`, content,
     tags: [...TAGS, "swarm-report"], category: "swarm-report",
@@ -163,6 +201,17 @@ async function cmdReport() {
 }
 async function cmdRoster() {
   const worker = opt("--worker");
+  const map = await scratchMap();
+  const sAll = scratchRecords(map, "swarm:task:");
+  const sTasks = worker ? sAll.filter((t) => (t.worker || "").slice(0, 8) === worker.slice(0, 8)) : sAll;
+  if (sTasks.length) {
+    const sRep = new Map(scratchRecords(map, "swarm:report:").map((r) => [r.task, r]));
+    out({
+      ok: true, open: sTasks.filter((t) => !sRep.has(t.task)).length,
+      roster: sTasks.map((t) => ({ task: t.task, worker: t.worker, status: sRep.get(t.task)?.status || "ASSIGNED", report: sRep.get(t.task)?.content?.slice(0, 300) ?? null })),
+    });
+    return;
+  }
   const q = worker ? `[swarm-task] ${worker.slice(0, 8)}` : "[swarm-task]";
   const [tasks, reports] = await Promise.all([search(q, 50), search(worker ? `[swarm-report] ${worker.slice(0, 8)}` : "[swarm-report]", 50)]);
   const byTask = new Map();
