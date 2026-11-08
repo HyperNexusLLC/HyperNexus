@@ -47,26 +47,38 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := map[string]any{"query": query, "limit": limit}
-	var result any
 	sctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
-	upstreamBase, upstreamErr := s.callUpstreamJSON(sctx, "memory.query", payload, &result)
 
-	// Always try local results too — addFact may have persisted locally even when
-	// upstream query is available (asymmetric bridge fallback).
-	localResults, localErr := s.localMemoryQueryResults(query, limit)
-	if localErr != nil {
-		localResults = nil
+	// All three backends run in parallel with hard timeout races: none of
+	// the callees may stall the handler (bridge/VSS/file clients have all
+	// been observed to ignore ctx under box load).
+	type upstreamResult struct {
+		base string
+		data any
+		err  error
 	}
-
+	upCh := make(chan upstreamResult, 1)
+	go func() {
+		var result any
+		base, err := s.callUpstreamJSON(sctx, "memory.query", payload, &result)
+		upCh <- upstreamResult{base: base, data: result, err: err}
+	}()
+	type localResult struct {
+		items []map[string]any
+		err   error
+	}
+	localCh := make(chan localResult, 1)
+	go func() {
+		items, err := s.localMemoryQueryResults(query, limit)
+		localCh <- localResult{items: items, err: err}
+	}()
 	// Also search the VectorStore (Ollama-backed semantic search).
-	// Hard timeout race: the embedding backend may ignore ctx under llama load.
 	vectorCh := make(chan []map[string]any, 1)
 	go func() {
 		var out []map[string]any
 		if tools.GlobalVectorStore != nil {
-			records, vErr := tools.GlobalVectorStore.SemanticSearch(sctx, query, limit)
-			if vErr == nil {
+			if records, vErr := tools.GlobalVectorStore.SemanticSearch(sctx, query, limit); vErr == nil {
 				for _, rec := range records {
 					out = append(out, map[string]any{
 						"id":       rec.ID,
@@ -81,6 +93,31 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 		}
 		vectorCh <- out
 	}()
+
+	var result any
+	var upstreamBase string
+	var upstreamErr error
+	select {
+	case u := <-upCh:
+		result, upstreamBase, upstreamErr = u.data, u.base, u.err
+	case <-time.After(12 * time.Second):
+		upstreamErr = context.DeadlineExceeded
+	}
+
+	// Always try local results too — addFact may have persisted locally even when
+	// upstream query is available (asymmetric bridge fallback).
+	var localResults []map[string]any
+	var localErr error
+	select {
+	case l := <-localCh:
+		localResults, localErr = l.items, l.err
+	case <-time.After(8 * time.Second):
+		localErr = context.DeadlineExceeded
+	}
+	if localErr != nil {
+		localResults = nil
+	}
+
 	var vectorResults []map[string]any
 	select {
 	case vectorResults = <-vectorCh:

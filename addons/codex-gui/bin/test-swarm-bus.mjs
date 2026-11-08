@@ -52,7 +52,7 @@ assert.match(task, /^sw-\w+$/);
 process.stdout.write(`  info assigned ${task}\n`);
 passed += 1; process.stdout.write("PASS live assign stores task fact\n");
 
-const probe = run(["inbox", "--worker", worker], { HN_TIMEOUT_MS: "15000" });
+const probe = run(["inbox", "--worker", worker], { HN_TIMEOUT_MS: "30000" });
 if (probe.status !== 0) {
   const rpSkip = run(["report", "--worker", worker, "--task", task, "--status", "DONE", "--summary", "self-test (search infra unavailable)"]);
   assert.equal(rpSkip.status, 0, rpSkip.stderr);

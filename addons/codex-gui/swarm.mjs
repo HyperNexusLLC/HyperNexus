@@ -95,18 +95,19 @@ function normalizeFts(items) {
 async function search(q, limit) {
   const simple = q.replace(/[^a-zA-Z0-9 _-]/g, " ").replace(/\s+/g, " ").trim();
   const f = await req("GET", "/api/memory/fts-search?q=" + encodeURIComponent(simple) + "&limit=" + (limit || 50));
-  if (f.status === 200) {
-    const hits = normalizeFts(itemsOf(f)).filter(function (x) { return isTask(x) || isReport(x); });
-    if (hits.length) return hits;
-  }
+  let ftsHits = [];
+  if (f.status === 200) ftsHits = normalizeFts(itemsOf(f)).filter(function (x) { return isTask(x) || isReport(x); });
   let last = null;
+  let semHits = [];
   for (let n = 0; n < 3; n++) {
     const r = await req("GET", "/api/memory/search?q=" + encodeURIComponent(q) + "&limit=" + (limit || 50));
-    if (r.status === 200) return itemsOf(r);
+    if (r.status === 200) { semHits = itemsOf(r); break; }
     last = r;
     await new Promise(function (s) { setTimeout(s, 2000 * (n + 1)); });
   }
-  fail("memory search failed after 3 tries (HTTP " + last.status + "): " + JSON.stringify(last.data).slice(0, 200));
+  if (!ftsHits.length && !semHits.length) fail("memory search failed after 3 tries (HTTP " + (last ? last.status : "n/a") + "): " + JSON.stringify(last ? last.data : null).slice(0, 200));
+  const seen = new Set();
+  return ftsHits.concat(semHits).filter(function (x) { const k = taskIdOf(x) || JSON.stringify(x).slice(0, 120); if (seen.has(k)) return false; seen.add(k); return true; });
 }
 async function storeFact(body, what) {
   let last = null;
