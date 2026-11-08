@@ -61,7 +61,7 @@ async function req(method, path, body) {
 function itemsOf(payload) {
   if (!payload || typeof payload !== "object") return [];
   const d = payload.data !== undefined ? payload.data : payload;
-  for (const k of ["results", "facts", "memories", "items", "hits"]) {
+  for (const k of ["results", "facts", "memories", "items", "data","hits"]) {
     if (Array.isArray(d?.[k])) return d[k];
   }
   if (Array.isArray(d)) return d;
@@ -100,7 +100,7 @@ async function search(q, limit) {
   let last = null;
   let semHits = [];
   for (let n = 0; n < 3; n++) {
-    const r = await req("GET", "/api/memory/search?q=" + encodeURIComponent(q) + "&limit=" + (limit || 50));
+    const r = await req("GET", "/api/memory/search?q=" + encodeURIComponent(simple) + "&limit=" + (limit || 50));
     if (r.status === 200) { semHits = itemsOf(r); break; }
     last = r;
     await new Promise(function (s) { setTimeout(s, 2000 * (n + 1)); });
