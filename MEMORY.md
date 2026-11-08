@@ -1,6 +1,12 @@
 # MEMORY.md â€” Multi-Agent Insights
 
 ## Critical Architecture Lessons
+### Repo sync: working-tree regression + live-churn staging rule (2026-11-07, v1.0.30)
+
+- **Working tree can regress behind HEAD silently**: lane processes overwrote VERSION/buildinfo/35 package.jsons 1.0.29→1.0.28 and reverted CHANGELOG/HANDOFF/ROADMAP/TODO/SUBMODULES + dashboard decomposition + supervisor mapping. Always `git diff HEAD --stat` (excluding `.hypernexus/imported_sessions`) at sync start; restore regressions with `git checkout HEAD -- <paths>` before version-bumping.
+- **Never `git add .` while the kernel runs**: the live kernel rewrites `catalog.db`/`hypernexus.db`, prunes `.hypernexus/imported_sessions` archives, and rotates `.hypernexus/logs/a2a_traffic.jsonl`. Stage version/docs/memory files explicitly; leave DB + archive churn unstaged until a quiesced snapshot.
+- **Dashboard canonical form**: `DashboardConsolidatedSections` (extracted component) beats the inline 9-view version — same sections, decomposition direction preserved. Discard inline duplicates on sight.
+
 ### Repo sync: unrelated-history feature branch + DB push limits (2026-11-05, v1.0.28)
 
 - **`feature/cloud-dashboard-mcp-sse-*` is an unrelated history** (root `c3993a0a` vs main `3b787366`, no merge base; local tip `775605d4b` also differs from gitlab tip `8d597c328`). Never merge it into main (16k-file regression); its features already landed via the main line. Local variant preserved as remote branch `archive/cloud-dashboard-mcp-sse-775605d`.
@@ -365,3 +371,6 @@ Memories should be stored both:
 - copilot-cli dual-model launcher (2026-11-05): META_MODEL intent export; live mint OK; battery 12/12; PSParser 0.
 - opencode dual-model (2026-11-05): launcher both routes + installer seeds/backfills both models + jsonc sample; battery 9/9; temp-project round-trip green; kernel lists spark only (wonder pending upstream).
 - codex-gui swarm verify (2026-11-05): wonder pinned, mint live, battery 8/8, .codex-gui/ drift fixed via reinstall; memory STORE 200 + FTS OK, semantic search slow under load (flake).
+## 2026-11-07 - kernel search hang root cause (codex-gui lane)
+- handleMemorySearch (go/internal/httpapi/missing_handlers.go:28): callUpstreamJSON memory.query via interop.CallTRPCProcedure (no own timeout) then Ollama-backed VectorStore.SemanticSearch; either blocks past 45s. FTS fast but omits fresh facts. facts/add fine. Shared-kernel rebuild/restart NOT done (other sessions live); bus adapted instead (FTS-first + SKIP).
+- Box discipline re-verified: one light command per turn, heavy ops background-to-file, llama-server BelowNormal.

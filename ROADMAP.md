@@ -60,7 +60,7 @@ memory-graphrag 15KB, healer-cognition 10KB, integrations 8KB, mission-control
 - Replace the per-restart kernel deploys with a graceful, zero-downtime reload where possible.
 - Full `DEPLOY.md` parity for Hetzner + local.
 
-## Milestone 6 - Repository Consolidation (v1.0.28, 2026-11-05)
-- Single-line `main` reconciled across GitHub + GitLab (258-commit fast-forward); all feature branches audited - the one divergent branch (`feature/cloud-dashboard-mcp-sse-*`) is an unrelated-history archive, retained unmerged.
+## Milestone 6 - Repository Consolidation (v1.0.28, 2026-11-05; re-verified v1.0.30, 2026-11-07)
+- Single-line `main` reconciled across GitHub + GitLab (258-commit fast-forward); all feature branches audited - the one divergent branch (`feature/cloud-dashboard-mcp-sse-*`) is an unrelated-history archive, retained unmerged. Re-audit 2026-11-07: 0 unique commits on all active branches; all 4 fast-forwarded to `main` (v1.0.30).
 - Submodules pinned to latest upstream (`vendor/deepseek-harness` dsh 0.2.2-rc.1); structural map in `docs/SUBMODULES.md`.
-- Memory/session state tracked in git (`.hypernexus/`, `.tormentnexus/` state, `.memory/branches/`); runtime DBs pending a Git LFS decision (see TODO.md).
+- Memory/session state tracked in git (`.hypernexus/`, `.tormentnexus/` state, `.memory/branches/`); runtime DBs pending a Git LFS decision (see TODO.md). Live-kernel DB/archive churn left unstaged until a quiesced snapshot (SYNC3).

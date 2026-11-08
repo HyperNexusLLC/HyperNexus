@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
@@ -45,32 +47,81 @@ func (s *Server) handleMemorySearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := map[string]any{"query": query, "limit": limit}
+	sctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+
+	// All three backends run in parallel with hard timeout races: none of
+	// the callees may stall the handler (bridge/VSS/file clients have all
+	// been observed to ignore ctx under box load).
+	type upstreamResult struct {
+		base string
+		data any
+		err  error
+	}
+	upCh := make(chan upstreamResult, 1)
+	go func() {
+		var result any
+		base, err := s.callUpstreamJSON(sctx, "memory.query", payload, &result)
+		upCh <- upstreamResult{base: base, data: result, err: err}
+	}()
+	type localResult struct {
+		items []map[string]any
+		err   error
+	}
+	localCh := make(chan localResult, 1)
+	go func() {
+		items, err := s.localMemoryQueryResults(query, limit)
+		localCh <- localResult{items: items, err: err}
+	}()
+	// Also search the VectorStore (Ollama-backed semantic search).
+	vectorCh := make(chan []map[string]any, 1)
+	go func() {
+		var out []map[string]any
+		if tools.GlobalVectorStore != nil {
+			if records, vErr := tools.GlobalVectorStore.SemanticSearch(sctx, query, limit); vErr == nil {
+				for _, rec := range records {
+					out = append(out, map[string]any{
+						"id":       rec.ID,
+						"content":  rec.Content,
+						"category": rec.Category,
+						"kind":     rec.Kind,
+						"tags":     rec.Tags,
+						"source":   "vectorstore",
+					})
+				}
+			}
+		}
+		vectorCh <- out
+	}()
+
 	var result any
-	upstreamBase, upstreamErr := s.callUpstreamJSON(r.Context(), "memory.query", payload, &result)
+	var upstreamBase string
+	var upstreamErr error
+	select {
+	case u := <-upCh:
+		result, upstreamBase, upstreamErr = u.data, u.base, u.err
+	case <-time.After(12 * time.Second):
+		upstreamErr = context.DeadlineExceeded
+	}
 
 	// Always try local results too — addFact may have persisted locally even when
 	// upstream query is available (asymmetric bridge fallback).
-	localResults, localErr := s.localMemoryQueryResults(query, limit)
+	var localResults []map[string]any
+	var localErr error
+	select {
+	case l := <-localCh:
+		localResults, localErr = l.items, l.err
+	case <-time.After(8 * time.Second):
+		localErr = context.DeadlineExceeded
+	}
 	if localErr != nil {
 		localResults = nil
 	}
 
-	// Also search the VectorStore (Ollama-backed semantic search)
 	var vectorResults []map[string]any
-	if tools.GlobalVectorStore != nil {
-		records, vErr := tools.GlobalVectorStore.SemanticSearch(r.Context(), query, limit)
-		if vErr == nil {
-			for _, rec := range records {
-				vectorResults = append(vectorResults, map[string]any{
-					"id":       rec.ID,
-					"content":  rec.Content,
-					"category": rec.Category,
-					"kind":     rec.Kind,
-					"tags":     rec.Tags,
-					"source":   "vectorstore",
-				})
-			}
-		}
+	select {
+	case vectorResults = <-vectorCh:
+	case <-time.After(10 * time.Second):
 	}
 
 	if upstreamErr == nil {
