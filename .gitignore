@@ -226,3 +226,4 @@ addons/droid/marketplace/
 bin/*.bak*
 bin/*.exe.bak*
 .hypernexus/memory/
+.codex-gui/

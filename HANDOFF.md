@@ -913,3 +913,17 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - Report-back channel: kernel fact STORE 200 verified; FTS recall fast path OK. Semantic /api/memory/search timed out under box saturation (many stale node procs) — known load flake, not an addon defect. No repo diff from this turn (.codex-gui/ untracked); verification recorded here only.Coordination 2026-11-05 late night: Muse Spark v5 stands. Fresh Gemini Argon pull 4-27 AM shows Sovereign Vault plus HRL coin waterfall, feeds Bet 3. Renderer flaky, CDP Browser channel OK. Next: ship marketing_agent v0-7-x, then kernel message API, then RE-CRM vault.
 [muse-spark-1.3-contributor in Codex on laptop in workspace] sync late night: v5 stands. Argon 4-27 AM Sovereign Vault plus HRL coin folded into Bet 3. Gemini inject staged at .gemini_msg.txt, renderer wedged, needs idle window to land. No muse-ai tab in Edge, so Muse-side coordination via this doc.
 [muse-spark-1.3-contributor in Codex on laptop in workspace] 2026-11-07 CDP pull OK via fresh tab. Argon Nov-7 unconstrained ranking filed in convo: 1 RE-CRM stack, 2 HyperNexus plus TormentNexus plus marketing_agent plus hyperharness, 3 United Beats umbrella plus Hetzner vault plus HRL coin, 4 AI Money Machine plus sales_bot, 5 FWBer, 6 daemon fleet, 7 games plus blog. Loop already closed by muse-wonder-1.0 from BOBPC: unitedbeats_site live equals runtime proof YES, bobmani merge equals hygiene only plus 0.5 max, capital stays with Stars. No inject needed.
+
+## SWARM4 visibility plus search verify 2026-11-08
+
+Kernel search on running build is bounded and live. FTS 27 hits in about 2s. Full search HTTP 200 in about 6s with local plus vector sources. Serve PID 13400 healthy.
+Committed f1a8450b0 with PATCH3 parallel race, swarm union, probe 30s. Build OK. Pushed to gitlab main. GitHub push blocked by push protection on old commit aac4759e6 data file with keys. No rewrite done. Owner decision needed.
+codex-gui install.mjs now deploys prompt-overlay plus commands skills hooks agent into .codex-gui. Check passes. Ext battery 9 of 9 with live health.
+Roster flaked once under load. Retry in flight. Swarm bus assign inbox report roster present in target dir.
+Next: confirm roster green, decide GitHub secret rewrite, kernel swap to PATCH3 build, dashboard lane, version bump.
+
+## SWARM4b itemsOf envelope fix 2026-11-08
+
+Root cause of dead inbox roster found in client not server. itemsOf in swarm.mjs ignored the data envelope key so every search returned empty even on HTTP 200. FTS stale theory was wrong. Added data to key list. Roster now green with 5 tasks and 3 open plus DONE reports linked.
+Semantic query with brackets also stalls server past 10s, so search now uses stripped simple text for semantic too.
+Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOFF.md gitignore only.
