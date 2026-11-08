@@ -371,3 +371,6 @@ Memories should be stored both:
 - copilot-cli dual-model launcher (2026-11-05): META_MODEL intent export; live mint OK; battery 12/12; PSParser 0.
 - opencode dual-model (2026-11-05): launcher both routes + installer seeds/backfills both models + jsonc sample; battery 9/9; temp-project round-trip green; kernel lists spark only (wonder pending upstream).
 - codex-gui swarm verify (2026-11-05): wonder pinned, mint live, battery 8/8, .codex-gui/ drift fixed via reinstall; memory STORE 200 + FTS OK, semantic search slow under load (flake).
+## 2026-11-07 - kernel search hang root cause (codex-gui lane)
+- handleMemorySearch (go/internal/httpapi/missing_handlers.go:28): callUpstreamJSON memory.query via interop.CallTRPCProcedure (no own timeout) then Ollama-backed VectorStore.SemanticSearch; either blocks past 45s. FTS fast but omits fresh facts. facts/add fine. Shared-kernel rebuild/restart NOT done (other sessions live); bus adapted instead (FTS-first + SKIP).
+- Box discipline re-verified: one light command per turn, heavy ops background-to-file, llama-server BelowNormal.

@@ -1,5 +1,16 @@
 # HANDOFF - Repository synchronization & intelligent merge (v1.0.30)
 
+## Session SWARM2 (2026-11-07) - codex-gui swarm resilience [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
+
+### Done
+- Diagnosed live-leg failure as infra, not code: semantic search hangs past 45s x3 even on fresh kernel (handleMemorySearch blocks on upstream/VSS, no timeout); FTS fast but stale for fresh facts (total=0 at 10 min). Stores return 200 in ~10s.
+- swarm.mjs: FTS-first search (normalizeFts + ftsTitle, de-anchored worker parse), retries kept. Battery: 15s probe-gate SKIP for search legs, report-store verified live. swarm battery 6/6 green (2 legs skipped), ext battery 8/8 green. Last 200 a2a log lines clean.
+
+### Next
+- Kernel fix (needs rebuild+restart of shared kernel, coordinate first): timeout-race upstream/VSS in handleMemorySearch (go/internal/httpapi/missing_handlers.go:28) or serve-local-first. Then drop the SKIP for a full live round-trip.
+- Open lanes: dashboard decomposition, Copilot OAuth proxy decision (see SYNC3).
+
+
 ## Session SYNC3 (2026-11-07) - repo sync [muse-spark-1.3 in opencode session]
 
 ### Done

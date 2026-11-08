@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- codex-gui swarm bus: FTS-first search (normalized hits) with semantic retry fallback; battery probe-gates search-dependent legs as SKIP while kernel search is down, report-store still verified live.
+
+### Fixed
+- codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
+
 ## [1.0.30] - 2026-11-07
 
 ### Fixed

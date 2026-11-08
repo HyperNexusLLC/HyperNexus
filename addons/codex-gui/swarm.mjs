@@ -80,7 +80,25 @@ function taskIdOf(f) {
   const m = /^\[swarm-(?:task|report)\]\s+(\S+)/.exec(strOf(f, ["title", "name"]));
   return m ? m[1] : null;
 }
+function ftsTitle(tags) {
+  const m = /title=(.*?)(?:\s+\w+=|$)/.exec(tags || "");
+  return m ? m[1].trim() : "";
+}
+function normalizeFts(items) {
+  return (items || []).map(function (h) {
+    if (h && h.record) {
+      return { title: ftsTitle(h.record.tags), content: h.record.content, id: h.record.id, tags: h.record.tags, score: h.score };
+    }
+    return h;
+  });
+}
 async function search(q, limit) {
+  const simple = q.replace(/[^a-zA-Z0-9 _-]/g, " ").replace(/\s+/g, " ").trim();
+  const f = await req("GET", "/api/memory/fts-search?q=" + encodeURIComponent(simple) + "&limit=" + (limit || 50));
+  if (f.status === 200) {
+    const hits = normalizeFts(itemsOf(f)).filter(function (x) { return isTask(x) || isReport(x); });
+    if (hits.length) return hits;
+  }
   let last = null;
   for (let n = 0; n < 3; n++) {
     const r = await req("GET", "/api/memory/search?q=" + encodeURIComponent(q) + "&limit=" + (limit || 50));
@@ -176,7 +194,7 @@ async function cmdRoster() {
       const id = taskIdOf(t);
       const rep = byTask.get(id);
       const title = strOf(t, ["title", "name"]);
-      const w = /->\s*(\S+)\s*$/.exec(title);
+      const w = /->\s*(\S+)/.exec(title);
       return {
         task: id, worker: w ? w[1] : "?",
         status: rep ? /\[swarm-report\]\s+\S+\s+(\S+)/.exec(strOf(rep, ["title", "name"]))?.[1] || "REPORTED" : "ASSIGNED",
