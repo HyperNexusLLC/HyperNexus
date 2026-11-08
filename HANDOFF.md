@@ -8,6 +8,12 @@
 - gofmt clean for the touched file (rest of package pre-existing unformatted), go build ./internal/httpapi/ exit 0.
 - Committed 7d00e00f3 (see push verification below).
 
+## Session SWARM3b (2026-11-08) - staged rebuild [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
+
+### Done
+- Rebuilt kernel from 7d00e00f3 via build.bat invocation (VERSION 1.0.30, -s -w, -buildvcs=false) to bin/hypernexus.new.exe (37,755,392B, EXIT 0).
+- SHA256 differs from running bin/hypernexus.exe, fix confirmed staged. Swap NOT performed, shared kernel still on old binary, restart window is now a 30-second stop plus rename plus start.
+
 ### Next
 - Coordinate kernel rebuild + restart window (shared kernel, other lanes live). Then drop the swarm battery SKIP and expect a full live round-trip green.
 - Version bump left for the next sync session (35-ref sync is heavy, shared tree).
