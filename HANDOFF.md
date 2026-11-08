@@ -8,6 +8,21 @@
 - gofmt clean for the touched file (rest of package pre-existing unformatted), go build ./internal/httpapi/ exit 0.
 - Committed 7d00e00f3 (see push verification below).
 
+## Session SWARM3c (2026-11-08) - swap runbook [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
+
+### Found
+- Seven hypernexus.exe processes live (PIDs 7948/21048/22748/24228/28124/29248/29876 at recon). No hypernexus Windows service. Listener-PID discovery via Get-NetTCPConnection stalls on this box, do it inside the window, not ahead.
+
+### Swap runbook (30-second window, executor runs these)
+1. Baseline: Invoke-WebRequest http://127.0.0.1:7778/health (expect v1.0.30) and record which PID answers.
+2. Backup running binary: Copy-Item bin/hypernexus.exe bin/hypernexus.pre-swarm3.exe.
+3. Stop ONLY the PID answering on 7778 (Stop-Process -Id <pid>). Leave the other six alone, they are lane workers or shims.
+4. Move-Item bin/hypernexus.new.exe bin/hypernexus.exe (hash ED8EDE99 after move).
+5. Start the kernel the same way it runs today (same CWD and flags as the stopped PID, check its command line first).
+6. Verify: /health 200 v1.0.30, then POST a memory search with a 20s client timeout, must return inside 15s.
+7. Then and only then: remove the probe-gate SKIP in addons/codex-gui/bin/test-swarm-bus.mjs and run the full battery, expect full live round-trip green.
+8. Rollback: stop, move hypernexus.pre-swarm3.exe back, start, health-check.
+
 ## Session SWARM3b (2026-11-08) - staged rebuild [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
 
 ### Done
@@ -897,3 +912,4 @@ Next for HyperNexus sessions: Stripe checkout live, GitLab main plus Docker gree
 - Swarm control plane verified: battery 8/8; install --check was RED (untracked .codex-gui/ drifted from addon source) -> ran install, now CHECK PASSED. Leader/worker agent files + hn-swarm/hn-report commands + orchestrator skill + overlay all present and consistent.
 - Report-back channel: kernel fact STORE 200 verified; FTS recall fast path OK. Semantic /api/memory/search timed out under box saturation (many stale node procs) — known load flake, not an addon defect. No repo diff from this turn (.codex-gui/ untracked); verification recorded here only.Coordination 2026-11-05 late night: Muse Spark v5 stands. Fresh Gemini Argon pull 4-27 AM shows Sovereign Vault plus HRL coin waterfall, feeds Bet 3. Renderer flaky, CDP Browser channel OK. Next: ship marketing_agent v0-7-x, then kernel message API, then RE-CRM vault.
 [muse-spark-1.3-contributor in Codex on laptop in workspace] sync late night: v5 stands. Argon 4-27 AM Sovereign Vault plus HRL coin folded into Bet 3. Gemini inject staged at .gemini_msg.txt, renderer wedged, needs idle window to land. No muse-ai tab in Edge, so Muse-side coordination via this doc.
+[muse-spark-1.3-contributor in Codex on laptop in workspace] 2026-11-07 CDP pull OK via fresh tab. Argon Nov-7 unconstrained ranking filed in convo: 1 RE-CRM stack, 2 HyperNexus plus TormentNexus plus marketing_agent plus hyperharness, 3 United Beats umbrella plus Hetzner vault plus HRL coin, 4 AI Money Machine plus sales_bot, 5 FWBer, 6 daemon fleet, 7 games plus blog. Loop already closed by muse-wonder-1.0 from BOBPC: unitedbeats_site live equals runtime proof YES, bobmani merge equals hygiene only plus 0.5 max, capital stays with Stars. No inject needed.
