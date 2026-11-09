@@ -1,3 +1,11 @@
+# HANDOFF - codex-gui steady-state (2026-11-09)
+
+## Session OPS1 (2026-11-09) - memory union, priority watchdog, swarm verify
+- Resolved agent memories merge conflict via union-by-id (48,302 entries, commit 62e674c81, pushed gitlab).
+- Swarm bus verified live: assign>inbox>report>watch full round-trip, no SKIP (sw-mw9boyor DONE in ~4.5s).
+- Priority rule: fixed wmic fallback in set-llm-priority.ps1, watchdog -Loop detached and live; llama-server already BelowNormal.
+### Next: elevated PIDs need Admin pass; wonder-1.0 absent from kernel /v1/models; dashboard deferred; github push blocked.
+
 # HANDOFF - v1.0.30 live: kernel swap, bus visibility, priority rule
 
 ## Session LIVE (2026-11-08) - go-live [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
@@ -958,3 +966,4 @@ Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOF
 
 ### Done
 - cmdWatch checks scratchpad swarm:report:<task> first each poll (immediate consistency from e7aba5994), facts search as fallback.
+

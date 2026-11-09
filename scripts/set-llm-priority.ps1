@@ -57,14 +57,7 @@ function Set-LLMPriorities {
                     Write-Host "  [$($p.Id)] $($p.ProcessName) -> $Priority (was $current)"
                 }
             } catch {
-                try {
-                    $null = & wmic process where "ProcessId=$($p.Id)" call setpriority $priorityValue 2>&1
-                    $changed++
-                    Write-Host "  [$($p.Id)] $($p.ProcessName) -> $Priority (via wmic)"
-                } catch {
-                    $msg = $_.Exception.Message
-                    Write-Warning "  [$($p.Id)] $($p.ProcessName) cannot set priority - $msg"
-                }
+                Write-Warning "  [$($p.Id)] $($p.ProcessName) is elevated - rerun this script as Administrator to downgrade it"
             }
         }
     }
