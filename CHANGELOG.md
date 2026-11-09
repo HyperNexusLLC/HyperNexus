@@ -28,6 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.31] - 2026-11-08
+
+### Changed
+- **Repository synchronization (Session SYNC3)**: re-ran full fetch/branch/submodule audit at v1.0.30 state — no new remote commits; all feature branches still fully contained in `main` (0 unique) except the unrelated-history cloud archive branch and the two `gh-pages` deploy branches (retained untouched). Submodules at upstream tips (`deepseek-harness` fcc0ad4621, `grok-build` 2bdd1d6a, `lumbros.me` 16261e0), no internal feature branches. Root scripts (`start.bat`/`build.bat`) re-validated against ports 7778/7779 + `cmd/tormentnexus`.
+- **Visibility**: Muse session-start hook prints a one-line HyperNexus banner (kernel version, bus sessions, open swarm tasks, goal); fixed latent hook KIND bug. Verified in the active Muse plugin cache (hypernexus plugin enabled/active).
+- **Version sync**: 1.0.30 -> 1.0.31 across 35 references.
+
+## [1.0.30] - 2026-11-08
+
+### Changed
+- Kernel swapped to merged build (session bus + native Go orchestrate live); swarm bus scratchpad mirror; priority rule (heavyweight processes BelowNormal).
+
 ## [1.0.29] - 2026-11-05
 
 ### Changed

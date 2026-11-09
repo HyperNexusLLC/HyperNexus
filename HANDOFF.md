@@ -1,3 +1,12 @@
+# HANDOFF - Repository synchronization SYNC3 (v1.0.31)
+
+## Session SYNC3 (2026-11-08) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+- Fetch --all --tags root + 3 submodules (recursive, no nested): no new remote commits; local main == gitlab main at audit time.
+- Branch audit: every branch 0 unique vs main except feature/cloud-dashboard-mcp-sse-389806464713532918 (67, unrelated history, retained) + gh-pages-hypernexus/tormentnexus (1 each, deploy, retained). Submodules single-branch at upstream tips; untracked HyperNexus overlays retained. Nothing to forward/reverse merge — completed branches stay as merged ancestors.
+- Scripts validated (start.bat/build.bat ports + build target). Version 1.0.30 -> 1.0.31 (35 refs). Muse banner verified in active plugin cache (hypernexus enabled/active, trust=user-local).
+- GitHub still cannot accept the secret-blob lane history (owner unblock/rewrite decision); Groq/HF rotation still owner-pending. data/tormentnexus.db (210MB) untracked pending LFS; data/provider_metrics.db.local-backup is a local safety copy — do not commit.
+
+---
 
 ## Session LIVE2 (2026-11-08) - visibility + priority [muse-wonder-1.0 in muse-code]
 - Muse session-start hook now prints a visible banner (kernel version, bus sessions, open swarm tasks, goal); fixed latent KIND bug (wrappers set argv after import, so hooks always logged 'event') + synchronous stdout write. Battery 8/8, live banner verified. Codex GUI hn-swarm surfaces redeployed (check OK). Priority: scripts/set-llm-priority.ps1 run (4 procs lowered) + manual sweep; rule standing.
