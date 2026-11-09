@@ -11,6 +11,7 @@
  *   node swarm.mjs inbox --worker <thread-id>            # pending tasks for one worker
  *   node swarm.mjs report --worker <thread-id> --task <task-id> --status DONE|BLOCKED [--summary "..."] [--files "..."]
  *   node swarm.mjs roster [--worker <thread-id>]         # leader collect view
+ *   node swarm.mjs watch --task <task-id> [--worker <thread-id>] [--timeout-ms 120000]
  *
  * Conventions: task facts titled `[swarm-task] <taskId> -> <workerId>`,
  * reports titled `[swarm-report] <taskId> <STATUS>`; tags always include
@@ -33,6 +34,7 @@ function usage() {
     "  node swarm.mjs inbox --worker <thread-id>",
     "  node swarm.mjs report --worker <thread-id> --task <task-id> --status DONE|BLOCKED [--summary \"...\"] [--files \"...\"]",
     "  node swarm.mjs roster [--worker <thread-id>]",
+    "  node swarm.mjs watch --task <task-id> [--worker <thread-id>] [--timeout-ms 120000]",
   ].join("\n");
 }
 function fail(msg) { process.stderr.write(`[swarm] FAIL: ${msg}\n`); process.exit(1); }
@@ -204,12 +206,36 @@ async function cmdRoster() {
     }),
   });
 }
+async function cmdWatch() {
+  const task = opt("--task");
+  if (!task) fail("watch needs --task <task-id>");
+  const worker = opt("--worker");
+  const timeoutMs = Math.max(5000, Number(opt("--timeout-ms") || 120000));
+  const pollMs = 10000;
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    const q = worker ? `[swarm-report] ${worker.slice(0, 8)}` : "[swarm-report]";
+    const reports = await search(q, 50);
+    const hit = reports.filter(isReport).find((r) => taskIdOf(r) === task);
+    if (hit) {
+      const m = /\[swarm-report\]\s+\S+\s+(\S+)/.exec(strOf(hit, ["title", "name"]));
+      out({ ok: true, task, status: m ? m[1] : "REPORTED", report: strOf(hit, ["content", "text", "snippet"]).slice(0, 500) });
+      return;
+    }
+    if (Date.now() >= deadline) {
+      process.stderr.write(`[swarm] TIMEOUT: no report for ${task} after ${timeoutMs}ms` + "\n");
+      process.exit(2);
+    }
+    await new Promise(function (s) { setTimeout(s, pollMs); });
+  }
+}
 async function main() {
   const cmd = process.argv[2];
   if (cmd === "assign") return cmdAssign();
   if (cmd === "inbox") return cmdInbox();
   if (cmd === "report") return cmdReport();
   if (cmd === "roster") return cmdRoster();
+  if (cmd === "watch") return cmdWatch();
   process.stderr.write(usage() + "\n");
   process.exit(cmd === "--help" || cmd === "-h" ? 0 : 1);
 }

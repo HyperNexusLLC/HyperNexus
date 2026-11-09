@@ -53,7 +53,7 @@ process.stdout.write(`  info assigned ${task}\n`);
 passed += 1; process.stdout.write("PASS live assign stores task fact\n");
 
 const probe = run(["inbox", "--worker", worker], { HN_TIMEOUT_MS: "30000" });
-if (probe.status !== 0) {
+if (false && probe.status !== 0) { // SWARM4: outage over, full round-trip required
   const rpSkip = run(["report", "--worker", worker, "--task", task, "--status", "DONE", "--summary", "self-test (search infra unavailable)"]);
   assert.equal(rpSkip.status, 0, rpSkip.stderr);
   passed += 1; process.stdout.write("PASS live report stores DONE (search-skipped)\n");
@@ -82,4 +82,11 @@ const row = JSON.parse(ro.stdout).roster.find((r) => r.task === task);
 assert.ok(row && row.status === "DONE", `roster missing DONE for ${task}`);
 passed += 1; process.stdout.write("PASS live roster collects DONE\n");
 
+const w1 = run(["watch", "--task", task, "--worker", worker, "--timeout-ms", "20000"]);
+assert.equal(w1.status, 0, w1.stderr);
+assert.equal(JSON.parse(w1.stdout).status, "DONE");
+passed += 1; process.stdout.write("PASS live watch collects DONE report\n");
+const w2 = run(["watch", "--task", "sw-does-not-exist-0000", "--timeout-ms", "15000"]);
+assert.equal(w2.status, 2, "watch timeout should exit 2");
+passed += 1; process.stdout.write("PASS watch times out with exit 2\n");
 process.stdout.write(`\n${passed}/${passed} checks passed\n`);

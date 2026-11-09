@@ -927,3 +927,18 @@ Next: confirm roster green, decide GitHub secret rewrite, kernel swap to PATCH3 
 Root cause of dead inbox roster found in client not server. itemsOf in swarm.mjs ignored the data envelope key so every search returned empty even on HTTP 200. FTS stale theory was wrong. Added data to key list. Roster now green with 5 tasks and 3 open plus DONE reports linked.
 Semantic query with brackets also stalls server past 10s, so search now uses stripped simple text for semantic too.
 Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOFF.md gitignore only.
+
+# HANDOFF - Swarm bus live round-trip green (v1.0.30)
+
+## Session SWARM4 (2026-11-09) - swarm watch plus unskipped battery [muse-spark-1.3-contributor in codex-gui in ~/workspace/HyperNexus]
+
+### Done
+- Probe: GET /api/memory/search?query=swarm returned success:true in ~3.5s (sources local-json plus vectorstore). SWARM3 timeout patches confirmed live in the running binary.
+- swarm.mjs: added watch command (bounded poll for DONE/BLOCKED report; exit 0 on report, 2 on timeout) so a leader session can block for worker reports.
+- test-swarm-bus.mjs: retired the search-outage SKIP; battery now requires the full live round-trip. Added watch legs (DONE collect plus timeout exit 2). Battery 11/11 green.
+- hn-swarm SKILL.md: documented watch flow; mirrored to ~/.codex/skills/hn-swarm/.
+- Roster green: ok:true. Stale self-test reports from the outage window retained (facts are append-only).
+
+### Next
+- Investigate wonder-1.0 registry absence (kernel serves spark family only).
+- Dashboard-consolidation lane still deferred. GitHub push still blocked (push protection).
