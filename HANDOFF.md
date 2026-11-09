@@ -953,3 +953,8 @@ Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOF
 ### Next
 - Investigate wonder-1.0 registry absence (kernel serves spark family only).
 - Dashboard-consolidation lane still deferred. GitHub push still blocked (push protection).
+
+## Session SWARM4b (2026-11-09) - watch via scratchpad mirror
+
+### Done
+- cmdWatch checks scratchpad swarm:report:<task> first each poll (immediate consistency from e7aba5994), facts search as fallback.
