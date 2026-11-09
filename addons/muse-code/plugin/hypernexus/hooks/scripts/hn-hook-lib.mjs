@@ -15,11 +15,13 @@
  *   node hn-session-start.mjs | hn-prompt-submit | hn-pre-tool-use |
  *        hn-post-tool-use | hn-session-stop
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, writeSync } from "node:fs";
 
 const BASE = process.env.HYPERNEXUS_URL || "http://127.0.0.1:7778";
 const BUDGET_MS = 3000;
-const KIND = process.argv[2] || "event";
+// KIND is read inside run(): wrappers set process.argv[2] AFTER importing
+// this module, so a top-level read would always see "event".
+let KIND = "event";
 
 function readStdin() {
   try {
@@ -54,6 +56,7 @@ async function post(path, body) {
 }
 
 export async function run() {
+  KIND = process.argv[2] || "event";
   let input = {};
   try {
     const raw = readStdin();
@@ -124,5 +127,46 @@ export async function run() {
       namespace: "project",
     });
   }
+  if (KIND === "session-start") await printBanner();
   // continue:true — hooks must never block the session.
+}
+
+// Visible indicator: one-line HyperNexus banner printed on session start so
+// bus/kernel activity is apparent in the harness (kernel version, sessions
+// registered on the bus, open swarm tasks, active goal). Budgeted, silent
+// on failure except an explicit offline line.
+async function get(path) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), BUDGET_MS);
+  try {
+    const res = await fetch(`${BASE}${path}`, { signal: ctrl.signal });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+async function printBanner() {
+  try {
+    const health = await get("/health");
+    if (!health?.ok) {
+      writeSync(1, "[HyperNexus] kernel offline (http://127.0.0.1:7778) — memory/bus unavailable this session\n");
+      return;
+    }
+    const snap = await get("/api/memory/scratchpad/get");
+    const map = snap?.data?.scratchpad || snap?.scratchpad || {};
+    const sessions = Object.keys(map).filter((k) => k.startsWith("bus:reg:")).length;
+    const tasks = Object.keys(map).filter((k) => k.startsWith("swarm:task:"));
+    const reported = new Set(Object.keys(map).filter((k) => k.startsWith("swarm:report:")).map((k) => k.slice("swarm:report:".length)));
+    const open = tasks.filter((k) => !reported.has(k.slice("swarm:task:".length))).length;
+    let goal = "";
+    try {
+      const raw = map.goal;
+      if (typeof raw === "string") {
+        try { goal = String(JSON.parse(raw)?.value || raw).slice(0, 90); } catch { goal = raw.slice(0, 90); }
+      } else if (raw) goal = String(raw.value || "").slice(0, 90);
+    } catch { /* goal optional */ }
+    writeSync(1, `[HyperNexus] kernel v${health.version} online · bus: ${sessions} sessions · swarm: ${open} open tasks${goal ? ` · goal: ${goal}` : ""}\n`);
+  } catch { /* banner must never break the session */ }
 }

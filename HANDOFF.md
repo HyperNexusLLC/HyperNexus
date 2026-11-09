@@ -1,3 +1,7 @@
+
+## Session LIVE2 (2026-11-08) - visibility + priority [muse-wonder-1.0 in muse-code]
+- Muse session-start hook now prints a visible banner (kernel version, bus sessions, open swarm tasks, goal); fixed latent KIND bug (wrappers set argv after import, so hooks always logged 'event') + synchronous stdout write. Battery 8/8, live banner verified. Codex GUI hn-swarm surfaces redeployed (check OK). Priority: scripts/set-llm-priority.ps1 run (4 procs lowered) + manual sweep; rule standing.
+- Git: FF to gitlab 4e171c1e8a (v1.0.30 lane: memory union-merge, swarm watch scratchpad-first, priority watchdog). GitHub still cannot accept secret-blob history (owner decision).
 # HANDOFF - codex-gui steady-state (2026-11-09)
 
 ## Session OPS1 (2026-11-09) - memory union, priority watchdog, swarm verify

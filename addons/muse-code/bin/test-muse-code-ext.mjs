@@ -65,6 +65,14 @@ check("hooks are log-only observers (no shell allowlist grant)", () => {
   assert.match(lib, /127\.0\.0\.1:7778|HYPERNEXUS_URL/);
 });
 
+check("session-start prints a visible HyperNexus banner", () => {
+  const lib = fs.readFileSync(path.join(PLUGIN, "hooks", "scripts", "hn-hook-lib.mjs"), "utf8");
+  assert.match(lib, /printBanner/);
+  assert.match(lib, /\[HyperNexus\] kernel v/);
+  assert.match(lib, /bus:.*sessions/);
+  assert.match(lib, /swarm:/);
+});
+
 check("no shell tool in default docs (attestation 403 policy)", () => {
   const skill = fs.readFileSync(path.join(PLUGIN, "skills", "hypernexus", "SKILL.md"), "utf8");
   assert.doesNotMatch(skill, /\| files\/shell \|/);
