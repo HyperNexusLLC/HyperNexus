@@ -264,6 +264,14 @@ async function cmdWatch() {
   const deadline = Date.now() + timeoutMs;
   while (true) {
     const q = worker ? `[swarm-report] ${worker.slice(0, 8)}` : "[swarm-report]";
+    const smap = await scratchMap();
+    const sraw = smap["swarm:report:" + task];
+    let srep = null;
+    if (sraw) { try { srep = typeof sraw === "string" ? JSON.parse(sraw) : sraw; } catch (e) { srep = null; } }
+    if (srep && srep.task) {
+      out({ ok: true, task, status: srep.status || "REPORTED", report: String(srep.content || srep.summary || "").slice(0, 500) });
+      return;
+    }
     const reports = await search(q, 50);
     const hit = reports.filter(isReport).find((r) => taskIdOf(r) === task);
     if (hit) {
