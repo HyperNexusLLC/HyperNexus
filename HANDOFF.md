@@ -1,3 +1,12 @@
+# HANDOFF - wonder everywhere (2026-11-09)
+
+## Session OPS2 (2026-11-09) - kernel wonder support plus fleet flip plus live verify
+- Proved meta/muse-wonder-1.0-contributor HTTP 200 on subscription via direct upstream probe.
+- Patched kernel: wonder in /v1/models, empty-model defaults to wonder (anthropic_compat.go, openai_compat.go).
+- Flipped 9 spark-primary connection.json to wonder; all 15 GUI addons now wonder-primary, spark alt.
+- Built hypernexus.wonder.exe (37.7MB), swapped live; /v1/models advertises wonder; live kernel inference returned ok in 4s.
+### Next: promote hypernexus.wonder.exe to hypernexus.exe at next window (old binary still on disk); elevated PIDs need Admin pass.
+
 # HANDOFF - codex-gui steady-state (2026-11-09)
 
 ## Session OPS1 (2026-11-09) - memory union, priority watchdog, swarm verify
@@ -966,4 +975,5 @@ Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOF
 
 ### Done
 - cmdWatch checks scratchpad swarm:report:<task> first each poll (immediate consistency from e7aba5994), facts search as fallback.
+
 

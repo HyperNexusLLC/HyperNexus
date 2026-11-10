@@ -351,7 +351,9 @@ func (s *Server) handleAnthropicModels(w http.ResponseWriter, r *http.Request) {
 		// model metadata by exact ID match, so without the alias it warns
 		// "model metadata not found" and hides the model from the picker.
 		"data": []map[string]any{
-			{"id": "muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
+					{"id": "muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
+		{"id": "meta/muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
+		{"id": "muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
 			{"id": "meta/muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
 			{"id": "muse-spark-1.3", "object": "model", "owned_by": "meta"},
 			{"id": "meta/muse-spark-1.3", "object": "model", "owned_by": "meta"},
@@ -380,13 +382,13 @@ func (s *Server) handleAnthropicMessages(w http.ResponseWriter, r *http.Request)
 	}
 	model := req.Model
 	if model == "" {
-		model = "muse-spark-1.3-contributor"
+		model = "muse-wonder-1.0-contributor"
 	}
 	maxTokens := req.MaxTokens
 	if maxTokens <= 0 {
 		maxTokens = 1024
 	}
-	// muse-spark is a thinking model: reasoning tokens count against the limit.
+	// muse-spark and muse-wonder are thinking models: reasoning tokens count against the limit.
 	// Claude Code's small max_tokens would truncate the trace into empty output,
 	// so floor the UPSTREAM budget while still honoring the client's limit in
 	// spirit (usage is reported honestly from the upstream response).
@@ -550,3 +552,4 @@ func truncateForError(b []byte) string {
 	s = strings.ReplaceAll(s, `"`, "'")
 	return s
 }
+

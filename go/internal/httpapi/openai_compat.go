@@ -552,7 +552,7 @@ func (s *Server) handleOpenAIChatCompletions(w http.ResponseWriter, r *http.Requ
 	}
 	model := req.Model
 	if model == "" {
-		model = "muse-spark-1.3-contributor"
+		model = "muse-wonder-1.0-contributor"
 	} else {
 		// Harness configs attach a provider prefix ("meta/..."); the vendor
 		// only knows the bare model ID (a prefixed ID 404s).
@@ -562,7 +562,7 @@ func (s *Server) handleOpenAIChatCompletions(w http.ResponseWriter, r *http.Requ
 	if req.MaxCompletionTokens > maxTokens {
 		maxTokens = req.MaxCompletionTokens
 	}
-	// muse-spark is a thinking model: reasoning tokens count against the
+	// muse-spark and muse-wonder are thinking models: reasoning tokens count against the
 	// limit, so floor the UPSTREAM budget (usage is reported honestly).
 	// (Responses requires max_output_tokens >= 16.)
 	upstreamMax := maxTokens
@@ -715,7 +715,7 @@ func (s *Server) proxyToMeta(w http.ResponseWriter, r *http.Request, upstream st
 	if err := json.Unmarshal(raw, &bodyMap); err == nil {
 		dirty := false
 		if m, _ := bodyMap["model"].(string); m == "" {
-			bodyMap["model"] = "muse-spark-1.3-contributor"
+			bodyMap["model"] = "muse-wonder-1.0-contributor"
 			dirty = true
 		} else if n := normalizeMetaModel(m); n != m {
 			bodyMap["model"] = n
@@ -797,3 +797,5 @@ func (s *Server) proxyToMeta(w http.ResponseWriter, r *http.Request, upstream st
 	w.WriteHeader(resp.StatusCode)
 	_, _ = io.Copy(w, resp.Body)
 }
+
+
