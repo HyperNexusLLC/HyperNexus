@@ -993,3 +993,4 @@ Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOF
 - Muse new tab 1259 (chat restored server-side): sync TYPED(TEXTAREA)+CLICKED+SENT. Old poisoned tab closed.
 - ChatGPT: synced+replied (prior). Pattern: per-tab renderer wedging defeats Runtime+DOM+Debugger; Page domain still works; fix is fresh tab via PUT /json/new.
 - Next: read back Gemini+Muse replies, close extra tabs, commit HANDOFF only, user pushes gitlab.
+# 2026-11-12 1100 CDP resync alive [muse-wonder-1.0 in codex-gui] - Edge BelowNormal set, llama-server none running, cdp_coord_read OK GEMINI len 25474 plus Bobbi 6 tasks, CDP open
