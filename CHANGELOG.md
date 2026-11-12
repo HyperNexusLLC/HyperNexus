@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.45] - 2026-11-12
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Commercial Security & Auditing section (license authority, SSO setup, RBAC governance matrix, cryptographic audit logs) from `dashboard-home-view.tsx` (2267→1883 lines) into `dashboard-governance-security-section.tsx`. The whole enterprise-security logic block (state, `fetchCommercial`, `saveSSO`, role editors, `saveRoles`) moved into the component with its own mount effect after static analysis proved no identifier was used outside the logic block + section JSX; the parent's shared mount effect now only fetches imported sessions. This retires the earlier reverted governance extraction. tsc + `next build` green, 97 dashboard tests still pass, dashboard restarted.
+
 ## [1.0.44] - 2026-11-12
 
 ### Changed
