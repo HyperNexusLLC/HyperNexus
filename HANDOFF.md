@@ -1,3 +1,7 @@
+# HANDOFF - Per-section decomposition v1.0.42 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardMcpSection` (swarm state via props — a second panel shares it). Gotcha recorded: a `{/* comment */}` sibling before the root element is a second JSX root at component level; wrap returns in fragments when extracting sections that start with a comment.
+- Remaining: research-workflows (~1000 lines), governance-billing/security (shared workflow state).
+
 # HANDOFF - Per-section decomposition v1.0.41 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Extracted `DashboardMemorySection` with its logic (cold archive, GraphRAG relation builder, scan/link triggers) — self-contained, own mount effect. Remaining sections: mcp-registry (~480 lines), research-workflows (~1000), governance-billing/security (shared workflow state — thread props deliberately).
 
