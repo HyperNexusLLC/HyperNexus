@@ -1,3 +1,7 @@
+# HANDOFF - Per-section decomposition v1.0.38 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardMissionControlHeader` (`dashboard-mission-control-header.tsx`) from the home view; state stays in the parent (also used by the workflows section), passed via props. Remaining decomposition: memory-graphrag / mcp-registry / research-workflows / governance-billing / integrations section bodies follow the same pattern.
+- Note: `activeTab` prop on `DashboardHomeView` is currently unused (single-page consolidated layout renders all sections); per-tab lazy loading would need tab-gating in `DashboardHomeClient.renderActiveTab`.
+
 # HANDOFF - Embedding cache v1.0.37 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Added LRU+TTL embedding cache to `go/internal/memorystore/local_embed.go` (+ `embed_cache_test.go`, 4 tests; full memorystore package green; kernel builds clean to `bin/hypernexus-new.exe` stamped 1.0.37, NOT swapped — live kernel remains installed v1.0.0-b1, owner decision).
 - Remaining queue: per-tab decomposition of `DashboardHomeView` body; kernel swap (owner); Git LFS for `data/tormentnexus.db`; VISION/MEMORY/DEPLOY/IDEAS docs refresh.
