@@ -1,3 +1,6 @@
+# HANDOFF - Per-section decomposition v1.0.39 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardIntegrationsSection` (incl. telemetry children + `DashboardConsolidatedSections`, which were nested inside the integrations div — DOM preserved). Remaining sections to extract: memory-graphrag, mcp-registry, research-workflows, governance-billing. Pattern: python line-splice + props for query data + tsc/tests/build/restart per section.
+
 # HANDOFF - Per-section decomposition v1.0.38 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Extracted `DashboardMissionControlHeader` (`dashboard-mission-control-header.tsx`) from the home view; state stays in the parent (also used by the workflows section), passed via props. Remaining decomposition: memory-graphrag / mcp-registry / research-workflows / governance-billing / integrations section bodies follow the same pattern.
 - Note: `activeTab` prop on `DashboardHomeView` is currently unused (single-page consolidated layout renders all sections); per-tab lazy loading would need tab-gating in `DashboardHomeClient.renderActiveTab`.
