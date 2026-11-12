@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.41] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Cognitive Memory + GraphRAG/Cold Archive section (~370 lines with its cold-archive, relation-builder, skill-indexer, and backlog-repair logic moved in) from `dashboard-home-view.tsx` into `dashboard-memory-section.tsx`. tsc, 97 dashboard tests, and `next build` green; dashboard restarted on the new build.
+
 ## [1.0.40] - 2026-11-11
 
 ### Documentation
