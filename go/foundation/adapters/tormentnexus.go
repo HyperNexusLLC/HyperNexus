@@ -22,7 +22,7 @@ type TormentNexusStatus struct {
 }
 
 type TormentNexusAdapter struct {
-	tormentnexusAdapter *tormentnexus.Adapter
+	tormentnexusAdapter *hypernexus.Adapter
 	workingDir  string
 	homeDir     string
 }
@@ -30,7 +30,7 @@ type TormentNexusAdapter struct {
 func NewTormentNexusAdapter(workingDir string) *TormentNexusAdapter {
 	homeDir, _ := os.UserHomeDir()
 	return &TormentNexusAdapter{
-		tormentnexusAdapter: tormentnexus.NewAdapter(),
+		tormentnexusAdapter: hypernexus.NewAdapter(),
 		workingDir:  workingDir,
 		homeDir:     homeDir,
 	}
@@ -43,7 +43,7 @@ func (a *TormentNexusAdapter) Status() TormentNexusStatus {
 		Provider:      BuildProviderStatus(),
 	}
 	if a.tormentnexusAdapter != nil {
-		status.TormentNexusCoreURL = a.tormentnexusAdapter.TormentNexusCoreURL
+		status.TormentNexusCoreURL = a.tormentnexusAdapter.HyperNexusCoreURL
 	}
 	if repoPath, ok := a.findTormentNexusRepo(); ok {
 		status.TormentNexusRepoPath = repoPath

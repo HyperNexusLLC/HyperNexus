@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
+	"github.com/MDMAtk/TormentNexus/internal/config"
 )
 
 func BenchmarkHealthEndpoint(b *testing.B) {

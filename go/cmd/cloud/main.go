@@ -11,7 +11,7 @@ import (
 	"syscall"
 
 	_ "github.com/glebarez/go-sqlite"
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/cloud"
+	"github.com/MDMAtk/TormentNexus/internal/cloud"
 )
 
 func main() {

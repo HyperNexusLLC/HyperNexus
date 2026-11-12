@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
+	"github.com/MDMAtk/TormentNexus/internal/config"
 )
 
 // The agent-memory store (.hypernexus/agent_memory/memories.json) is rewritten

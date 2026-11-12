@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/enterprise"
+	"github.com/MDMAtk/TormentNexus/internal/enterprise"
 )
 
 // dangerousOperationBlocklist mirrors the pi extension's local check and serves

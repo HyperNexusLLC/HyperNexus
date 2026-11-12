@@ -62,7 +62,7 @@ func ensureLocalEmbedder() error {
 		return localEmbedErr
 	}
 
-	session, err := hugot.NewGoSession()
+	session, err := hugot.NewGoSession(context.Background())
 	if err != nil {
 		localEmbedErr = fmt.Errorf("hugot session: %w", err)
 		return localEmbedErr
@@ -82,7 +82,7 @@ func ensureLocalEmbedder() error {
 	}
 
 	// Warm up so the first real query does not pay JIT/first-run latency.
-	_, _ = pipe.RunPipeline([]string{"warmup"})
+	_, _ = pipe.RunPipeline(context.Background(), []string{"warmup"})
 
 	localEmbedPipe = pipe
 	localEmbedSession = session
@@ -107,7 +107,7 @@ func localEmbed(ctx context.Context, text string) []float32 {
 	go func() {
 		localEmbedMu.Lock()
 		defer localEmbedMu.Unlock()
-		out, err := localEmbedPipe.RunPipeline([]string{text})
+		out, err := localEmbedPipe.RunPipeline(context.Background(), []string{text})
 		if err != nil {
 			ch <- result{err: err}
 			return

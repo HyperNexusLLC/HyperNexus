@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	roottools "gitlab.com/HyperNexusLLC/HyperNexus/tools"
+	roottools "github.com/MDMAtk/TormentNexus/tools"
 )
 
 // This file completes stdio↔router tool parity: every tool the stdio MCP server

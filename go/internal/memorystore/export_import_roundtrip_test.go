@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
+	"github.com/MDMAtk/TormentNexus/internal/controlplane"
 )
 
 func TestExportImportRoundTrip(t *testing.T) {

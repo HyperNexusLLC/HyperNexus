@@ -603,3 +603,24 @@ func min(a, b int) int {
 
 // Ensure math is used
 var _ = math.Pi
+
+// RoutingEvent records a single model/tool routing decision.
+type RoutingEvent struct {
+	Timestamp int64 `json:"timestamp"`
+	RequestID string `json:"requestId,omitempty"`
+	Provider string `json:"provider,omitempty"`
+	Model string `json:"model,omitempty"`
+	ToolName string `json:"toolName,omitempty"`
+	Strategy string `json:"strategy,omitempty"`
+	LatencyMs float64 `json:"latencyMs,omitempty"`
+	Success bool `json:"success"`
+	Error string `json:"error,omitempty"`
+	TokenInput int `json:"tokenInput,omitempty"`
+	TokenOutput int `json:"tokenOutput,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
+}
+
+// RecordRouting captures a routing decision in the metrics stream.
+func (ms *MetricsService) RecordRouting(ev RoutingEvent) {
+	ms.Track("llm_routing", ev.LatencyMs, map[string]string{"provider": ev.Provider, "model": ev.Model, "strategy": ev.Strategy})
+}

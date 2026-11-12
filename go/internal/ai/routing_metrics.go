@@ -3,7 +3,7 @@ package ai
 import (
 	"time"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/metrics"
+	"github.com/MDMAtk/TormentNexus/internal/metrics"
 )
 
 // recordLLMRouting captures a routing decision in the local metrics ring buffer.

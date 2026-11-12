@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
+	"github.com/MDMAtk/TormentNexus/internal/config"
 )
 
 // A handler panic must never take down the control plane: Go's net/http does

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
+	"github.com/MDMAtk/TormentNexus/internal/config"
 )
 
 func TestAgentOrchestrateLocalFallback(t *testing.T) {

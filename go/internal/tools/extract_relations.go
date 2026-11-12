@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
+	"github.com/MDMAtk/TormentNexus/internal/memorystore"
 )
 
 var (

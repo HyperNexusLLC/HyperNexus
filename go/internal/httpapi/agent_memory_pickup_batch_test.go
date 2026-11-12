@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
+	"github.com/MDMAtk/TormentNexus/internal/config"
 )
 
 // Pickup must replay a multi-entry artifact with ONE store rewrite, not one

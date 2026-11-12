@@ -42,7 +42,7 @@ type MCPCallResult struct {
 }
 
 type MCPAdapter struct {
-	tormentnexusAdapter *tormentnexus.Adapter
+	tormentnexusAdapter *hypernexus.Adapter
 	workingDir  string
 	homeDir     string
 }
@@ -50,7 +50,7 @@ type MCPAdapter struct {
 func NewMCPAdapter(workingDir string) *MCPAdapter {
 	homeDir, _ := os.UserHomeDir()
 	return &MCPAdapter{
-		tormentnexusAdapter: tormentnexus.NewAdapter(),
+		tormentnexusAdapter: hypernexus.NewAdapter(),
 		workingDir:  workingDir,
 		homeDir:     homeDir,
 	}

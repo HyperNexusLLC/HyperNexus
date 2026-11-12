@@ -118,6 +118,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 type Server struct {
+	accountDB          *sql.DB
 	memoryManager      *memorystore.Manager
 	codeExecutor       *codeexec.Sandbox
 	cfg                config.Config

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/tools"
+	"github.com/MDMAtk/TormentNexus/internal/memorystore"
+	"github.com/MDMAtk/TormentNexus/internal/tools"
 )
 
 // handleMemoryGraphCleanup rewrites hashed entity IDs and returns counts.

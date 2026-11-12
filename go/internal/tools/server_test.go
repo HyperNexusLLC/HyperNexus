@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/memorystore"
+	"github.com/MDMAtk/TormentNexus/internal/memorystore"
 )
 
 func TestHandleScratchpadGetSet(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/HyperNexusLLC/HyperNexus/internal/controlplane"
+	"github.com/MDMAtk/TormentNexus/internal/controlplane"
 )
 
 // MemoryExport represents a portable memory bundle

@@ -107,3 +107,8 @@ func browserHost(host string) string {
 		return host
 	}
 }
+
+// AccountDBPath returns the path to the accounts SQLite database.
+func (c Config) AccountDBPath() string {
+	return filepath.Join(c.ConfigDir, "accounts.db")
+}
