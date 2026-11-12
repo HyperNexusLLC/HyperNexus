@@ -984,3 +984,12 @@ Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOF
 - CDP: Muse C0C0 SENT, ChatGPT F27F SENT, old Gemini B93E gone, new 69E1 opened+SENT with wide timeouts. Kernel 1.0.30 PID 16988 single listener.
 - Next: you run git push gitlab main (2 ahead), watch 3 tabs for replies, promote wonder binary quiet-window, Admin priority rerun.
 
+# 2026-11-12 0230 CDP send2 root-caused + send3 built [muse-wonder-1.0 in codex-gui]
+- send2 IIFE bugs fixed: typeExpr needed closing paren, clickExpr missing close. Verified NO_COMPOSER on pixel-frame.
+- Runtime.evaluate AND DOM.getDocument both time out on Muse C0C0 + Gemini 69E1 tabs (renderers CPU-pegged, generating). send3 DOM+Input path built + verified on light tab. ChatGPT already synced.
+- Next: retry send3 after renderers settle; if still wedged reload Gemini convo URL app/88cb83d3ff2db78a; never blind-navigate Muse (no convo URL).
+# 2026-11-12 0300 CDP all-synced [muse-wonder-1.0 in codex-gui]
+- Gemini new tab 2875: sync TYPED(DIV)+CLICKED+SENT, readback shows Gemini adopted shared goal and is working. Old tab closed.
+- Muse new tab 1259 (chat restored server-side): sync TYPED(TEXTAREA)+CLICKED+SENT. Old poisoned tab closed.
+- ChatGPT: synced+replied (prior). Pattern: per-tab renderer wedging defeats Runtime+DOM+Debugger; Page domain still works; fix is fresh tab via PUT /json/new.
+- Next: read back Gemini+Muse replies, close extra tabs, commit HANDOFF only, user pushes gitlab.
