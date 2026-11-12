@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.33] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (continued)**: extracted the 17 startup-blocking-reason helpers (~390 lines) from `dashboard-home-view.tsx` into `dashboard-startup-blocking.ts`; home view re-exports them so existing imports/tests are unchanged. `tsc --noEmit` and `next build` green; dashboard restarted on the new build. Note: `dashboard-home-view.test.tsx` fails identically on pristine HEAD (stale `packages/ui/dist` + duplicate `.next-build` test copy) — pre-existing, not a regression.
+
 ## [1.0.32] - 2026-11-11
 
 ### Changed

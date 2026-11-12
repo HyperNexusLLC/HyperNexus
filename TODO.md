@@ -5,11 +5,12 @@
 ## 🔴 High (do next)
 
 - [ ] **Owner: reinstall Git for Windows** — system install gutted (`mingw64/bin` = 1 file, `BUG (fork bomb)`); SYNC4 used GitHub Desktop's bundled git. Also rotate Groq/HF keys + decide GitHub secret-blob unblock (see HANDOFF SYNC4).
-- [ ] **Kernel build drift**: live :7778 is the installed `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` reporting v1.0.0-b1 (no `/api/system/status`); decide when to swap in the repo v1.0.32 build (exact-pid swap only).
+- [ ] **Kernel build drift**: live :7778 is the installed `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` reporting v1.0.0-b1 (no `/api/system/status`); decide when to swap in the repo v1.0.33 build (exact-pid swap only).
 
 - [x] ~~Dashboard consolidation~~ — **verified already consolidated** (nav = 7 value-ordered sections, all tooltips present, all hrefs → home-view anchors). Remaining polish below.
 - [x] **Flesh out 3 thin home-view sections** — `health-metrics`, `skills-workflows`, `security-audit` now carry tooltips (`title`), `aria-label`, `data-testid` wraps, and truth-pass copy (loading/error/empty, never mocked) in `dashboard-home-view.tsx`. Remaining: per-card forms/filters live in sub-pages.
-- [ ] **Decompose `dashboard-home-view.tsx`** → one lazy-loaded component per section. Progress (v1.0.29): consolidated sections extracted to `dashboard-consolidated-sections.tsx` (4698→4631 lines, tsc+build green). Remaining: overview/startup blocks inside `DashboardHomeView` (~lines 1146-4500).
+- [ ] **Decompose `dashboard-home-view.tsx`** → one lazy-loaded component per section. Progress (v1.0.29): consolidated sections extracted to `dashboard-consolidated-sections.tsx` (4698→4631 lines, tsc+build green). Progress (v1.0.33): startup-blocking helpers extracted to `dashboard-startup-blocking.ts` (4888→4509 lines, tsc+build green). Remaining: overview builders + the `DashboardHomeView` component body.
+- [ ] **Fix pre-existing dashboard test breakage**: rebuild `packages/ui` dist (`@/utils/trpc` unresolved from `dist/components/SquadsPanel.js`) and exclude `.next-build/**` from vitest discovery (duplicate test copies fail).
 - [ ] **Retire 99 legacy `dashboard/*` pages** (not in nav) — progress 2026-10-31: ~53 already `RedirectPage` stubs; `health|metrics|pulse`→`#health-metrics`, `skills|workflows`→`#skills-workflows`, `security|audit`→`#security-audit` deep-linked (7/7 verified). Remaining `GenericDashboardPage` stubs (logs-metrics, healer, memory-analytics, mcp) carry unique fetches — review before stubbing.
 - [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
 - [x] ~~Watchdog as scheduled task~~ — **verified done 2026-10-23**: `HyperNexus-KernelWatchdog` is registered and Running (spawns the kernel with an elevated token — see HANDOFF session 9 for the swap implications).

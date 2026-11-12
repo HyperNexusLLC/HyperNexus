@@ -1,3 +1,10 @@
+# HANDOFF - Dashboard decomposition v1.0.33 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted 17 startup-blocking helpers from `dashboard-home-view.tsx` (4888 -> ~4509 lines) into new `apps/web/src/app/dashboard/dashboard-startup-blocking.ts`; home view imports them for internal use and re-exports them, so `dashboard-home-view.test.tsx` / health view-model imports are unchanged. `tsc --noEmit` 0, `next build` 0, dashboard restarted on new build (200).
+- Pre-existing test breakage confirmed on pristine HEAD: `dashboard-home-view.test.tsx` fails via stale `packages/ui/dist` (`@/utils/trpc` unresolved) + duplicate test copy under `.next-build/standalone` — rebuild `packages/ui` and exclude `.next-build` from vitest to fix.
+- Version 1.0.32 -> 1.0.33. Next: extract overview builders (`buildOverviewMetrics`/`buildStartupChecklist`/`buildDashboardAlerts`, lines ~776-1074) into `dashboard-overview-model.ts` the same way.
+
+---
+
 # HANDOFF - Repository synchronization SYNC4 (v1.0.32)
 
 ## Session SYNC4 (2026-11-11) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
