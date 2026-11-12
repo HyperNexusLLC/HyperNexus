@@ -1,6 +1,13 @@
 # ROADMAP: TormentNexus Kernel & TormentNexus Dashboard
 
-_Last updated: 2026-07-10, version 1.0.0-alpha.252_
+_Last updated: 2026-11-12, version 1.0.0-alpha.254_
+
+## Completed (v1.0.0-alpha.254)
+
+### Repository Synchronization & Upstream Merge
+- Merged upstream `origin/main` (v1.0.29) into local `main` with local-wins conflict strategy; 22,092 remote-only files integrated, zero conflicts.
+- Activated submodules `lumbros.me`, `vendor/deepseek-harness`, `vendor/grok-build` (see `docs/SUBMODULES.md`).
+- Audited all remote feature branches: `clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed` fully contained upstream.
 
 ## Status Legend
 

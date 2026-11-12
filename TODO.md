@@ -1,6 +1,10 @@
 # TODO
 
-_Last updated: 2026-07-10, version 1.0.0-alpha.252_
+_Last updated: 2026-11-12, version 1.0.0-alpha.254_
+
+- [x] **Repository Sync (alpha.254)**: Merged `origin/main` v1.0.29 into `main` (local-wins, unrelated histories), initialized 3 submodules, audited all remote feature branches.
+- [ ] **Post-merge validation**: Run full Go + web test suites against remote-only code merged in alpha.254 before relying on it.
+- [ ] **Version script**: Run `pnpm install` then `node scripts/sync-versions.mjs` to restore scripted version sync (needs `glob`).
 
 ## P0 — Must do now (Stability, Testing & Validation)
 - [x] **Chrome Extension Integration**: Point Chrome extension event-stream and websocket URLs to port `7778` (Go Sidecar). (Completed alpha.250)

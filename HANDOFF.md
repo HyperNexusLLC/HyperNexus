@@ -1,3 +1,23 @@
+# Handoff — Repository Synchronization (v1.0.0-alpha.254, 2026-11-12)
+
+## What was done
+- Repaired a wiped git index (0 files staged vs 13,589 in HEAD; all files intact on disk) with `git reset`. No work lost.
+- Fetched all remotes/tags. Found `origin/main` force-rewritten: unrelated history (local alpha.253, Jul 2026, 2,975 unique commits vs remote v1.0.29, Nov 2026, 386 unique commits, no merge base).
+- Backed up pre-sync main at branch `backup/pre-sync-alpha253`.
+- Merged `origin/main` into local `main` with `--allow-unrelated-histories -X ours`: local wins 7,864 overlapping files, 22,092 remote-only files added, 0 conflicts. Push is now a fast-forward.
+- Branch audit: `clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed` are fully contained in `origin/main` (nothing to forward-merge; reverse merge unnecessary). Stale June archive branches ignored per protocol.
+- Initialized 3 submodules recursively (`lumbros.me`, `vendor/deepseek-harness`, `vendor/grok-build`); updated deepseek-harness to tracking tip `e8f7b93`. See `docs/SUBMODULES.md`.
+- Version bumped `1.0.0-alpha.253` -> `1.0.0-alpha.254`, synced across 36 package.json manifests (`scripts/sync-versions.mjs` needs `glob`; synced manually — run `pnpm install` then the script next time).
+- Kept the pre-existing `go/go.mod` change promoting `glebarez/go-sqlite` and `lib/pq` to direct deps.
+
+## Left for next agent
+- `hypernexus.db` and `scripts/atlas.db` show as modified (live runtime DB drift, LFS-pointer mismatch). Deliberately NOT committed; files untouched on disk.
+- Remote-only code merged with `-X ours` was never compiled against local overlaps — run the full Go + web test suites before relying on remote-only features.
+- `VERSION.md` now holds only the version string; restore its history/checklist content from git history if wanted.
+
+
+---
+
 # Handoff â€” Executive Protocol R18
 
 ## Completed

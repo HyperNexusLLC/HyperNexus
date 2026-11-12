@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0-alpha.254] - 2026-11-12
+
+### Added
+
+- Repository synchronization: merged `origin/main` (v1.0.29, Nov 2026) into local `main` via `--allow-unrelated-histories -X ours`. Local tree wins overlapping files; 22,092 remote-only files added, zero conflicts.
+- Activated 3 git submodules from upstream `.gitmodules`: `lumbros.me`, `vendor/deepseek-harness` (updated to `e8f7b93`), `vendor/grok-build`, initialized recursively.
+- Promoted `github.com/glebarez/go-sqlite` and `github.com/lib/pq` to direct dependencies in `go/go.mod`.
+
+### Changed
+
+- Global version bumped to `1.0.0-alpha.254` and synchronized across 36 `package.json` manifests.
+- Branch audit: `clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, and `fix/test-local-embed` confirmed fully contained in `origin/main`; stale June archive branches left untouched per protocol.
+
 ## [1.0.0-alpha.252] - 2026-07-10
 
 ### Added
