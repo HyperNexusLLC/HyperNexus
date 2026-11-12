@@ -1,3 +1,7 @@
+# HANDOFF - Embedding cache v1.0.37 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Added LRU+TTL embedding cache to `go/internal/memorystore/local_embed.go` (+ `embed_cache_test.go`, 4 tests; full memorystore package green; kernel builds clean to `bin/hypernexus-new.exe` stamped 1.0.37, NOT swapped — live kernel remains installed v1.0.0-b1, owner decision).
+- Remaining queue: per-tab decomposition of `DashboardHomeView` body; kernel swap (owner); Git LFS for `data/tormentnexus.db`; VISION/MEMORY/DEPLOY/IDEAS docs refresh.
+
 # HANDOFF - Legacy dashboard retirement v1.0.36 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Retired the final 10 `GenericDashboardPage` stubs to `RedirectPage` deep-links (see CHANGELOG). All 60 `dashboard/*` dirs are now real views or redirects. Remaining queue: per-tab decomposition of `DashboardHomeView` body; embedding cache for semantic search; kernel swap decision (owner); Git LFS for `data/tormentnexus.db`.
 

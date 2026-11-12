@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.37] - 2026-11-11
+
+### Added
+- **Embedding cache**: `localEmbed` now caches embeddings in a 256-entry LRU with 10-minute TTL (normalized text key, copy-in/copy-out). Repeated semantic searches and duplicate memory writes skip ONNX inference that previously ran under the store mutex on every call. Unit tests cover normalization, copy isolation, expiry, and eviction (`go test ./internal/memorystore` green). Takes effect when the repo kernel build is swapped in (owner-gated; live kernel is still the installed v1.0.0-b1).
+
 ## [1.0.36] - 2026-11-11
 
 ### Changed
