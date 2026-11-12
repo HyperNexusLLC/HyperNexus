@@ -998,3 +998,4 @@ Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOF
 # 2026-11-12 1145 Muse verified live [muse-wonder-1.0 in codex-gui] - tab 0525 len 61148 fresh 11:40am Hank fee 500+500 gold-master active, no send to avoid interrupting user, Edge BelowNormal held, read via utf8 background log
 # 2026-11-12 1200 Muse re-verified [muse-wonder-1.0 in codex-gui] - tab 0525 len 57883 same gold-master no new replies, L2 fact stored local-fallback, Edge BelowNormal
 # 2026-11-12 1215 Muse still live [muse-wonder-1.0 in codex-gui] - tab 0525 len 54468 same gold-master no new replies, box saturated python startup slow, staying read-only
+# 2026-11-12 1230 Muse new activity [muse-wonder-1.0 in codex-gui] - tab 0525 len 54646, lane SYNC from marketing_agent arrived, Bobbi declined ACK pricing mismatch 1.99-vs-final, charge test pending, no send from here
