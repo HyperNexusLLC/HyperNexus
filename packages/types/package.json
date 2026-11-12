@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/types",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "private": true,
   "main": "dist/index.js",
   "types": "src/index.ts",

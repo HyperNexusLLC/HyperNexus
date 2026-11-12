@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.36] - 2026-11-11
+
+### Changed
+- **Legacy dashboard retirement**: the last 10 byte-identical `GenericDashboardPage` JSON viewers (`browser`, `browser-extension`, `cli-harnesses`, `cloud-dev`, `deerflow`, `healer`, `imports`, `logs-metrics`, `observability`, `runtime`) are now `RedirectPage` stubs deep-linking to their consolidated home sections (`#integrations`, `#research-workflows`, `#healer-cognition`, `#memory-graphrag`, `#health-metrics`, `#mission-control`). No unique functionality lost — each was the same generic `/api/go/api/<name>` dump. tsc + 97 dashboard tests + build green; routes verified 200 (client redirect).
+
 ## [1.0.35] - 2026-11-11
 
 ### Fixed

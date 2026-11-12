@@ -1,3 +1,6 @@
+# HANDOFF - Legacy dashboard retirement v1.0.36 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Retired the final 10 `GenericDashboardPage` stubs to `RedirectPage` deep-links (see CHANGELOG). All 60 `dashboard/*` dirs are now real views or redirects. Remaining queue: per-tab decomposition of `DashboardHomeView` body; embedding cache for semantic search; kernel swap decision (owner); Git LFS for `data/tormentnexus.db`.
+
 # HANDOFF - Dashboard test repair v1.0.35 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Dashboard tests were 100% unrunnable (stale `packages/ui/dist`, no vitest config). Added `apps/web/vitest.config.ts` (tsconfig-mirroring aliases, single React, inline deps, build-output excludes), tRPC + next/navigation mocks, and refreshed stale pre-consolidation assertions. **14 files / 97 tests green**, tsc + next build green, dashboard restarted (pid 47508, BelowNormal).
 - Real bugs found by the revived tests: research/manual views crashed on `data?.totals.*` / `data?.queue.failed` when payload lacked those keys (fixed with full optional chaining); `getMemoryContextDetail` shadowed enabled `claudeMem` behind the disabled `tormentnexus` default (fixed to prefer enabled store).
