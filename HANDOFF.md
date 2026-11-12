@@ -977,3 +977,10 @@ Battery rerun in flight. Next commit is surgical on install.mjs swarm.mjs HANDOF
 - cmdWatch checks scratchpad swarm:report:<task> first each poll (immediate consistency from e7aba5994), facts search as fallback.
 
 
+
+## 2026-11-12 codex wonder-check fix + CDP resync [muse-wonder-1.0-contributor in codex-gui in ~/workspace/HyperNexus]
+- addons/codex/install.mjs: check accepts spark/wonder, defaults+overlay wonder-primary. CHECK OK (was FAILED). Committed 35b59171f.
+- codex-gui: reinstall fixed hn-swarm drift, now install OK.
+- CDP: Muse C0C0 SENT, ChatGPT F27F SENT, old Gemini B93E gone, new 69E1 opened+SENT with wide timeouts. Kernel 1.0.30 PID 16988 single listener.
+- Next: you run git push gitlab main (2 ahead), watch 3 tabs for replies, promote wonder binary quiet-window, Admin priority rerun.
+
