@@ -320,7 +320,13 @@ export function getResidentMcpDetail(
 export function getMemoryContextDetail(
 	memory: DashboardStartupStatus["checks"]["memory"],
 ): string {
-	const claudeMem = memory.tormentnexus || memory.claudeMem;
+	// Prefer whichever store is actually enabled: the normalized
+	// tormentnexus default is always a truthy object (enabled: false) and
+	// would otherwise shadow real claudeMem seeding state.
+	const claudeMem =
+		[memory.tormentnexus, memory.claudeMem].find((store) => store?.enabled) ??
+		memory.tormentnexus ??
+		memory.claudeMem;
 
 	if (memory.ready) {
 		if (claudeMem?.enabled) {

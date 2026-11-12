@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.35] - 2026-11-11
+
+### Fixed
+- **Dashboard test suite repaired** (was 100% unrunnable): added `apps/web/vitest.config.ts` mirroring tsconfig path aliases (`@hypernexus/ui` from source, `@/*`), single-React dedupe with all deps inlined, and build-output excludes; added tRPC/navigation mocks to the home-view and client tests and updated stale pre-consolidation copy assertions to the consolidated UI. Result: 14 files / 97 tests green.
+- **Crash fix**: `queueQuery.data?.totals.*` and `data?.queue.failed` in the research and manual views crashed when the ingestion payload lacked `totals`/`queue`; now fully optional-chained.
+- **Memory detail shadowing**: `getMemoryContextDetail` preferred the always-truthy disabled `tormentnexus` default over enabled `claudeMem` seeding state; now prefers the enabled store.
+
 ## [1.0.34] - 2026-11-11
 
 ### Changed

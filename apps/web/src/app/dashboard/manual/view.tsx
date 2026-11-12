@@ -56,15 +56,15 @@ export default function ManualPage() {
                 <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div className="rounded-md border border-emerald-500/30 bg-emerald-950/20 px-3 py-2">
                         <div className="text-xs uppercase tracking-wide text-emerald-300/80">Processed</div>
-                        <div className="text-xl font-semibold text-emerald-300">{queueQuery.data?.totals.processed ?? 0}</div>
+                        <div className="text-xl font-semibold text-emerald-300">{queueQuery.data?.totals?.processed ?? 0}</div>
                     </div>
                     <div className="rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2">
                         <div className="text-xs uppercase tracking-wide text-amber-300/80">Pending</div>
-                        <div className="text-xl font-semibold text-amber-300">{queueQuery.data?.totals.pending ?? 0}</div>
+                        <div className="text-xl font-semibold text-amber-300">{queueQuery.data?.totals?.pending ?? 0}</div>
                     </div>
                     <div className="rounded-md border border-rose-500/30 bg-rose-950/20 px-3 py-2">
                         <div className="text-xs uppercase tracking-wide text-rose-300/80">Failed</div>
-                        <div className="text-xl font-semibold text-rose-300">{queueQuery.data?.totals.failed ?? 0}</div>
+                        <div className="text-xl font-semibold text-rose-300">{queueQuery.data?.totals?.failed ?? 0}</div>
                     </div>
                     <div className="rounded-md border border-blue-500/30 bg-blue-950/20 px-3 py-2">
                         <div className="text-xs uppercase tracking-wide text-blue-300/80">Autonomy</div>

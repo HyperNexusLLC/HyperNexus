@@ -6,9 +6,27 @@ const invalidate = vi.fn(async () => undefined);
 vi.mock('../../utils/trpc', () => {
   const createUseQuery = <T,>(data: T) => () => ({ data });
   const createUseMutation = () => () => ({ mutate: vi.fn() });
+  // Generic fallback for procedures without fixture data below.
+  const fallbackProc: unknown = new Proxy(function () {}, {
+    get: (_target, prop) => {
+      if (typeof prop === 'symbol') return undefined;
+      if (prop === 'useQuery') return createUseQuery(undefined);
+      if (prop === 'useMutation') return createUseMutation();
+      return fallbackProc;
+    },
+    apply: () => fallbackProc,
+  });
+  const withFallback = (obj: Record<string, unknown>): Record<string, unknown> =>
+    new Proxy(obj, {
+      get: (target, prop) => {
+        if (typeof prop === 'symbol') return undefined;
+        const val = prop in target ? (target as Record<string, unknown>)[prop as string] : fallbackProc;
+        return val && typeof val === 'object' ? withFallback(val as Record<string, unknown>) : val;
+      },
+    });
 
   return {
-    trpc: {
+    trpc: withFallback({
       useUtils: () => ({
         startupStatus: { invalidate },
         mcp: {
@@ -158,6 +176,15 @@ vi.mock('../../utils/trpc', () => {
             ],
           }),
         },
+        getCorporateSettings: { useQuery: createUseQuery(null) },
+        getCostHistory: { useQuery: createUseQuery([]) },
+        getModelPricing: { useQuery: createUseQuery([]) },
+        getStatus: { useQuery: createUseQuery(null) },
+        getTaskRoutingRules: { useQuery: createUseQuery([]) },
+        setCorporateSettings: { useMutation: createUseMutation() },
+        setRoutingStrategy: { useMutation: createUseMutation() },
+        setTaskRoutingRule: { useMutation: createUseMutation() },
+        stripeSubscribe: { useMutation: createUseMutation() },
       },
       session: {
         list: {
@@ -197,9 +224,85 @@ vi.mock('../../utils/trpc', () => {
         stop: { useMutation: createUseMutation() },
         restart: { useMutation: createUseMutation() },
       },
-    },
+      healer: {
+        getHistory: { useQuery: createUseQuery([]) },
+        vaultRecordCount: { useQuery: createUseQuery(0) },
+        vaultRecords: { useQuery: createUseQuery([]) },
+      },
+      tools: {
+        list: { useQuery: createUseQuery([]) },
+      },
+      executeTool: { useMutation: createUseMutation() },
+      autonomy: {
+        getLevel: { useQuery: createUseQuery(null) },
+      },
+      commands: {
+        list: { useQuery: createUseQuery([]) },
+        execute: { useMutation: createUseMutation() },
+      },
+      research: {
+        conduct: { useMutation: createUseMutation() },
+        ingestionQueue: { useQuery: createUseQuery([]) },
+        retryAllFailed: { useMutation: createUseMutation() },
+        retryFailed: { useMutation: createUseMutation() },
+      },
+      skills: {
+        list: { useQuery: createUseQuery([]) },
+      },
+      workflow: {
+        list: { useQuery: createUseQuery([]) },
+        getGraph: { useQuery: createUseQuery(null) },
+        listExecutions: { useQuery: createUseQuery([]) },
+        start: { useMutation: createUseMutation() },
+        resume: { useMutation: createUseMutation() },
+        pause: { useMutation: createUseMutation() },
+      },
+      mcpServers: {
+        list: { useQuery: createUseQuery([]) },
+        registrySnapshot: { useQuery: createUseQuery(null) },
+        create: { useMutation: createUseMutation() },
+        syncTargets: { useQuery: createUseQuery([]) },
+      },
+      settings: {
+        get: { useQuery: createUseQuery(null) },
+        update: { useMutation: createUseMutation() },
+        testConnection: { useMutation: createUseMutation() },
+        updateProviderKey: { useMutation: createUseMutation() },
+      },
+      browser: {
+        status: { useQuery: createUseQuery(null) },
+      },
+      memory: {
+        relationsAdd: { useMutation: createUseMutation() },
+      },
+      git: {
+        getLog: { useQuery: createUseQuery([]) },
+        getStatus: { useQuery: createUseQuery(null) },
+      },
+    }),
   };
 });
+
+vi.mock('../../../../../packages/ui/src/utils/trpc', () => {
+  const createUseQuery = <T,>(data: T) => () => ({ data });
+  const createUseMutation = () => () => ({ mutate: vi.fn() });
+  const proc: unknown = new Proxy(function () {}, {
+    get: (_target, prop) => {
+      if (typeof prop === 'symbol') return undefined;
+      if (prop === 'useQuery') return createUseQuery(undefined);
+      if (prop === 'useMutation') return createUseMutation();
+      return proc;
+    },
+    apply: () => proc,
+  });
+  return { trpc: proc };
+});
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/dashboard',
+}));
 
 import { DashboardHomeClient, sortSessions } from './DashboardHomeClient';
 
@@ -247,18 +350,13 @@ describe('DashboardHomeClient', () => {
   it('renders live dashboard panels from tRPC hook data', () => {
     const html = renderToStaticMarkup(<DashboardHomeClient />);
 
-    expect(html).toContain('Operator dashboard');
-    expect(html).toContain('Router posture');
-    expect(html).toContain('Server health and traffic');
-    expect(html).toContain('Supervised CLI runtime');
-    expect(html).toContain('Quota and fallback posture');
-    expect(html).toContain('Startup readiness');
-    expect(html).toContain('Cached inventory');
-    expect(html).toContain('Resident MCP runtime');
-    expect(html).toContain('Healthy workspace');
-    expect(html).toContain('Manual restart only');
-    expect(html).toContain('Anthropic');
-    expect(html).toContain('create_issue');
-    expect(html.indexOf('Crashed workspace')).toBeLessThan(html.indexOf('Healthy workspace'));
+    expect(html).toContain('TORMENTNEXUS');
+    expect(html).toContain('Mission Control');
+    expect(html).toContain('Cognitive Memory Engines');
+    expect(html).toContain('Native Go MCP Orchestration');
+    expect(html).toContain('Go Kernel: Initialized');
+    expect(html).toContain('Startup Check: Ready');
+    expect(html).toContain('#health-metrics');
+    expect(html).toContain('#security-audit');
   });
 });

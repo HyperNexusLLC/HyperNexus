@@ -1,3 +1,8 @@
+# HANDOFF - Dashboard test repair v1.0.35 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Dashboard tests were 100% unrunnable (stale `packages/ui/dist`, no vitest config). Added `apps/web/vitest.config.ts` (tsconfig-mirroring aliases, single React, inline deps, build-output excludes), tRPC + next/navigation mocks, and refreshed stale pre-consolidation assertions. **14 files / 97 tests green**, tsc + next build green, dashboard restarted (pid 47508, BelowNormal).
+- Real bugs found by the revived tests: research/manual views crashed on `data?.totals.*` / `data?.queue.failed` when payload lacked those keys (fixed with full optional chaining); `getMemoryContextDetail` shadowed enabled `claudeMem` behind the disabled `tormentnexus` default (fixed to prefer enabled store).
+- Next: per-tab decomposition of `DashboardHomeView` body; legacy `dashboard/*` retirement; embedding cache.
+
 # HANDOFF - Dashboard decomposition v1.0.34 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - v1.0.34: extracted overview/startup model (~830 lines) into `apps/web/src/app/dashboard/dashboard-overview-model.ts`; `dashboard-home-view.tsx` now ~3,750 lines. tsc + next build green, dashboard restarted (200, BelowNormal). Remaining decomposition: the `DashboardHomeView` component body itself (tab panels) — split per-tab into lazy components.
 - Fix the SYNC4 label in ROADMAP if it was auto-bumped (it records v1.0.32 historically).

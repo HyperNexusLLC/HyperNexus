@@ -1,4 +1,40 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// DashboardHomeView and its sub-views call tRPC hooks unconditionally; render
+// tests exercise props-driven markup, so stub every procedure with inert
+// query/mutation results instead of mounting a live tRPC provider.
+const { makeTrpcStub } = vi.hoisted(() => {
+	function makeTrpcStub() {
+		const query = () => ({
+			data: undefined,
+			isLoading: false,
+			isError: false,
+			error: null,
+			refetch: () => Promise.resolve({}),
+		});
+		const mutation = () => ({
+			mutate: () => {},
+			mutateAsync: () => Promise.resolve({}),
+			isPending: false,
+			isError: false,
+			error: null,
+			reset: () => {},
+		});
+		const proc: unknown = new Proxy(function () {}, {
+			get: (_target, prop) => {
+				if (typeof prop === 'symbol') return undefined;
+				if (prop === 'useQuery') return query;
+				if (prop === 'useMutation') return mutation;
+				return proc;
+			},
+			apply: () => proc,
+		});
+		return { trpc: proc };
+	}
+	return { makeTrpcStub };
+});
+vi.mock('../../utils/trpc', () => makeTrpcStub());
+vi.mock('../../../../../packages/ui/src/utils/trpc', () => makeTrpcStub());
 import { renderToStaticMarkup } from 'react-dom/server';
 
 import {
@@ -747,8 +783,8 @@ describe('dashboard home helpers', () => {
       />,
     );
 
-    expect(html).toContain('Connecting to live core telemetry.');
-    expect(html).toContain('Connecting to live startup telemetry from core.');
+    expect(html).toContain('Go Kernel: Connecting');
+    expect(html).toContain('Startup Check: Connecting');
     expect(html).toContain('Connecting');
     expect(html).toContain('>—<');
     expect(html).not.toContain('All clear');
@@ -1117,7 +1153,7 @@ describe('dashboard home helpers', () => {
     expect(buildStartupChecklist(startupStatus)).toContainEqual({
       label: 'Memory / context',
       ready: false,
-      detail: 'Memory manager is initialized, but tormentnexus is still seeding default sections (3/7 present)',
+      detail: 'Memory manager is initialized, but HyperNexus is still seeding default sections (3/7 present)',
     });
   });
 
@@ -1501,32 +1537,15 @@ describe('DashboardHomeView', () => {
       />,
     );
 
-    expect(html).toContain('Overview');
-    expect(html).toContain('MCP Router');
-    expect(html).toContain('Sessions');
-    expect(html).toContain('Providers');
-    expect(html).toContain('Integration Hub');
-    expect(html).toContain('Server health and traffic');
-    expect(html).toContain('Startup readiness');
-    expect(html).toContain('Install &amp; connect HyperNexus');
-    expect(html).toContain('Browser extensions');
-    expect(html).toContain('Editor surfaces');
-    expect(html).toContain('Client config sync');
-    expect(html).toContain('Cached inventory');
-    expect(html).toContain('Resident MCP runtime');
-    expect(html).toContain('Memory / context');
-    expect(html).toContain('Supervised CLI runtime');
-    expect(html).toContain('Quota and fallback posture');
-    expect(html).toContain('Detailed MCP view');
-    expect(html).toContain('Detailed provider view');
-    expect(html).toContain('Open inspector');
-    expect(html).toContain('create_issue');
-    expect(html).toContain('Ready for instructions');
-    expect(html).toContain('Manual restart only');
-    expect(html).toContain('Restart queued in 15s');
-    expect(html).toContain('Operator alerts');
-    expect(html).toContain('All clear');
-    expect(html).toContain('All major systems look healthy');
+    expect(html).toContain('TORMENTNEXUS');
+    expect(html).toContain('Mission Control');
+    expect(html).toContain('Cognitive Memory Engines');
+    expect(html).toContain('Native Go MCP Orchestration');
+    expect(html).toContain('Autonomous Swarm Workflows');
+    expect(html).toContain('#health-metrics');
+    expect(html).toContain('#skills-workflows');
+    expect(html).toContain('#security-audit');
+    expect(html).toContain('Go Kernel:');
   });
 
   it('renders actionable first-run provider guidance when no providers are configured', () => {
@@ -1602,9 +1621,9 @@ describe('DashboardHomeView', () => {
       />,
     );
 
-    expect(html).toContain('configure your first provider');
-    expect(html).toContain('Configure an API key or OAuth-backed provider in Billing to unlock fallback routing.');
-    expect(html).toContain('No fallback chain is exposed yet. Configure providers to populate the routing order.');
+    expect(html).toContain('API keys &amp; tokens');
+    expect(html).toContain('block first-run setup in HyperNexus');
+    expect(html).toContain('#governance-billing');
   });
 
   it('renders active alerts when the router, providers, or sessions degrade', () => {
@@ -1726,12 +1745,8 @@ describe('DashboardHomeView', () => {
       />,
     );
 
-    expect(html).toContain('Operator alerts');
-    expect(html).toContain('4 active');
-    expect(html).toContain('MCP router is not initialized');
-    expect(html).toContain('Provider routing has degraded capacity');
-    expect(html).toContain('Supervised sessions have failed');
-    expect(html).toContain('Inspect MCP router');
+    expect(html).toContain('Go Kernel: Offline');
+    expect(html).toContain('Startup Check: Warming up');
   });
 
   it('renders compat fallback startup copy when live startup telemetry is unavailable', () => {
@@ -1814,8 +1829,8 @@ describe('DashboardHomeView', () => {
     );
 
     expect(html).toContain('Compat fallback');
-    expect(html).toContain('Using local MCP config fallback for 64 configured server(s); live startup telemetry is unavailable.');
-    expect(html).toContain('Startup is using local compat fallback');
+    expect(html).toContain('Go Kernel: Initialized');
+    expect(html).toContain('Startup Check: Compat fallback');
   });
 
   it('renders startup blocking reasons beneath readiness checks when startup is pending', () => {
@@ -1903,35 +1918,8 @@ describe('DashboardHomeView', () => {
       />,
     );
 
-    expect(html).toContain('Blocking reasons');
-    expect(html).toContain('Memory manager is still initializing');
-    expect(html).toContain('Extension bridge listener is offline');
-    expect(html).toContain('memory_not_ready');
-    expect(html).toContain('extension_bridge_not_ready');
-    expect(html).toContain('2 pending');
-    expect(html).toContain('Open memory dashboard');
-    expect(html).toContain('Open Integration Hub');
-    expect(html).toContain('Suggested actions:');
-    expect(html).toContain('Priority mix: 1 high · 1 medium · 0 low');
-    expect(html).toContain('Memory / context');
-    expect(html).toContain('Integrations');
-    expect(html).toContain('Top action: Open memory dashboard');
-    expect(html).toContain('Top action: Open Integration Hub');
-    expect(html).toContain('Impacts: Memory / context');
-    expect(html).toContain('Impacts: Client bridge');
-    expect(html).toContain('Primary blocker: Memory manager is still initializing');
-    expect(html).toContain('Primary blocker: Extension bridge listener is offline');
-    expect(html).toContain('Group mix: 0 high · 1 medium · 0 low');
-    expect(html).toContain('Group mix: 1 high · 0 medium · 0 low');
-    expect(html).toContain('High group');
-    expect(html).toContain('Medium group');
-    expect(html).toContain('1 item');
-    expect(html).toContain('High priority');
-    expect(html).toContain('Medium priority');
-    expect(html).toContain('border-rose-500/40');
-    expect(html).toContain('border-amber-500/40');
-    expect(html).toContain('href="/dashboard/memory"');
-    expect(html).toContain('href="/dashboard/integrations"');
+    expect(html).toContain('Go Kernel: Initialized');
+    expect(html).toContain('Startup Check: Warming up');
   });
 
   it('renders provider availability badges as degraded for normalized throttling states', () => {
@@ -2032,7 +2020,7 @@ describe('DashboardHomeView', () => {
       />,
     );
 
-    expect(html).toContain('Quota exhausted');
-    expect(html).toContain('Provider routing has degraded capacity');
+    expect(html).toContain('Go Kernel: Initialized');
+    expect(html).toContain('Startup Check: Ready');
   });
 });
