@@ -1,3 +1,6 @@
+# HANDOFF - Kernel swap v1.0.43 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Owner authorized fixing kernel drift + Git. Git for Windows reinstalled via winget (2.56.0; verified incl. submodule ops). Kernel: stopped ONLY pid 31112 (installed v1.0.0-b1 `serve`) and started repo build `bin/hypernexus-new.exe serve`; other sessions' `bin/hypernexus.exe mcp` processes untouched. Do NOT use `bin/swap-kernel.ps1` while other sessions' MCP processes run — it kills all hypernexus processes.
+
 # HANDOFF - Per-section decomposition v1.0.42 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Extracted `DashboardMcpSection` (swarm state via props — a second panel shares it). Gotcha recorded: a `{/* comment */}` sibling before the root element is a second JSX root at component level; wrap returns in fragments when extracting sections that start with a comment.
 - Remaining: research-workflows (~1000 lines), governance-billing/security (shared workflow state).

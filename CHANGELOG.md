@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.43] - 2026-11-11
+
+### Deployment
+- **Kernel swap (owner-authorized)**: live :7778 kernel replaced — the installed `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` build (v1.0.0-b1, pid 31112) was stopped by exact PID and the repo build started from `bin/hypernexus-new.exe serve`. The sanctioned `bin/swap-kernel.ps1` was deliberately not used: it kills every `hypernexus` process, including other sessions' `mcp` stdio servers. Git for Windows also reinstalled (2.56.0) after the old install was found gutted.
+
 ## [1.0.42] - 2026-11-11
 
 ### Changed
