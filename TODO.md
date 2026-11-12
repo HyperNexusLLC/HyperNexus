@@ -4,6 +4,9 @@
 
 ## 🔴 High (do next)
 
+- [ ] **Owner: reinstall Git for Windows** — system install gutted (`mingw64/bin` = 1 file, `BUG (fork bomb)`); SYNC4 used GitHub Desktop's bundled git. Also rotate Groq/HF keys + decide GitHub secret-blob unblock (see HANDOFF SYNC4).
+- [ ] **Kernel build drift**: live :7778 is the installed `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` reporting v1.0.0-b1 (no `/api/system/status`); decide when to swap in the repo v1.0.32 build (exact-pid swap only).
+
 - [x] ~~Dashboard consolidation~~ — **verified already consolidated** (nav = 7 value-ordered sections, all tooltips present, all hrefs → home-view anchors). Remaining polish below.
 - [x] **Flesh out 3 thin home-view sections** — `health-metrics`, `skills-workflows`, `security-audit` now carry tooltips (`title`), `aria-label`, `data-testid` wraps, and truth-pass copy (loading/error/empty, never mocked) in `dashboard-home-view.tsx`. Remaining: per-card forms/filters live in sub-pages.
 - [ ] **Decompose `dashboard-home-view.tsx`** → one lazy-loaded component per section. Progress (v1.0.29): consolidated sections extracted to `dashboard-consolidated-sections.tsx` (4698→4631 lines, tsc+build green). Remaining: overview/startup blocks inside `DashboardHomeView` (~lines 1146-4500).

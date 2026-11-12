@@ -1,3 +1,15 @@
+# HANDOFF - Repository synchronization SYNC4 (v1.0.32)
+
+## Session SYNC4 (2026-11-11) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+- Fetch --all --tags root + submodules: no new remote commits; local main == GitLab main at audit time (6578b5145a).
+- Branch audit: `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`, `clean-main` all fully merged into main (0 unique). Retained untouched: `feature/cloud-dashboard-mcp-sse-389806464713532918` (unrelated history, archive), `gh-pages-hypernexus`/`gh-pages-tormentnexus` (deploy). Upstream dependabot branch ignored per protocol. Nothing to forward/reverse merge.
+- Submodules: `vendor/deepseek-harness` advanced 923 commits fcc0ad4621 -> e8f7b93a34 (upstream master, dsh v0.2.2-rc.2); untracked overlays (`README-HYPERNEXUS.md`, `hypernexus.cordis.yml`) retained. `vendor/grok-build` 2bdd1d6a and `lumbros.me` 16261e0 unchanged; overlays retained.
+- Scripts re-validated (`start.bat`/`build.bat`: VERSION-driven, ports 7778/7779, `cmd/tormentnexus`). Version 1.0.31 -> 1.0.32 (35 package/buildinfo refs + VERSION/CHANGELOG).
+- **Environment breaks found (owner action)**: system Git for Windows is gutted (`C:\Program Files\Git\mingw64\bin` has 1 file; wrappers fail `BUG (fork bomb)`) — this sync used GitHub Desktop's bundled git 2.56.1; reinstall Git for Windows. Running kernel is now the installed build `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` pid 31112 reporting v1.0.0-b1 (started externally 2026-11-11 02:44; `/api/system/status` 404 on this build, scratchpad `goal` re-seeded) — repo kernel on :7778 was replaced outside this session; dashboard :7779 was down and restarted from `apps/web`.
+- Still owner-pending: Groq/HF key rotation + GitHub secret-blob unblock/rewrite decision; `data/tormentnexus.db` LFS; stashes `memories-ff`/`ff-blockers` review.
+
+---
+
 # HANDOFF - Repository synchronization SYNC3 (v1.0.31)
 
 ## Session SYNC3 (2026-11-08) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
@@ -174,6 +186,7 @@
 - Human-gated (unchanged): fresh `/login meta` in pi for the mint; droid Factory auth; hax WSL kernel bind decision; maki TUI seed; installed-exe swap blocked by pre-existing pid 26812 — leave it running.
 - Gemini lane per AGENTS.md: bulk refactoring / recursive scripts / context analysis. Coordinate via scratchpad `goal` + L2 before starting.
 - **Superseded by Session XB (below/above):** native `POST /api/agent/orchestrate` now exists in Go; bus transport is kernel scratchpad. The 404/TS-upstream notes in this block are historical.
+- 2026-11-11 coordination note: Git for Windows binary currently fails with `BUG (fork bomb): C:\Program Files\Git\bin\git.exe` on every invocation (worked earlier same session); 15 stale `git` processes (Oct 28–Nov 6) left untouched. Git state verified read-only via gitdir `../.git/modules/HyperNexus` refs: local `main` == `gitlab/main` == `6578b5145a`. Kernel v1.0.31 / dashboard :7779 healthy; investigate git wrapper before next commit.
 
 ---
 

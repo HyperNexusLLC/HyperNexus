@@ -4,6 +4,8 @@
 
 ## Current State Snapshot (2026-10-21)
 
+> SYNC4 (2026-11-11, v1.0.32): all feature branches merged or retained-as-archive; deepseek-harness at v0.2.2-rc.2; live kernel is the installed v1.0.0-b1 build (drift from repo version — see TODO).
+
 | Layer | Status |
 |---|---|
 | Go kernel (:7778) | ✅ running, 49+ tools, systray (fixed ghost + TaskbarCreated) |

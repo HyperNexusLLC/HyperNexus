@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.32] - 2026-11-11
+
+### Changed
+- **Repository synchronization (Session SYNC4)**: full fetch; all named feature branches (`feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`, `clean-main`) confirmed fully merged into `main`; unrelated-history `feature/cloud-dashboard-mcp-sse-3898…` archive and `gh-pages-*` deploy branches retained untouched; upstream dependabot branch ignored per protocol.
+- **Submodule**: `vendor/deepseek-harness` advanced 923 commits to upstream master `e8f7b93a34` (dsh v0.2.2-rc.2); untracked HyperNexus overlays retained. `vendor/grok-build` and `lumbros.me` unchanged.
+- **Ops findings**: system Git for Windows install is gutted (`mingw64/bin` reduced to one file; wrapper fails with `BUG (fork bomb)`) — sync performed with GitHub Desktop's bundled git 2.56.1. Running kernel is now the installed build (`%LOCALAPPDATA%\HyperNexus\hypernexus.exe`, reports v1.0.0-b1, no `/api/system/status` route); dashboard :7779 restarted from `apps/web`.
+
 ## [1.0.31] - 2026-11-08
 
 ### Changed
