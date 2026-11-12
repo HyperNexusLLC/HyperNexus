@@ -4,7 +4,7 @@
 
 ## Current State Snapshot (2026-10-21)
 
-> SYNC4 (2026-11-11, v1.0.32): all feature branches merged or retained-as-archive; deepseek-harness at v0.2.2-rc.2; live kernel is the installed v1.0.0-b1 build (drift from repo version — see TODO). v1.0.33: dashboard startup-blocking helpers extracted to `dashboard-startup-blocking.ts`.
+> SYNC4 (2026-11-11, v1.0.32): all feature branches merged or retained-as-archive; deepseek-harness at v0.2.2-rc.2; live kernel is the installed v1.0.0-b1 build (drift from repo version — see TODO). v1.0.33: dashboard startup-blocking helpers extracted to `dashboard-startup-blocking.ts`; v1.0.34: overview model extracted to `dashboard-overview-model.ts`.
 
 | Layer | Status |
 |---|---|

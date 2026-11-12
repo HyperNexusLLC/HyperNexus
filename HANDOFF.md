@@ -1,3 +1,7 @@
+# HANDOFF - Dashboard decomposition v1.0.34 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- v1.0.34: extracted overview/startup model (~830 lines) into `apps/web/src/app/dashboard/dashboard-overview-model.ts`; `dashboard-home-view.tsx` now ~3,750 lines. tsc + next build green, dashboard restarted (200, BelowNormal). Remaining decomposition: the `DashboardHomeView` component body itself (tab panels) — split per-tab into lazy components.
+- Fix the SYNC4 label in ROADMAP if it was auto-bumped (it records v1.0.32 historically).
+
 # HANDOFF - Dashboard decomposition v1.0.33 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Extracted 17 startup-blocking helpers from `dashboard-home-view.tsx` (4888 -> ~4509 lines) into new `apps/web/src/app/dashboard/dashboard-startup-blocking.ts`; home view imports them for internal use and re-exports them, so `dashboard-home-view.test.tsx` / health view-model imports are unchanged. `tsc --noEmit` 0, `next build` 0, dashboard restarted on new build (200).
 - Pre-existing test breakage confirmed on pristine HEAD: `dashboard-home-view.test.tsx` fails via stale `packages/ui/dist` (`@/utils/trpc` unresolved) + duplicate test copy under `.next-build/standalone` — rebuild `packages/ui` and exclude `.next-build` from vitest to fix.
