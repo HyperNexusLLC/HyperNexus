@@ -1,0 +1,51 @@
+{
+  "name": "hypernexus",
+  "version": "1.0.0",
+  "description": "AI Control Plane with persistent memory and 26K+ MCP tools catalog",
+  "main": "dist/index.js",
+  "bin": {
+    "hypernexus": "./bin/hypernexus"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install-binary.js"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "mcp",
+    "memory",
+    "tools",
+    "agents",
+    "local-ai",
+    "model-context-protocol"
+  ],
+  "author": "HyperNexus Team <dev@hypernexus.org>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/hypernexus-org/HyperNexus.git"
+  },
+  "homepage": "https://hypernexus.site",
+  "bugs": {
+    "url": "https://gitlab.com/hypernexus-org/HyperNexus/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "files": [
+    "bin/",
+    "dist/",
+    "scripts/",
+    "README.md",
+    "LICENSE"
+  ]
+}

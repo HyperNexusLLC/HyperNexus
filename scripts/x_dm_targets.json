@@ -1,0 +1,242 @@
+[
+  {
+    "target": "Aman Sanger",
+    "handle": "amanasanger",
+    "company": "Cursor",
+    "note": "Co-Founder/CEO",
+    "dm": "Hey Aman, sent a short technical note to your email on reducing input token costs by ~90% per seat using local vector-based tool routing. Happy to share the benchmark suite. Let me know!",
+    "url": "https://twitter.com/messages/compose?recipient_id=amanasanger"
+  },
+  {
+    "target": "Michael Truell",
+    "handle": "truell20",
+    "company": "Cursor",
+    "note": "Co-Founder",
+    "dm": "Hey Michael, sent a short technical note to your email on reducing input token costs by ~90% per seat using local vector-based tool routing. Happy to share the benchmark suite. Let me know!",
+    "url": "https://twitter.com/messages/compose?recipient_id=truell20"
+  },
+  {
+    "target": "Quinn Slack",
+    "handle": "sqs",
+    "company": "Sourcegraph",
+    "note": "CEO",
+    "dm": "Hey Quinn, sent a quick technical overview to your email on zero-dependency tool schema pruning for agentic workflows. Checked in a 60s benchmark script to prove the token reduction. Let me know if you'd like to take a look!",
+    "url": "https://twitter.com/messages/compose?recipient_id=sqs"
+  },
+  {
+    "target": "Beyang Liu",
+    "handle": "beyang",
+    "company": "Sourcegraph",
+    "note": "CTO",
+    "dm": "Hey Beyang, sent a quick technical overview to your email on zero-dependency tool schema pruning for agentic workflows. Checked in a 60s benchmark script to prove the token reduction. Let me know if you'd like to take a look!",
+    "url": "https://twitter.com/messages/compose?recipient_id=beyang"
+  },
+  {
+    "target": "Amjad Masad",
+    "handle": "amasad",
+    "company": "Replit",
+    "note": "CEO",
+    "dm": "Hey Amjad, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=amasad"
+  },
+  {
+    "target": "Jeffrey Morgan",
+    "handle": "jmorgan_",
+    "company": "Ollama",
+    "note": "Founder",
+    "dm": "Hey Jeffrey, dropped a brief message re: native MCP tool schema routing in Go to keep local 8B/14B context windows light. Would love to share the architecture breakdown if you're interested!",
+    "url": "https://twitter.com/messages/compose?recipient_id=jmorgan_"
+  },
+  {
+    "target": "Varun Mohan",
+    "handle": "varun_mohan",
+    "company": "Codeium",
+    "note": "CEO",
+    "dm": "Hey Varun, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=varun_mohan"
+  },
+  {
+    "target": "Jason Warner",
+    "handle": "jasoncwarner",
+    "company": "Poolside",
+    "note": "CEO",
+    "dm": "Hey Jason, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=jasoncwarner"
+  },
+  {
+    "target": "Harrison Chase",
+    "handle": "hwchase17",
+    "company": "LangChain",
+    "note": "CEO",
+    "dm": "Hey Harrison, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=hwchase17"
+  },
+  {
+    "target": "Jerry Liu",
+    "handle": "jerryjliu0",
+    "company": "LlamaIndex",
+    "note": "CEO",
+    "dm": "Hey Jerry, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=jerryjliu0"
+  },
+  {
+    "target": "Guillermo Rauch",
+    "handle": "rauchg",
+    "company": "Vercel",
+    "note": "CEO",
+    "dm": "Hey Guillermo, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=rauchg"
+  },
+  {
+    "target": "Aravind Srinivas",
+    "handle": "AravindSrinivas",
+    "company": "Perplexity",
+    "note": "CEO",
+    "dm": "Hey Aravind, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=AravindSrinivas"
+  },
+  {
+    "target": "Sam Altman",
+    "handle": "sama",
+    "company": "OpenAI",
+    "note": "CEO",
+    "dm": "Hey Sam, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=sama"
+  },
+  {
+    "target": "Dario Amodei",
+    "handle": "DarioAmodei",
+    "company": "Anthropic",
+    "note": "CEO",
+    "dm": "Hey Dario, dropped a technical note re: optimizing MCP tool schema routing for agentic workflows - 92.7% token reduction with local vector routing. Would love to share the architecture if interested!",
+    "url": "https://twitter.com/messages/compose?recipient_id=DarioAmodei"
+  },
+  {
+    "target": "Jared Kaplan",
+    "handle": "jaredkaplan",
+    "company": "Anthropic",
+    "note": "Chief Science Officer",
+    "dm": "Hey Jared, dropped a technical note re: optimizing MCP tool schema routing for agentic workflows - 92.7% token reduction with local vector routing. Would love to share the architecture if interested!",
+    "url": "https://twitter.com/messages/compose?recipient_id=jaredkaplan"
+  },
+  {
+    "target": "Jan Leike",
+    "handle": "janleike",
+    "company": "Anthropic",
+    "note": "Alignment",
+    "dm": "Hey Jan, dropped a technical note re: optimizing MCP tool schema routing for agentic workflows - 92.7% token reduction with local vector routing. Would love to share the architecture if interested!",
+    "url": "https://twitter.com/messages/compose?recipient_id=janleike"
+  },
+  {
+    "target": "Demis Hassabis",
+    "handle": "demishassabis",
+    "company": "DeepMind",
+    "note": "CEO",
+    "dm": "Hey Demis, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=demishassabis"
+  },
+  {
+    "target": "Mustafa Suleyman",
+    "handle": "mustafasuleyman",
+    "company": "Microsoft AI",
+    "note": "CEO",
+    "dm": "Hey Mustafa, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=mustafasuleyman"
+  },
+  {
+    "target": "Mira Murati",
+    "handle": "miramurati",
+    "company": "OpenAI",
+    "note": "CTO",
+    "dm": "Hey Mira, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=miramurati"
+  },
+  {
+    "target": "Emad Mostaque",
+    "handle": "EMostaque",
+    "company": "Stability AI",
+    "note": "Founder",
+    "dm": "Hey Emad, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=EMostaque"
+  },
+  {
+    "target": "David Holz",
+    "handle": "DavidSHolz",
+    "company": "Midjourney",
+    "note": "CEO",
+    "dm": "Hey David, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=DavidSHolz"
+  },
+  {
+    "target": "Alexandr Wang",
+    "handle": "alexandr_wang",
+    "company": "Scale AI",
+    "note": "CEO",
+    "dm": "Hey Alexandr, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=alexandr_wang"
+  },
+  {
+    "target": "Igor Babuschkin",
+    "handle": "ibab",
+    "company": "xAI",
+    "note": "Co-Founder",
+    "dm": "Hey Igor, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=ibab"
+  },
+  {
+    "target": "Tim Brooks",
+    "handle": "timbrooks",
+    "company": "OpenAI",
+    "note": "Research",
+    "dm": "Hey Tim, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=timbrooks"
+  },
+  {
+    "target": "Noam Shazeer",
+    "handle": "noamshazeer",
+    "company": "Character AI",
+    "note": "CEO",
+    "dm": "Hey Noam, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=noamshazeer"
+  },
+  {
+    "target": "Jim Fan",
+    "handle": "DrJimFan",
+    "company": "NVIDIA",
+    "note": "Senior Research",
+    "dm": "Hey Jim, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=DrJimFan"
+  },
+  {
+    "target": "Andrej Karpathy",
+    "handle": "karpathy",
+    "company": "Eureka Labs",
+    "note": "Founder",
+    "dm": "Hey Andrej, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=karpathy"
+  },
+  {
+    "target": "Chris Lattner",
+    "handle": "clattner_llvm",
+    "company": "Modular AI",
+    "note": "CEO",
+    "dm": "Hey Chris, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=clattner_llvm"
+  },
+  {
+    "target": "Arthur Mensch",
+    "handle": "arthurmensch",
+    "company": "Mistral",
+    "note": "CEO",
+    "dm": "Hey Arthur, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=arthurmensch"
+  },
+  {
+    "target": "Dylan Field",
+    "handle": "zoink",
+    "company": "Figma",
+    "note": "CEO",
+    "dm": "Hey Dylan, dropped a note to your inbox re: cutting AI agent token costs by 92.7% via a native Go routing engine (sqlite-vec). Benchmark package is ready to run. Would love to connect!",
+    "url": "https://twitter.com/messages/compose?recipient_id=zoink"
+  }
+]

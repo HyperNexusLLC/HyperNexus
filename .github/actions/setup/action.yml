@@ -1,0 +1,46 @@
+name: "HyperNexus Setup"
+description: "Set up HyperNexus for AI memory and MCP routing"
+
+inputs:
+  version:
+    description: "HyperNexus version"
+    required: false
+    default: "latest"
+  memory:
+    description: "Enable memory"
+    required: false
+    default: "true"
+  mcp-port:
+    description: "MCP port"
+    required: false
+    default: "8080"
+
+outputs:
+  mcp-url:
+    description: "MCP server URL"
+    value: ${{ steps.setup.outputs.mcp-url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          irm https://hypernexus.site/install.ps1 | iex
+        else
+          curl -fsSL https://hypernexus.site/install.sh | bash
+        fi
+
+    - name: Start
+      id: setup
+      shell: bash
+      run: |
+        hypernexus serve --port ${{ inputs.mcp-port }} &
+        sleep 5
+        echo "mcp-url=http://localhost:${{ inputs.mcp-port }}/mcp" >> \
+          $GITHUB_OUTPUT
+
+    - name: Verify
+      shell: bash
+      run: curl -s http://localhost:${{ inputs.mcp-port }}/health

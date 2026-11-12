@@ -1,0 +1,9 @@
+C:\Program Files
+C:\Program Files (x86)
+C:\ProgramData
+C:\Users\hyper
+C:\Users\hyper\.hypernexus
+C:\Users\hyper\AppData\Local\Programs
+C:\Users\hyper\AppData\Local\Programs\WSCC (x64)
+C:\Users\hyper\workspace
+C:\Users\hyper\workspace\HyperNexus

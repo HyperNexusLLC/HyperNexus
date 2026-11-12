@@ -1,0 +1,21 @@
+{
+  "name": "hypernexus",
+  "version": "2.0.0",
+  "description": "HyperNexus control plane: persistent L2 memory, MCP tool routing, sessions, skills, and billing — backed by the local kernel on :7778 with Meta subscriber model routing.",
+  "author": { "name": "HyperNexus LLC" },
+  "license": "MIT",
+  "keywords": ["memory", "mcp", "tools", "orchestration", "hypernexus"],
+  "skills": [
+    "../skills/hypernexus",
+    "../skills/hypernexus-agents",
+    "../skills/hypernexus-l2",
+    "../skills/hypernexus-mcp-routing",
+    "../skills/hypernexus-memory",
+    "../skills/hypernexus-ops",
+    "../skills/hypernexus-sessions",
+    "../skills/hypernexus-status-billing",
+    "../skills/hypernexus-workflows"
+  ],
+  "hooks": "../hooks/hooks.json",
+  "mcpServers": "../mcp.json"
+}

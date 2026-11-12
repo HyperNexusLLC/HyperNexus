@@ -1,0 +1,36 @@
+# HyperNexus — Meta model wiring for Reasonix (MINTER PATTERN, no secrets inside).
+# =============================================================================
+# Model: muse-spark-1.3-contributor via Meta's OpenAI-compatible endpoint.
+# Auth is minted LIVE per run from pi's auth.json identity (pi owns OAuth
+# refresh); this file never contains a token. Mirrors
+# addons/open-interpreter/meta-model.open-interpreter.md.
+#
+# Mint / verify (key hidden, never stored):
+#   node addons/reasonix/bin/meta-muse-key.mjs --check
+# Per-run launch (fresh key, process env only):
+#   .\addons\reasonix\use-meta-model.ps1 "your prompt here"
+#   .\addons\reasonix\use-meta-model.ps1
+#
+# To make it the default, merge the top-level default_model key plus the
+# [[providers]] block below into %APPDATA%\reasonix\config.toml, then pick
+# the model in the TUI. The provider still reads META_MUSE_API_KEY from the
+# process env (minted fresh by use-meta-model.ps1); nothing is persisted.
+#
+# If the mint reports an expired session (401/403), re-login in pi
+# (`/login meta`) — identity tokens are not renewable; pi owns the refresh.
+
+default_model = "meta/muse-spark-1.3-contributor"
+
+[[providers]]
+name        = "meta"
+kind        = "openai"
+# NOTE: Meta api rejects reasonix 'thinking' param -> keep disabled for this provider
+base_url    = "http://127.0.0.1:7778/v1"
+models      = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"]
+default     = "muse-spark-1.3-contributor"
+api_key_env = "META_MUSE_API_KEY"
+context_window = 1048576
+vision_models = ["muse-spark-1.3-contributor", "muse-wonder-1.0-contributor"]
+
+# Dual-model: META_MODEL env (default spark, opt-in wonder) for the launcher; provider lists both models, default_model stays spark.
+

@@ -1,0 +1,13 @@
+# HyperNexus Codex MCP servers (drop-in snippet for ~/.codex/config.toml).
+# Same canonical content as mcp/config.toml. The installer
+# (scripts/install.bat / install.sh) writes this block with absolute
+# paths derived from the repo root at install time.
+# Transport is stdio (`hypernexus.exe mcp`); port 7778 is authoritative.
+
+[mcp_servers.hypernexus]
+command = "C:\\Users\\hyper\\workspace\\HyperNexus\\bin\\hypernexus.exe"
+args = ["mcp"]
+
+[mcp_servers.hypernexus.env]
+HYPERNEXUS_WORKSPACE_ROOT = "C:\\Users\\hyper\\workspace\\HyperNexus"
+HYPERNEXUS_URL = "http://127.0.0.1:7778"

@@ -1,0 +1,119 @@
+{
+  "SessionStart": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/session-start.mjs",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/prompt-submit.mjs",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "mcp__hypernexus.*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/tool-audit.mjs",
+          "timeout": 10
+        }
+      ]
+    },
+    {
+      "matcher": "Execute",
+      "commandRegex": "(?i)\\b(rm\\s+-rf|del\\s+/[sfq]|format\\s+[a-z]:|drop\\s+table|delete\\s+from|shutdown|reboot|mkfs|dd\\s+if=)",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/rbac-guard.mjs",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Create|Edit|ApplyPatch",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/post-edit.mjs",
+          "timeout": 20
+        }
+      ]
+    },
+    {
+      "matcher": "mcp__hypernexus__add_memory|mcp__hypernexus__search_memory|mcp__hypernexus__memory_scratchpad_set",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/tool-audit.mjs",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/session-stop.mjs",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/session-end.mjs",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "PreCompact": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/pre-compact.mjs",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "SubagentStop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${DROID_PLUGIN_ROOT}/hooks/subagent-stop.mjs",
+          "timeout": 15
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "cloud",
+  "version": "1.0.0",
+  "description": "Cloud sync and collaboration - sync memories, share contexts, and collaborate with teams",
+  "author": "HyperNexus LLC",
+  "license": "MIT",
+  "main": "cloud.js",
+  "capabilities": [
+    "sync",
+    "share",
+    "collaborate",
+    "backup",
+    "restore"
+  ],
+  "commands": [
+    {
+      "name": "cloud_sync",
+      "description": "Sync local data with cloud",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": ["up", "down", "both"],
+            "description": "Sync direction",
+            "default": "both"
+          }
+        }
+      }
+    },
+    {
+      "name": "cloud_share",
+      "description": "Share context with team members",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "Context to share"
+          },
+          "recipients": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Recipient emails or usernames"
+          }
+        },
+        "required": ["context"]
+      }
+    },
+    {
+      "name": "cloud_backup",
+      "description": "Create a backup of local data",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "include_memories": {
+            "type": "boolean",
+            "description": "Include memories in backup",
+            "default": true
+          },
+          "include_config": {
+            "type": "boolean",
+            "description": "Include configuration in backup",
+            "default": true
+          }
+        }
+      }
+    }
+  ]
+}

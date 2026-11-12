@@ -1,0 +1,246 @@
+#!/usr/bin/env node
+/**
+ * swarm.mjs -- HyperNexus swarm bus for Codex GUI sessions.
+ * ==========================================================
+ * Direct session-driving API where the app offers no thread API: the LEADER
+ * assigns subtasks and workers report back through kernel memory facts, so any
+ * session (leader or worker) can dispatch/collect programmatically instead of
+ * relying solely on in-thread messages.
+ *
+ *   node swarm.mjs assign --worker <thread-id> --goal "..." [--files "..."] [--criteria "..."]
+ *   node swarm.mjs inbox --worker <thread-id>            # pending tasks for one worker
+ *   node swarm.mjs report --worker <thread-id> --task <task-id> --status DONE|BLOCKED [--summary "..."] [--files "..."]
+ *   node swarm.mjs roster [--worker <thread-id>]         # leader collect view
+ *
+ * Conventions: task facts titled `[swarm-task] <taskId> -> <workerId>`,
+ * reports titled `[swarm-report] <taskId> <STATUS>`; tags always include
+ * `swarm,codex-gui` plus `swarm-task|swarm-report`. Facts are append-only
+ * (no kernel update/delete for facts) -- a report supersedes its task.
+ * Shell-equivalent work stays on parity tools (Meta 403 guard); this driver
+ * defines no shell tool names or descriptions.
+ *
+ * Env: HYPERNEXUS_URL (default http://127.0.0.1:7778), HN_TIMEOUT_MS (default 45000).
+ * Node stdlib only. Prints JSON to stdout; errors to stderr with exit 1.
+ */
+const BASE = (process.env.HYPERNEXUS_URL || "http://127.0.0.1:7778").replace(/\/$/, "");
+const TIMEOUT = Number(process.env.HN_TIMEOUT_MS || 45000);
+const TAGS = ["swarm", "codex-gui"];
+
+function usage() {
+  return [
+    "usage:",
+    "  node swarm.mjs assign --worker <thread-id> --goal \"...\" [--files \"...\"] [--criteria \"...\"]",
+    "  node swarm.mjs inbox --worker <thread-id>",
+    "  node swarm.mjs report --worker <thread-id> --task <task-id> --status DONE|BLOCKED [--summary \"...\"] [--files \"...\"]",
+    "  node swarm.mjs roster [--worker <thread-id>]",
+  ].join("\n");
+}
+function fail(msg) { process.stderr.write(`[swarm] FAIL: ${msg}\n`); process.exit(1); }
+function out(obj) { process.stdout.write(JSON.stringify(obj, null, 2) + "\n"); }
+function opt(name) {
+  const i = process.argv.indexOf(name);
+  return i >= 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith("--") ? process.argv[i + 1] : null;
+}
+async function req(method, path, body) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), TIMEOUT);
+  try {
+    const r = await fetch(BASE + path, {
+      method, signal: ctrl.signal,
+      headers: { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const text = await r.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 500) }; }
+    return { status: r.status, data };
+  } catch (e) {
+    return { status: 0, data: { error: `kernel unreachable: ${e.message}` } };
+  } finally { clearTimeout(t); }
+}
+function itemsOf(payload) {
+  if (!payload || typeof payload !== "object") return [];
+  const d = payload.data !== undefined ? payload.data : payload;
+  for (const k of ["results", "facts", "memories", "items", "hits"]) {
+    if (Array.isArray(d?.[k])) return d[k];
+  }
+  if (Array.isArray(d)) return d;
+  return [];
+}
+function strOf(f, keys) {
+  for (const k of keys) {
+    const v = f?.[k];
+    if (typeof v === "string" && v) return v;
+  }
+  return "";
+}
+function isTask(f) { return strOf(f, ["title", "name"]).startsWith("[swarm-task]"); }
+function isReport(f) { return strOf(f, ["title", "name"]).startsWith("[swarm-report]"); }
+function taskIdOf(f) {
+  const m = /^\[swarm-(?:task|report)\]\s+(\S+)/.exec(strOf(f, ["title", "name"]));
+  return m ? m[1] : null;
+}
+async function search(q, limit) {
+  let last = null;
+  for (let n = 0; n < 3; n++) {
+    const r = await req("GET", "/api/memory/search?q=" + encodeURIComponent(q) + "&limit=" + (limit || 50));
+    if (r.status === 200) return itemsOf(r);
+    last = r;
+    await new Promise(function (s) { setTimeout(s, 2000 * (n + 1)); });
+  }
+  fail("memory search failed after 3 tries (HTTP " + last.status + "): " + JSON.stringify(last.data).slice(0, 200));
+}
+async function storeFact(body, what) {
+  let last = null;
+  for (let n = 0; n < 2; n++) {
+    const r = await req("POST", "/api/memory/facts/add", body);
+    if (r.status === 200 || r.status === 201) return r;
+    last = r;
+    await new Promise(function (s) { setTimeout(s, 3000); });
+  }
+  // Slow-box tolerance (shared-bus pattern): a timed-out write may still
+  // land server-side — verify by exact title before failing.
+  const title = body && body.title;
+  if (title) {
+    for (let n = 0; n < 3; n++) {
+      await new Promise(function (s) { setTimeout(s, 15000); });
+      const v = await req("GET", "/api/memory/search?q=" + encodeURIComponent(title) + "&limit=5");
+      const items = itemsOf(v.data);
+      if (items.some((f) => strOf(f, ["title", "name"]) === title)) return { status: 200, data: { verified: "landing" } };
+    }
+  }
+  fail(what + " store failed after 2 tries (HTTP " + last.status + "): " + JSON.stringify(last.data).slice(0, 200));
+}
+// Scratchpad mirror (session-bus transport pattern): SQLite-fast writes and
+// one-GET reads, so inbox/roster are immediately consistent even while the
+// facts search index lags on a saturated box. Facts remain the audit trail.
+async function scratchSet(key, obj) {
+  const r = await req("POST", "/api/memory/scratchpad/set", { key, value: JSON.stringify(obj) });
+  if (r.status !== 200) fail("scratchpad set failed (HTTP " + r.status + "): " + JSON.stringify(r.data).slice(0, 200));
+}
+async function scratchMap() {
+  const r = await req("GET", "/api/memory/scratchpad/get");
+  if (r.status !== 200) return {};
+  return r.data?.scratchpad || r.data?.data?.scratchpad || {};
+}
+function scratchRecords(map, prefix) {
+  return Object.keys(map).filter((k) => k.startsWith(prefix)).map((k) => {
+    try { return typeof map[k] === "string" ? JSON.parse(map[k]) : map[k]; } catch { return null; }
+  }).filter(Boolean);
+}
+async function cmdAssign() {
+  const worker = opt("--worker");
+  const goal = opt("--goal");
+  if (!worker) fail("assign needs --worker <thread-id>");
+  if (!goal) fail("assign needs --goal \"...\"");
+  const taskId = "sw-" + Date.now().toString(36);
+  const content = [
+    `worker: ${worker}`, `task: ${taskId}`, "status: assigned",
+    `goal: ${goal}`, `files: ${opt("--files") || "(none)"}`,
+    `criteria: ${opt("--criteria") || "report STATUS: DONE with changed files + verification"}`,
+  ].join("\n");
+  await scratchSet("swarm:task:" + taskId, { task: taskId, worker, goal, files: opt("--files") || "(none)", criteria: opt("--criteria") || "", title: `[swarm-task] ${taskId} -> ${worker}`, content, ts: Date.now() });
+  await storeFact({
+    title: `[swarm-task] ${taskId} -> ${worker}`, content,
+    tags: [...TAGS, "swarm-task"], category: "swarm-task",
+  }, "assign");
+  out({ ok: true, task: taskId, worker, goal });
+}
+// Facts writes land asynchronously on a saturated box (the POST can return
+// before the search index sees the record). Poll briefly so a just-assigned
+// task is not reported missing; bounded by HN_POLL_MS (default 90000).
+const POLL_MS = Number(process.env.HN_POLL_MS || 90000);
+async function searchUntil(q, limit, want) {
+  const t0 = Date.now();
+  let items = await search(q, limit);
+  while (!items.some(want) && Date.now() - t0 < POLL_MS) {
+    await new Promise(function (s) { setTimeout(s, 5000); });
+    items = await search(q, limit);
+  }
+  return items;
+}
+async function pendingFor(workerShort) {
+  const map = await scratchMap();
+  const sTasks = scratchRecords(map, "swarm:task:").filter((t) => (t.worker || "").slice(0, 8) === workerShort);
+  if (sTasks.length) {
+    const sReported = new Set(scratchRecords(map, "swarm:report:").map((r) => r.task).filter(Boolean));
+    return sTasks.filter((t) => !sReported.has(t.task)).map((t) => ({ title: t.title, content: t.content }));
+  }
+  const [tasks, reports] = await Promise.all([
+    searchUntil(`[swarm-task] ${workerShort}`, 50, isTask), search(`[swarm-report] ${workerShort}`, 50),
+  ]);
+  const reported = new Set(reports.filter(isReport).map(taskIdOf).filter(Boolean));
+  return tasks.filter(isTask).filter((t) => !reported.has(taskIdOf(t)));
+}
+async function cmdInbox() {
+  const worker = opt("--worker");
+  if (!worker) fail("inbox needs --worker <thread-id>");
+  const pending = await pendingFor(worker.slice(0, 8));
+  out({
+    ok: true, worker, pending: pending.length,
+    tasks: pending.map((t) => ({ task: taskIdOf(t), title: strOf(t, ["title", "name"]), content: strOf(t, ["content", "text", "snippet"]) })),
+  });
+}
+async function cmdReport() {
+  const worker = opt("--worker");
+  const task = opt("--task");
+  const status = opt("--status");
+  if (!worker) fail("report needs --worker <thread-id>");
+  if (!task) fail("report needs --task <task-id>");
+  if (status !== "DONE" && status !== "BLOCKED") fail("report needs --status DONE|BLOCKED");
+  const content = [
+    `worker: ${worker}`, `task: ${task}`, `status: ${status}`,
+    `summary: ${opt("--summary") || "(none)"}`, `files: ${opt("--files") || "(none)"}`,
+  ].join("\n");
+  await scratchSet("swarm:report:" + task, { task, worker, status, summary: opt("--summary") || "(none)", files: opt("--files") || "(none)", title: `[swarm-report] ${task} ${status}`, content, ts: Date.now() });
+  await storeFact({
+    title: `[swarm-report] ${task} ${status}`, content,
+    tags: [...TAGS, "swarm-report"], category: "swarm-report",
+  }, "report");
+  out({ ok: true, task, worker, status });
+}
+async function cmdRoster() {
+  const worker = opt("--worker");
+  const map = await scratchMap();
+  const sAll = scratchRecords(map, "swarm:task:");
+  const sTasks = worker ? sAll.filter((t) => (t.worker || "").slice(0, 8) === worker.slice(0, 8)) : sAll;
+  if (sTasks.length) {
+    const sRep = new Map(scratchRecords(map, "swarm:report:").map((r) => [r.task, r]));
+    out({
+      ok: true, open: sTasks.filter((t) => !sRep.has(t.task)).length,
+      roster: sTasks.map((t) => ({ task: t.task, worker: t.worker, status: sRep.get(t.task)?.status || "ASSIGNED", report: sRep.get(t.task)?.content?.slice(0, 300) ?? null })),
+    });
+    return;
+  }
+  const q = worker ? `[swarm-task] ${worker.slice(0, 8)}` : "[swarm-task]";
+  const [tasks, reports] = await Promise.all([search(q, 50), search(worker ? `[swarm-report] ${worker.slice(0, 8)}` : "[swarm-report]", 50)]);
+  const byTask = new Map();
+  for (const r of reports.filter(isReport)) {
+    const id = taskIdOf(r);
+    if (id && !byTask.has(id)) byTask.set(id, r);
+  }
+  out({
+    ok: true, open: tasks.filter(isTask).filter((t) => !byTask.has(taskIdOf(t))).length,
+    roster: tasks.filter(isTask).map((t) => {
+      const id = taskIdOf(t);
+      const rep = byTask.get(id);
+      const title = strOf(t, ["title", "name"]);
+      const w = /->\s*(\S+)\s*$/.exec(title);
+      return {
+        task: id, worker: w ? w[1] : "?",
+        status: rep ? /\[swarm-report\]\s+\S+\s+(\S+)/.exec(strOf(rep, ["title", "name"]))?.[1] || "REPORTED" : "ASSIGNED",
+        report: rep ? strOf(rep, ["content", "text", "snippet"]).slice(0, 300) : null,
+      };
+    }),
+  });
+}
+async function main() {
+  const cmd = process.argv[2];
+  if (cmd === "assign") return cmdAssign();
+  if (cmd === "inbox") return cmdInbox();
+  if (cmd === "report") return cmdReport();
+  if (cmd === "roster") return cmdRoster();
+  process.stderr.write(usage() + "\n");
+  process.exit(cmd === "--help" || cmd === "-h" ? 0 : 1);
+}
+main().catch((e) => fail(e.message || String(e)));

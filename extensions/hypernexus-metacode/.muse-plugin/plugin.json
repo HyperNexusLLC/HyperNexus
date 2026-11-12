@@ -1,0 +1,696 @@
+{
+  "schemaVersion": 1,
+  "name": "hypernexus-metacode",
+  "displayName": "HyperNexus for Meta Code",
+  "version": "0.1.0",
+  "description": "HyperNexus AI control plane for Meta Code (Muse Code): persistent L2 memory, MCP tool routing, agent dispatch, session management, and kernel status/billing over stdio.",
+  "compat": {
+    "source": "native",
+    "manifestDir": ".muse-plugin"
+  },
+  "capabilities": {
+    "skills": [
+      {
+        "id": "hypernexus",
+        "path": "skills/hypernexus/SKILL.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hypernexus-ops",
+        "path": "skills/hypernexus-ops/SKILL.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hypernexus-workflows",
+        "path": "skills/hypernexus-workflows/SKILL.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hypernexus-sessions",
+        "path": "skills/hypernexus-sessions/SKILL.md",
+        "enabledDefault": true
+      }
+    ],
+    "commands": [
+      {
+        "id": "hn-status",
+        "path": "commands/hn-status.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-memory",
+        "path": "commands/hn-memory.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-tools",
+        "path": "commands/hn-tools.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-session",
+        "path": "commands/hn-session.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-billing",
+        "path": "commands/hn-billing.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-ops",
+        "path": "commands/hn-ops.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-search",
+        "path": "commands/hn-search.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-handoff",
+        "path": "commands/hn-handoff.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-context",
+        "path": "commands/hn-context.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-purge",
+        "path": "commands/hn-purge.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-agent",
+        "path": "commands/hn-agent.md",
+        "enabledDefault": true
+      },
+      {
+        "id": "hn-workflow",
+        "path": "commands/hn-workflow.md",
+        "enabledDefault": true
+      }
+    ],
+    "hooks": [
+      {
+        "id": "hn-session-start",
+        "event": "SessionStart",
+        "command": [
+          "sh",
+          "hooks/hn-session-start.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging session to HyperNexus"
+      },
+      {
+        "id": "hn-pre-tool-use",
+        "event": "PreToolUse",
+        "command": [
+          "sh",
+          "hooks/hn-pre-tool-use.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Recalling HyperNexus memory context"
+      },
+      {
+        "id": "hn-post-tool-use",
+        "event": "PostToolUse",
+        "command": [
+          "sh",
+          "hooks/hn-post-tool-use.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Recording tool context in HyperNexus"
+      },
+      {
+        "id": "hn-session-end",
+        "event": "SessionEnd",
+        "command": [
+          "sh",
+          "hooks/hn-session-end.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Capturing HyperNexus session summary"
+      },
+      {
+        "id": "hn-user-prompt-submit",
+        "event": "UserPromptSubmit",
+        "command": [
+          "sh",
+          "hooks/hn-user-prompt-submit.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Capturing prompt in HyperNexus"
+      },
+      {
+        "id": "hn-stop",
+        "event": "Stop",
+        "command": [
+          "sh",
+          "hooks/hn-stop.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Recording turn end in HyperNexus"
+      },
+      {
+        "id": "hn-permission-request",
+        "event": "PermissionRequest",
+        "command": [
+          "sh",
+          "hooks/hn-permission-request.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging permission request in HyperNexus"
+      },
+      {
+        "id": "hn-pre-compact",
+        "event": "PreCompact",
+        "command": [
+          "sh",
+          "hooks/hn-pre-compact.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Checkpointing context in HyperNexus"
+      },
+      {
+        "id": "hn-post-compact",
+        "event": "PostCompact",
+        "command": [
+          "sh",
+          "hooks/hn-post-compact.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Noting compaction in HyperNexus"
+      },
+      {
+        "id": "hn-subagent-start",
+        "event": "SubagentStart",
+        "command": [
+          "sh",
+          "hooks/hn-subagent-start.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging subagent start in HyperNexus"
+      },
+      {
+        "id": "hn-subagent-stop",
+        "event": "SubagentStop",
+        "command": [
+          "sh",
+          "hooks/hn-subagent-stop.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Logging subagent finish in HyperNexus"
+      },
+      {
+        "id": "hn-interrupt",
+        "event": "Interrupt",
+        "command": [
+          "sh",
+          "hooks/hn-interrupt.sh"
+        ],
+        "timeoutMs": 5000,
+        "statusMessage": "Passing interrupt through",
+        "async": true
+      }
+    ],
+    "mcpServers": [
+      {
+        "id": "hypernexus",
+        "transport": "stdio",
+        "command": [
+          "sh",
+          "mcp/stdio.sh"
+        ]
+      }
+    ],
+    "reminders": [
+      {
+        "id": "hn-memory-first",
+        "path": "reminders/hn-memory-first.md",
+        "tools": [
+          "read_file"
+        ],
+        "blocking": false,
+        "decision": {
+          "version": 1,
+          "envelope": {
+            "version": 1,
+            "template": "<system-reminder>\n{text}\n</system-reminder>"
+          },
+          "deliveryRole": "developer",
+          "fields": [
+            {
+              "name": "text",
+              "description": "Reminder body text.",
+              "requirement": "remind",
+              "shape": {
+                "type": "string",
+                "minBytes": 1,
+                "maxBytes": 2000
+              }
+            }
+          ],
+          "bodyTemplate": {
+            "text": "{text}",
+            "slots": [
+              {
+                "name": "text",
+                "source": {
+                  "field": "text"
+                },
+                "escape": "xml",
+                "fallback": ""
+              }
+            ],
+            "maxBytes": 65536
+          },
+          "validators": [],
+          "proposal": {
+            "remind": {
+              "body": {
+                "renderedBody": true
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "reminder_requested"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": null
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "none": {
+              "body": {
+                "literal": ""
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "none"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "no_reminder"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "invalidPayload": {
+              "body": {
+                "inputError": true
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "invalid_payload"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "invalid_payload"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "roundEnded": {
+              "body": {
+                "literal": ""
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "round_ended"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "round_ended"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "syntheticFailure": {
+              "body": {
+                "literal": ""
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "synthetic_failure"
+              },
+              "reason": {
+                "literal": "synthetic_failure"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "invalid_payload"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "validatorRejections": {}
+          },
+          "lifecycle": {
+            "seenKey": "ordinary",
+            "eotProgressGate": "notApplicable",
+            "failureFallback": "none",
+            "installBudget": "roster"
+          },
+          "limits": {
+            "declarationBytes": 65536,
+            "customFields": 64,
+            "fieldNameBytes": 64,
+            "descriptionBytes": 1024,
+            "objectDepth": 4,
+            "objectFields": 32,
+            "arrayItems": 64,
+            "submittedJsonBytes": 262144,
+            "scalarStringBytes": 65536,
+            "templateBytes": 16384,
+            "slots": 64,
+            "renderedBodyBytes": 65536,
+            "memoryAdmissionReads": 64,
+            "memoryAdmissionLinesPerRead": 2000,
+            "memoryAdmissionExaminedBytesPerRead": 100000,
+            "memoryAdmissionReturnedBytesPerRead": 100000,
+            "memoryAdmissionExaminedBytesPerDecision": 6400000,
+            "memoryAdmissionReturnedBytesPerDecision": 6400000
+          }
+        }
+      },
+      {
+        "id": "hn-verify-ops",
+        "path": "reminders/hn-verify-ops.md",
+        "tools": [
+          "read_file"
+        ],
+        "blocking": false,
+        "decision": {
+          "version": 1,
+          "envelope": {
+            "version": 1,
+            "template": "<system-reminder>\n{text}\n</system-reminder>"
+          },
+          "deliveryRole": "developer",
+          "fields": [
+            {
+              "name": "text",
+              "description": "Reminder body text.",
+              "requirement": "remind",
+              "shape": {
+                "type": "string",
+                "minBytes": 1,
+                "maxBytes": 2000
+              }
+            }
+          ],
+          "bodyTemplate": {
+            "text": "{text}",
+            "slots": [
+              {
+                "name": "text",
+                "source": {
+                  "field": "text"
+                },
+                "escape": "xml",
+                "fallback": ""
+              }
+            ],
+            "maxBytes": 65536
+          },
+          "validators": [],
+          "proposal": {
+            "remind": {
+              "body": {
+                "renderedBody": true
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "reminder_requested"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": null
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "none": {
+              "body": {
+                "literal": ""
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "none"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "no_reminder"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "invalidPayload": {
+              "body": {
+                "inputError": true
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "invalid_payload"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "invalid_payload"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "roundEnded": {
+              "body": {
+                "literal": ""
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "general"
+              },
+              "reason": {
+                "literal": "round_ended"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "round_ended"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "syntheticFailure": {
+              "body": {
+                "literal": ""
+              },
+              "kind": {
+                "literal": "general"
+              },
+              "subject": {
+                "literal": "synthetic_failure"
+              },
+              "reason": {
+                "literal": "synthetic_failure"
+              },
+              "requestedPriority": {
+                "effective": "defaultPriority"
+              },
+              "effectivePriority": {
+                "effective": "clampedPriority"
+              },
+              "visibleForSteps": {
+                "literal": 1
+              },
+              "rejection": {
+                "literal": "invalid_payload"
+              },
+              "memoryEvidence": {
+                "literal": []
+              },
+              "skillEvidence": {
+                "literal": null
+              }
+            },
+            "validatorRejections": {}
+          },
+          "lifecycle": {
+            "seenKey": "ordinary",
+            "eotProgressGate": "notApplicable",
+            "failureFallback": "none",
+            "installBudget": "roster"
+          },
+          "limits": {
+            "declarationBytes": 65536,
+            "customFields": 64,
+            "fieldNameBytes": 64,
+            "descriptionBytes": 1024,
+            "objectDepth": 4,
+            "objectFields": 32,
+            "arrayItems": 64,
+            "submittedJsonBytes": 262144,
+            "scalarStringBytes": 65536,
+            "templateBytes": 16384,
+            "slots": 64,
+            "renderedBodyBytes": 65536,
+            "memoryAdmissionReads": 64,
+            "memoryAdmissionLinesPerRead": 2000,
+            "memoryAdmissionExaminedBytesPerRead": 100000,
+            "memoryAdmissionReturnedBytesPerRead": 100000,
+            "memoryAdmissionExaminedBytesPerDecision": 6400000,
+            "memoryAdmissionReturnedBytesPerDecision": 6400000
+          }
+        }
+      }
+    ]
+  }
+}

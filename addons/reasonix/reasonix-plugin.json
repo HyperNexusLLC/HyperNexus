@@ -1,0 +1,78 @@
+{
+  "apiVersion": "reasonix.io/plugin/v2",
+  "name": "hypernexus",
+  "version": "1.0.28",
+  "description": "HyperNexus AI control plane for Reasonix: persistent L2/L3 memory, semantic MCP tool discovery across 26k+ tools, knowledge graph, sessions, skills, billing, and agent orchestration. Uses tools, intercepts, skills, commands, agents, hooks, and MCP server config.",
+  "requires": [],
+  "provides": [
+    {
+      "namespace": "plugin/hypernexus",
+      "kind": "interceptors",
+      "id": "default",
+      "version": "1.0.0"
+    }
+  ],
+  "contributes": {
+    "skills": [
+      "skills"
+    ],
+    "agents": [
+      "agents"
+    ],
+    "commands": [
+      "commands"
+    ],
+    "hooks": {
+      "SessionStart": [
+        {
+          "contextFile": "hooks/context/startup.md",
+          "description": "HyperNexus session primer: RECALL-first discipline and kernel endpoints"
+        }
+      ],
+      "PreCompact": [
+        {
+          "contextFile": "hooks/context/precompact.md",
+          "description": "HyperNexus compaction guidance: preserve L2 pointers"
+        }
+      ]
+    },
+    "mcpServers": {
+      "hypernexus": {
+        "command": "hypernexus.exe",
+        "args": [
+          "mcp"
+        ],
+        "env": {
+          "HYPERNEXUS_URL": "http://127.0.0.1:7778"
+        }
+      }
+    }
+  },
+  "runtime": {
+    "command": "node",
+    "args": [
+      "${REASONIX_PLUGIN_ROOT}/runtime/bin/hypernexus-reasonix.mjs"
+    ],
+    "env": {
+      "HYPERNEXUS_URL": "http://127.0.0.1:7778"
+    },
+    "required": false,
+    "priority": 0,
+    "intercepts": [
+      "input.receive",
+      "context.prepare",
+      "tool.before",
+      "tool.after",
+      "permission.decision",
+      "session.start",
+      "session.end",
+      "compaction.prepare",
+      "system_prompt.build",
+      "agent.before_start"
+    ],
+    "replaces": [],
+    "capabilities": [
+      "interceptors"
+    ]
+  }
+}

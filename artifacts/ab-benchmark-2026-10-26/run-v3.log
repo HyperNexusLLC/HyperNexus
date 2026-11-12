@@ -1,0 +1,48 @@
+== A/B BENCHMARK v2.1 (Muse live-proof spec) | model=gemma-4-heretic:latest | tasks=12 per mode
+prior run data rotated -> results-2026-10-27T09-33-26.jsonl
+prior run data rotated -> summary-2026-10-27T09-33-26.md
+
+-- Mode A: full catalog (58 tools) --
+  [A] store-memory    success=0 toolTok=4607 ctxBefore=4681 ctxAfter=176 latency=647480ms calls=1 err=1
+  [A] search-memory HARNESS ERROR: TimeoutError: The operation was aborted due to timeout
+  [A] shell-echo      success=0 toolTok=4607 ctxBefore=4674 ctxAfter=177 latency=646873ms calls=1 err=1
+  [A] scratchpad      success=1 toolTok=4607 ctxBefore=4692 ctxAfter=334 latency=612140ms calls=2 err=0
+  [A] tool-discovery  success=0 toolTok=4607 ctxBefore=4673 ctxAfter=102 latency=413321ms calls=0 err=0
+  [A] status          success=0 toolTok=4607 ctxBefore=4667 ctxAfter=230 latency=445245ms calls=1 err=0
+  [A] hello           success=1 toolTok=4607 ctxBefore=4682 ctxAfter=224 latency=336443ms calls=1 err=0
+  [A] jira-honesty    success=0 toolTok=4607 ctxBefore=4683 ctxAfter=102 latency=357686ms calls=0 err=0
+  [A] pipeline        success=1 toolTok=4607 ctxBefore=4673 ctxAfter=477 latency=426639ms calls=0 err=0
+  [A] list-tools      success=1 toolTok=4607 ctxBefore=4669 ctxAfter=444 latency=449422ms calls=1 err=0
+  [A] browser-status  success=1 toolTok=4607 ctxBefore=4678 ctxAfter=114 latency=304556ms calls=0 err=0
+  [A] session-search  success=1 toolTok=4607 ctxBefore=4675 ctxAfter=497 latency=376821ms calls=1 err=0
+
+-- Mode B: progressive disclosure (2 + discovery) --
+  [B] store-memory    success=0 toolTok=172 ctxBefore=285 ctxAfter=239 latency=96254ms calls=1 err=0
+  [B] search-memory   success=0 toolTok=172 ctxBefore=285 ctxAfter=164 latency=161556ms calls=0 err=0
+  [B] shell-echo      success=0 toolTok=172 ctxBefore=278 ctxAfter=125 latency=72490ms calls=0 err=0
+  [B] scratchpad      success=0 toolTok=172 ctxBefore=296 ctxAfter=280 latency=302740ms calls=1 err=0
+  [B] tool-discovery  success=0 toolTok=172 ctxBefore=277 ctxAfter=162 latency=156856ms calls=0 err=0
+  [B] status          success=1 toolTok=172 ctxBefore=272 ctxAfter=286 latency=121160ms calls=1 err=0
+  [B] hello           success=1 toolTok=386 ctxBefore=287 ctxAfter=325 latency=330247ms calls=2 err=1
+  [B] jira-honesty    success=0 toolTok=172 ctxBefore=288 ctxAfter=171 latency=106858ms calls=0 err=0
+  [B] pipeline        success=1 toolTok=172 ctxBefore=278 ctxAfter=430 latency=272311ms calls=0 err=0
+  [B] list-tools      success=1 toolTok=333 ctxBefore=273 ctxAfter=225 latency=113357ms calls=1 err=1
+  [B] browser-status  success=1 toolTok=172 ctxBefore=283 ctxAfter=302 latency=135303ms calls=1 err=0
+  [B] session-search  success=1 toolTok=172 ctxBefore=280 ctxAfter=163 latency=108781ms calls=0 err=0
+
+== SUMMARY ==
+
+Same tasks, same harness, twice: full catalog vs progressive disclosure + predictive routing.
+
+| Metric | Mode A (full catalog) | Mode B (progressive disclosure) |
+|---|---|---|
+| Tasks | 11 | 12 |
+| Task success | 6/11 (55%) | 6/12 (50%) |
+| Miss rate | 45% | 50% |
+| Tool tokens (avg) | 4607 | 203 |
+| Context tokens before (avg) | 4677 | 282 |
+| Context tokens after (avg) | 262 | 239 |
+| Model latency (avg ms) | 456057 | 164826 |
+| Tool calls (total) | 8 | 7 |
+
+Artifacts: artifacts\ab-benchmark-2026-10-27

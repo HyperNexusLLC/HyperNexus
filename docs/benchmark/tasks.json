@@ -1,0 +1,113 @@
+{
+  "version": "1.1",
+  "note": "Ground truth for the HyperNexus live-proof benchmark. DRAFT for Robert + Muse review. Synthetic data only; no PII/secrets. Revised per Muse review of c1256e361.",
+  "scoring": {
+    "equivalent": 1.0,
+    "equivalent_rule": "An 'equivalents' tool fully replaces the expected tool and scores 1.0.",
+    "partial": 0.5,
+    "partial_rule": "A 'partials' tool only partly substitutes (weaker/narrower) and scores 0.5.",
+    "miss": 0,
+    "multi_tool_rule": "'equivalents'/'partials' are PER-EXPECTED-TOOL maps. A multi-tool task scores the mean over its expected tools, each scored 1.0 if the expected tool or one of its equivalents is selected, else 0.5 if one of its partials is selected, else 0."
+  },
+  "tasks": [
+    { "task_id": "T01", "domain": "memory", "prompt": "Recall what we decided about HyperNexus pricing last session.",
+      "expected": ["search_memory"],
+      "equivalents": { "search_memory": ["memory_search", "hypernexus_memory_search"] },
+      "partials": { "search_memory": [] } },
+
+    { "task_id": "T02", "domain": "memory", "prompt": "Store this non-obvious finding about the Stripe webhook for cross-session recall.",
+      "expected": ["add_memory"],
+      "equivalents": { "add_memory": ["memory_store", "hypernexus_memory_store"] },
+      "partials": { "add_memory": ["memory_scratchpad_set"] } },
+
+    { "task_id": "T03", "domain": "memory", "prompt": "Semantically find memories conceptually related to 'tool-token bloat reduction', not just keyword matches.",
+      "expected": ["memory_vector_search"],
+      "equivalents": { "memory_vector_search": ["hypernexus_memory_vector_search"] },
+      "partials": { "memory_vector_search": ["search_memory"] } },
+
+    { "task_id": "T04", "domain": "tool_discovery", "prompt": "Find the best-fit tool for routing an agent task across 60+ MCP servers (identify it; no need to invoke it).",
+      "expected": ["mcp_list_tools"],
+      "equivalents": { "mcp_list_tools": ["tool_search", "hypernexus_tool_search"] },
+      "partials": { "mcp_list_tools": [] } },
+
+    { "task_id": "T05", "domain": "tool_discovery", "prompt": "Discover what capabilities the hypernexus MCP server currently exposes.",
+      "expected": ["mcp_list_tools"],
+      "equivalents": { "mcp_list_tools": ["hypernexus_tool_search"] },
+      "partials": { "mcp_list_tools": [] } },
+
+    { "task_id": "T06", "domain": "code_search", "prompt": "Find every place that resolves an LLM provider in the Go kernel.",
+      "expected": ["code_search"],
+      "equivalents": { "code_search": ["repograph_search", "hypernexus_code_search"] },
+      "partials": { "code_search": [] } },
+
+    { "task_id": "T07", "domain": "code_search", "prompt": "Find all references to LMStudioProvider before we remove it.",
+      "expected": ["code_search"],
+      "equivalents": { "code_search": ["repograph_find_references", "hypernexus_code_search"] },
+      "partials": { "code_search": [] } },
+
+    { "task_id": "T08", "domain": "ops_status", "prompt": "Check the current health of the HyperNexus kernel and its services.",
+      "expected": ["system_status"],
+      "equivalents": { "system_status": ["hypernexus_system_status"] },
+      "partials": { "system_status": ["memory_stats"] } },
+
+    { "task_id": "T09", "domain": "ops_status", "prompt": "Report memory tier usage and any mesh peers currently connected.",
+      "expected": ["memory_stats", "system_status"],
+      "equivalents": { "memory_stats": [], "system_status": ["hypernexus_system_status"] },
+      "partials": { "memory_stats": [], "system_status": [] } },
+
+    { "task_id": "T10", "domain": "knowledge", "prompt": "Ingest this design document into the knowledge base for later retrieval.",
+      "expected": ["knowledge_ingest"],
+      "equivalents": { "knowledge_ingest": [] },
+      "partials": { "knowledge_ingest": ["add_memory"] } },
+
+    { "task_id": "T11", "domain": "knowledge", "prompt": "Show me the knowledge graph relationships around the 'billing' entity.",
+      "expected": ["knowledge_graph"],
+      "equivalents": { "knowledge_graph": [] },
+      "partials": { "knowledge_graph": ["memory_extract_relations", "search_memory"] } },
+
+    { "task_id": "T12", "domain": "sessions", "prompt": "Find prior imported sessions that discussed the Muse coordinator.",
+      "expected": ["session_search"],
+      "equivalents": { "session_search": ["hypernexus_session_search"] },
+      "partials": { "session_search": [] } },
+
+    { "task_id": "T13", "domain": "skills", "prompt": "Load the skill module that describes HyperNexus production operations.",
+      "expected": ["skill_manage"],
+      "equivalents": { "skill_manage": ["hypernexus_skill_manage"] },
+      "partials": { "skill_manage": [] } },
+
+    { "task_id": "T14", "domain": "memory", "prompt": "Keep this short-lived working note out of the durable vault; just park it in the scratchpad.",
+      "expected": ["memory_scratchpad_set"],
+      "equivalents": { "memory_scratchpad_set": ["memory_scratchpad_append"] },
+      "partials": { "memory_scratchpad_set": [] } },
+
+    { "task_id": "T15", "domain": "multi", "prompt": "Recall the pricing decision, then check billing status, then park an unresolved note in the scratchpad.",
+      "expected": ["search_memory", "billing_status", "memory_scratchpad_set"],
+      "equivalents": { "search_memory": ["memory_search"], "billing_status": [], "memory_scratchpad_set": ["memory_scratchpad_append"] },
+      "partials": { "search_memory": [], "billing_status": ["system_status"], "memory_scratchpad_set": [] } },
+
+    { "task_id": "T16", "domain": "multi", "prompt": "Find code references to the Stripe checkout handler and store the result as a durable memory.",
+      "expected": ["code_search", "add_memory"],
+      "equivalents": { "code_search": ["repograph_search"], "add_memory": ["memory_store"] },
+      "partials": { "code_search": [], "add_memory": ["memory_scratchpad_set"] } },
+
+    { "task_id": "T17", "domain": "ambiguous", "prompt": "Make sure the team durably remembers this decision going forward.",
+      "expected": ["add_memory"],
+      "equivalents": { "add_memory": ["memory_store"] },
+      "partials": { "add_memory": ["memory_scratchpad_set"] } },
+
+    { "task_id": "T18", "domain": "ambiguous", "prompt": "See if there's a tool that already does this before I build it (identify it, don't invoke).",
+      "expected": ["mcp_list_tools"],
+      "equivalents": { "mcp_list_tools": ["tool_search", "hypernexus_tool_search"] },
+      "partials": { "mcp_list_tools": [] } },
+
+    { "task_id": "T19", "domain": "code_search", "prompt": "Trace where the AutoRoute provider fallback is implemented.",
+      "expected": ["code_search"],
+      "equivalents": { "code_search": ["repograph_search"] },
+      "partials": { "code_search": [] } },
+
+    { "task_id": "T20", "domain": "ops_status", "prompt": "Give me the current system status and pull any related memories into context.",
+      "expected": ["system_status", "search_memory"],
+      "equivalents": { "system_status": ["hypernexus_system_status"], "search_memory": ["memory_search"] },
+      "partials": { "system_status": ["memory_stats"], "search_memory": ["memory_vector_search"] } }
+  ]
+}

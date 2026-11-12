@@ -1,0 +1,16 @@
+# HyperNexus Codex MCP configuration — LEGACY form. NOT RECOMMENDED.
+# Canonical form is mcp/config.toml with [mcp_servers.hypernexus] and
+# implied stdio transport. This file documents the legacy dotted form some
+# older guides cite ([mcp.servers.<n>] with explicit type keys). Kept only
+# so version drift is visible; the installer never writes this form.
+# If your Codex build requires it, translate:
+#   [mcp.servers.hypernexus] type="stdio"  ->  [mcp_servers.hypernexus]
+
+[mcp.servers.hypernexus]
+type = "stdio"
+command = "C:\\Users\\hyper\\workspace\\HyperNexus\\bin\\hypernexus.exe"
+args = ["mcp"]
+
+[mcp.servers.hypernexus.env]
+HYPERNEXUS_WORKSPACE_ROOT = "C:\\Users\\hyper\\workspace\\HyperNexus"
+HYPERNEXUS_URL = "http://127.0.0.1:7778"

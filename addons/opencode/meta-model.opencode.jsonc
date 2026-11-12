@@ -1,0 +1,85 @@
+// HyperNexus — Meta muse-spark model wiring for OpenCode (V2 config shape).
+// ============================================================================
+// Dual-model: muse-spark-1.3-contributor (default) + muse-wonder-1.0-contributor
+// (opt-in via META_MODEL env in use-meta-model.ps1; installer seeds both).
+// Model: muse-spark-1.3-contributor via Meta's OpenAI-compatible endpoint
+// (https://api.meta.ai/v1), authenticated from the pi Meta OAuth subscription.
+//
+// V2 uses plural "providers" + "npm" loader + "options" (NOT V1 singular
+// "provider", and NOT "package" — v2.2.x schema has no "package" key).
+// Provider id MUST NOT be "meta": opencode ships a built-in "meta" (images)
+// provider hardcoded to https://api.meta.ai/v1, which shadows/ignores a
+// custom "meta" entry and 403s subscription keys. "meta-hn" is collision-free.
+//
+// TWO WAYS TO SUPPLY THE KEY (in order of preference):
+//
+//   A. LIVE PI OAUTH (recommended — pi owns refresh, nothing stored):
+//      1. $env:META_AUTH_PATH = "$HOME\.pi\agent\auth.json"   # default, optional
+//      2. $env:META_MUSE_API_KEY = "$(node addons/opencode/bin/meta-muse-key.mjs)"
+//      3. opencode   (or: opencode run --model meta/muse-spark-1.3-contributor "...")
+//      The helper mints a Model API key from ~/.pi/agent/auth.json -> meta.refresh
+//      via POST https://api.meta.ai/muse-code/key. Run it again after pi re-login.
+//      Verify without printing a key:  node addons/opencode/bin/meta-muse-key.mjs --check
+//
+//   B. MANUAL PASTE (one live shell only, never stored):
+//      1. $env:META_MUSE_API_KEY = '<paste-your-token-here>'
+//      2. opencode run --model meta-hn/muse-spark-1.3-contributor "hello"
+//
+// Merge the "providers" object into opencode.json(c) (project .opencode/
+// or ~/.config/opencode/opencode.json). To make it the default, also merge
+// the top-level "model" key. This file NEVER contains a token.
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "meta-hn": {
+      "name": "Meta (muse-spark via HyperNexus proxy)",
+      "env": ["META_MUSE_API_KEY"],
+      "npm": "@opencode/ai/providers/openai-compatible",
+      // "models" WITH releaseDate on purpose. Root-caused 2026-11-02 against
+      // opencode v2.2.5 source (packages/core/src/model.ts, provider.ts,
+      // config/plugin/provider.ts, schema): core Model.snapshot sorts
+      // `right.time.released - left.time.released` with DIRECT access, and the
+      // config overlay sets time ONLY from `releaseDate`
+      // (Date.parse(config.releaseDate)); the plugin's editor.add stores models
+      // raw. A time-less entry crashes startup with "undefined is not an
+      // object (evaluating 'ae.time.released')". release_date 2026-09-02 is the
+      // models.dev catalog value for muse-spark-1.3-contributor. The plugin
+      // registers the same complete Model.Info as backstop (whichever transform
+      // runs first, the model resolves with time).
+      "options": {
+        "baseURL": "http://127.0.0.1:7778/v1"
+      },
+      "models": {
+        "muse-spark-1.3-contributor": {
+          "name": "Muse Spark 1.3 Contributor",
+          "releaseDate": "2026-09-02",
+          "limit": {
+            "context": 1048576,
+            "output": 131072
+          }
+        },
+        // Dual-model opt-in (META_MODEL=muse-wonder-1.0-contributor, default spark).
+        // releaseDate is ordering-only for core Model.snapshot (time-less
+        // entries crash startup); refresh from models.dev once wonder catalog
+        // date publishes.
+        "muse-wonder-1.0-contributor": {
+          "name": "Muse Wonder 1.0 Contributor",
+          "releaseDate": "2026-09-02",
+          "limit": {
+            "context": 1048576,
+            "output": 131072
+          }
+        }
+      }
+    }
+  },
+  "model": "meta-hn/muse-spark-1.3-contributor",
+  // META SUBSCRIPTION RULE (403 client_attestation_denied, live-bisected
+  // 2026-11-01): the vendor rejects subscription-key requests carrying
+  // shell-named tools. Keep native `bash` OUT of the model payload;
+  // shell-equivalent work goes through the hypernexus/* plugin tools
+  // (parity surface, minimal descriptions), which pass attestation.
+  "tools": {
+    "bash": false
+  }
+}

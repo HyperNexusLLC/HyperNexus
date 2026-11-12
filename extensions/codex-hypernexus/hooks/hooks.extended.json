@@ -1,0 +1,76 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/session_start.bat" }]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/user_prompt_submit.bat" }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/pre_tool_use.bat" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/post_tool_use.bat" }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/stop.bat" }]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/permission_request.bat" }]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/pre_compact.bat" }]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/post_compact.bat" }]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/subagent_start.bat" }]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/subagent_stop.bat" }]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/session_end.bat" }]
+      }
+    ],
+    "Interrupt": [
+      {
+        "matcher": ".*",
+        "hooks": [{ "type": "command", "command": "./scripts/interrupt.bat" }]
+      }
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "name": "memory",
+  "version": "1.0.0",
+  "description": "Persistent memory across sessions - remembers decisions, preferences, and architectural choices",
+  "author": "HyperNexus LLC",
+  "license": "MIT",
+  "main": "memory.js",
+  "capabilities": [
+    "session-memory",
+    "long-term-memory",
+    "context-harvesting",
+    "memory-search",
+    "memory-export"
+  ],
+  "commands": [
+    {
+      "name": "memory_save",
+      "description": "Save a memory to persistent storage",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The memory content to save"
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tags for the memory"
+          },
+          "importance": {
+            "type": "number",
+            "description": "Importance level (1-10)",
+            "default": 5
+          }
+        },
+        "required": ["content"]
+      }
+    },
+    {
+      "name": "memory_search",
+      "description": "Search memories by query",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of results",
+            "default": 10
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "memory_list",
+      "description": "List all memories",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of results",
+            "default": 50
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1206 @@
+{
+  "version": 1,
+  "updatedAt": 1782315683400,
+  "sessions": [
+    {
+      "id": "6b301deb-6f98-4805-bf5e-ed930ab1ea8f",
+      "status": "starting",
+      "startedAt": 1782271336125,
+      "lastActivity": 1782271336125,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\6b301deb-6f98-4805-bf5e-ed930ab1ea8f",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "c066b3f5-c09b-48f0-8d03-94082ff806b2",
+      "status": "starting",
+      "startedAt": 1782271367179,
+      "lastActivity": 1782271367179,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\c066b3f5-c09b-48f0-8d03-94082ff806b2",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "890522f3-0ea4-433b-af93-cb787e8c4794",
+      "status": "starting",
+      "startedAt": 1782271396958,
+      "lastActivity": 1782271396958,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\890522f3-0ea4-433b-af93-cb787e8c4794",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "a61d079b-3920-4205-85ea-07b8c421e3c2",
+      "status": "starting",
+      "startedAt": 1782271426359,
+      "lastActivity": 1782271426359,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\a61d079b-3920-4205-85ea-07b8c421e3c2",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "b7123767-3a4d-4f9e-ba52-2f3046e8b757",
+      "status": "starting",
+      "startedAt": 1782271456771,
+      "lastActivity": 1782271456771,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\b7123767-3a4d-4f9e-ba52-2f3046e8b757",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "fa5fc844-f5a1-4038-a2d7-664b51d3315f",
+      "status": "starting",
+      "startedAt": 1782271488968,
+      "lastActivity": 1782271488968,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\fa5fc844-f5a1-4038-a2d7-664b51d3315f",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "2ab6fa8d-c90e-4b7d-aa9a-b257c0c546ac",
+      "status": "starting",
+      "startedAt": 1782271518549,
+      "lastActivity": 1782271518549,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\2ab6fa8d-c90e-4b7d-aa9a-b257c0c546ac",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "29c59602-1ca7-459b-b127-03d37857dfa2",
+      "status": "starting",
+      "startedAt": 1782271597198,
+      "lastActivity": 1782271597198,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\29c59602-1ca7-459b-b127-03d37857dfa2",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "45003f00-241b-4814-9dbe-8e01475588d9",
+      "status": "starting",
+      "startedAt": 1782271628689,
+      "lastActivity": 1782271628689,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\45003f00-241b-4814-9dbe-8e01475588d9",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "2ee9db0d-4ec6-4810-94df-a2b41c3ff650",
+      "status": "starting",
+      "startedAt": 1782271659925,
+      "lastActivity": 1782271659925,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\2ee9db0d-4ec6-4810-94df-a2b41c3ff650",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "0a980eed-ee2b-44c3-b593-64b95b525197",
+      "status": "starting",
+      "startedAt": 1782271692161,
+      "lastActivity": 1782271692161,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\0a980eed-ee2b-44c3-b593-64b95b525197",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "9a6784e7-4435-42b2-879d-d8ee9f75aeb3",
+      "status": "starting",
+      "startedAt": 1782271720306,
+      "lastActivity": 1782271720306,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\9a6784e7-4435-42b2-879d-d8ee9f75aeb3",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "4901c549-1a07-45dc-9b10-c7f49236836b",
+      "status": "starting",
+      "startedAt": 1782271750769,
+      "lastActivity": 1782271750769,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\4901c549-1a07-45dc-9b10-c7f49236836b",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "fd92c83d-fdb7-45b3-8e63-ae5e37547c11",
+      "status": "starting",
+      "startedAt": 1782271780939,
+      "lastActivity": 1782271780939,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\fd92c83d-fdb7-45b3-8e63-ae5e37547c11",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "63430c4e-b69d-4d1b-ac95-ee5612e86799",
+      "status": "starting",
+      "startedAt": 1782271814402,
+      "lastActivity": 1782271814402,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\63430c4e-b69d-4d1b-ac95-ee5612e86799",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "cbc54832-7eb6-4a09-9daf-b4f6043d3452",
+      "status": "starting",
+      "startedAt": 1782271847939,
+      "lastActivity": 1782271847939,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\cbc54832-7eb6-4a09-9daf-b4f6043d3452",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "aeaf4348-022c-476a-8775-216988272077",
+      "status": "starting",
+      "startedAt": 1782271876823,
+      "lastActivity": 1782271876823,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\aeaf4348-022c-476a-8775-216988272077",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "509d19b9-4993-4d06-b687-12033a829be5",
+      "status": "starting",
+      "startedAt": 1782271909678,
+      "lastActivity": 1782271909678,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\509d19b9-4993-4d06-b687-12033a829be5",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "b37b16ef-bb99-4924-a1a2-60ba62413135",
+      "status": "starting",
+      "startedAt": 1782271942863,
+      "lastActivity": 1782271942863,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\b37b16ef-bb99-4924-a1a2-60ba62413135",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "7d1077a8-765e-43a0-b67e-374a081cf945",
+      "status": "starting",
+      "startedAt": 1782271974253,
+      "lastActivity": 1782271974253,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\7d1077a8-765e-43a0-b67e-374a081cf945",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "989ddadd-6377-4230-bc65-5583e6b26f39",
+      "status": "starting",
+      "startedAt": 1782272005291,
+      "lastActivity": 1782272005291,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\989ddadd-6377-4230-bc65-5583e6b26f39",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "1f14f06d-a255-4a05-82fd-c314a704d49e",
+      "status": "starting",
+      "startedAt": 1782272037052,
+      "lastActivity": 1782272037052,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\1f14f06d-a255-4a05-82fd-c314a704d49e",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "6aa8731e-e13b-4fe2-b5ac-8c0ccf4d4b3a",
+      "status": "starting",
+      "startedAt": 1782272121800,
+      "lastActivity": 1782272121800,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\6aa8731e-e13b-4fe2-b5ac-8c0ccf4d4b3a",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "8d877cb5-9180-406b-9641-32fb38cfd6c4",
+      "status": "starting",
+      "startedAt": 1782272148619,
+      "lastActivity": 1782272148619,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\8d877cb5-9180-406b-9641-32fb38cfd6c4",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "91111a3d-2880-4cab-8067-a949e94957e1",
+      "status": "starting",
+      "startedAt": 1782272180012,
+      "lastActivity": 1782272180012,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\91111a3d-2880-4cab-8067-a949e94957e1",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "ba50f251-e175-47d8-96e2-e87f89bd8855",
+      "status": "starting",
+      "startedAt": 1782272207092,
+      "lastActivity": 1782272207092,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\ba50f251-e175-47d8-96e2-e87f89bd8855",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "6ba756ad-aea8-4010-86f0-8eada387d0aa",
+      "status": "starting",
+      "startedAt": 1782272233089,
+      "lastActivity": 1782272233089,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\6ba756ad-aea8-4010-86f0-8eada387d0aa",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "89ab3f59-0fe2-4d75-8a27-8105c01c3598",
+      "status": "starting",
+      "startedAt": 1782272262040,
+      "lastActivity": 1782272262040,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\89ab3f59-0fe2-4d75-8a27-8105c01c3598",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "1478b075-24a9-4512-8527-19284b2298ec",
+      "status": "starting",
+      "startedAt": 1782272289345,
+      "lastActivity": 1782272289345,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\1478b075-24a9-4512-8527-19284b2298ec",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "fe21529a-5370-468a-b02b-8fd39b0fd395",
+      "status": "starting",
+      "startedAt": 1782272318854,
+      "lastActivity": 1782272318854,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\fe21529a-5370-468a-b02b-8fd39b0fd395",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "290093a1-67b4-4e29-ab79-0679ba138822",
+      "status": "starting",
+      "startedAt": 1782272345657,
+      "lastActivity": 1782272345657,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\290093a1-67b4-4e29-ab79-0679ba138822",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "dc7cd263-c765-4489-8746-af02a62f4fae",
+      "status": "starting",
+      "startedAt": 1782272374192,
+      "lastActivity": 1782272374192,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\dc7cd263-c765-4489-8746-af02a62f4fae",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "ea9384aa-61fd-49b1-b92d-f1ba75db9ae8",
+      "status": "starting",
+      "startedAt": 1782272405400,
+      "lastActivity": 1782272405400,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\ea9384aa-61fd-49b1-b92d-f1ba75db9ae8",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "e21f4bb4-0393-40cc-83c2-a861382d6fb1",
+      "status": "starting",
+      "startedAt": 1782272433709,
+      "lastActivity": 1782272433709,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\e21f4bb4-0393-40cc-83c2-a861382d6fb1",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "817a3f7b-3460-48e1-9a7c-542cf85106e5",
+      "status": "starting",
+      "startedAt": 1782272462954,
+      "lastActivity": 1782272462954,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\817a3f7b-3460-48e1-9a7c-542cf85106e5",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "1b5af74d-2269-4d9d-b3cc-1076a39449af",
+      "status": "starting",
+      "startedAt": 1782272488262,
+      "lastActivity": 1782272488262,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\1b5af74d-2269-4d9d-b3cc-1076a39449af",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "e5b84859-5a44-470d-b511-2f4dfa6e6a72",
+      "status": "starting",
+      "startedAt": 1782272512872,
+      "lastActivity": 1782272512872,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\e5b84859-5a44-470d-b511-2f4dfa6e6a72",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "de109710-8fff-4d1b-b5b1-c54adeaaa1ba",
+      "status": "starting",
+      "startedAt": 1782272540021,
+      "lastActivity": 1782272540021,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\de109710-8fff-4d1b-b5b1-c54adeaaa1ba",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "4c94401f-b06f-4e78-95da-92f730b5d807",
+      "status": "starting",
+      "startedAt": 1782272640774,
+      "lastActivity": 1782272640774,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\4c94401f-b06f-4e78-95da-92f730b5d807",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "467376ef-d764-4d11-a533-b8f0460869cf",
+      "status": "starting",
+      "startedAt": 1782272667987,
+      "lastActivity": 1782272667987,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\467376ef-d764-4d11-a533-b8f0460869cf",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "818f2184-1ab9-4616-a600-0893c6117c9c",
+      "status": "starting",
+      "startedAt": 1782272695454,
+      "lastActivity": 1782272695454,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\818f2184-1ab9-4616-a600-0893c6117c9c",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "163e87b1-fac0-4df6-b446-e6e0cc62bd22",
+      "status": "starting",
+      "startedAt": 1782272723788,
+      "lastActivity": 1782272723788,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\163e87b1-fac0-4df6-b446-e6e0cc62bd22",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "6dfd10b8-4a55-4161-8bca-23eab6797f43",
+      "status": "starting",
+      "startedAt": 1782272751560,
+      "lastActivity": 1782272751560,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\6dfd10b8-4a55-4161-8bca-23eab6797f43",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "c6319fff-dbc4-44dd-8372-88f586e9a6fe",
+      "status": "starting",
+      "startedAt": 1782272779703,
+      "lastActivity": 1782272779703,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\c6319fff-dbc4-44dd-8372-88f586e9a6fe",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "0513344f-2a99-4709-b7fa-b7f28e78a939",
+      "status": "starting",
+      "startedAt": 1782272808312,
+      "lastActivity": 1782272808312,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\0513344f-2a99-4709-b7fa-b7f28e78a939",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "a3e6e036-9734-4a5d-9788-396d3c1693f0",
+      "status": "starting",
+      "startedAt": 1782272834190,
+      "lastActivity": 1782272834190,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\a3e6e036-9734-4a5d-9788-396d3c1693f0",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "9ee6d527-cb93-44af-b71f-138b503f04ee",
+      "status": "starting",
+      "startedAt": 1782272861321,
+      "lastActivity": 1782272861321,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\9ee6d527-cb93-44af-b71f-138b503f04ee",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "4caf1b5c-c0ee-4bd8-8302-524e7acbc6a0",
+      "status": "starting",
+      "startedAt": 1782272889487,
+      "lastActivity": 1782272889487,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\4caf1b5c-c0ee-4bd8-8302-524e7acbc6a0",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "1e0554fe-e6a3-41d4-8615-4d7bee1374b9",
+      "status": "starting",
+      "startedAt": 1782272918229,
+      "lastActivity": 1782272918229,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\1e0554fe-e6a3-41d4-8615-4d7bee1374b9",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "f989fa70-c9b5-45ba-8a28-78c3470a6490",
+      "status": "starting",
+      "startedAt": 1782272941276,
+      "lastActivity": 1782272941276,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\f989fa70-c9b5-45ba-8a28-78c3470a6490",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "53007152-937e-4028-8bfa-eb54a521b339",
+      "status": "starting",
+      "startedAt": 1782272965178,
+      "lastActivity": 1782272965178,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\53007152-937e-4028-8bfa-eb54a521b339",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "f0c3fe07-9ba1-4c34-9ca7-a36cc5b0ad85",
+      "status": "starting",
+      "startedAt": 1782272991297,
+      "lastActivity": 1782272991298,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\f0c3fe07-9ba1-4c34-9ca7-a36cc5b0ad85",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "c14a315f-4a40-4247-a5d7-13c44a40ddfd",
+      "status": "starting",
+      "startedAt": 1782273021422,
+      "lastActivity": 1782273021422,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\c14a315f-4a40-4247-a5d7-13c44a40ddfd",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "3c9fa17a-69e8-4a8c-ac10-955045e9fbad",
+      "status": "starting",
+      "startedAt": 1782273100153,
+      "lastActivity": 1782273100153,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\3c9fa17a-69e8-4a8c-ac10-955045e9fbad",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "86ceaafc-f66e-414c-b7b2-8bb3e6ebd862",
+      "status": "starting",
+      "startedAt": 1782273126206,
+      "lastActivity": 1782273126206,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\86ceaafc-f66e-414c-b7b2-8bb3e6ebd862",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "f022558a-a89f-47d6-b766-ec3ff16589ca",
+      "status": "starting",
+      "startedAt": 1782273154394,
+      "lastActivity": 1782273154394,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\f022558a-a89f-47d6-b766-ec3ff16589ca",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "f7233483-4f21-42e7-bc17-1ccd3c006dff",
+      "status": "starting",
+      "startedAt": 1782273182532,
+      "lastActivity": 1782273182532,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\f7233483-4f21-42e7-bc17-1ccd3c006dff",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "db8816f6-6c95-4052-8986-01ec038a90e5",
+      "status": "starting",
+      "startedAt": 1782273210797,
+      "lastActivity": 1782273210797,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\db8816f6-6c95-4052-8986-01ec038a90e5",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "6caf5d5a-57bf-4b35-bde2-2672f4af2ca7",
+      "status": "starting",
+      "startedAt": 1782273235412,
+      "lastActivity": 1782273235412,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\6caf5d5a-57bf-4b35-bde2-2672f4af2ca7",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "fd5da97c-d2de-4d2b-9635-a10adaa29cd1",
+      "status": "starting",
+      "startedAt": 1782273258479,
+      "lastActivity": 1782273258479,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\fd5da97c-d2de-4d2b-9635-a10adaa29cd1",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "bc4b1adc-6985-4f5c-9077-6965d49224d3",
+      "status": "starting",
+      "startedAt": 1782273281409,
+      "lastActivity": 1782273281409,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\bc4b1adc-6985-4f5c-9077-6965d49224d3",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "238c50ca-250e-4956-9e64-872f789d021b",
+      "status": "starting",
+      "startedAt": 1782273307327,
+      "lastActivity": 1782273307327,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\238c50ca-250e-4956-9e64-872f789d021b",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "5491b908-284d-4142-8006-48bed70c20b7",
+      "status": "starting",
+      "startedAt": 1782273335237,
+      "lastActivity": 1782273335237,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\5491b908-284d-4142-8006-48bed70c20b7",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "53c6ac3b-7d1f-415f-8389-10134dac000f",
+      "status": "starting",
+      "startedAt": 1782273359773,
+      "lastActivity": 1782273359773,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\53c6ac3b-7d1f-415f-8389-10134dac000f",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "90543b08-65e5-4b9b-8666-f5e805c34b86",
+      "status": "starting",
+      "startedAt": 1782273387219,
+      "lastActivity": 1782273387219,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\90543b08-65e5-4b9b-8666-f5e805c34b86",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "26a6f70d-ca5a-474c-910d-86ed187cc57b",
+      "status": "starting",
+      "startedAt": 1782273412738,
+      "lastActivity": 1782273412738,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\26a6f70d-ca5a-474c-910d-86ed187cc57b",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "89905aae-73e8-461d-902d-a17b289a521c",
+      "status": "starting",
+      "startedAt": 1782273437487,
+      "lastActivity": 1782273437487,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\89905aae-73e8-461d-902d-a17b289a521c",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "c69e65bf-5fd5-4f32-8cc4-6d290d46d2cc",
+      "status": "starting",
+      "startedAt": 1782273462279,
+      "lastActivity": 1782273462279,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\c69e65bf-5fd5-4f32-8cc4-6d290d46d2cc",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "786b2925-919c-4a2f-aa00-de25211cb7dd",
+      "status": "starting",
+      "startedAt": 1782273494973,
+      "lastActivity": 1782273494973,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\786b2925-919c-4a2f-aa00-de25211cb7dd",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "431835cd-0ff0-4da1-9bb3-c95ec3bce3f0",
+      "status": "starting",
+      "startedAt": 1782273571704,
+      "lastActivity": 1782273571704,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\431835cd-0ff0-4da1-9bb3-c95ec3bce3f0",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "987f0fcf-3640-4937-a8dd-4a33db8bf12d",
+      "status": "starting",
+      "startedAt": 1782273595568,
+      "lastActivity": 1782273595568,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\987f0fcf-3640-4937-a8dd-4a33db8bf12d",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "d94f2b5b-0e21-45a4-8bb2-6e776434cba0",
+      "status": "starting",
+      "startedAt": 1782273621092,
+      "lastActivity": 1782273621092,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\d94f2b5b-0e21-45a4-8bb2-6e776434cba0",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "58220556-1f2e-415f-b6b0-b4a6683d04a8",
+      "status": "starting",
+      "startedAt": 1782273646627,
+      "lastActivity": 1782273646627,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\58220556-1f2e-415f-b6b0-b4a6683d04a8",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "ffd2d995-22f2-4cd0-9eed-dc1ed3c9743b",
+      "status": "starting",
+      "startedAt": 1782273671982,
+      "lastActivity": 1782273671982,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\ffd2d995-22f2-4cd0-9eed-dc1ed3c9743b",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "6492e337-12a5-448c-881a-a972ad7fa19e",
+      "status": "starting",
+      "startedAt": 1782273696361,
+      "lastActivity": 1782273696361,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\6492e337-12a5-448c-881a-a972ad7fa19e",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "5bbb24b9-3ea2-4da7-9d1f-8689919237c4",
+      "status": "starting",
+      "startedAt": 1782273719917,
+      "lastActivity": 1782273719917,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\5bbb24b9-3ea2-4da7-9d1f-8689919237c4",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "56745d5b-18f8-4c65-a5af-23aba26d7866",
+      "status": "starting",
+      "startedAt": 1782273745524,
+      "lastActivity": 1782273745524,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\56745d5b-18f8-4c65-a5af-23aba26d7866",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "fd8aba99-6797-4dbc-9e38-cf51943b3209",
+      "status": "starting",
+      "startedAt": 1782273770674,
+      "lastActivity": 1782273770674,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\fd8aba99-6797-4dbc-9e38-cf51943b3209",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "d41f9297-d105-4394-bb6c-2f9c7d9f98dc",
+      "status": "starting",
+      "startedAt": 1782273794176,
+      "lastActivity": 1782273794177,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\d41f9297-d105-4394-bb6c-2f9c7d9f98dc",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "0d2b47c3-dcef-46e5-ac6c-f50b75260d52",
+      "status": "starting",
+      "startedAt": 1782273817423,
+      "lastActivity": 1782273817423,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\0d2b47c3-dcef-46e5-ac6c-f50b75260d52",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "bdb2d2c5-61dd-4486-a670-6e924d7549b9",
+      "status": "starting",
+      "startedAt": 1782273842496,
+      "lastActivity": 1782273842496,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\bdb2d2c5-61dd-4486-a670-6e924d7549b9",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "5f18c73b-74f8-422e-a80d-457ef57c0fbe",
+      "status": "starting",
+      "startedAt": 1782273867846,
+      "lastActivity": 1782273867846,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\5f18c73b-74f8-422e-a80d-457ef57c0fbe",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "4a050be4-5eae-4843-9ce5-78bc4cea06d3",
+      "status": "starting",
+      "startedAt": 1782273892391,
+      "lastActivity": 1782273892391,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\4a050be4-5eae-4843-9ce5-78bc4cea06d3",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "6f9c809d-663c-4ba2-b450-637bf3b9e129",
+      "status": "starting",
+      "startedAt": 1782273917588,
+      "lastActivity": 1782273917588,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\6f9c809d-663c-4ba2-b450-637bf3b9e129",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "c9c89755-4a70-49ce-9371-9d0d02cc1672",
+      "status": "starting",
+      "startedAt": 1782273942398,
+      "lastActivity": 1782273942398,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\c9c89755-4a70-49ce-9371-9d0d02cc1672",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "a0d7775a-b7dd-4622-96ee-b7caa0917269",
+      "status": "starting",
+      "startedAt": 1782274032887,
+      "lastActivity": 1782274032887,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\a0d7775a-b7dd-4622-96ee-b7caa0917269",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "8cebdbce-7c31-4bc3-ac4d-6ed123cd99e3",
+      "status": "starting",
+      "startedAt": 1782274055617,
+      "lastActivity": 1782274055617,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\8cebdbce-7c31-4bc3-ac4d-6ed123cd99e3",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "be77a086-5eed-4f78-ad3b-8c75e9c8dbe2",
+      "status": "starting",
+      "startedAt": 1782274079781,
+      "lastActivity": 1782274079781,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\be77a086-5eed-4f78-ad3b-8c75e9c8dbe2",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "1e5c50fe-1463-474c-afca-765cf5b2bba2",
+      "status": "starting",
+      "startedAt": 1782274104458,
+      "lastActivity": 1782274104458,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\1e5c50fe-1463-474c-afca-765cf5b2bba2",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "58fd9fdd-b8df-47d4-8e52-4499943b2afe",
+      "status": "starting",
+      "startedAt": 1782274129164,
+      "lastActivity": 1782274129164,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\58fd9fdd-b8df-47d4-8e52-4499943b2afe",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "07b5d624-a091-449c-a6c5-890057c572cf",
+      "status": "starting",
+      "startedAt": 1782274154391,
+      "lastActivity": 1782274154391,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\07b5d624-a091-449c-a6c5-890057c572cf",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "55554253-e5d7-4ba2-9d89-4fe396d689d8",
+      "status": "starting",
+      "startedAt": 1782274177449,
+      "lastActivity": 1782274177449,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\55554253-e5d7-4ba2-9d89-4fe396d689d8",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "57577748-45e1-469b-b411-cb481d001de9",
+      "status": "starting",
+      "startedAt": 1782274198947,
+      "lastActivity": 1782274198947,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\57577748-45e1-469b-b411-cb481d001de9",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "8e6cce1b-9bf4-4696-a915-e46e943bba94",
+      "status": "starting",
+      "startedAt": 1782274221854,
+      "lastActivity": 1782274221854,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\8e6cce1b-9bf4-4696-a915-e46e943bba94",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "14c0b8cb-8d16-4f73-bfcf-8a9bd5501d70",
+      "status": "starting",
+      "startedAt": 1782274244823,
+      "lastActivity": 1782274244823,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\14c0b8cb-8d16-4f73-bfcf-8a9bd5501d70",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "3973de80-983c-4b4a-a6c2-19a9b288fe7f",
+      "status": "starting",
+      "startedAt": 1782274267321,
+      "lastActivity": 1782274267321,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\3973de80-983c-4b4a-a6c2-19a9b288fe7f",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "68e904d6-3efb-4d23-8c2b-298010161feb",
+      "status": "starting",
+      "startedAt": 1782274288400,
+      "lastActivity": 1782274288400,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\68e904d6-3efb-4d23-8c2b-298010161feb",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "e4852f4c-a761-4b23-8171-5a51ef8362dc",
+      "status": "starting",
+      "startedAt": 1782274312552,
+      "lastActivity": 1782274312552,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\e4852f4c-a761-4b23-8171-5a51ef8362dc",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "5a98a411-b531-4c46-9139-2b2e125fa97f",
+      "status": "starting",
+      "startedAt": 1782274334074,
+      "lastActivity": 1782274334074,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\5a98a411-b531-4c46-9139-2b2e125fa97f",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    },
+    {
+      "id": "13dbe09a-1e72-4bd2-a401-be5e11e02f79",
+      "status": "starting",
+      "startedAt": 1782271306182,
+      "lastActivity": 1782271306182,
+      "port": 0,
+      "workingDirectory": "C:\\Users\\hyper\\workspace\\hypernexus\\.hypernexus\\worktrees\\13dbe09a-1e72-4bd2-a401-be5e11e02f79",
+      "tags": [],
+      "metadata": {
+        "cliType": "opencode"
+      }
+    }
+  ]
+}

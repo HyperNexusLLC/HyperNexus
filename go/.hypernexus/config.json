@@ -1,0 +1,24 @@
+{
+  "language": "en",
+  "scripts": [
+    {
+      "code": "return 42",
+      "description": null,
+      "name": "t47-test-script-updated",
+      "uuid": "102deb10-30b5-41d2-8ff8-aa6d56ac05a6"
+    },
+    {
+      "code": "console.log(\"Hello from E2E test\"); return { result: \"success\", value: 42 };",
+      "description": "E2E test script",
+      "name": "e2e-test-script",
+      "uuid": "821eb22d-56d1-4467-95fe-f314fa8099e2"
+    },
+    {
+      "code": "echo test",
+      "description": "test script from cycle",
+      "name": "test-script-cycle",
+      "uuid": "a388c055-6916-4c31-a8a5-265be4ec52e1"
+    }
+  ],
+  "theme": "dark"
+}

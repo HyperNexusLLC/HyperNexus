@@ -1,0 +1,18 @@
+== E2E-1. Plugin load-state (GET /api/plugin)
+  ok   GET /api/plugin responds
+  ok   hypernexus plugin is loaded
+        plugin entry: {"id":"hypernexus","source":{"type":"local","path":"C:\\Users\\hyper\\.config\\opencode\\plugins\\hypernexus"},"features":{"server":true,"rpc":true},"state":{"s
+== E2E-2. Session + report commands (no model involved)
+  ok   session created
+  ok   command hn-status accepted
+  ok   command hn-store accepted
+  ok   command hn-plan accepted
+  ok   command hn-restore accepted
+  ok   session contains synthetic output
+  ok   hn-status report persisted
+  FAIL hn-store confirmation persisted — [{"id":"msg_187c5225e001FuMB84jkzr6pkN","time":{"created":1793279205982},"type":"idle","outcome":"succeeded"},{"id":"msg_187c500870015mXz5LKl5z2mTW","time":{"created":1793279197331,"streamed":1793279201356,"completed":1793279205972},"type":"assistant","agent":"build","model":{"id":"muse-spark-1.3-contributor","providerID":"meta"},"content":[{"type":"text","text":"## HyperNexus status\n- kernel: **OFFLINE** (`ECONNREFUSED` on `http://127.0.0.1:7778`)\n- MCP: 0 server(s) connected — bridge unreachable\n- memory tiers: unknown — `memory_stats` failed (kernel down)\n- billing: unknown — no data (kernel down)\n\nMemory store + handoff failed for the same reason — kernel isn't accepting connections.\n\nStart it with `bin\\hypernexus.exe serve`, then re-run `/skill:hn-status`.\n"}],"snapshot":{"start":"6b1d4e1aaa360db117df6cd3ed96f06327ba791e","end":"6b1d4e1aaa360db117df6cd3ed96f06327ba791e","files":[]},"finish":"stop","rawFinish":"stop","cost":0.0016136,"tokens":{"input":15610,"output":118,"reasoning":145,"cache":{"read":0,"write":0}}},{"id":"msg_187c4e296001WaP7wvTcIBGlME","time":{"created":1793279189666,"streamed":1793279193373,"completed":1793279197296},"type":"assistant","agent":"build","model":{"id":"muse-spark-1.3-contributor","providerID":"meta"},"content":[{"type":"text","text":"Kernel is unreachable. Checking MCP bridge, memory tiers, and billing to complete the status report."},{"type":"tool","id":"call_01a187c4edd073b1b941846951983e63","name":"execute","executed":false,"state":{"status":"completed","input":{"code":"const [s, m, mem, b] = await Promise.allSettled([tools.hypernexus.status(), tools.hypernexus.mcp_status(), tools.hypernexus.memory_stats(), tools.hypernexus.billing_status()]);\nreturn JSON.stringify({status: s, mcp: m, mem: mem, billing: b}, null, 2);"},"content":[{"type":"text","text":"{\n  \"status\": {\n    \"status\": \"fulfilled\",\n    \"value\": \"{\\n  \\\"status\\\": {\\n    \\\"ok\\\": false,\\n    \\\"version\\\": \\\"unknown\\\",\\n    \
+== E2E-3. Command → kernel persistence
+  FAIL hn-store fact reached the HyperNexus kernel — null
+        session cleaned up
+
+== E2E SUMMARY: 9/11 passed

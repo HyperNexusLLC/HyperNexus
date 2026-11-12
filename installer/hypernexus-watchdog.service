@@ -1,0 +1,28 @@
+[Unit]
+Description=HyperNexus Watchdog - Service Health Monitor
+Documentation=https://hypernexus.site/docs
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python3 /opt/hypernexus/scripts/watchdog.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hypernexus-watchdog
+
+# Security hardening
+NoNewPrivileges=false
+ProtectSystem=strict
+ReadWritePaths=/var/log/hypernexus /var/run/hypernexus
+PrivateTmp=true
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

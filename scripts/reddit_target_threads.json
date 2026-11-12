@@ -1,0 +1,962 @@
+[
+  {
+    "title": "I built a self-hosted visual builder for LangChain/LangGraph agents and would love feedback",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v87hds/i_built_a_selfhosted_visual_builder_for/",
+    "comments": 2,
+    "age": "4 hours ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "agent",
+      "self-host",
+      "build"
+    ],
+    "relevance_score": 3
+  },
+  {
+    "title": "What's the best framework for building an agent harness right now?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v873on/whats_the_best_framework_for_building_an_agent/",
+    "comments": 18,
+    "age": "5 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent",
+      "framework",
+      "build"
+    ],
+    "relevance_score": 3
+  },
+  {
+    "title": "Tempo MCP Server \u2013 An MCP server for managing Tempo worklogs in Jira, allowing users to track time, retrieve logs, and perform bulk operations via natural language. It integrates with the Tempo API to support creating, editing, and deleting work entries through MCP-compatible clients like Claude and",
+    "url": "https://old.reddit.com/r/mcp/comments/1v82v6q/tempo_mcp_server_an_mcp_server_for_managing_tempo/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "mcp",
+      "claude"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Stopful \u2014 a travel MCP server: your agent plans the road trip, it returns an editable map link",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7w7fu/stopful_a_travel_mcp_server_your_agent_plans_the/",
+    "comments": 11,
+    "age": "12 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "mcp",
+      "agent"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Tanuki Context - A LLM Token Saver (Up to 94% Tokens saved)",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7w48k/tanuki_context_a_llm_token_saver_up_to_94_tokens/",
+    "comments": 6,
+    "age": "12 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "context",
+      "llm"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Built an MCP server on Replit that lets Claude Desktop find leads, write proposals, and search my agency knowledge base",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7ptve/built_an_mcp_server_on_replit_that_lets_claude/",
+    "comments": 2,
+    "age": "18 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "mcp",
+      "claude"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "I wired my business into Claude with MCP and now I run it by typing sentences",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8eavw/i_wired_my_business_into_claude_with_mcp_and_now/",
+    "comments": 7,
+    "age": "44 minutes ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "mcp",
+      "claude"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Claude Code's memory index has an undocumented hard cap, truncates silently, and drops your NEWEST memories first. The governance fix was closed as \"not planned.\"",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dnkl/claude_codes_memory_index_has_an_undocumented/",
+    "comments": 5,
+    "age": "an hour ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "memory",
+      "claude"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "I used Claude to build a media tracking \"app\" for me and my partner !",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8cqca/i_used_claude_to_build_a_media_tracking_app_for/",
+    "comments": 3,
+    "age": "an hour ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "claude",
+      "build"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "[Project] Local LLM agent playing Perfect Dark on Mac \u2014 real locomotion + combat (on-device MLX)",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8dflw/project_local_llm_agent_playing_perfect_dark_on/",
+    "comments": 3,
+    "age": "an hour ago",
+    "sub": "LocalLLaMA",
+    "matched_keywords": [
+      "agent",
+      "llm"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Nifer is insane. 700t/s with Qwen 3.6 35B (no thinking). Purpose build for RTX5090. Full 250k context too.",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8a7wb/nifer_is_insane_700ts_with_qwen_36_35b_no/",
+    "comments": 45,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA",
+    "matched_keywords": [
+      "context",
+      "build"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "I want to use AI coding agents for machine learning projects [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v758ek/i_want_to_use_ai_coding_agents_for_machine/",
+    "comments": 9,
+    "age": "1 day ago",
+    "sub": "MachineLearning",
+    "matched_keywords": [
+      "agent",
+      "ai coding"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Mistakes to avoid when launching SAAS?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8etn6/mistakes_to_avoid_when_launching_saas/",
+    "comments": 3,
+    "age": "25 minutes ago",
+    "sub": "SaaS",
+    "matched_keywords": [
+      "saas",
+      "launch"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Boss of startup hacked by rogue OpenAI agent urges \u2018radical transparency\u2019 in investigation",
+    "url": "https://old.reddit.com/r/artificial/comments/1v83kb2/boss_of_startup_hacked_by_rogue_openai_agent/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "artificial",
+    "matched_keywords": [
+      "agent",
+      "startup"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Skill Router: local-first tool for searching large agent skill libraries without blowing up your context window",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7ttjz/skill_router_localfirst_tool_for_searching_large/",
+    "comments": 2,
+    "age": "14 hours ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "context",
+      "agent"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Building a \"Stack Overflow for AI Agents\" (with human validation & micro-payments)",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6p9od/building_a_stack_overflow_for_ai_agents_with/",
+    "comments": 10,
+    "age": "1 day ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "agent",
+      "build"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "My 10-Node Agentic RAG Architecture: Combining LangGraph, Cohere, Pinecone & MCP for Dense Legal Parsing",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6cs6r/my_10node_agentic_rag_architecture_combining/",
+    "comments": 23,
+    "age": "2 days ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "mcp",
+      "agent"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Which MCP servers give AI agents real business capabilities in 2026??",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v89fp6/which_mcp_servers_give_ai_agents_real_business/",
+    "comments": 7,
+    "age": "3 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "mcp",
+      "agent"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Most AI agent frameworks give you the illusion of control. This one treats agents like software components.",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v894vj/most_ai_agent_frameworks_give_you_the_illusion_of/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent",
+      "framework"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "We need a tool for teams to sync memory across all agents",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8620w/we_need_a_tool_for_teams_to_sync_memory_across/",
+    "comments": 2,
+    "age": "5 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "memory",
+      "agent"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "How I structure Claude Code agents so they're verifiable instead of vibes (references + examples + CI checks)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v82juh/how_i_structure_claude_code_agents_so_theyre/",
+    "comments": 2,
+    "age": "7 hours ago",
+    "sub": "LLMDevs",
+    "matched_keywords": [
+      "agent",
+      "claude"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Tanuki Context - A LLM Token Saver (Up to 94% Tokens saved)",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7vswn/tanuki_context_a_llm_token_saver_up_to_94_tokens/",
+    "comments": 9,
+    "age": "12 hours ago",
+    "sub": "LLMDevs",
+    "matched_keywords": [
+      "context",
+      "llm"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "What's been your biggest AI security challenge when building LLM applications?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7rdlw/whats_been_your_biggest_ai_security_challenge/",
+    "comments": 5,
+    "age": "16 hours ago",
+    "sub": "LLMDevs",
+    "matched_keywords": [
+      "llm",
+      "build"
+    ],
+    "relevance_score": 2
+  },
+  {
+    "title": "Is your MCP turning a profit?",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8b4kj/is_your_mcp_turning_a_profit/",
+    "comments": 4,
+    "age": "2 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "mcp"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "I built a live remote MCP server for safer EU e-invoice preflight",
+    "url": "https://old.reddit.com/r/mcp/comments/1v8376d/i_built_a_live_remote_mcp_server_for_safer_eu/",
+    "comments": 3,
+    "age": "7 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "mcp"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Open-source testbed for MCP servers",
+    "url": "https://old.reddit.com/r/mcp/comments/1v81j4d/opensource_testbed_for_mcp_servers/",
+    "comments": 10,
+    "age": "8 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "mcp"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Using Chromes installed Model with an MCP in a Chat",
+    "url": "https://old.reddit.com/r/mcp/comments/1v7t8kl/using_chromes_installed_model_with_an_mcp_in_a/",
+    "comments": 4,
+    "age": "15 hours ago",
+    "sub": "mcp",
+    "matched_keywords": [
+      "mcp"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "I built a Claude Code skill where an implementer and reviewer reconcile every finding",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8dsaa/i_built_a_claude_code_skill_where_an_implementer/",
+    "comments": 6,
+    "age": "an hour ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Claude Cowork Escaped Sandbox on Mac, Gained Full Access to All Files",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8d8d4/claude_cowork_escaped_sandbox_on_mac_gained_full/",
+    "comments": 9,
+    "age": "an hour ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Possible Claude Max usage bug: session limit consumed without using",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8d1ck/possible_claude_max_usage_bug_session_limit/",
+    "comments": 9,
+    "age": "an hour ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Switching to Claude \u2014 Any must-know tips or setup advice to get the most out of it from day one?",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8c7hk/switching_to_claude_any_mustknow_tips_or_setup/",
+    "comments": 7,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "I'm having Claude animate all 24 books of the Odyssey",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8bdj6/im_having_claude_animate_all_24_books_of_the/",
+    "comments": 9,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Multiplayer Destruction Game I made With Claude",
+    "url": "https://old.reddit.com/r/ClaudeAI/comments/1v8baiq/multiplayer_destruction_game_i_made_with_claude/",
+    "comments": 6,
+    "age": "2 hours ago",
+    "sub": "ClaudeAI",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "All LLMs are liberal and left. Yes, even Grok, half the time.",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8fcup/all_llms_are_liberal_and_left_yes_even_grok_half/",
+    "comments": 2,
+    "age": "4 minutes ago",
+    "sub": "LocalLLaMA",
+    "matched_keywords": [
+      "llm"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Ollama Kimi-K3 cloud model use \u201cnot included in plan usage\u201d can only use via separate pay-per-token \u201cextra usage\u201d API",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v8f0c4/ollama_kimik3_cloud_model_use_not_included_in/",
+    "comments": 7,
+    "age": "17 minutes ago",
+    "sub": "LocalLLaMA",
+    "matched_keywords": [
+      "ollama"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "I ran the 35B agentic comparison someone asked for (stock vs Ornith vs KAT-Coder, 120 runs)",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v89yxj/i_ran_the_35b_agentic_comparison_someone_asked/",
+    "comments": 10,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Local AI content creators with true, verifiable results, who haven't lost their mind?",
+    "url": "https://old.reddit.com/r/LocalLLaMA/comments/1v891ti/local_ai_content_creators_with_true_verifiable/",
+    "comments": 14,
+    "age": "3 hours ago",
+    "sub": "LocalLLaMA",
+    "matched_keywords": [
+      "local ai"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Multi-Tenant SaaS: Which Architecture Would You Choose? [D]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v794kw/multitenant_saas_which_architecture_would_you/",
+    "comments": 3,
+    "age": "1 day ago",
+    "sub": "MachineLearning",
+    "matched_keywords": [
+      "saas"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "We compared different LLMs on IMO 2026 [R]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v6wskz/we_compared_different_llms_on_imo_2026_r/",
+    "comments": 8,
+    "age": "1 day ago",
+    "sub": "MachineLearning",
+    "matched_keywords": [
+      "llm"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "I implemented the YOLO26n model inference from scratch using ARM64 Assembly Language (No framework) [P]",
+    "url": "https://old.reddit.com/r/MachineLearning/comments/1v6w394/i_implemented_the_yolo26n_model_inference_from/",
+    "comments": 14,
+    "age": "1 day ago",
+    "sub": "MachineLearning",
+    "matched_keywords": [
+      "framework"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "I build the Finest Software for construction management.",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8c1aw/i_build_the_finest_software_for_construction/",
+    "comments": 2,
+    "age": "2 hours ago",
+    "sub": "SaaS",
+    "matched_keywords": [
+      "build"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "How do you handle the 'did this actually run correctly?' problem with automated workflows?",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8ba2s/how_do_you_handle_the_did_this_actually_run/",
+    "comments": 4,
+    "age": "2 hours ago",
+    "sub": "SaaS",
+    "matched_keywords": [
+      "workflow"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "builders before and after AI",
+    "url": "https://old.reddit.com/r/SaaS/comments/1v8altm/builders_before_and_after_ai/",
+    "comments": 4,
+    "age": "2 hours ago",
+    "sub": "SaaS",
+    "matched_keywords": [
+      "build"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Why does my development agency keep asking me what to build? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v88yrv/why_does_my_development_agency_keep_asking_me/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "startups",
+    "matched_keywords": [
+      "build"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Why does my development agency keep asking me what to build? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v88vr9/why_does_my_development_agency_keep_asking_me/",
+    "comments": 3,
+    "age": "3 hours ago",
+    "sub": "startups",
+    "matched_keywords": [
+      "build"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Anyone here also building for the AEC industry (architecture, engineering, construction)? . I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v87uau/anyone_here_also_building_for_the_aec_industry/",
+    "comments": 2,
+    "age": "4 hours ago",
+    "sub": "startups",
+    "matched_keywords": [
+      "build"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "How are AI agencies getting clients in the age of Lovable and Claude Code? i will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v86xnv/how_are_ai_agencies_getting_clients_in_the_age_of/",
+    "comments": 4,
+    "age": "5 hours ago",
+    "sub": "startups",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "[I will not promote] Hold onto your job. My startup failed and I'm having a hard time finding a job in this market",
+    "url": "https://old.reddit.com/r/startups/comments/1v7ypoq/i_will_not_promote_hold_onto_your_job_my_startup/",
+    "comments": 33,
+    "age": "10 hours ago",
+    "sub": "startups",
+    "matched_keywords": [
+      "startup"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "What's the hardest part of getting your first 10 clients when you're a solo consultant (not SaaS)? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7ygwb/whats_the_hardest_part_of_getting_your_first_10/",
+    "comments": 4,
+    "age": "10 hours ago",
+    "sub": "startups",
+    "matched_keywords": [
+      "saas"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "How do I find startups that are looking for a developer? How to approach them? I will not promote",
+    "url": "https://old.reddit.com/r/startups/comments/1v7ybj7/how_do_i_find_startups_that_are_looking_for_a/",
+    "comments": 5,
+    "age": "10 hours ago",
+    "sub": "startups",
+    "matched_keywords": [
+      "startup"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "OneSignal killing free tier. Looking to move from them, what are some alternatives you use?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v82mli/onesignal_killing_free_tier_looking_to_move_from/",
+    "comments": 12,
+    "age": "7 hours ago",
+    "sub": "webdev",
+    "matched_keywords": [
+      "free"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "How can I serverlessly generate vector embeddings for images I upload at a relatively cheap price for the case of an e-commerce startup to particularly fuel an image search functionality?",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7xhi6/how_can_i_serverlessly_generate_vector_embeddings/",
+    "comments": 11,
+    "age": "11 hours ago",
+    "sub": "webdev",
+    "matched_keywords": [
+      "startup"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "our AI agents kept overwriting each other's work and nobody noticed for two days",
+    "url": "https://old.reddit.com/r/webdev/comments/1v7778k/our_ai_agents_kept_overwriting_each_others_work/",
+    "comments": 14,
+    "age": "1 day ago",
+    "sub": "webdev",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "How much would you charge to build static website or e commerce.",
+    "url": "https://old.reddit.com/r/webdev/comments/1v72vab/how_much_would_you_charge_to_build_static_website/",
+    "comments": 11,
+    "age": "1 day ago",
+    "sub": "webdev",
+    "matched_keywords": [
+      "build"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Agentic operating systems will need an audit layer beneath the AI",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7yatj/agentic_operating_systems_will_need_an_audit/",
+    "comments": 9,
+    "age": "10 hours ago",
+    "sub": "artificial",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Could this be the reason why some people see large coding productivity improvement, while others almost nothing?",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7dqkv/could_this_be_the_reason_why_some_people_see/",
+    "comments": 13,
+    "age": "1 day ago",
+    "sub": "artificial",
+    "matched_keywords": [
+      "productivity"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "30+ officially free AI/ML books, all in one curated repo",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7d1lx/30_officially_free_aiml_books_all_in_one_curated/",
+    "comments": 4,
+    "age": "1 day ago",
+    "sub": "artificial",
+    "matched_keywords": [
+      "free"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "AI agents are starting to look less like software and more like employees",
+    "url": "https://old.reddit.com/r/artificial/comments/1v7ateo/ai_agents_are_starting_to_look_less_like_software/",
+    "comments": 10,
+    "age": "1 day ago",
+    "sub": "artificial",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "ChatGPT stored its own unsupported praise as a \u201cfact\u201d about me\u2014then claimed I invented the first AI framework of its kind",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8e5wz/chatgpt_stored_its_own_unsupported_praise_as_a/",
+    "comments": 6,
+    "age": "50 minutes ago",
+    "sub": "ChatGPT",
+    "matched_keywords": [
+      "framework"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Free Plan Nuked?",
+    "url": "https://old.reddit.com/r/ChatGPT/comments/1v8czek/free_plan_nuked/",
+    "comments": 12,
+    "age": "an hour ago",
+    "sub": "ChatGPT",
+    "matched_keywords": [
+      "free"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Retrying a failed agent step is not the same as safely resuming a 14-step run",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7z2vz/retrying_a_failed_agent_step_is_not_the_same_as/",
+    "comments": 2,
+    "age": "9 hours ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "LLM router based on TPM/RPM limits rather than model quality?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7qyzf/llm_router_based_on_tpmrpm_limits_rather_than/",
+    "comments": 4,
+    "age": "17 hours ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "llm"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "AI agent behaving differently in prod vs dev with Slack",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7ppxx/ai_agent_behaving_differently_in_prod_vs_dev_with/",
+    "comments": 6,
+    "age": "18 hours ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "What are the best, up-to-date resources to master the LangChain, LangGraph, LangSmith frameworks in-depth in August 2026?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v7azvt/what_are_the_best_uptodate_resources_to_master/",
+    "comments": 2,
+    "age": "1 day ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "framework"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Sandboxes solve where agent code runs. What controls what it does next?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6qu7r/sandboxes_solve_where_agent_code_runs_what/",
+    "comments": 4,
+    "age": "1 day ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Best approach to hook up hermes to existing llm workspace?",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6m4oa/best_approach_to_hook_up_hermes_to_existing_llm/",
+    "comments": 6,
+    "age": "1 day ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "llm"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "AI agents have created a new kind of technical debt",
+    "url": "https://old.reddit.com/r/LangChain/comments/1v6f9fb/ai_agents_have_created_a_new_kind_of_technical/",
+    "comments": 20,
+    "age": "2 days ago",
+    "sub": "LangChain",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "i feel like copilot is sexually assaulting me with words",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v860og/i_feel_like_copilot_is_sexually_assaulting_me/",
+    "comments": 4,
+    "age": "5 hours ago",
+    "sub": "OpenAI",
+    "matched_keywords": [
+      "copilot"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Hugging Face CEO shares his demands of OpenAI after 'rogue' agent hack: 'It deserves an unprecedented response'",
+    "url": "https://old.reddit.com/r/OpenAI/comments/1v8182u/hugging_face_ceo_shares_his_demands_of_openai/",
+    "comments": 55,
+    "age": "8 hours ago",
+    "sub": "OpenAI",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Agent payments are an identity problem, not a checkout problem",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8e9bq/agent_payments_are_an_identity_problem_not_a/",
+    "comments": 2,
+    "age": "47 minutes ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Anyone found a solid openclaw alternative for hosting agents without the headache?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v8b427/anyone_found_a_solid_openclaw_alternative_for/",
+    "comments": 14,
+    "age": "2 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "How do you actually verify sub-agent output in a multi-agent pipeline? Or do you just... trust it?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v89bz3/how_do_you_actually_verify_subagent_output_in_a/",
+    "comments": 2,
+    "age": "3 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "I started building an open-source n8n repository. I don't think that's what I'm building anymore.",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v88yi9/i_started_building_an_opensource_n8n_repository_i/",
+    "comments": 5,
+    "age": "3 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "build"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "We created an agent-only world for autonomous agents to survive, leave artifacts, reproduce, interact with each other, and die. Here's what we saw.",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v88arz/we_created_an_agentonly_world_for_autonomous/",
+    "comments": 2,
+    "age": "4 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Your error handling can't catch the agent run that never happened",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v87xjd/your_error_handling_cant_catch_the_agent_run_that/",
+    "comments": 6,
+    "age": "4 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Is it possible that Codex is somehow consuming my Claude tokens?",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v86f9l/is_it_possible_that_codex_is_somehow_consuming_my/",
+    "comments": 5,
+    "age": "5 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "claude"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "AI shouldn\u2019t replace customer support agents, it should help them",
+    "url": "https://old.reddit.com/r/AI_Agents/comments/1v85r2v/ai_shouldnt_replace_customer_support_agents_it/",
+    "comments": 2,
+    "age": "5 hours ago",
+    "sub": "AI_Agents",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Everyone measures whether the agent finished. Does anyone actually measure whether it was right?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v848j0/everyone_measures_whether_the_agent_finished_does/",
+    "comments": 5,
+    "age": "6 hours ago",
+    "sub": "LLMDevs",
+    "matched_keywords": [
+      "agent"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "What's the next high ticket skill for AI/LLM engineers?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7z7e7/whats_the_next_high_ticket_skill_for_aillm/",
+    "comments": 20,
+    "age": "9 hours ago",
+    "sub": "LLMDevs",
+    "matched_keywords": [
+      "llm"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "How do undergrad researchers afford LLM API cost in research?",
+    "url": "https://old.reddit.com/r/LLMDevs/comments/1v7s3t5/how_do_undergrad_researchers_afford_llm_api_cost/",
+    "comments": 10,
+    "age": "16 hours ago",
+    "sub": "LLMDevs",
+    "matched_keywords": [
+      "llm"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Is the GMKtec M6 Ultra a Good $600 Starter Machine for Hosting a Local LLM?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v87g6h/is_the_gmktec_m6_ultra_a_good_600_starter_machine/",
+    "comments": 7,
+    "age": "4 hours ago",
+    "sub": "selfhosted",
+    "matched_keywords": [
+      "llm"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Ariami 5.0.0 \u2014 an easier way to self-host your music across all your devices",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v82228/ariami_500_an_easier_way_to_selfhost_your_music/",
+    "comments": 10,
+    "age": "8 hours ago",
+    "sub": "selfhosted",
+    "matched_keywords": [
+      "self-host"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "What features do you consider essential before you'd self-host an automation platform?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7t498/what_features_do_you_consider_essential_before/",
+    "comments": 10,
+    "age": "15 hours ago",
+    "sub": "selfhosted",
+    "matched_keywords": [
+      "self-host"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Crossplatform Spotify self-hosted solution?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7sod6/crossplatform_spotify_selfhosted_solution/",
+    "comments": 16,
+    "age": "15 hours ago",
+    "sub": "selfhosted",
+    "matched_keywords": [
+      "self-host"
+    ],
+    "relevance_score": 1
+  },
+  {
+    "title": "Best self-hosted services for renters/newlyweds?",
+    "url": "https://old.reddit.com/r/selfhosted/comments/1v7rkzp/best_selfhosted_services_for_rentersnewlyweds/",
+    "comments": 9,
+    "age": "16 hours ago",
+    "sub": "selfhosted",
+    "matched_keywords": [
+      "self-host"
+    ],
+    "relevance_score": 1
+  }
+]

@@ -1,0 +1,19 @@
+# hn-standup — scheduled HyperNexus status prompt for Prime Agent.
+#
+# Wire (USER-RUN, one live shell — nothing stored by this file):
+#   prime-agent schedule add <agent> "0 9 * * 1-5" -- "$(cat addons/prime-agent/schedules/hn-standup.txt)"
+# Inspect: prime-agent schedule list
+# Remove:  prime-agent schedule cancel <id>
+#
+# The scheduled turn below is read-only: it never writes memories, never sends
+# messages, never touches credentials. Kernel-down degrades to one plain line.
+
+Report HyperNexus control-plane status, read-only, as a short bullet list:
+
+1. Kernel liveness and version — `await hypernexus.kernel_status()`.
+2. MCP bridge inventory — `await hypernexus.mcp_status()` (servers, tool count).
+3. Memory tiers — `await hypernexus.memory_list(1)` size probe.
+4. Billing — `await hypernexus.billing_status()` (display only).
+
+If the kernel is unreachable, say so in one line and point at
+`bin\hypernexus.exe serve`. Do not retry, do not write memories, do not stall.

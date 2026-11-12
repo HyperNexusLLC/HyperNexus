@@ -1,0 +1,1 @@
+channels solid: copy plus node-write both work

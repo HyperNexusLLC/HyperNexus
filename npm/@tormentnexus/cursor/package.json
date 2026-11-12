@@ -1,0 +1,10 @@
+{
+  "name": "@hypernexus/cursor",
+  "version": "1.0.0-b1",
+  "description": "HyperNexus for Cursor — AI memory, MCP tools, and context harvesting in the Cursor editor",
+  "main": "index.js",
+  "keywords": ["hypernexus", "cursor", "mcp", "ai-memory", "cursor-ide"],
+  "repository": "github:MDMAtk/HyperNexus",
+  "license": "MIT",
+  "files": ["index.js", "package.json"]
+}

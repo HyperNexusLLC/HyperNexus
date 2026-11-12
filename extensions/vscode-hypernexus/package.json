@@ -1,0 +1,145 @@
+{
+  "name": "hypernexus",
+  "displayName": "HyperNexus - Universal AI Control Plane",
+  "description": "Persistent memory, MCP tool routing, and cross-client context sharing for all AI tools",
+  "version": "1.0.0",
+  "publisher": "hypernexus",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/HyperNexusLLC/HyperNexus.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "mcp",
+    "memory",
+    "context",
+    "claude",
+    "cursor",
+    "copilot",
+    "llm"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "hypernexus.connect",
+        "title": "HyperNexus: Connect to Server"
+      },
+      {
+        "command": "hypernexus.disconnect",
+        "title": "HyperNexus: Disconnect"
+      },
+      {
+        "command": "hypernexus.saveMemory",
+        "title": "HyperNexus: Save Memory"
+      },
+      {
+        "command": "hypernexus.searchMemory",
+        "title": "HyperNexus: Search Memory"
+      },
+      {
+        "command": "hypernexus.showStatus",
+        "title": "HyperNexus: Show Status"
+      },
+      {
+        "command": "hypernexus.openDashboard",
+        "title": "HyperNexus: Open Dashboard"
+      },
+      {
+        "command": "hypernexus.showBilling",
+        "title": "HyperNexus: Show Billing Status"
+      },
+      {
+        "command": "hypernexus.searchCode",
+        "title": "HyperNexus: Semantic Code Search"
+      },
+      {
+        "command": "hypernexus.captureHandoff",
+        "title": "HyperNexus: Capture Session Handoff"
+      },
+      {
+        "command": "hypernexus.showSessions",
+        "title": "HyperNexus: Show Sessions"
+      },
+      {
+        "command": "hypernexus.runOpsCheck",
+        "title": "HyperNexus: Run Ops Verify Check"
+      },
+      {
+        "command": "hypernexus.dispatchAgent",
+        "title": "HyperNexus: Dispatch Agent Call"
+      }
+    ],
+    "configuration": {
+      "title": "HyperNexus",
+      "properties": {
+        "hypernexus.serverUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:7778",
+          "description": "HyperNexus kernel base URL (port 7778 is authoritative; 8080 is stale)"
+        },
+        "hypernexus.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect on startup"
+        },
+        "hypernexus.enableMemory": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable persistent memory"
+        },
+        "hypernexus.enableToolRouting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable progressive MCP tool routing"
+        },
+        "hypernexus.modelProvider": {
+          "type": "string",
+          "default": "meta",
+          "description": "Model provider id for HyperNexus agent calls"
+        },
+        "hypernexus.model": {
+          "type": "string",
+          "default": "muse-spark-1.3-contributor",
+          "description": "Model id for HyperNexus agent calls (Meta provider)"
+        }
+      }
+    },
+    "mcpServers": {
+      "hypernexus": {
+        "type": "stdio",
+        "command": "hypernexus",
+        "args": ["mcp"],
+        "env": {
+          "HN_EDITION": "corporate",
+          "HYPERNEXUS_URL": "http://127.0.0.1:7778"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

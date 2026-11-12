@@ -1,0 +1,7 @@
+{
+  "name": "hypernexus",
+  "version": "1.0.0",
+  "bin": {"tn": "./scripts/tn"},
+  "description": "HyperNexus — universal AI control plane CLI + client installer",
+  "scripts": {"install": "python3 scripts/install-client-support.py"}
+}

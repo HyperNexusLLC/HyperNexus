@@ -1,0 +1,13 @@
+agent
+bin
+commands
+hooks
+install.mjs
+mcp.freebuff.snippet.json
+meta-model.freebuff.md
+preferred-tools.md
+prompt-overlay.md
+README.md
+skills
+swarm-prompt-block.md
+use-meta-model.ps1

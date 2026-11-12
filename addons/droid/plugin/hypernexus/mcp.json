@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hypernexus": {
+      "type": "stdio",
+      "command": "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe",
+      "args": ["mcp"],
+      "timeout": 120000,
+      "connectTimeout": 60000,
+      "disabled": false
+    }
+  }
+}

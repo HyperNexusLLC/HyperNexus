@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "hypernexus": {
+      "command": "C:/Users/hyper/workspace/HyperNexus/bin/hypernexus.exe",
+      "args": ["mcp"],
+      "env": {
+        "HYPERNEXUS_WORKSPACE_ROOT": "C:/Users/hyper/workspace/HyperNexus",
+        "HYPERNEXUS_URL": "http://127.0.0.1:7778"
+      },
+      "exposure": "direct",
+      "description": "HyperNexus control plane (Go kernel on :7778): persistent L2/L3 memory, MCP tool routing, agent dispatch, sessions, skills, system + billing status."
+    }
+  }
+}

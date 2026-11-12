@@ -1,0 +1,11 @@
+{
+  "name": "hypernexus-mimo-tui",
+  "version": "1.0.0",
+  "description": "HyperNexus TUI plugin for MiMoCode — slash commands, status toasts, and dialogs for the kernel catalog, tool suggestions, and L2 memory.",
+  "type": "module",
+  "main": "tui.js",
+  "license": "MIT",
+  "dependencies": {
+    "@mimo-ai/plugin": "*"
+  }
+}
