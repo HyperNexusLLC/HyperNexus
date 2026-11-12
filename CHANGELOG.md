@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.44] - 2026-11-12
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Autonomous Swarm Workflows & Pipelines section (`#research-workflows`: Topic Research Center, swarm code-generation queue, live multi-agent swarm topology) from `dashboard-home-view.tsx` (2451→2267 lines) into `dashboard-research-workflows-section.tsx`; shared swarm state (`swarmRunning`, `triggerSwarmGen`) stays in the parent and is passed as props, same pattern as the MCP/memory extractions. tsc + `next build` green, dashboard restarted on the new build; the 97 previously-green dashboard tests still pass (8 failures in `api/trpc/[trpc]/route.test.ts` are pre-existing and environmental — upstream :3100 down, file untouched since v1.0.4).
+
 ## [1.0.43] - 2026-11-11
 
 ### Deployment

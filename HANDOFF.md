@@ -1,3 +1,9 @@
+# HANDOFF - Research-workflows extraction v1.0.44 (2026-11-12) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardResearchWorkflowsSection` (`#research-workflows`: Topic Research Center + swarm code-gen queue + swarm topology, 186 lines) from `dashboard-home-view.tsx` (2451→2267) into `dashboard-research-workflows-section.tsx`; `swarmRunning`/`triggerSwarmGen` threaded as props (same pattern as MCP section). Removed now-unused `ResearchPage` import from home view. Method: python line-splice of lines 902–1087 with assertions.
+- Verified: `npx tsc --noEmit` 0, `npx next build` 0, dashboard restarted (pid 13544, BelowNormal, :7779 200). Dashboard tests: 97 previously-green still pass; 8 failures in `src/app/api/trpc/[trpc]/route.test.ts` are PRE-EXISTING/environmental (expects upstream :3100, currently down; file untouched since v1.0.4) — not caused by this extraction.
+- Remaining in home view body: system-recovery (~640 lines), prompt-collections (~210), governance-billing + enterprise-security (~280, shared workflow/session state — thread props deliberately), workflow-orchestration (~220, workflow state defined in parent at ~line 413).
+- Standing: kernel pid 18336 (v1.0.43, BelowNormal), all hypernexus/node heavyweights swept BelowNormal. Owner still pending: Groq/HF key rotation + GitHub secret-blob decision.
+
 # HANDOFF - Kernel swap v1.0.43 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Owner authorized fixing kernel drift + Git. Git for Windows reinstalled via winget (2.56.0; verified incl. submodule ops). Kernel: stopped ONLY pid 31112 (installed v1.0.0-b1 `serve`) and started repo build `bin/hypernexus-new.exe serve`; other sessions' `bin/hypernexus.exe mcp` processes untouched. Do NOT use `bin/swap-kernel.ps1` while other sessions' MCP processes run — it kills all hypernexus processes.
 
