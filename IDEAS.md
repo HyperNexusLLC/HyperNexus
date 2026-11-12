@@ -379,3 +379,10 @@ SELECT * FROM users WHERE hn_match('find active users from last week');
 ---
 
 *"The best way to predict the future is to invent it."* — Alan Kay
+
+## 2026-11-11 — next-wave ideas
+
+- **Tab-gated lazy sections**: make `DashboardHomeClient` honor `activeTab` and `next/dynamic` the five big home sections; first paint drops to mission-control + health only.
+- **Embedding-cache telemetry**: expose cache hit-rate + embed latency in `/api/system/status` so the sub-second-search goal is measurable, then cache record embeddings' cosine top-K per query hash.
+- **One-command harness doctor**: a kernel endpoint that reports, per harness (Codex/Muse/pi/...), plugin version, MCP reachability, and banner-hook health — the CLI/desktop visibility work made self-diagnosing.
+- **Tray as supervisor**: systray menu gains "Restart dashboard" and live kernel version/build channel (repo vs installed), closing the build-drift gap without a terminal.

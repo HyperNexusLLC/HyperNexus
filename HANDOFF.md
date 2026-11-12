@@ -1,3 +1,7 @@
+# HANDOFF - Docs governance v1.0.40 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Refreshed DEPLOY/MEMORY/IDEAS/VISION + fixed VERSION source references. Governance-section extraction attempted and reverted cleanly (shared workflow state) — see MEMORY.md note before retrying.
+- Remaining queue: memory-graphrag / mcp-registry / research-workflows extractions (full props threading), kernel swap (owner), Git LFS for `data/tormentnexus.db` (needs quiesced snapshot; 210MB), harness doctor endpoint (IDEAS).
+
 # HANDOFF - Per-section decomposition v1.0.39 (2026-11-11) [muse-wonder-1.0 in muse-code]
 - Extracted `DashboardIntegrationsSection` (incl. telemetry children + `DashboardConsolidatedSections`, which were nested inside the integrations div — DOM preserved). Remaining sections to extract: memory-graphrag, mcp-registry, research-workflows, governance-billing. Pattern: python line-splice + props for query data + tsc/tests/build/restart per section.
 

@@ -374,3 +374,10 @@ Memories should be stored both:
 ## 2026-11-07 - kernel search hang root cause (codex-gui lane)
 - handleMemorySearch (go/internal/httpapi/missing_handlers.go:28): callUpstreamJSON memory.query via interop.CallTRPCProcedure (no own timeout) then Ollama-backed VectorStore.SemanticSearch; either blocks past 45s. FTS fast but omits fresh facts. facts/add fine. Shared-kernel rebuild/restart NOT done (other sessions live); bus adapted instead (FTS-first + SKIP).
 - Box discipline re-verified: one light command per turn, heavy ops background-to-file, llama-server BelowNormal.
+
+## 2026-11-11 — architecture notes (v1.0.40)
+
+- Dashboard home is a single-page consolidation: sections are extracted components (`dashboard-mission-control-header.tsx`, `dashboard-integrations-section.tsx`, `dashboard-consolidated-sections.tsx`) over pure model modules (`dashboard-overview-model.ts`, `dashboard-startup-blocking.ts`). `DashboardHomeView`'s `activeTab` prop is unused; tab-gating would belong in `DashboardHomeClient`.
+- Remaining home-view sections (memory-graphrag, mcp-registry, research-workflows, governance/security) keep their state in the parent because sibling sections share it (diagnostics/schema results, workflow mutations); extract only with full props threading.
+- Semantic search embeds the query on every call via the bundled MiniLM ONNX model; `localEmbed` now LRU-caches (256 entries, 10 min TTL) — repeated queries skip inference under the store mutex.
+- Dashboard tests run under `apps/web/vitest.config.ts` (source aliases for `@hypernexus/ui`, single React copy, inlined deps, build-output excludes). 97 tests green; do not point vitest at `packages/ui/dist` (stale, unresolved `@/` imports).

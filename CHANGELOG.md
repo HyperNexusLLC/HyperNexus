@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
 
+## [1.0.40] - 2026-11-11
+
+### Documentation
+- Governance refresh: `DEPLOY.md` gains the version-stamped kernel build, dashboard start, and current ops notes (remotes, owner-gated kernel swap, BelowNormal rule, Git-for-Windows fork-bomb workaround, systray). `MEMORY.md`/`IDEAS.md`/`VISION.md` gain dated 2026-11-11 sections; `TODO.md`/`ROADMAP.md` now correctly cite `VERSION` (not `VERSION.md`) as the single version source.
+- Attempted governance-section extraction was reverted: its JSX shares workflow/session state with sibling sections, so it stays in the parent until props threading is done deliberately (noted in MEMORY.md).
+
 ## [1.0.39] - 2026-11-11
 
 ### Changed
