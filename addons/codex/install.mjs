@@ -40,7 +40,7 @@ for (const c of cands) { if (fs.existsSync(c)) { return c; } }
 return exe; } 
 function wsRoot() { if (process.env.HYPERNEXUS_WORKSPACE_ROOT) { return process.env.HYPERNEXUS_WORKSPACE_ROOT; } return REPO_ROOT; } 
 function defaultsBlock() { 
-return [TD_BEGIN, 'model = ' + DQ + 'meta/muse-spark-1.3-contributor' + DQ, 'model_provider = ' + DQ + 'meta' + DQ, 'model_reasoning_effort = ' + DQ + 'high' + DQ, 'model_reasoning_summary = ' + DQ + 'auto' + DQ, 'model_context_window = 1048576', TD_END].join('\n'); } 
+return [TD_BEGIN, 'model = ' + DQ + 'meta/muse-wonder-1.0-contributor' + DQ, 'model_provider = ' + DQ + 'meta' + DQ, 'model_reasoning_effort = ' + DQ + 'high' + DQ, 'model_reasoning_summary = ' + DQ + 'auto' + DQ, 'model_context_window = 1048576', TD_END].join('\n'); } 
 function providerBlock() { 
 return [TP_BEGIN, '[model_providers.meta]', 'name = ' + DQ + 'Meta' + DQ, 'base_url = ' + DQ + 'http://127.0.0.1:7778/v1' + DQ, 'env_key = ' + DQ + 'MODEL_API_KEY' + DQ, 'wire_api = ' + DQ + 'responses' + DQ, TP_END].join('\n'); } 
 function mcpBlock() { 
@@ -107,7 +107,7 @@ const rsrc = path.join(__dirname, 'hooks', 'README.md');
 if (fs.existsSync(rsrc)) { writeUtf8(path.join(HOOKS_DIR, 'README.md'), fs.readFileSync(rsrc, 'utf8')); } 
 return count; } 
 function agentsBlock() { 
-return [MBEGIN, '## HyperNexus Control Plane (codex)', '', 'This repo is backed by the local HyperNexus kernel (Go, port 7778).', 'Codex reads this file at session start plus skills from CODEX_HOME/skills', '(each skill invocable as /skill:name).', '', 'Discipline loop: RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY', '', '- RECALL: search kernel memory first (hypernexus MCP search_memory) before re-deriving.', '- DISCOVER: list MCP servers and tools, then route with mcp_call_tool.', '- PERSIST: store non-obvious outcomes via add_memory with topic,codex tags.', '- VERIFY: system_status plus billing_status before and after production changes.', '- Skills: hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator, hypernexus-researcher', '  plus command-skills hn-status, hn-search, hn-store, hn-session, hn-context, hn-summary, hn-tools, hn-purge, hn-plan, hn-remember, hn-restore, hn-auth, hn-models.', '- Model: meta/muse-spark-1.3-contributor via model_providers.meta (env_key MODEL_API_KEY).', '  Mint with node addons/codex/bin/meta-muse-key.mjs (pi owns OAuth refresh).', '  Launch with use-meta-model.ps1 after setting MODEL_API_KEY in your shell.', '- Hooks (by-convention, CODEX_HOME/hooks): hn-session.sh bootstrap, hn-rbac.sh deny-list, hn-pre-tool.sh allow-gate.', '- Degradation: if the kernel is down, say so in one sentence and continue with local tools.', MEND].join('\n'); } 
+return [MBEGIN, '## HyperNexus Control Plane (codex)', '', 'This repo is backed by the local HyperNexus kernel (Go, port 7778).', 'Codex reads this file at session start plus skills from CODEX_HOME/skills', '(each skill invocable as /skill:name).', '', 'Discipline loop: RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY', '', '- RECALL: search kernel memory first (hypernexus MCP search_memory) before re-deriving.', '- DISCOVER: list MCP servers and tools, then route with mcp_call_tool.', '- PERSIST: store non-obvious outcomes via add_memory with topic,codex tags.', '- VERIFY: system_status plus billing_status before and after production changes.', '- Skills: hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator, hypernexus-researcher', '  plus command-skills hn-status, hn-search, hn-store, hn-session, hn-context, hn-summary, hn-tools, hn-purge, hn-plan, hn-remember, hn-restore, hn-auth, hn-models.', '- Model: meta/muse-wonder-1.0-contributor via model_providers.meta (env_key MODEL_API_KEY).', '  Mint with node addons/codex/bin/meta-muse-key.mjs (pi owns OAuth refresh).', '  Launch with use-meta-model.ps1 after setting MODEL_API_KEY in your shell.', '- Hooks (by-convention, CODEX_HOME/hooks): hn-session.sh bootstrap, hn-rbac.sh deny-list, hn-pre-tool.sh allow-gate.', '- Degradation: if the kernel is down, say so in one sentence and continue with local tools.', MEND].join('\n'); } 
 function installOverlay() { 
 const ex = readIfExists(AGENTS_FILE); 
 if (ex == null) { log('WARNING: AGENTS.md not found, skipping overlay.'); return 'skipped'; } 
@@ -124,7 +124,7 @@ const gaps = [];
 const raw = readIfExists(CONFIG); 
 if (raw == null) { gaps.push('missing ' + CONFIG); } 
 else { 
-if (raw.indexOf('muse-spark-1.3-contributor') === -1) { gaps.push('config: no muse-spark-1.3-contributor model'); } 
+if (raw.indexOf('muse-spark-1.3-contributor') === -1 && raw.indexOf('muse-wonder-1.0-contributor') === -1) { gaps.push('config: no muse-spark/wonder model'); } 
 if (raw.indexOf('[model_providers.meta]') === -1) { gaps.push('config: no [model_providers.meta]'); } 
 if (raw.indexOf('[mcp_servers.hypernexus]') === -1) { gaps.push('config: no [mcp_servers.hypernexus]'); } } 
 const all = CORE_SKILLS.concat(AGENTS).concat(COMMANDS); 
