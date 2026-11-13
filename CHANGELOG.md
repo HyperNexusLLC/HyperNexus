@@ -43,6 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Git LFS prep**: `.gitattributes` patterns route `data/tormentnexus.db` (210MB), `data/catalog.db` (52MB), and `.tormentnexus/skills.db` (49MB) through LFS when staged. The files stay untracked until an owner-timed quiesced snapshot (kernel + MCP processes stopped, WAL checkpointed) - the live DBs cannot be quiesced without stopping other sessions.
 
+## [1.0.59] - 2026-11-13
+
+### Fixed
+- **pi `hypernexus_code_search` mode docs**: corrected the advertised modes from the non-existent `ast|semantic|pattern` (default semantic) to the kernel's real `symbols|definitions|references` (default symbols), with a battery guard in `test-pi-ext.mjs` (11/11).
+
 ## [Unreleased]
 
 ### Added

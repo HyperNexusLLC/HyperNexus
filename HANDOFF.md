@@ -1,3 +1,8 @@
+# HANDOFF - pi code_search mode docs corrected v1.0.59 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- `addons/pi/hypernexus.ts` `hypernexus_code_search` documented non-existent modes (`ast|semantic|pattern`, default semantic). Kernel contract (`go/internal/tools/tool_schemas.go`, `codebase_analysis.go`) is `symbols|definitions|references` (default symbols). Fixed description/promptSnippet/guidelines/param enum/default in pi; guarded by a new check in `addons/pi/bin/test-pi-ext.mjs` (**11/11**).
+- Kernel redeployed v1.0.59 exact-pid (quoted set env); dashboard survives swaps.
+- Remaining queue: Git LFS snapshot (owner quiesced window), per-GUI app launches (owner). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - Git LFS prep (attributes) v1.0.58 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Assessed LFS migration: git-lfs 3.8.1 present; `data/tormentnexus.db` 210MB has LIVE `-wal`/`-shm` sidecars and other sessions' MCP processes hold the DBs, so a true quiesce is an owner-window operation (cannot stop other lanes' processes). Prep shipped instead: `.gitattributes` LFS patterns for `data/tormentnexus.db`, `data/catalog.db`, `.tormentnexus/skills.db` (verified via `git check-attr`); files remain untracked until the quiesced snapshot. Root `catalog.db`/`hypernexus.db` stay regular tracked files.
 - Owner window needed for the actual snapshot: stop kernel + all harness MCP processes, `PRAGMA wal_checkpoint(TRUNCATE)`, stage the three DBs (LFS pointers), push, restart. Est. one 210MB LFS upload.

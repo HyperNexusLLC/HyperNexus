@@ -23,7 +23,7 @@
 - [ ] **Embedding cache** — in-memory vector matrix so semantic search stays sub-second under load (currently 0.8–2.5s with hybrid retrieve).
 - [ ] **Ollama install** — `llama-server` binary is missing; either repair the install or drop the watchdog's Ollama dependency (embeddings already use bundled MiniLM, so Ollama is now optional).
 - [x] ~~**Port pi tools** to mimo + opencode~~ **done (opencode v1.0.43-era, mimo verified v1.0.55, 33 tools + battery 7/7)**.
-- [ ] **`codebase_search` docs** — its modes are `symbols|definitions|references` (not `ast|semantic|pattern`); document in the tool description.
+- [x] ~~**`codebase_search` docs**~~ **done v1.0.59**: pi tool now advertises `symbols|definitions|references` (default symbols); battery-guarded.
 - [ ] **Gossip (:7878)** — confirm whether P2P gossip is expected to run locally; gate or start it.
 
 ## 🟢 Low / cleanup

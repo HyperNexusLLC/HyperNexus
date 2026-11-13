@@ -87,4 +87,10 @@ check("README documents install and model", () => {
   assert.match(readme, /muse-spark-1\.3-contributor/);
 });
 
+check("code_search documents kernel modes symbols|definitions|references", () => {
+  const ts = src("hypernexus.ts");
+  assert.match(ts, /symbols.*definitions.*references/);
+  assert.doesNotMatch(ts, /'ast' \| 'semantic' \| 'pattern'/);
+});
+
 process.stdout.write(`\n${passed}/${passed} checks passed\n`);
