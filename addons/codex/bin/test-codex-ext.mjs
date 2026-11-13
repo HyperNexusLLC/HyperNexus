@@ -18,7 +18,7 @@ function ok(n, c) { if (c) { pass++; console.log('PASS ' + n); } else { fail++; 
 function readIfExists(p) { try { return fs.readFileSync(p, 'utf8'); } catch (e) { return null; } }
 const cfg = readIfExists(CONFIG);
 ok('config-exists', cfg != null);
-ok('config-model', cfg != null && (cfg.indexOf('muse-spark-1.3-contributor') !== -1 || (cfg.indexOf('[model_providers.meta]') !== -1 && cfg.indexOf('model_provider') !== -1)));
+ok('config-model', cfg != null && (cfg.indexOf('muse-wonder-1.0-contributor') !== -1 || (cfg.indexOf('[model_providers.meta]') !== -1 && cfg.indexOf('model_provider') !== -1)));
 ok('config-provider', cfg != null && cfg.indexOf('[model_providers.meta]') !== -1);
 ok('config-envkey', cfg != null && cfg.indexOf('MODEL_API_KEY') !== -1);
 ok('config-mcp', cfg != null && cfg.indexOf('[mcp_servers.hypernexus]') !== -1);
@@ -90,7 +90,7 @@ async function main() {
     });
     if (!key) { console.log('SKIP proxy-inference (empty key)'); }
     else {
-      const body = { model: 'meta/muse-spark-1.3-contributor', input: 'Reply with the exact word PONG.', tools: [{ type: 'function', name: 'code_interpreter', description: 'run code', parameters: { type: 'object', properties: {} } }] };
+      const body = { model: 'meta/muse-wonder-1.0-contributor', input: 'Reply with the exact word PONG.', tools: [{ type: 'function', name: 'code_interpreter', description: 'run code', parameters: { type: 'object', properties: {} } }] };
       const res = await fetch('http://127.0.0.1:7778/v1/responses', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key }, body: JSON.stringify(body) });
       const txt = await res.text();
       console.log('proxy-inference-status: ' + res.status + ' body: ' + txt.slice(0, 300));

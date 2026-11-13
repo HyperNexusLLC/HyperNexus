@@ -1,18 +1,20 @@
 #!/usr/bin/env node
 /**
- * cdp-bridge.mjs -- drive web session threads (muse.ai, Gemini) via Edge CDP.
- * ==========================================================================
+ * cdp-bridge.mjs -- drive web session threads (muse.ai, Gemini, ChatGPT) via Edge CDP.
+ * ====================================================================================
  * The output/input driver for sessions that live in the browser and cannot
  * poll the kernel session bus. Generalizes bin/cdp-send.mjs + bin/cdp.mjs.
  *
  *   node cdp-bridge.mjs tabs
- *   node cdp-bridge.mjs send --target muse|gemini --file <path>
- *   node cdp-bridge.mjs send --target muse|gemini --text "..."
- *   node cdp-bridge.mjs read --target muse|gemini [--chars 2000]
+ *   node cdp-bridge.mjs send --target muse|gemini|chatgpt --file <path>
+ *   node cdp-bridge.mjs send --target muse|gemini|chatgpt --text "..."
+ *   node cdp-bridge.mjs read --target muse|gemini|chatgpt [--chars 2000]
  *
- * INPUT:  muse = textarea value-setter + Enter key events (synchronous
- *         evaluate; background tabs throttle timers). gemini = focus the
- *         Quill editor, execCommand insertText, then click Send.
+ * INPUT:  muse    = textarea value-setter + Enter key events (synchronous
+ *                   evaluate; background tabs throttle timers).
+ *         gemini  = focus the Quill editor, execCommand insertText, then click Send.
+ *         chatgpt = focus ProseMirror #prompt-textarea (or fallback textarea),
+ *                   insertText/input event, then click [data-testid="send-button"].
  * OUTPUT: synchronous Runtime.evaluate of document.body.innerText tail.
  *         awaitPromise is never used (it hangs while a reply generates).
  *
@@ -34,11 +36,14 @@ function listTabs() {
     return JSON.parse(execSync(`curl.exe -s -m 10 ${CDP}/json`).toString());
   } catch (e) { fail("CDP tab list failed (is msedge --remote-debugging-port=9222 running?): " + e.message); }
 }
+const VALID_TARGETS = new Set(["muse", "gemini", "chatgpt"]);
 function findTab(target) {
   const tabs = listTabs().filter((t) => t.type === "page");
   const tab = target === "muse"
     ? tabs.find((t) => t.url.includes("muse.ai"))
-    : tabs.find((t) => t.url.includes("gemini.google.com"));
+    : target === "gemini"
+      ? tabs.find((t) => t.url.includes("gemini.google.com"))
+      : tabs.find((t) => t.url.includes("chatgpt.com") || t.url.includes("chat.openai.com"));
   if (!tab) fail(`no ${target} tab open in Edge (CDP ${CDP})`);
   return tab;
 }
@@ -94,7 +99,7 @@ async function cmdTabs() {
 }
 async function cmdSend() {
   const target = opt("--target");
-  if (target !== "muse" && target !== "gemini") fail("send needs --target muse|gemini");
+  if (!VALID_TARGETS.has(target)) fail("send needs --target muse|gemini|chatgpt");
   const file = opt("--file");
   const text = file ? readFileSync(file, "utf8").trim() : opt("--text");
   if (!text) fail("send needs --file <path> or --text \"...\"");
@@ -118,7 +123,7 @@ async function cmdSend() {
 })()`;
     const r = await evaluate(tab, js);
     if (r !== "SUBMITTED") fail("muse send failed: " + r);
-  } else {
+  } else if (target === "gemini") {
     const insertJs = `
 (() => {
   const ed = document.querySelector('div.ql-editor[contenteditable="true"]') || document.querySelector('div.ql-editor');
@@ -142,13 +147,49 @@ async function cmdSend() {
 })()`;
     const r = await evaluate(tab, clickJs);
     if (r !== "CLICKED") fail("gemini send failed: " + r);
+  } else {
+    // ChatGPT (ProseMirror contenteditable #prompt-textarea or fallback textarea)
+    const insertJs = `
+(() => {
+  const pm = document.querySelector('#prompt-textarea[contenteditable="true"]')
+    || document.querySelector('div.ProseMirror[contenteditable="true"]');
+  if (pm) {
+    pm.focus();
+    const ok = document.execCommand('insertText', false, ${JSON.stringify(text)});
+    if (!ok || pm.innerText.trim().length === 0) {
+      pm.textContent = ${JSON.stringify(text)};
+      pm.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${JSON.stringify(text)} }));
+    }
+    return JSON.stringify({ mode: 'prosemirror', len: pm.innerText.length });
+  }
+  const ta = document.querySelector('textarea#prompt-textarea') || document.querySelector('textarea');
+  if (!ta) return JSON.stringify({ error: 'NO_CHATGPT_EDITOR' });
+  const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+  setter.call(ta, ${JSON.stringify(text)});
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  return JSON.stringify({ mode: 'textarea', len: ta.value.length });
+})()`;
+    const ins = JSON.parse(await evaluate(tab, insertJs));
+    if (ins.error || !ins.len) fail("chatgpt insert failed: " + JSON.stringify(ins));
+    await sleep(900);
+    const clickJs = `
+(() => {
+  const send = document.querySelector('button[data-testid="send-button"]')
+    || [...document.querySelectorAll('button')].find(b => /send prompt|send message/i.test(b.getAttribute('aria-label') || ''));
+  if (!send) return 'NO_SEND_BTN';
+  if (send.disabled) return 'SEND_DISABLED';
+  send.click();
+  return 'CLICKED';
+})()`;
+    const r = await evaluate(tab, clickJs);
+    if (r !== "CLICKED") fail("chatgpt send failed: " + r);
   }
   await ackRecord(guard.key, target, text.length);
   process.stdout.write(JSON.stringify({ ok: true, target, sent: text.length, ackKey: guard.key }) + "\n");
 }
 async function cmdRead() {
   const target = opt("--target");
-  if (target !== "muse" && target !== "gemini") fail("read needs --target muse|gemini");
+  if (!VALID_TARGETS.has(target)) fail("read needs --target muse|gemini|chatgpt");
   const chars = Number(opt("--chars") || 2000);
   const tab = findTab(target);
   const text = await evaluate(tab, `document.body.innerText.slice(-${chars})`);
@@ -159,7 +200,7 @@ async function main() {
   if (cmd === "tabs") return cmdTabs();
   if (cmd === "send") return cmdSend();
   if (cmd === "read") return cmdRead();
-  process.stderr.write("usage: node cdp-bridge.mjs tabs | send --target muse|gemini (--file <path>|--text \"...\") | read --target muse|gemini [--chars n]\n");
+  process.stderr.write("usage: node cdp-bridge.mjs tabs | send --target muse|gemini|chatgpt (--file <path>|--text \"...\") | read --target muse|gemini|chatgpt [--chars n]\n");
   process.exit(cmd === "--help" || cmd === "-h" ? 0 : 1);
 }
 main().catch((e) => fail(e.message || String(e)));

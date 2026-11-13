@@ -15,18 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
-## [1.0.30] - 2026-11-07
+## [1.0.46] - 2026-11-12
+
+### Added
+- **Cross-harness Edge CDP 9222 bridge (`addons/shared/cdp-bridge.mjs`)**: added `--target chatgpt` (`chatgpt.com` / `chat.openai.com` ProseMirror `#prompt-textarea` + fallback `textarea` + `[data-testid="send-button"]`) alongside `muse` and `gemini`, with kernel scratchpad SHA-256 deduplication guard (`bus:acked:<hash12>`). Registered `antigravity-gemini` on `addons/shared/session-bus.mjs`.
+- **Codex Wonder 1.0 wiring (`addons/codex/*`, `AGENTS.md`)**: aligned Codex default contributor model wiring to `meta/muse-wonder-1.0-contributor` (22/22 static + kernel health/MCP battery checks green; Meta OAuth mint awaits `/login meta` refresh in `pi`).
 
 ### Fixed
-- **Working-tree regression repaired**: the working tree had regressed to a 1.0.28 state (VERSION, Go buildinfo, 35 package.json refs, plus reverted CHANGELOG/HANDOFF/ROADMAP/TODO/SUBMODULES text, a dashboard decomposition revert, and a dropped `claude-code` supervisor mapping). All restored to the committed 1.0.29 state; the inline dashboard duplicate was discarded in favor of the agreed `DashboardConsolidatedSections` extraction, and the `claude-code` → `claude` supervisor mapping retained. Temp artifacts (`_pong_*`, codex-gui swarm out/err logs) deleted; `.claude-flow/` added to `.gitignore` alongside the other harness working dirs.
-- **Branch reconciliation**: all 4 local feature branches (`clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`) verified at 0 unique commits vs `main` (fully merged ancestors) and fast-forwarded to `main` tip (reverse-merge, no drift). Remote-only `feature/cloud-dashboard-mcp-sse-*` and `gh-pages-*` branches left untouched (archival/deploy).
+- **Root build & launch scripts**:
+  - `start.sh`: fixed silent Go kernel build target (`./cmd/hypernexus` → `./cmd/tormentnexus`).
+  - `start.bat`: launches Go sidecar (`:7778`) and Next.js dashboard (`:7779`) with `/BELOWNORMAL` priority per standing host stability rule.
+  - `build-editions.bat`: fixed unreachable `:build_corporate` menu target (`CHOICE==2` previously jumped to `:build_hypernexus`).
+  - `commit-and-push.bat` & `push-to-gitlab.bat`: switched push target from legacy `clean-main` to `main` and added explicit `git reset HEAD` exclusions for live runtime SQLite churn (`catalog.db`, `hypernexus.db`, `.tormentnexus/skills.db`), >100MB `data/tormentnexus.db`, `data/provider_metrics.db*`, and Windows `go/NUL`.
+- **Lockfile regex corruption restored**: reverted sibling regex-replace corruption on `pnpm-lock.yaml`, 4 `Cargo.lock` files, and 2 skill example versions before staging.
 
 ### Changed
-- **Upstream sync**: `git fetch --all --tags` on root + all 3 submodules (no nested submodules). `github/main` trails local `main` by 2 commits (memory/session state); `gitlab/main` in sync. Submodules (`vendor/deepseek-harness` fcc0ad4621, `vendor/grok-build` 2bdd1d6a, `lumbros.me` 16261e0) at upstream tips, no feature branches. Structural map re-verified in `docs/SUBMODULES.md`.
-- **Version sync**: VERSION 1.0.29 -> 1.0.30 propagated to 35 package/buildinfo references via `scripts/sync-versions.mjs`.
-
-### Notes
-- Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
+- **Repository synchronization (Session SYNC5)**: fetched `--all --tags` across root (`gitlab`, `github`, `origin`) and all 3 submodules (`vendor/deepseek-harness` `e8f7b93a34`, `vendor/grok-build` `2bdd1d6a`, `lumbros.me` `16261e0`). Audited divergent `github/main` (`b37ca5bf08` / `e3fc22dc84`): verified all `alpha.251–253` code commits (`swarm_v7.py`, UDP gossip, Win32 systray, deep-link actions, Chrome extension icons, Reddit tools) are already present in `main`, merged `b37ca5bf08`'s finalized Pricing/Status/License updates into `README.md` without importing `a64d2a842b`'s 3,550 `..go_backup_old/` + 1,823 `third_party/` files, and fast-forwarded `clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, and `fix/test-local-embed` to `main`.
+- **Nondestructive root cleanup**: moved 19 tracked `_tmp_*` debug scratch files from repository root into `archive/root-tmp-2026-11-12/` via `git mv`.
+- **Version sync**: `VERSION` `1.0.45` → `1.0.46` across 35 manifests + Go `buildinfo`.
 
 ## [1.0.45] - 2026-11-12
 
@@ -114,6 +120,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Kernel swapped to merged build (session bus + native Go orchestrate live); swarm bus scratchpad mirror; priority rule (heavyweight processes BelowNormal).
+
+### Fixed (2026-11-07 sync pass)
+- **Working-tree regression repaired**: restored committed 1.0.29 state over regressed 1.0.28 working copy, retained `DashboardConsolidatedSections` extraction and `claude-code` → `claude` supervisor mapping, added `.claude-flow/` to `.gitignore`, and fast-forwarded all 4 active feature branches (`clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`) to `main` while leaving live-kernel SQLite/archive churn unstaged.
 
 ## [1.0.29] - 2026-11-05
 

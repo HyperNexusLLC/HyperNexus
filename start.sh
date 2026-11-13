@@ -15,7 +15,7 @@ echo ""
 # ── 1. Build Go Kernel ───────────────────────────
 if command -v go &>/dev/null; then
 	echo "[1/4] Building Go kernel..."
-	(cd go && go build -ldflags "-s -w -X gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo.Version=${VER}" -buildvcs=false -o ../bin/hypernexus ./cmd/hypernexus 2>/dev/null) && echo "      ✓ bin/hypernexus built" || echo "      [WARN] Go build failed"
+	(cd go && go build -ldflags "-s -w -X gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo.Version=${VER}" -buildvcs=false -o ../bin/hypernexus ./cmd/tormentnexus 2>/dev/null) && echo "      ✓ bin/hypernexus built" || echo "      [WARN] Go build failed"
 else
 	echo "[1/4] Go not found — skipping kernel build."
 fi

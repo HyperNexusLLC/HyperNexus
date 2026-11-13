@@ -40,7 +40,7 @@ cd apps/web
 node node_modules/next/dist/bin/next start -p 7779   # production, after `npx next build`
 ```
 
-Current ops notes (2026-11-11, v1.0.40):
+Current ops notes (2026-11-11, v1.0.43):
 
 - Canonical remotes: GitLab `gitlab.com/HyperNexusLLC/HyperNexus` (primary). GitHub lags pending the owner's secret-blob unblock/rewrite decision.
 - The live :7778 kernel may be the installed build (`%LOCALAPPDATA%/HyperNexus/hypernexus.exe`); swapping in a repo build is an owner-gated, exact-PID operation (`bin/swap-kernel.ps1`). Never kill pre-existing hypernexus processes.

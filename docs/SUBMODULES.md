@@ -1,6 +1,6 @@
 # Submodule Structural Map
 
-Regenerated 2026-11-11 (v1.0.32 repo-sync, Session SYNC4). Source of truth: `.gitmodules` + `git submodule status`. deepseek-harness advanced to upstream master v0.2.2-rc.2; grok-build and lumbros.me unchanged. Untracked HyperNexus overlays inside `vendor/deepseek-harness` (`README-HYPERNEXUS.md`, `hypernexus.cordis.yml`) and `vendor/grok-build` (`.grok/`, `hypernexus-mcp.toml`) retained as-is.
+Regenerated 2026-11-12 (v1.0.46 repo-sync, Session SYNC5). Source of truth: `.gitmodules` + `git -C <submodule> rev-parse HEAD` across all 3 submodules (`git fetch --all --tags` clean, 0 nested `.gitmodules`, 0 submodule feature branches). `vendor/deepseek-harness` local `master` branch ref fast-forwarded to `origin/master` (`e8f7b93a34`, dsh v0.2.2-rc.2); `vendor/grok-build` (`2bdd1d6a`) and `lumbros.me` (`16261e0`) verified at exact upstream `main` tips. Untracked HyperNexus overlays inside `vendor/deepseek-harness` (`README-HYPERNEXUS.md`, `hypernexus.cordis.yml`) and `vendor/grok-build` (`.grok/`, `hypernexus-mcp.toml`) retained as-is.
 
 | Path | Remote URL | Commit | Branch/Describe |
 |---|---|---|---|

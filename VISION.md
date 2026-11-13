@@ -199,6 +199,6 @@ Developers should focus on what their agents DO, not how they REMEMBER, ROUTINE,
 
 *"The best infrastructure is invisible. You don't think about it, you just build on top of it."*
 
-## Status bridge (2026-11-11, v1.0.40)
+## Status bridge (2026-11-11, v1.0.43)
 
 The forgetting problem is now attacked on three live layers: L1/L2 kernel memory with semantic (cached-embedding) recall, a session bus visible in CLI and desktop harnesses (startup banner, swarm scratchpad mirror), and a consolidated single-page console where every subsystem is one anchor away. Next: lazy per-tab loading, measurable search latency, and harness self-diagnostics.

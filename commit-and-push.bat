@@ -21,14 +21,15 @@ git status --short
 echo ----------------------------------------
 echo.
 
-REM Stage all changes
-echo Staging all changes...
+REM Stage all changes (excluding live runtime SQLite churn, >100MB DBs, secrets, and Windows device names)
+echo Staging changes safely...
 git add -A
 if errorlevel 1 (
     echo [ERROR] Failed to stage changes
     pause
     exit /b 1
 )
+git reset HEAD -- catalog.db hypernexus.db .tormentnexus/skills.db data/tormentnexus.db data/provider_metrics.db data/provider_metrics.db.local-backup go/NUL >nul 2>nul
 echo Done staging changes.
 echo.
 
@@ -66,7 +67,7 @@ echo.
 
 REM Confirm push
 echo.
-echo This will push to both GitHub and GitLab (clean-main).
+echo This will push to both GitLab and GitHub (main).
 set /p CONFIRM="Continue? (Y/N): "
 if /i not "%CONFIRM%"=="Y" (
     echo Push cancelled.
@@ -76,16 +77,16 @@ if /i not "%CONFIRM%"=="Y" (
 
 REM Push to both remotes
 echo.
-echo Pushing to GitHub...
-git push github clean-main
-if errorlevel 1 (
-    echo [WARNING] Push to github failed
-)
-
-echo Pushing to GitLab...
-git push gitlab clean-main
+echo Pushing to GitLab (primary)...
+git push gitlab main
 if errorlevel 1 (
     echo [WARNING] Push to gitlab failed
+)
+
+echo Pushing to GitHub...
+git push github main
+if errorlevel 1 (
+    echo [WARNING] Push to github failed
 )
 
 echo.

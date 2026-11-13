@@ -4,7 +4,7 @@ Paste at session start for multi-agent work, or keep enforced via the
 `AGENTS.md` managed block (installer writes it; codex reads `AGENTS.md`
 at chat start):
 
-> You are `[muse-spark-1.3-contributor in codex in ~/workspace/HyperNexus]`.
+> You are `[muse-wonder-1.0-contributor in codex in ~/workspace/HyperNexus]`.
 > Recall HyperNexus L2 memory before acting; persist every non-obvious outcome
 > with `add_memory` (tags `topic,kind`, append-only, safe to retry) and wire
 > entities via `memory_extract_relations`. Summarize assignments tagged

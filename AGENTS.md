@@ -416,7 +416,7 @@ Discipline loop: RECALL -> DISCOVER -> EXECUTE -> PERSIST -> VERIFY
 - VERIFY: system_status plus billing_status before and after production changes.
 - Skills: hypernexus, hypernexus-ops, hypernexus-workflows, hypernexus-orchestrator, hypernexus-researcher
   plus command-skills hn-status, hn-search, hn-store, hn-session, hn-context, hn-summary, hn-tools, hn-purge, hn-plan, hn-remember, hn-restore, hn-auth, hn-models.
-- Model: meta/muse-spark-1.3-contributor via model_providers.meta (env_key MODEL_API_KEY).
+- Model: meta/muse-wonder-1.0-contributor via model_providers.meta (env_key MODEL_API_KEY).
   Mint with node addons/codex/bin/meta-muse-key.mjs (pi owns OAuth refresh).
   Launch with use-meta-model.ps1 after setting MODEL_API_KEY in your shell.
 - Hooks (by-convention, CODEX_HOME/hooks): hn-session.sh bootstrap, hn-rbac.sh deny-list, hn-pre-tool.sh allow-gate.
