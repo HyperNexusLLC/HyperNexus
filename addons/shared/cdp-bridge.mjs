@@ -66,6 +66,55 @@ function evaluate(tab, expression) {
 }
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 
+// Multi-call CDP session (Runtime + Input domains) for targets whose submit
+// path is a trusted key event rather than a DOM click: ChatGPT's ProseMirror
+// composer shows no clickable send button in some layouts, but Enter submits.
+function cdpSession(tab) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(tab.webSocketDebuggerUrl);
+    let nextId = 0;
+    const pending = new Map();
+    const timer = setTimeout(() => reject(new Error("CDP session timeout")), 45000);
+    ws.onmessage = (ev) => {
+      const d = JSON.parse(ev.data);
+      if (!pending.has(d.id)) return;
+      pending.get(d.id)(d);
+      pending.delete(d.id);
+    };
+    ws.onerror = () => { clearTimeout(timer); reject(new Error("CDP websocket error")); };
+    ws.onopen = () => resolve({
+      call(method, params) {
+        return new Promise((res) => {
+          const id = ++nextId;
+          pending.set(id, res);
+          ws.send(JSON.stringify({ id, method, params }));
+        });
+      },
+      close() { clearTimeout(timer); try { ws.close(); } catch {} },
+    });
+  });
+}
+
+async function dispatchEnterOnComposer(tab) {
+  const session = await cdpSession(tab);
+  try {
+    const info = await session.call("Runtime.evaluate", {
+      expression: `(() => { const el = document.querySelector('div[contenteditable="true"]'); if (!el) return 'no-composer'; el.focus(); const r = el.getBoundingClientRect(); return JSON.stringify({ x: r.x + r.width / 2, y: r.y + r.height / 2 }); })()`,
+      returnByValue: true,
+    });
+    const raw = info.result?.result?.value;
+    if (!raw || raw === "no-composer") return false;
+    const { x, y } = JSON.parse(raw);
+    await session.call("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+    await session.call("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
+    await session.call("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
+    await session.call("Input.dispatchKeyEvent", { type: "keyUp", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
+    return true;
+  } finally {
+    session.close();
+  }
+}
+
 // Dedupe/idempotency guard (leader priority): a message body is delivered
 // at most once per target. Before sending, check the kernel scratchpad for
 // bus:acked:<sha256-12>; after a confirmed send, record it. Best-effort:
@@ -181,8 +230,14 @@ async function cmdSend() {
   send.click();
   return 'CLICKED';
 })()`;
-    const r = await evaluate(tab, clickJs);
-    if (r !== "CLICKED") fail("chatgpt send failed: " + r);
+    let r = await evaluate(tab, clickJs);
+    if (r === "NO_SEND_BTN") {
+      // No clickable send button in this layout: Enter on the focused
+      // ProseMirror composer submits (verified live 2026-11-13).
+      r = (await dispatchEnterOnComposer(tab)) ? "ENTER" : r;
+      await sleep(1500);
+    }
+    if (r !== "CLICKED" && r !== "ENTER") fail("chatgpt send failed: " + r);
   }
   await ackRecord(guard.key, target, text.length);
   process.stdout.write(JSON.stringify({ ok: true, target, sent: text.length, ackKey: guard.key }) + "\n");

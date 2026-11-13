@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Web-lane coordination**: v1.0.55 update delivered via Edge CDP 9222 to muse.ai, Gemini, and ChatGPT tabs; Gemini replied with Git-LFS migration cautions (WAL checkpoint, SHA-rewrite tradeoff - now in TODO), ChatGPT acknowledged GREEN. Systray menu verified in code (dashboard/API-index/logs/autostart/Exit All with confirm).
 
+## [1.0.57] - 2026-11-13
+
+### Fixed
+- **cdp-bridge ChatGPT send**: added an Enter-key fallback (CDP Input domain on the focused ProseMirror composer) for layouts with no clickable send button, which previously failed with NO_SEND_BTN. Verified live end-to-end through the bridge.
+
 ## [Unreleased]
 
 ### Added
