@@ -12,3 +12,14 @@ at chat start):
 > continues. Kernel calls are budgeted and never stall a turn: hot paths use
 > FTS-only search (400ms); explicit tools may use full semantic search.
 > If the kernel is down, say so in one short sentence and continue with local tools.
+
+## Session control (shared bus)
+
+One session can direct the others through the kernel-backed session bus
+(`addons/shared/session-bus.mjs`, scratch transport by default):
+
+- Register: `node addons/shared/session-bus.mjs register --id <lane> --harness freebuff`
+- Leader: `send --from <id> --to <worker-id|*> --text "..."` then collect with
+  `thread --id <id>` / `watch --id <id>`.
+- Worker: poll `inbox --id <id>` at task boundaries; answer with
+  `reply --from <id> --to <leader> --in-reply-to <msg-id> --text "..." --status DONE|BLOCKED`.

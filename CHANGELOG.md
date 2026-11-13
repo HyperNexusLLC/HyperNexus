@@ -15,6 +15,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
+## [1.0.49] - 2026-11-13
+
+### Fixed
+- **Kernel memory write hang (P0)**: `POST /api/memory/facts/add` blocked >120s under multi-agent load — the L2 dual-write `VectorStore.Commit` ran inline under the store-wide mutex that semantic searches hold while embedding, behind the durable local write. The dual-write is now async with a 30s bounded context; the endpoint answers in ~2s (the 41MB `memories.json` rewrite dominates). This unblocks the Codex swarm bus (live legs 11/11 again), droid memory writes (battery 68/4 → 74/2), and MCP `add_memory`.
+- **Attestation strip coverage (P1)**: `stripAttestationTools` only read the top-level tool `name`, missing the Chat Completions shape (`function.name`) — shell-named chat tools now strip on the denial-retry path too (name match already case-insensitive). New regression test `TestStripAttestationToolsChatShapeAndCase`; full `internal/httpapi` suite green.
+- **`/v1/models`** now lists `muse-wonder-1.0-contributor` (+ `meta/` alias) — it was served (200) but unlisted.
+
+### Added
+- **Hermetic batteries for the 10 battery-less CLI harnesses** (`addons/<h>/bin/test-<h>-ext.mjs`: codewhale, jcode, maki, prime-agent, freebuff, crush, hax, reasonix, open-interpreter, grok) — layout, dual-model pin, shared-minter shim, swarm floor, no-shell-tools policy. All pass.
+- **Session-bus swarm floor** (`swarm-prompt-block.md`) for the 13 harnesses that had no session-control surface, plus bus sections appended to the crush/freebuff blocks; `preferred-tools.md` for hax, open-interpreter, grok. `reasonix-plugin.json` 1.0.28 → 1.0.49.
+
+### Notes
+- Harness-matrix workflow (33 harnesses × wonder/spark): 20 WORKING / 13 PARTIAL / 0 MISSING. All four model×endpoint parity combos return 200 with the exact token; the 403 root cause is upstream Meta attestation on shell-named tools, neutralized by parity tools (`code_interpreter`) + kernel stripping. Remaining reds are owner-gated (pi Meta session expired — `/login meta` in pi) or user-pinned choices (droid session default).
+
 ## [1.0.48] - 2026-11-12
 
 ### Changed

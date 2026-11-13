@@ -351,7 +351,9 @@ func (s *Server) handleAnthropicModels(w http.ResponseWriter, r *http.Request) {
 		// model metadata by exact ID match, so without the alias it warns
 		// "model metadata not found" and hides the model from the picker.
 		"data": []map[string]any{
-			{"id": "muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
+			{"id": "muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
+		{"id": "meta/muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
+		{"id": "muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
 			{"id": "meta/muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
 			{"id": "muse-spark-1.3", "object": "model", "owned_by": "meta"},
 			{"id": "meta/muse-spark-1.3", "object": "model", "owned_by": "meta"},

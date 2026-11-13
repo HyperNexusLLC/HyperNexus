@@ -391,3 +391,32 @@ func TestIsAttestationDenial(t *testing.T) {
 		t.Fatal("other 403 must not match")
 	}
 }
+
+// Regression (harness-matrix P1-3): the attestation strip must also cover
+// Chat Completions tool shape {type:"function", function:{name:...}} and
+// case variants, while parity tools pass untouched.
+func TestStripAttestationToolsChatShapeAndCase(t *testing.T) {
+	tools := []any{
+		map[string]any{"type": "function", "function": map[string]any{"name": "Bash", "parameters": map[string]any{}}},
+		map[string]any{"type": "function", "function": map[string]any{"name": "powershell", "parameters": map[string]any{}}},
+		map[string]any{"type": "function", "name": "Shell"},
+		map[string]any{"type": "function", "name": "code_interpreter", "description": "run code"},
+	}
+	kept, stripped := stripAttestationTools(tools)
+	if len(kept) != 1 {
+		t.Fatalf("kept = %d, want 1 code_interpreter only: %v", len(kept), kept)
+	}
+	if len(stripped) != 3 {
+		t.Fatalf("stripped = %v, want 3 shell-named tools", stripped)
+	}
+	km, _ := kept[0].(map[string]any)
+	if km["name"] != "code_interpreter" {
+		t.Fatalf("kept tool = %v, want code_interpreter", km["name"])
+	}
+	if !attestationTrippingTool("BASH") || !attestationTrippingTool("PowerShell") {
+		t.Fatal("attestationTrippingTool must be case-insensitive")
+	}
+	if attestationTrippingTool("code_interpreter") {
+		t.Fatal("code_interpreter must never trip attestation")
+	}
+}
