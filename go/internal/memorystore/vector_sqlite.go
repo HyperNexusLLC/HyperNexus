@@ -702,6 +702,16 @@ func (s *VectorStore) cacheTopIDs(ctx context.Context, queryVec []float32, filte
 }
 
 func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit int) ([]controlplane.L2VaultRecord, error) {
+	// Pre-embed plain-text queries BEFORE taking the store mutex: ONNX
+	// inference under s.mu serialized every concurrent search/write behind
+	// it. localEmbed caches by text, so the locked path below re-embeds as
+	// a cache hit. Structured/vector payloads skip this (parsed inside).
+	trimmed := strings.TrimSpace(query)
+	if trimmed != "" && !strings.HasPrefix(trimmed, "{") && !strings.HasPrefix(trimmed, "[") {
+		embedCtx, cancel := context.WithTimeout(ctx, searchEmbedTimeout)
+		_ = localEmbed(embedCtx, query)
+		cancel()
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.semanticSearchLocked(ctx, query, limit)
