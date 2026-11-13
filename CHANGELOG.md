@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dashboard section-header tooltips**: all eight dashboard section headers (governance/security, integrations, MCP, memory, prompts/deployments, research-workflows, system-recovery, workflow-orchestration) now carry descriptive native `title` tooltips explaining scope.
 
 ### Fixed
-- **Dashboard survival**: dashboard now started fully detached via WMI `Win32_Process.Create` (listener pid 50280, BelowNormal) instead of as a child of a tool session. Health + dashboard verified 200 on the new build; web tests 107/107, tsc 0, next build 0.
+- **Dashboard survival (root cause)**: dashboard deaths on kernel swaps were caused by `POST /api/shutdown` -> `systray.TriggerFullShutdown()` CIM sweep explicitly killing the :7779 Next dashboard (by design for tray/UI full shutdown). Kernel swaps must stop the exact kernel pid only, never /api/shutdown. Dashboard restarted WMI-detached (listener pid 21448, BelowNormal); web tests 107/107, tsc 0, next build 0.
 
 ## [Unreleased]
 

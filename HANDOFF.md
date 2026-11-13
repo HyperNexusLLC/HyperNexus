@@ -1,3 +1,8 @@
+# HANDOFF - Dashboard-death ROOT CAUSE FOUND (2026-11-13) [muse-wonder-1.0 in muse-code]
+- `POST /api/shutdown` calls `systray.TriggerFullShutdown()` (`go/internal/httpapi/server.go:1986`), whose CIM sweep (`buildBackgroundCleanupScript`, `systray_windows.go:528`) explicitly kills the :7779 Next dashboard + background workers before `os.Exit`. That is intentional for the dashboard UI shutdown button and tray Quit - so every graceful kernel swap via /api/shutdown killed the dashboard (4/4). NOT session reaping: WMI-detached dashboard (pid 50280) died the same way.
+- SWAP PROCEDURE (corrected): never use /api/shutdown for kernel swaps. Stop ONLY the exact kernel listener pid, start new kernel WMI-detached, set BelowNormal, verify health + dashboard. Kernel now v1.0.53 pid 36676; dashboard listener pid 21448 BelowNormal, both 200.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner), cross-driver interop. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - Dashboard tooltips + WMI-detached dashboard v1.0.53 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Added descriptive native `title` tooltips to the 5 dashboard section headers missing them (governance, integrations, mcp, memory, research-workflows); other 3 already titled. All 8 covered. Web: tsc 0, vitest 107/107, next build 0.
 - Dashboard restarted on new build via WMI `Win32_Process.Create` (fully detached, listener pid 50280 BelowNormal, 200) to test survival vs session-reaping theory for deaths around kernel swaps.
