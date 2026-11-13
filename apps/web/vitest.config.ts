@@ -7,6 +7,7 @@ const webRoot = path.dirname(fileURLToPath(import.meta.url));
 // Mirror tsconfig.json "paths" so tests resolve the same modules Next does:
 // @hypernexus/ui from source (not its stale dist build) and @/* from src/.
 export default defineConfig({
+	root: webRoot,
 	resolve: {
 		alias: [
 			{
@@ -53,7 +54,10 @@ export default defineConfig({
 			"**/.next-build/**",
 			"**/.next-build2/**",
 			"**/.next-dev/**",
+			"**/.turbo/**",
 			"**/dist/**",
+			"**/archive/**",
+			"**/deploy-artifacts/**",
 		],
 	},
 });

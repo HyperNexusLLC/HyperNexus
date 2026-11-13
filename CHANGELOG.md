@@ -15,6 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
+## [1.0.47] - 2026-11-12
+
+### Added
+- **Modular Omni-Console section components (`apps/web/src/app/dashboard/`)**:
+  - `dashboard-workflow-orchestration-section.tsx` (`#workflow-orchestration`): autonomous DAG workflow library, live `WorkflowVisualizer` node inspector, and Pause/Resume execution controls with descriptive tooltips.
+  - `dashboard-prompts-deployments-section.tsx` (`#prompts-deployments`): compiled Go system prompt inspector, independent static landing deploy cards (`tormentnexus.site` vs `hypernexus.site`), Cloud portal, and `hypernexus://` OS URI protocol registry + deep-link actions.
+  - `dashboard-system-recovery-section.tsx` (`#system-recovery`): SQLite restoration probe, catalog schema sync, integrity console, cross-harness session import bridge, git chronicle, `SettingsDashboard`, immune self-healing radar, and L2 vector vault telemetry.
+- **Expanded Operator Manual (`apps/web/src/app/dashboard/manual/view.tsx`)**: live `/api/go/health` kernel probe + fallback `VERSION` reader, interactive map of all 13 Omni-Console quick-jump anchors, L1/L2/L3 + GraphRAG memory tier guide, Win32 systray & `hypernexus://` reference, and Cross-Harness Session Bus + Edge CDP `9222` bridge documentation.
+
+### Fixed
+- **Web Deployment Operations state collision**: fixed duplicate `"hypernexus.site"` deployment state key so `tormentnexus.site` and `hypernexus.site` deploy independently without cross-disabling buttons.
+- **Live diagnostics & schema sync probes (`dashboard-home-view.tsx`)**: replaced simulated `setTimeout` placeholder banners with live `/api/go/health` + `/api/go/api/mcp/status` and `/api/go/api/mcp/servers` kernel probes.
+- **Next.js tRPC upstream resolution & route test suite (`apps/web/src/lib/trpc-upstream.ts`, `apps/web/src/app/api/trpc/[trpc]/route.ts`, `route.test.ts`, `apps/web/vitest.config.ts`)**: replaced dummy `resolveUpstreamBases` stub with real ordered upstream/Go-API resolution (`HYPERNEXUS_*` + `TORMENTNEXUS_*` env support), isolated `vitest.config.ts` to `root: webRoot` (excluding `archive/` and `deploy-artifacts/`), and updated `route.test.ts` for the Go-native kernel proxy contract — bringing the full dashboard test suite to **15/15 files, 107/107 tests green**.
+
+### Changed
+- **Completed `dashboard-home-view.tsx` decomposition**: reduced `dashboard-home-view.tsx` from `1,883` lines to `760` lines, updated top-nav branding (`⚡ HyperNexus`), and wired all 13 sticky-header quick-jump anchors with `title` tooltips.
+- **Version sync**: `VERSION` `1.0.46` → `1.0.47` across all workspace manifests + Go `buildinfo`.
+
 ## [1.0.46] - 2026-11-12
 
 ### Added

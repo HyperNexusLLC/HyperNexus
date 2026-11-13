@@ -91,3 +91,7 @@ export function setCached(
     }
   }
 }
+
+export function clearCache(): void {
+  cache.clear();
+}
