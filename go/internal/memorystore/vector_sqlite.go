@@ -89,6 +89,18 @@ type QueryPayload struct {
 	Tags      []string  `json:"tags"`
 }
 
+// vecCacheEntry is one row of the in-memory vector matrix: the decoded
+// embedding, its precomputed norm, and the metadata scoring needs. Content
+// stays in SQL and is hydrated only for top candidates.
+type vecCacheEntry struct {
+	vec        []float32
+	norm       float64
+	mType      string
+	kind       string
+	category   string
+	importance float64
+}
+
 type VectorStore struct {
 	db            *sql.DB
 	mu            sync.Mutex
@@ -96,6 +108,13 @@ type VectorStore struct {
 	l1Max         int
 	coldArchive   *L3ColdArchive
 	relationStore *RelationStore
+	// In-memory vector matrix (see vecCacheEntry). Loaded lazily, refreshed
+	// on a short TTL; Commit/Delete update it eagerly. Scoring the full
+	// vault from SQLite blobs per query cost ~2.7s at 31k rows; the matrix
+	// reduces that to tens of ms and bounds SQL hydration to top hits.
+	vecMu       sync.RWMutex
+	vecCache    map[string]vecCacheEntry
+	vecLoadedAt time.Time
 }
 
 // sqliteDSNWithPragmas embeds connection-level PRAGMAs in the DSN so EVERY
@@ -311,6 +330,7 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 		if err != nil {
 			return fmt.Errorf("memorystore commit embedding: %w", err)
 		}
+		s.vecCacheRefresh(ctx, entry.ID)
 	} else if entry.Content != "" {
 		// Embed + store the vector asynchronously so the write returns immediately.
 		// localEmbed runs ONNX inference which can take seconds under load; blocking
@@ -328,6 +348,7 @@ func (s *VectorStore) Commit(ctx context.Context, entry controlplane.L2VaultReco
 				VALUES (?, ?)
 				ON CONFLICT(id) DO UPDATE SET embedding = excluded.embedding
 			`, id, encodeVec(vec))
+			s.vecCacheRefresh(context.Background(), id)
 		}()
 	}
 	return nil
@@ -350,6 +371,7 @@ func (s *VectorStore) DeleteMemory(ctx context.Context, id string) error {
 		return err
 	}
 	_, _ = s.db.ExecContext(ctx, `DELETE FROM vec_l2_vault WHERE id = ?`, id)
+	s.vecCacheDelete(id)
 	return nil
 }
 
@@ -545,6 +567,140 @@ type scored struct {
 	score  float64
 }
 
+const vecCacheTTL = 30 * time.Second
+
+// ensureVecCacheLocked loads (or TTL-refreshes) the in-memory vector matrix.
+// Caller holds s.mu. A failed load leaves the previous matrix in place.
+func (s *VectorStore) ensureVecCacheLocked(ctx context.Context) error {
+	s.vecMu.RLock()
+	fresh := s.vecCache != nil && time.Since(s.vecLoadedAt) < vecCacheTTL
+	s.vecMu.RUnlock()
+	if fresh {
+		return nil
+	}
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT v.id, v.embedding, l.memory_type, l.memory_kind, l.category, l.importance
+		FROM vec_l2_vault v JOIN l2_vault l ON l.id = v.id`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	m := make(map[string]vecCacheEntry, 32768)
+	for rows.Next() {
+		var id, mType, kind, category string
+		var blob []byte
+		var importance float64
+		if err := rows.Scan(&id, &blob, &mType, &kind, &category, &importance); err != nil {
+			return err
+		}
+		vec := decodeVec(blob, len(blob)/4)
+		var n float64
+		for _, x := range vec {
+			n += float64(x) * float64(x)
+		}
+		m[id] = vecCacheEntry{vec: vec, norm: math.Sqrt(n), mType: mType, kind: kind, category: category, importance: importance}
+	}
+	s.vecMu.Lock()
+	s.vecCache = m
+	s.vecLoadedAt = time.Now()
+	s.vecMu.Unlock()
+	return nil
+}
+
+// vecCacheDelete drops one id from the matrix (no-op before first load).
+func (s *VectorStore) vecCacheDelete(id string) {
+	s.vecMu.Lock()
+	defer s.vecMu.Unlock()
+	delete(s.vecCache, id)
+}
+
+// vecCacheRefresh re-reads one row into the matrix after a write.
+func (s *VectorStore) vecCacheRefresh(ctx context.Context, id string) {
+	s.vecMu.RLock()
+	loaded := s.vecCache != nil
+	s.vecMu.RUnlock()
+	if !loaded {
+		return
+	}
+	var blob []byte
+	var mType, kind, category string
+	var importance float64
+	err := s.db.QueryRowContext(ctx, `
+		SELECT v.embedding, l.memory_type, l.memory_kind, l.category, l.importance
+		FROM vec_l2_vault v JOIN l2_vault l ON l.id = v.id WHERE v.id = ?`, id).Scan(&blob, &mType, &kind, &category, &importance)
+	if err != nil {
+		s.vecCacheDelete(id)
+		return
+	}
+	vec := decodeVec(blob, len(blob)/4)
+	var n float64
+	for _, x := range vec {
+		n += float64(x) * float64(x)
+	}
+	s.vecMu.Lock()
+	s.vecCache[id] = vecCacheEntry{vec: vec, norm: math.Sqrt(n), mType: mType, kind: kind, category: category, importance: importance}
+	s.vecMu.Unlock()
+}
+
+// cacheTopIDs scores the query against the in-memory matrix and returns the
+// ids clearing the same boosted-similarity threshold the SQL path applies.
+// restrict, when non-nil, bounds scoring to that id set (FTS hybrid path).
+func (s *VectorStore) cacheTopIDs(ctx context.Context, queryVec []float32, filterKind, filterCategory string, restrict map[string]bool, cap int) ([]string, bool) {
+	if err := s.ensureVecCacheLocked(ctx); err != nil {
+		return nil, false
+	}
+	var qn float64
+	for _, x := range queryVec {
+		qn += float64(x) * float64(x)
+	}
+	qn = math.Sqrt(qn)
+	if qn == 0 {
+		return nil, false
+	}
+	type hit struct {
+		id    string
+		score float64
+	}
+	var hits []hit
+	s.vecMu.RLock()
+	for id, e := range s.vecCache {
+		if restrict != nil && !restrict[id] {
+			continue
+		}
+		if filterKind != "" && e.kind != filterKind {
+			continue
+		}
+		if filterCategory != "" && e.category != filterCategory {
+			continue
+		}
+		if e.norm == 0 || len(e.vec) != len(queryVec) {
+			continue
+		}
+		var dot float64
+		for i, x := range queryVec {
+			dot += float64(x) * float64(e.vec[i])
+		}
+		sim := dot / (qn * e.norm)
+		boosted := sim * (0.8 + 0.2*e.importance)
+		if e.mType == "archive" {
+			boosted *= archiveRankPenalty
+		}
+		if boosted >= 0.3 {
+			hits = append(hits, hit{id, boosted})
+		}
+	}
+	s.vecMu.RUnlock()
+	sort.Slice(hits, func(i, j int) bool { return hits[i].score > hits[j].score })
+	if len(hits) > cap {
+		hits = hits[:cap]
+	}
+	ids := make([]string, len(hits))
+	for i, h := range hits {
+		ids[i] = h.id
+	}
+	return ids, true
+}
+
 func (s *VectorStore) SemanticSearch(ctx context.Context, query string, limit int) ([]controlplane.L2VaultRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -728,13 +884,29 @@ func (s *VectorStore) semanticSearchLocked(ctx context.Context, query string, li
 		// Hybrid: bound the scan to FTS-retrieved candidates when we have query
 		// text. Avoids loading + cosine-ing every row (slow under load). Falls back
 		// to a full scan when FTS returns too few (pure-semantic matches).
+		var restrict map[string]bool
 		if queryText != "" {
 			if ids := s.ftsCandidateIDs(ctx, queryText, hybridCandidateCap); len(ids) >= hybridMinCandidates {
-				ph := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
-				sqlQuery += " AND v.id IN (" + ph + ")"
+				restrict = make(map[string]bool, len(ids))
 				for _, id := range ids {
-					args = append(args, id)
+					restrict[id] = true
 				}
+			}
+		}
+		// In-memory matrix pre-score: hydrate only the top 200 ids from SQL
+		// instead of scanning every embedding blob. On matrix failure the
+		// unrestricted SQL scan below remains the fallback.
+		if topIDs, ok := s.cacheTopIDs(ctx, queryVec, filterKind, filterCategory, restrict, 200); ok && len(topIDs) > 0 {
+			ph := strings.TrimSuffix(strings.Repeat("?,", len(topIDs)), ",")
+			sqlQuery += " AND v.id IN (" + ph + ")"
+			for _, id := range topIDs {
+				args = append(args, id)
+			}
+		} else if restrict != nil {
+			ph := strings.TrimSuffix(strings.Repeat("?,", len(restrict)), ",")
+			sqlQuery += " AND v.id IN (" + ph + ")"
+			for id := range restrict {
+				args = append(args, id)
 			}
 		}
 		if filterKind != "" {

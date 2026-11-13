@@ -17868,6 +17868,9 @@ func (s *Server) localAgentMemoryStats() (map[string]any, error) {
 
 func (s *Server) localAgentMemories() ([]localAgentMemoryRecord, error) {
 	memoriesPath := filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "agent_memory", "memories.json")
+	if cached, ok := cachedAgentMemories(memoriesPath); ok {
+		return cached, nil
+	}
 	raw, err := os.ReadFile(memoriesPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -17907,6 +17910,7 @@ func (s *Server) localAgentMemories() ([]localAgentMemoryRecord, error) {
 		}
 		records = append(records, memory)
 	}
+	storeAgentMemoriesCache(memoriesPath, records)
 	return records, nil
 }
 

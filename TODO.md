@@ -20,7 +20,7 @@
 
 ## 🟡 Medium
 
-- [ ] **Embedding cache** — in-memory vector matrix so semantic search stays sub-second under load (currently 0.8–2.5s with hybrid retrieve).
+- [x] ~~**Embedding cache**~~ **done v1.0.61**: in-memory vector matrix + mtime-keyed memories.json cache; search ~2.8s->~1.1s, recent 1161->165ms. Residual: store-mutex contention under write load (heat writes under `s.mu`).
 - [x] ~~**Ollama install**~~ **audited v1.0.60**: optional - embeddings use bundled MiniLM; Ollama (:11434) not required locally.
 - [x] ~~**Port pi tools** to mimo + opencode~~ **done (opencode v1.0.43-era, mimo verified v1.0.55, 33 tools + battery 7/7)**.
 - [x] ~~**`codebase_search` docs**~~ **done v1.0.59**: pi tool now advertises `symbols|definitions|references` (default symbols); battery-guarded.

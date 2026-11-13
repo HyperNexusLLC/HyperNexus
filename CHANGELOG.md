@@ -53,6 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - **Component audit**: kernel overview/MCP/billing all answer 200 via Go-local fallbacks (designed degraded mode). Marketing (:8084), gossip (:7878), and Ollama (:11434) are down and confirmed optional/non-critical; embeddings use bundled MiniLM. No required component is down.
 
+## [1.0.61] - 2026-11-13
+
+### Fixed
+- **Memory search latency**: `/api/memory/search` ~2.8s -> ~1.1s and `/api/agent-memory/recent` 1161ms -> 165ms. Added an mtime-keyed parsed cache for the 44MB `memories.json` (was re-parsed per request) and an in-memory vector matrix (decoded embeddings + precomputed norms, TTL-refreshed, write-invalidated) so semantic search hydrates only the top 200 candidates from SQL.
+
 ## [Unreleased]
 
 ### Added
