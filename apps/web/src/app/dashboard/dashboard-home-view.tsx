@@ -10,6 +10,7 @@ import CloudOrchestratorDashboardPage from "./cloud-orchestrator/view";
 import SettingsDashboard from "./settings/view";
 // High-value views consolidated into single-page dashboard
 import { DashboardConsolidatedSections } from "./dashboard-consolidated-sections";
+import { CrossSessionBusPanel } from "./cross-session-bus-panel";
 
 export interface DashboardStatusSummary {
 	initialized: boolean;
@@ -1765,6 +1766,7 @@ export function DashboardHomeView({
 						<div className="flex gap-1 overflow-x-auto">
 							{[
 								{ href: "#mission-control", label: "🌌 Mission Control" },
+								{ href: "#cross-session-coordination", label: "Sessions" },
 								{ href: "#memory-graphrag", label: "🧠 Memory" },
 								{ href: "#mcp-registry", label: "🔌 MCP & Tools" },
 								{ href: "#research-workflows", label: "🔬 Workflows" },
@@ -1918,6 +1920,8 @@ export function DashboardHomeView({
 						</div>
 					)}
 				</div>
+
+				<CrossSessionBusPanel />
 
 				{/* INTERACTIVE COMMAND CENTER */}
 				<div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">

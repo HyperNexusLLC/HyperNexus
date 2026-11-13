@@ -58,6 +58,8 @@ const A = {
 	workflows: "/dashboard#research-workflows",
 	integrations: "/dashboard#integrations",
 	settings: "/dashboard#governance-billing",
+	healer: "/dashboard#healer-cognition",
+	coordination: "/dashboard#cross-session-coordination",
 } as const;
 
 // ── High-Value Core (most prominent, first) ──
@@ -78,6 +80,14 @@ export const CORE_NAV: NavItem[] = [
 		variant: "ghost",
 		tooltip:
 			"Live runtime status: services, locks, startup readiness, session management, healer",
+	},
+	{
+		title: "Sessions & Coordination",
+		href: A.coordination,
+		icon: Users,
+		variant: "ghost",
+		tooltip:
+			"Cross-session registry, unanswered bus messages, replies, supervised sessions, and web delivery receipts",
 	},
 	{
 		title: "MCP & Tools",
@@ -101,19 +111,12 @@ export const CORE_NAV: NavItem[] = [
 
 export const AGENTS_NAV: NavItem[] = [
 	{
-		title: "Swarm & Agents",
+		title: "Swarm, Workflows & Agents",
 		href: A.workflows,
 		icon: Users,
 		variant: "ghost",
 		tooltip:
-			"Multi-agent orchestration: missions, debates, consensus, agent management",
-	},
-	{
-		title: "Workflows",
-		href: A.workflows,
-		icon: Workflow,
-		variant: "ghost",
-		tooltip: "Workflow engine: definitions, executions, canvases, approvals",
+			"Multi-agent orchestration and workflow engine: missions, debates, consensus, definitions, executions, and approvals",
 	},
 	{
 		title: "Council & Governance",
@@ -125,7 +128,7 @@ export const AGENTS_NAV: NavItem[] = [
 	},
 	{
 		title: "Healer & Auto-Repair",
-		href: A.mission,
+		href: A.healer,
 		icon: Bug,
 		variant: "ghost",
 		tooltip: "Self-healing: diagnose errors, auto-repair, repair history",
@@ -136,32 +139,12 @@ export const AGENTS_NAV: NavItem[] = [
 
 export const TOOLS_NAV: NavItem[] = [
 	{
-		title: "Tool Catalog",
+		title: "Tool Catalog, Inspector, Console & Karma",
 		href: A.mcp,
 		icon: Search,
 		variant: "ghost",
-		tooltip: "Browse and search the full MCP tool catalog from all registered servers",
-	},
-	{
-		title: "Tools Inspector",
-		href: A.mcp,
-		icon: Wrench,
-		variant: "ghost",
-		tooltip: "Inspect tool definitions, parameters, and schemas in detail",
-	},
-	{
-		title: "Tool Console",
-		href: A.mcp,
-		icon: Terminal,
-		variant: "ghost",
-		tooltip: "Browse, inspect, and execute native Go tools interactively",
-	},
-	{
-		title: "Tool Karma",
-		href: A.mcp,
-		icon: Wrench,
-		variant: "ghost",
-		tooltip: "Native Go tool registry, handler health, and usage tracking",
+		tooltip:
+			"Browse, inspect, and execute MCP and native Go tools; inspect schemas, handler health, and usage in one registry section",
 	},
 	{
 		title: "Code Platform",
@@ -184,41 +167,27 @@ export const TOOLS_NAV: NavItem[] = [
 
 export const KNOWLEDGE_NAV: NavItem[] = [
 	{
-		title: "Memory Explorer",
+		title: "Memory Explorer & Analytics",
 		href: A.memory,
 		icon: Database,
 		variant: "ghost",
-		tooltip: "Full-text search across 86K+ memories with L4 limbo management",
-	},
-	{
-		title: "Memory Analytics",
-		href: A.memory,
-		icon: TrendingUp,
-		variant: "ghost",
 		tooltip:
-			"Tier stats, heat distribution, kind breakdown, lifecycle pipeline",
+			"Full-text memory search plus tier stats, heat distribution, kind breakdown, and lifecycle analytics",
 	},
 	{
-		title: "Cold Archive",
-		href: A.memory,
-		icon: Snowflake,
-		variant: "ghost",
-		tooltip: "L3 cold storage for low-heat memories: browse, search, promote",
-	},
-	{
-		title: "Knowledge & Skills",
+		title: "Cold Archive, Knowledge & Skills",
 		href: A.memory,
 		icon: Library,
 		variant: "ghost",
 		tooltip:
-			"Skill registry, knowledge graph, RAG ingestion, and directory browser",
+			"L3 cold storage, skill registry, knowledge graph, RAG ingestion, and directory browser",
 	},
 	{
 		title: "Context & Sessions",
-		href: A.memory,
+		href: A.coordination,
 		icon: Scroll,
 		variant: "ghost",
-		tooltip: "Imported sessions, context management, session export/import",
+		tooltip: "Imported sessions, cross-session context, coordination activity, session export/import",
 	},
 	{
 		title: "Session Imports",
@@ -242,20 +211,12 @@ export const INFRA_NAV: NavItem[] = [
 			"LLM provider routing, fallback chains, quotas, cost history, model pricing",
 	},
 	{
-		title: "Observability",
+		title: "Observability, Logs & Metrics",
 		href: A.mission,
 		icon: Eye,
 		variant: "ghost",
 		tooltip:
-			"System pulse: event streams, provider status, real-time monitoring",
-	},
-	{
-		title: "Logs & Metrics",
-		href: A.mission,
-		icon: BarChart3,
-		variant: "ghost",
-		tooltip:
-			"System logs, provider breakdown, routing history, system snapshots",
+			"System pulse, event streams, logs, provider breakdown, routing history, and snapshots",
 	},
 	{
 		title: "Mesh Network",
@@ -287,33 +248,19 @@ export const INFRA_NAV: NavItem[] = [
 
 export const DATA_NAV: NavItem[] = [
 	{
-		title: "Integrations Hub",
+		title: "Integrations, Harnesses & Cloud Dev",
 		href: A.integrations,
 		icon: Globe,
 		variant: "ghost",
 		tooltip:
-			"External integrations: Open WebUI, Ollama, and third-party bridges",
+			"External integrations, detected CLI harnesses, cloud dev sessions, Open WebUI, Ollama, and third-party bridges",
 	},
 	{
-		title: "CLI Harnesses",
-		href: A.integrations,
-		icon: Command,
-		variant: "ghost",
-		tooltip: "Detected CLI harnesses: versions, capabilities, install surfaces",
-	},
-	{
-		title: "Browser Extension",
+		title: "Browser Extension & DeerFlow",
 		href: A.integrations,
 		icon: Bot,
 		variant: "ghost",
-		tooltip: "Browser extension bridge: memories, DOM parsing, stats",
-	},
-	{
-		title: "Cloud Development",
-		href: A.integrations,
-		icon: Cloud,
-		variant: "ghost",
-		tooltip: "Cloud dev sessions: providers, messages, plans, logs",
+		tooltip: "Browser extension bridge, DOM parsing, DeerFlow models, skills, and memory status",
 	},
 	{
 		title: "Git Chronicle",
@@ -321,13 +268,6 @@ export const DATA_NAV: NavItem[] = [
 		icon: GitBranch,
 		variant: "ghost",
 		tooltip: "Git history, commit log, repository change tracking",
-	},
-	{
-		title: "DeerFlow",
-		href: A.integrations,
-		icon: Radio,
-		variant: "ghost",
-		tooltip: "DeerFlow bridge: models, skills, memory status",
 	},
 ];
 
