@@ -68,6 +68,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - **Cleanup audit**: pruned stale `origin-tormentnexus/*` and `robertpelloni/*` remote-tracking refs (remotes decommissioned); all git stashes left intact pending owner review (the TODO-named stash no longer exists under that name). deepseek-harness-gui battery re-verified 8/8.
 
+## [1.0.64] - 2026-11-13
+
+### Notes
+- **Orchestrate verified**: `POST /api/agent/orchestrate` (native Go RECALL/DISCOVER/PERSIST, EXECUTE via caller) verified live (200, persisted, recall hits) - the TODO entry calling for its implementation was stale. Added a permanent 15-minute autopilot cron (`3d7629b9`).
+
 ## [Unreleased]
 
 ### Added

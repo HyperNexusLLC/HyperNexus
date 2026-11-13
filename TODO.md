@@ -69,6 +69,6 @@
 - [ ] maki headless Meta: Lua provider registers only in interactive TUI sessions on 0.5.6; run one TUI session in-repo to seed `maki.provider.auth` for meta.
 - [ ] hax live from WSL needs the kernel reachable (bind `--host 0.0.0.0` or WSL mirrored networking) - user security-posture decision.
 - [ ] droid live needs Factory account auth; reasonix live needs one interactive `reasonix setup` (provider key); freebuff/codebuff BYOK needs the mint revived.
-- [ ] Kernel-native orchestrate: TS upstream on :4000 no longer exists in-tree (`packages/cli/` removed; root `start` script stale). Needs a Go-native `/api/agent/orchestrate` implementation or restoring the TS core. Paseo + memory-facts are the working control plane meanwhile.
+- [x] ~~Kernel-native orchestrate~~ **done (verified v1.0.64)**: Go-native `/api/agent/orchestrate` serves RECALL/DISCOVER/PERSIST locally; live 200 + tests green.
 - [ ] `claude` command still crashes on system Node 26 - either downgrade global Node to 22/24 LTS or put `%LOCALAPPDATA%\node22` first in PATH; `~/bin/claude.cmd` wrapper does not shadow in PowerShell.
 - [ ] droid 0.71.0 does not surface `customModels` (schema mismatch); copilot-cli Meta route needs the mint revived (`/login meta` in pi).

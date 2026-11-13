@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/mcp-registry",
-  "version": "1.0.63",
+  "version": "1.0.64",
   "private": true,
   "main": "dist/index.js",
   "types": "src/index.ts",

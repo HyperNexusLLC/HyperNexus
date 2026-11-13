@@ -1,3 +1,8 @@
+# HANDOFF - Orchestrate endpoint verified live (stale TODO) v1.0.64 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- TODO claimed `/api/agent/orchestrate` needs a Go implementation - STALE: `go/internal/httpapi/orchestrate_handlers.go` already serves it natively (RECALL local agent-memory search -> DISCOVER tool suggestions -> PERSIST scratchpad plan; EXECUTE stays with caller via /api/agent/tool). Live-verified: POST {goal, sessionId, harness} -> 200, persisted=true, recall hits returned; `TestAgentOrchestrate*` green.
+- New coordination cron: job `3d7629b9` every 15m (permanent, skips while active) for 'continue to proceed as you advise', alongside `a3f104fe` :07/:37 coordination loop.
+- Kernel redeployed v1.0.64 exact-pid; dashboard survives swaps.
+
 # HANDOFF - Cleanup audit: stale refs pruned, deepseek re-verified v1.0.63 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Pruned 8 stale remote-tracking refs (`origin-tormentnexus/*`, `robertpelloni/*` - remotes no longer configured; refs re-creatable by re-adding a remote). All 7 stashes left INTACT: TODO's named `pre-sync-wip-2026-11-05` stash no longer exists under that name (`stash@{0}` is now `memories-ff`), so no drop was performed - owner to confirm which stashes may go.
 - deepseek-harness-gui battery re-run: **8/8 pass** against current vendor submodule (`vendor/deepseek-harness` e8f7b93; the 0.2.2-rc.1 bump TODO referenced is not the checked-out commit - addon verified as-is).
