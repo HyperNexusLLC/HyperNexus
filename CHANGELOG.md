@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Mimo extension battery** (`addons/mimo/bin/test-mimo-ext.mjs`, 7/7): verifies the MiMoCode plugin surface - 33 typed tools including the pi ports `hypernexus_workflow/orchestrate/browser` (port was already landed; TODO was stale), MCP stdio config with no shell-named tools, meta-model pins, skills and mimocode commands.
 
+## [1.0.56] - 2026-11-13
+
+### Added
+- **Web-lane coordination**: v1.0.55 update delivered via Edge CDP 9222 to muse.ai, Gemini, and ChatGPT tabs; Gemini replied with Git-LFS migration cautions (WAL checkpoint, SHA-rewrite tradeoff - now in TODO), ChatGPT acknowledged GREEN. Systray menu verified in code (dashboard/API-index/logs/autostart/Exit All with confirm).
+
 ## [Unreleased]
 
 ### Added
