@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
+## [1.0.52] - 2026-11-13
+
+### Added
+- **Harness doctor endpoint** (`GET /api/harness/doctor`): read-only layout scan of every `addons/` harness (install, battery, meta doc, MCP config, swarm surface, connection pin) with ok/partial counts — live result 37 ok / 3 partial of 40 (partials are the non-harness `copilot`, `mimo`, `shared` dirs). New `scanHarnessAddons` + unit test; kernel swapped (pid 21912). Batteries themselves still run per-harness; this is the fast inventory the batteries assert against.
+
+### Notes
+- Dashboard died on the kernel swap again (third time) and was restarted (pid 52268). Correlation with swaps is now consistent — treat dashboard restart as a required step after every kernel swap until root-caused.
+
 ## [1.0.51] - 2026-11-13
 
 ### Added

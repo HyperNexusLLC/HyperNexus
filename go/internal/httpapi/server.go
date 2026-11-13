@@ -1445,6 +1445,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/agent-stats", s.handleMemoryAgentStats)
 	s.mux.HandleFunc("/api/memory/agent-search", s.handleMemoryAgentSearch)
 	s.mux.HandleFunc("/api/memory/facts/add", guard(s.handleMemoryAddFact))
+	s.mux.HandleFunc("/api/harness/doctor", guard(s.handleHarnessDoctor))
 	s.mux.HandleFunc("/api/memory/observations/record", s.handleMemoryRecordObservation)
 	s.mux.HandleFunc("/api/memory/observations/recent", s.handleMemoryRecentObservations)
 	s.mux.HandleFunc("/api/memory/observations/search", s.handleMemorySearchObservations)

@@ -1,3 +1,8 @@
+# HANDOFF - Harness doctor v1.0.52 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- New kernel endpoint `GET /api/harness/doctor` (`go/internal/httpapi/harness_doctor.go`, route beside facts/add): layout scan of `addons/*` (install/battery/metaDoc/mcpConfig/swarm/connection + ok|partial). Live: 40 total, 37 ok, partial = copilot/mimo/shared (extra non-matrix dirs). Unit test `TestScanHarnessAddons` green; kernel pid 21912 reports v1.0.52.
+- CONFIRMED PATTERN: dashboard dies on every kernel swap (3/3). Always restart + verify :7779 after a swap (pid 52268 now). Root cause unknown (next-start child of a reaped session process is the leading theory); standalone server or supervisor would settle it.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner-driven), cross-driver interop prose. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - GUI live smoke v1.0.51 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Added `addons/shared/bin/test-gui-live-smoke.mjs` (15 GUIs × chat+responses on their pinned models, parity tool attached, exact token): **30/30 pass**. Kernel rebuilt/swapped to report v1.0.51 (pid 52692, BelowNormal).
 - CodeWhale `.codewhale` payload installed (check green). Swarm battery re-confirmed 11/11.
