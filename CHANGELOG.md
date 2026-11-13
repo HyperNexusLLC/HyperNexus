@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Dashboard survival (root cause)**: dashboard deaths on kernel swaps were caused by `POST /api/shutdown` -> `systray.TriggerFullShutdown()` CIM sweep explicitly killing the :7779 Next dashboard (by design for tray/UI full shutdown). Kernel swaps must stop the exact kernel pid only, never /api/shutdown. Dashboard restarted WMI-detached (listener pid 21448, BelowNormal); web tests 107/107, tsc 0, next build 0.
 
+## [1.0.54] - 2026-11-13
+
+### Added
+- **Cross-driver bus interop battery** (`addons/shared/bin/test-bus-interop.mjs`, 7/7 live): one worker driven through both swarm.mjs and session-bus.mjs with cross-visibility asserted on the shared kernel facts/FTS + scratchpad substrate.
+
+### Fixed
+- **Kernel deploy env**: quoted `set "HYPERNEXUS_WORKSPACE_ROOT=..."` in the WMI start command - the unquoted form baked a trailing space into the workspace root and broke facts/add with a mkdir 503. Dashboard now survives kernel swaps (exact-pid stop, no /api/shutdown).
+
 ## [Unreleased]
 
 ### Added
