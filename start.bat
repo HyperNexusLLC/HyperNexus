@@ -25,26 +25,26 @@ if "%SKIP_INSTALL%"=="1" (
     call pnpm install --ignore-scripts 2>nul || call pnpm install
 )
 
-REM -- 3. Start HyperNexus Server on port 7778 --
+REM -- 3. Start HyperNexus Server on port 7778 (BelowNormal priority) --
 set GO_PORT=7778
 curl -s -o nul -w "%%{http_code}" http://127.0.0.1:%GO_PORT%/health > "%TEMP%\hypernexus_go_check.txt" 2>nul
 set /p GO_CHECK=<"%TEMP%\hypernexus_go_check.txt"
 if "!GO_CHECK!"=="200" (
     echo   Go sidecar already running on port %GO_PORT%.
 ) else (
-    echo   Starting Go sidecar on port %GO_PORT%...
-    start /B bin\hypernexus.exe serve --port %GO_PORT% > nul 2>&1
+    echo   Starting Go sidecar on port %GO_PORT% (BelowNormal priority)...
+    start "" /B /BELOWNORMAL bin\hypernexus.exe serve --port %GO_PORT% > nul 2>&1
 )
 
-REM -- 4. Start Next.js dashboard on port 7779 --
+REM -- 4. Start Next.js dashboard on port 7779 (BelowNormal priority) --
 set DASH_PORT=7779
 curl -s -o nul -w "%%{http_code}" http://127.0.0.1:%DASH_PORT%/dashboard > "%TEMP%\hypernexus_web_check.txt" 2>nul
 set /p WEB_CHECK=<"%TEMP%\hypernexus_web_check.txt"
 if "!WEB_CHECK!"=="200" (
     echo   Next.js dashboard already running on port %DASH_PORT%.
 ) else (
-    echo   Starting Next.js dashboard on port %DASH_PORT%...
-    start /B cmd /c "cd apps\web && set NEXT_PRIVATE_DISABLE_TURBOPACK_CACHE=1 && npx next dev --port %DASH_PORT% > nul 2>&1"
+    echo   Starting Next.js dashboard on port %DASH_PORT% (BelowNormal priority)...
+    start "" /B /BELOWNORMAL cmd /c "cd apps\web && set NEXT_PRIVATE_DISABLE_TURBOPACK_CACHE=1 && npx next dev --port %DASH_PORT% > nul 2>&1"
 )
 
 echo.

@@ -7,7 +7,7 @@ nothing is stored in this file or any config).
 ## Native surface: Grok model config
 
 Grok talks to any OpenAI-compatible endpoint via its
-`~/.openinterpreter/config.toml` (`model` + `api_base` +
+`~/.grok/config.toml` (`model` + `api_base` +
 `api_key`). Point `api_base` at `https://api.meta.ai/v1`, set `model` to
 `muse-spark-1.3-contributor`, and feed `api_key` from the live mint below —
 no config needed beyond that.

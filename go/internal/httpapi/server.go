@@ -4656,7 +4656,16 @@ func (s *Server) handleMemoryAddFact(w http.ResponseWriter, r *http.Request) {
 			if title != "" {
 				rec.Tags = "title=" + title
 			}
-			_ = tools.GlobalVectorStore.Commit(r.Context(), rec)
+			store := tools.GlobalVectorStore
+			// Async + bounded: Commit takes the store-wide mutex that semantic
+			// searches hold while embedding; inline commits hung this handler
+			// past client timeouts (>120s) under multi-agent hook load even
+			// though the durable local write above already succeeded.
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+				_ = store.Commit(ctx, rec)
+			}()
 		}
 	}
 

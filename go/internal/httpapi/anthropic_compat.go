@@ -47,8 +47,8 @@ type anthropicContentBlock struct {
 }
 
 type anthropicMessage struct {
-	Role    string                  `json:"role"`
-	Content any                     `json:"content,omitempty"` // string or []block
+	Role    string `json:"role"`
+	Content any    `json:"content,omitempty"` // string or []block
 }
 
 type anthropicTool struct {
@@ -247,17 +247,17 @@ func anthropicToResponses(req *anthropicMessagesRequest) []map[string]any {
 						switch c := bm["content"].(type) {
 						case string:
 							contentStr = c
-					default:
-						cb, _ := json.Marshal(c)
-						contentStr = string(cb)
+						default:
+							cb, _ := json.Marshal(c)
+							contentStr = string(cb)
+						}
+						id, _ := bm["tool_use_id"].(string)
+						out = append(out, map[string]any{
+							"type": "function_call_output", "call_id": id, "output": contentStr,
+						})
 					}
-					id, _ := bm["tool_use_id"].(string)
-					out = append(out, map[string]any{
-						"type": "function_call_output", "call_id": id, "output": contentStr,
-					})
 				}
-			}
-			flush()
+				flush()
 			} else {
 				out = append(out, map[string]any{"role": "user", "content": anthropicTextOf(m.Content)})
 			}
@@ -304,7 +304,7 @@ func anthropicToResponses(req *anthropicMessagesRequest) []map[string]any {
 				}
 				for _, tc := range calls {
 					out = append(out, map[string]any{
-						"type": "function_call",
+						"type":    "function_call",
 						"call_id": tc.CallID, "name": tc.Name, "arguments": tc.Arguments,
 					})
 				}
@@ -351,9 +351,9 @@ func (s *Server) handleAnthropicModels(w http.ResponseWriter, r *http.Request) {
 		// model metadata by exact ID match, so without the alias it warns
 		// "model metadata not found" and hides the model from the picker.
 		"data": []map[string]any{
-					{"id": "muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
-		{"id": "meta/muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
-		{"id": "muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
+			{"id": "muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
+			{"id": "meta/muse-wonder-1.0-contributor", "object": "model", "owned_by": "meta"},
+			{"id": "muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
 			{"id": "meta/muse-spark-1.3-contributor", "object": "model", "owned_by": "meta"},
 			{"id": "muse-spark-1.3", "object": "model", "owned_by": "meta"},
 			{"id": "meta/muse-spark-1.3", "object": "model", "owned_by": "meta"},
@@ -552,4 +552,3 @@ func truncateForError(b []byte) string {
 	s = strings.ReplaceAll(s, `"`, "'")
 	return s
 }
-

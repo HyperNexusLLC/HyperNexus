@@ -1,11 +1,11 @@
 # HyperNexus -- Meta model wiring for Codex (REFERENCE, no secrets inside) 
-Model: 'meta/muse-spark-1.3-contributor' via Meta Model API (1M context). 
+Model: 'meta/muse-wonder-1.0-contributor' via Meta Model API (1M context). 
 Auth is read LIVE from pi 'auth.json' at every mint (pi owns OAuth refresh; 
 nothing is stored in this file or any config). 
 ## Native surface: model_providers.meta in config.toml 
 Codex reads API keys from env vars only, so native Meta OAuth means a 
 provider block whose env_key points at a shell variable you mint live: 
-model = 'meta/muse-spark-1.3-contributor' 
+model = 'meta/muse-wonder-1.0-contributor' 
 model_provider = 'meta' 
 model_reasoning_effort = 'high' 
 model_reasoning_summary = 'auto' 
@@ -43,4 +43,4 @@ hypernexus MCP tools instead.
 - If mint reports expired session (401/403), re-login in pi (/login meta). 
 - Home-config model pin is YOUR override: install.mjs merge-only logic preserves an existing model line (e.g. gpt-6-astra); the battery accepts provider-meta + proxy wiring in that case. The subscription path is use-meta-model.ps1 (minimal CODEX_HOME, shell surfaces disabled).
 - Known codex-0.166 limitation (verified 2026-11-02 with 58-tool and 2-tool MCP servers): codex sends MCP servers upstream as a single mcp__<server> namespace envelope; the model improvises mcp__<server>.<tool> dot calls and the router rejects them (unsupported call). MCP parity calls inside codex exec are therefore unavailable until codex changes this; inference through the kernel proxy works. The stdio MCP server itself is healthy (58 tools, live system_status call verified by direct probe).
-- Home-config recursive-schema blocker (verified 2026-11-02): the `node_repl` MCP server's tool schema trips the vendor `Recursive JSON schemas` 400 on the Meta path (home config with node_repl fails; identical config without it returns PONG). Keep `node_repl` out of the Meta path: use a CODEX_HOME without its `[mcp_servers.node_repl]` section (or the minimal config) when running meta/muse-spark-1.3-contributor.
+- Home-config recursive-schema blocker (verified 2026-11-02): the `node_repl` MCP server's tool schema trips the vendor `Recursive JSON schemas` 400 on the Meta path (home config with node_repl fails; identical config without it returns PONG). Keep `node_repl` out of the Meta path: use a CODEX_HOME without its `[mcp_servers.node_repl]` section (or the minimal config) when running meta/muse-wonder-1.0-contributor.

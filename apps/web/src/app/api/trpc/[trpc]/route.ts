@@ -1,18 +1,14 @@
 import { getCacheTTL, getCached, setCached } from "../cache";
+import {
+	DEFAULT_UPSTREAM_BASES,
+	resolveGoApiBase,
+	resolveUpstreamBases,
+} from "../../../../lib/trpc-upstream";
 
 export const runtime = "nodejs";
 
-const DEFAULT_UPSTREAM_TRPC_URL = "http://127.0.0.1:7778/trpc";
-const DEFAULT_GO_API_BASE = "http://127.0.0.1:7778";
-
 function resolveUpstreamBase(): string {
-	return (
-		process.env.TORMENTNEXUS_TRPC_UPSTREAM?.trim() || DEFAULT_UPSTREAM_TRPC_URL
-	);
-}
-
-function resolveGoApiBase(): string {
-	return process.env.TORMENTNEXUS_GO_API_BASE?.trim() || DEFAULT_GO_API_BASE;
+	return resolveUpstreamBases()[0] || DEFAULT_UPSTREAM_BASES[0];
 }
 
 function getProcedurePath(req: Request): string {

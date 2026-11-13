@@ -145,15 +145,15 @@ export default function ResearchPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-md border border-emerald-500/30 bg-emerald-950/20 px-3 py-2">
                         <div className="text-xs uppercase tracking-wide text-emerald-300/80">Processed</div>
-                        <div className="text-2xl font-semibold text-emerald-300">{queueQuery.data?.totals.processed ?? 0}</div>
+                        <div className="text-2xl font-semibold text-emerald-300">{queueQuery.data?.totals?.processed ?? 0}</div>
                     </div>
                     <div className="rounded-md border border-amber-500/30 bg-amber-950/20 px-3 py-2">
                         <div className="text-xs uppercase tracking-wide text-amber-300/80">Pending</div>
-                        <div className="text-2xl font-semibold text-amber-300">{queueQuery.data?.totals.pending ?? 0}</div>
+                        <div className="text-2xl font-semibold text-amber-300">{queueQuery.data?.totals?.pending ?? 0}</div>
                     </div>
                     <div className="rounded-md border border-rose-500/30 bg-rose-950/20 px-3 py-2">
                         <div className="text-xs uppercase tracking-wide text-rose-300/80">Failed</div>
-                        <div className="text-2xl font-semibold text-rose-300">{queueQuery.data?.totals.failed ?? 0}</div>
+                        <div className="text-2xl font-semibold text-rose-300">{queueQuery.data?.totals?.failed ?? 0}</div>
                     </div>
                 </div>
 
@@ -230,7 +230,7 @@ export default function ResearchPage() {
                                     size="sm"
                                     variant="outline"
                                     className="h-7 text-xs"
-                                    disabled={(queueQuery.data?.queue.failed.length ?? 0) === 0 || retryAllMutation.isPending}
+                                    disabled={(queueQuery.data?.queue?.failed?.length ?? 0) === 0 || retryAllMutation.isPending}
                                     onClick={() => retryAllMutation.mutate()}
                                 >
                                     {retryAllMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Retry All'}
@@ -253,14 +253,14 @@ export default function ResearchPage() {
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                     Loading queue...
                                 </div>
-                            ) : (queueQuery.data?.queue.failed.length ?? 0) === 0 ? (
+                            ) : (queueQuery.data?.queue?.failed?.length ?? 0) === 0 ? (
                                 <div className="text-sm text-muted-foreground text-center py-4">
                                     No failed URLs. Queue is healthy.
                                 </div>
                             ) : (
                                 <ScrollArea className="h-64 pr-2">
                                     <div className="space-y-3">
-                                        {queueQuery.data?.queue.failed.slice(0, 20).map((item) => (
+                                        {(queueQuery.data?.queue?.failed ?? []).slice(0, 20).map((item) => (
                                             <div key={item.url} className="rounded-md border border-border/50 p-2 bg-muted/20">
                                                 <div className="text-xs font-medium text-foreground truncate" title={item.name}>{item.name}</div>
                                                 <div className="text-[11px] text-muted-foreground truncate" title={item.url}>{item.url}</div>

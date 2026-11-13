@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/knights-analytics/hugot"
 	"github.com/knights-analytics/hugot/pipelines"
@@ -23,6 +25,75 @@ var (
 	localEmbedErr     error
 	localEmbedTried   bool
 )
+
+// Query/content embedding cache: repeated searches for the same text (and
+// duplicate memory writes) otherwise pay a full ONNX inference under the
+// store mutex on every call. Small LRU + TTL keeps hot embeddings in memory.
+const (
+	embedCacheMaxEntries = 256
+	embedCacheTTL        = 10 * time.Minute
+)
+
+type embedCacheEntry struct {
+	vec []float32
+	at  time.Time
+}
+
+var (
+	embedCacheMu    sync.Mutex
+	embedCache      = map[string]embedCacheEntry{}
+	embedCacheOrder []string // LRU order, most-recently-used last
+)
+
+func embedCacheKey(text string) string {
+	return strings.Join(strings.Fields(strings.ToLower(strings.TrimSpace(text))), " ")
+}
+
+func embedCacheGet(key string) []float32 {
+	embedCacheMu.Lock()
+	defer embedCacheMu.Unlock()
+	e, ok := embedCache[key]
+	if !ok {
+		return nil
+	}
+	if time.Since(e.at) > embedCacheTTL {
+		delete(embedCache, key)
+		return nil
+	}
+	// Refresh LRU position.
+	for i, k := range embedCacheOrder {
+		if k == key {
+			embedCacheOrder = append(embedCacheOrder[:i], embedCacheOrder[i+1:]...)
+			break
+		}
+	}
+	embedCacheOrder = append(embedCacheOrder, key)
+	out := make([]float32, len(e.vec))
+	copy(out, e.vec)
+	return out
+}
+
+func embedCachePut(key string, vec []float32) {
+	embedCacheMu.Lock()
+	defer embedCacheMu.Unlock()
+	cp := make([]float32, len(vec))
+	copy(cp, vec)
+	if _, exists := embedCache[key]; !exists {
+		embedCacheOrder = append(embedCacheOrder, key)
+	}
+	embedCache[key] = embedCacheEntry{vec: cp, at: time.Now()}
+	for len(embedCacheOrder) > embedCacheMaxEntries {
+		delete(embedCache, embedCacheOrder[0])
+		embedCacheOrder = embedCacheOrder[1:]
+	}
+}
+
+func embedCacheClear() {
+	embedCacheMu.Lock()
+	defer embedCacheMu.Unlock()
+	embedCache = map[string]embedCacheEntry{}
+	embedCacheOrder = nil
+}
 
 // localEmbedModelPath returns the directory holding model.onnx + tokenizer.json.
 // Override with HYPERNEXUS_EMBED_MODEL_PATH for custom deployments.
@@ -92,6 +163,10 @@ func ensureLocalEmbedder() error {
 // localEmbed returns a localEmbedDim semantic embedding for text, or nil when
 // the bundled model is unavailable — the caller then falls back to simpleEmbed.
 func localEmbed(ctx context.Context, text string) []float32 {
+	cacheKey := embedCacheKey(text)
+	if cached := embedCacheGet(cacheKey); cached != nil {
+		return cached
+	}
 	if err := ensureLocalEmbedder(); err != nil || localEmbedPipe == nil {
 		return nil
 	}
@@ -124,6 +199,7 @@ func localEmbed(ctx context.Context, text string) []float32 {
 		if r.err != nil || len(r.vec) == 0 {
 			return nil
 		}
+		embedCachePut(cacheKey, r.vec)
 		return r.vec
 	case <-ctx.Done():
 		return nil
@@ -146,6 +222,7 @@ func closeLocalEmbedder() {
 		localEmbedSession = nil
 	}
 	localEmbedPipe = nil
+	embedCacheClear()
 	localEmbedTried = false
 	localEmbedErr = nil
 }

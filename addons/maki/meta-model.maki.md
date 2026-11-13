@@ -64,4 +64,4 @@ in ~24h and a snapshot rots.
 
 ## Dual-model (spark default, wonder opt-in)
 
-META_MODEL env selects the model (meta/ prefix tolerated); the one-shot flag becomes -m meta/$Model. Check accepts either model in the live catalog.
+META_MODEL env selects the model: default `meta/muse-spark-1.3-contributor`, opt-in `meta/muse-wonder-1.0-contributor` (meta/ prefix tolerated); the one-shot flag becomes -m meta/$Model. Check accepts either model in the live catalog.

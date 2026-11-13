@@ -207,6 +207,14 @@ func stripAttestationTools(tools []any) (kept []any, stripped []string) {
 			continue
 		}
 		name, _ := m["name"].(string)
+		if name == "" {
+			// Chat Completions shape {type:"function", function:{name:...}} has
+			// no top-level name; resolve it so the strip covers chat-format
+			// tools too (case handled by attestationTrippingTool).
+			if fn, ok := m["function"].(map[string]any); ok {
+				name, _ = fn["name"].(string)
+			}
+		}
 		if subs, isEnv := m["tools"].([]any); isEnv {
 			var droppedSubs []string
 			var keptList []any

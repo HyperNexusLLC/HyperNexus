@@ -17,7 +17,7 @@ echo.
 set /p CHOICE="Enter choice (1-4): "
 
 if "%CHOICE%"=="1" goto build_hypernexus
-if "%CHOICE%"=="2" goto build_hypernexus
+if "%CHOICE%"=="2" goto build_corporate
 if "%CHOICE%"=="3" goto build_both
 if "%CHOICE%"=="4" goto end
 echo Invalid choice. Please try again.

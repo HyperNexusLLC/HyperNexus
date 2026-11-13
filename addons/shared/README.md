@@ -70,7 +70,7 @@ Every session/thread, in any harness, can exchange input and output:
   `inbox` / `reply` (output, threaded by msg id) / `thread`. Conventions:
   `[session-bus] register <id>`, `[bus-msg] <id> -> <to>`, `[bus-out] <id>`.
 - `cdp-bridge.mjs` — drives the web threads that cannot poll the bus
-  (muse.ai, Gemini) through Edge CDP 9222: `tabs` / `send` / `read`.
+  (muse.ai, Gemini, ChatGPT) through Edge CDP 9222: `tabs` / `send --target muse|gemini|chatgpt` / `read --target muse|gemini|chatgpt`.
   Mirror web-thread exchanges onto the bus with `send`/`reply` so CLI
   sessions can read them.
 - Kernel-owned sessions already have native routes (`/api/sessions/supervisor/*`,

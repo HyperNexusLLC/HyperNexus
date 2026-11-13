@@ -12,6 +12,7 @@ import (
 	"time"
 	"unsafe"
 
+	"gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/config"
 	"gitlab.com/HyperNexusLLC/HyperNexus/internal/eventbus"
 	"golang.org/x/sys/windows"
@@ -59,6 +60,8 @@ const (
 	NIF_TIP     = 4
 
 	MF_STRING       = 0x00000000
+	MF_GRAYED       = 0x00000001
+	MF_SEPARATOR    = 0x00000800
 	TPM_LEFTALIGN   = 0x0000
 	TPM_RIGHTBUTTON = 0x0002
 	TPM_RETURNCMD   = 0x0100
@@ -69,6 +72,7 @@ const (
 	IDM_INFO_VERSION = 1004
 	IDM_INFO_STATUS  = 1005
 	IDM_AUTOSTART    = 1006
+	IDM_API_INDEX    = 1007
 	IDM_LOG_BASE     = 2000 // Base ID for last-10-log menu items (2000-2009)
 
 	MB_YESNO        = 0x00000004
@@ -78,8 +82,6 @@ const (
 	IDYES           = 6
 	IDNO            = 7
 	IDCANCEL        = 2
-
-	MF_GRAYED = 0x00000001
 
 	WM_CREATE        = 0x0001
 	WM_DESTROY       = 0x0002
@@ -162,7 +164,12 @@ var (
 
 // Start launches the system tray helper and message loops
 func Start(eb *eventbus.EventBus) {
+	addLogLine(fmt.Sprintf("[%s] Kernel v%s tray ready (:7778 -> :7779)", time.Now().Format("15:04:05"), buildinfo.Version))
 	go runMessageLoop()
+
+	if eb == nil {
+		return
+	}
 
 	// Subscribe to eventbus to display logs in real-time
 	eb.OnGlobal(func(ev eventbus.SystemEvent) {
@@ -348,33 +355,35 @@ func hiddenWndProc(hWnd windows.HWND, msg uint32, wParam uintptr, lParam uintptr
 			hMenu, _, _ := pCreatePopupMenu.Call()
 			branding := config.GetBranding()
 
-			// ── Last 10 Log Events (clickable sub-items) ──
-			logMutex.Lock()
-			last10 := logLines
-			if len(last10) > 10 {
-				last10 = last10[len(last10)-10:]
-			}
-			logMutex.Unlock()
+			// ── Status Header (non-interactive) ──
+			headerText, _ := syscall.UTF16PtrFromString(fmt.Sprintf("%s v%s — Kernel :7778", branding.ProductName, buildinfo.Version))
+			pAppendMenu.Call(hMenu, MF_STRING|MF_GRAYED, IDM_INFO_VERSION, uintptr(unsafe.Pointer(headerText)))
+			pAppendMenu.Call(hMenu, MF_SEPARATOR, 0, 0)
 
-			for i, line := range last10 {
-				// Truncate long lines for menu display
-				display := line
-				if len(display) > 60 {
-					display = display[:57] + "..."
+			// ── Last 10 Log Events (clickable sub-items; copied safely under lock) ──
+			last10 := snapshotRecentLogs(10)
+			if len(last10) == 0 {
+				emptyText, _ := syscall.UTF16PtrFromString("(No recent activity events yet)")
+				pAppendMenu.Call(hMenu, MF_STRING|MF_GRAYED, IDM_INFO_STATUS, uintptr(unsafe.Pointer(emptyText)))
+			} else {
+				for i, line := range last10 {
+					display := truncateMenuLine(line, 60)
+					itemText, _ := syscall.UTF16PtrFromString(display)
+					// IDM_LOG_BASE + i makes each item clickable (opens full log window)
+					pAppendMenu.Call(hMenu, MF_STRING, IDM_LOG_BASE+uintptr(i), uintptr(unsafe.Pointer(itemText)))
 				}
-				itemText, _ := syscall.UTF16PtrFromString(display)
-				// IDM_LOG_BASE + i makes each item clickable (opens full log window)
-				pAppendMenu.Call(hMenu, MF_STRING, IDM_LOG_BASE+uintptr(i), uintptr(unsafe.Pointer(itemText)))
 			}
-			pAppendMenu.Call(hMenu, MF_STRING, 0, 0) // Separator
+			pAppendMenu.Call(hMenu, MF_SEPARATOR, 0, 0)
 
 			// ── Navigation ──
-			dashboardText, _ := syscall.UTF16PtrFromString("Open Dashboard")
+			dashboardText, _ := syscall.UTF16PtrFromString("Open Dashboard (:7779)")
+			apiIndexText, _ := syscall.UTF16PtrFromString("Open Kernel API Index (:7778)")
 			logsText, _ := syscall.UTF16PtrFromString("Show Full Event Logs")
 			pAppendMenu.Call(hMenu, MF_STRING, IDM_DASHBOARD, uintptr(unsafe.Pointer(dashboardText)))
+			pAppendMenu.Call(hMenu, MF_STRING, IDM_API_INDEX, uintptr(unsafe.Pointer(apiIndexText)))
 			pAppendMenu.Call(hMenu, MF_STRING, IDM_LOGS, uintptr(unsafe.Pointer(logsText)))
 
-			pAppendMenu.Call(hMenu, MF_STRING, 0, 0) // Separator
+			pAppendMenu.Call(hMenu, MF_SEPARATOR, 0, 0)
 
 			// ── Auto-Start Toggle ──
 			startupLabel := "Enable Auto-Start with Windows"
@@ -384,7 +393,7 @@ func hiddenWndProc(hWnd windows.HWND, msg uint32, wParam uintptr, lParam uintptr
 			startupText, _ := syscall.UTF16PtrFromString(startupLabel)
 			pAppendMenu.Call(hMenu, MF_STRING, IDM_AUTOSTART, uintptr(unsafe.Pointer(startupText)))
 
-			pAppendMenu.Call(hMenu, MF_STRING, 0, 0) // Separator
+			pAppendMenu.Call(hMenu, MF_SEPARATOR, 0, 0)
 
 			// ── Exit ──
 			exitText, _ := syscall.UTF16PtrFromString(fmt.Sprintf("Exit All %s Processes", branding.ProductName))
@@ -410,6 +419,8 @@ func hiddenWndProc(hWnd windows.HWND, msg uint32, wParam uintptr, lParam uintptr
 			switch cmd {
 			case IDM_DASHBOARD:
 				_ = hiddenCommand("cmd", "/c", "start", "http://127.0.0.1:7779/dashboard").Start()
+			case IDM_API_INDEX:
+				_ = hiddenCommand("cmd", "/c", "start", "http://127.0.0.1:7778/api/index").Start()
 			case IDM_LOGS:
 				showLogWindow()
 			case IDM_AUTOSTART:
@@ -418,17 +429,18 @@ func hiddenWndProc(hWnd windows.HWND, msg uint32, wParam uintptr, lParam uintptr
 				// Show dialog asking user what to do with background processes
 				title, _ := syscall.UTF16PtrFromString(fmt.Sprintf("%s — Exit Options", branding.ProductName))
 				msg, _ := syscall.UTF16PtrFromString(fmt.Sprintf("Do you want to completely quit ALL %s background processes?\n\n"+
-					"Click 'Yes' to terminate: watchdog, swarm workers, dashboard, freellm.\n"+
-					"Click 'No' to quit the kernel only (background workers keep running).\n"+
+					"Click 'Yes' to terminate: watchdog, swarm workers, dashboard (:7779), freellm (leaves sibling MCP stdio sessions intact).\n"+
+					"Click 'No' to quit the kernel (:7778) only (background workers keep running).\n"+
 					"Click 'Cancel' to stay running.", branding.ProductName))
 				resp, _, _ := pMessageBox.Call(0, uintptr(unsafe.Pointer(msg)),
 					uintptr(unsafe.Pointer(title)), MB_YESNOCANCEL|MB_ICONQUESTION)
 				switch resp {
 				case IDYES:
-					// Kill everything
+					// Kill background suite + kernel
 					go TriggerFullShutdown()
 				case IDNO:
-					// Just exit the TN Kernel, leave workers running
+					// Remove tray icon cleanly first so Windows doesn't leave a ghost icon, then exit kernel only
+					removeTrayIcon()
 					os.Exit(0)
 				case IDCANCEL:
 					// Do nothing, stay running
@@ -478,28 +490,72 @@ func reAddTrayIcon() {
 	}
 }
 
+// snapshotRecentLogs returns a defensive copy of the most recent n log lines
+// so menu rendering never races against concurrent EventBus arrivals.
+func snapshotRecentLogs(limit int) []string {
+	if limit <= 0 {
+		return nil
+	}
+	logMutex.Lock()
+	defer logMutex.Unlock()
+
+	start := 0
+	if len(logLines) > limit {
+		start = len(logLines) - limit
+	}
+	out := make([]string, len(logLines)-start)
+	copy(out, logLines[start:])
+	return out
+}
+
+// truncateMenuLine truncates on rune boundaries rather than raw bytes so UTF-8
+// glyphs (em-dashes, icons) are never split mid-codepoint before UTF-16 conversion.
+func truncateMenuLine(line string, maxRunes int) string {
+	if maxRunes <= 3 {
+		return line
+	}
+	runes := []rune(line)
+	if len(runes) <= maxRunes {
+		return line
+	}
+	return string(runes[:maxRunes-3]) + "..."
+}
+
+// buildBackgroundCleanupScript builds a Win11-24H2-compatible PowerShell CIM
+// sweep (`wmic.exe` is removed on modern Windows 11 builds). It strictly targets
+// HyperNexus background workers and the `:7779` Next.js dashboard while leaving
+// unrelated Node apps and sibling `hypernexus.exe mcp` stdio processes untouched.
+func buildBackgroundCleanupScript() string {
+	return `Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { ` +
+		`$c = $_.CommandLine; if (-not $c) { return $false }; ` +
+		`($c -match 'watchdog\.py|swarm_v7\.py|bobbybookmarks_sync\.py|trends_analyzer\.py|autonomous_marketing\.py') -or ` +
+		`($_.Name -eq 'node.exe' -and ($c -match 'next(\.js|[\\/]+dist[\\/]+bin[\\/]+next)?\s+(dev|start)' -or $c -match 'standalone[\\/]+apps[\\/]+web[\\/]+server\.js') -and ($c -match '7779|apps[\\/]+web|HyperNexus')) ` +
+		`} | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+}
+
 func TriggerFullShutdown() {
 	branding := config.GetBranding()
 
 	// Remove the tray icon first so Windows doesn't leave a ghost on exit.
 	removeTrayIcon()
 
-	// 1. Terminate watchdog
+	// 1. Terminate named watchdog window & freellm helper if present
 	_ = hiddenCommand("taskkill", "/F", "/FI", fmt.Sprintf("WINDOWTITLE eq %s Watchdog", branding.ProductName)).Run()
-	_ = hiddenCommand("wmic", "process", "where", "CommandLine like '%watchdog.py%'", "call", "terminate").Run()
-
-	// 2. Terminate scripts
-	_ = hiddenCommand("wmic", "process", "where", "CommandLine like '%swarm_v7.py%'", "call", "terminate").Run()
-	_ = hiddenCommand("wmic", "process", "where", "CommandLine like '%bobbybookmarks_sync.py%'", "call", "terminate").Run()
-	_ = hiddenCommand("wmic", "process", "where", "CommandLine like '%trends_analyzer.py%'", "call", "terminate").Run()
-
-	// 3. Terminate Node dashboard processes
-	_ = hiddenCommand("wmic", "process", "where", "CommandLine like '%next-dev%' or CommandLine like '%next build%' or CommandLine like '%next start%'", "call", "terminate").Run()
-
-	// 4. Terminate freellm
 	_ = hiddenCommand("taskkill", "/F", "/IM", "freellm.exe").Run()
 
-	// 5. Exit kernel
+	// 2. Terminate HyperNexus background Python workers & :7779 Next.js dashboard via CIM
+	// (replaces legacy wmic calls removed in Windows 11 24H2+ and fixes the '%next-dev%' typo).
+	_ = hiddenCommand(
+		"powershell.exe",
+		"-NoProfile",
+		"-NonInteractive",
+		"-ExecutionPolicy",
+		"Bypass",
+		"-Command",
+		buildBackgroundCleanupScript(),
+	).Run()
+
+	// 3. Exit kernel
 	os.Exit(0)
 }
 

@@ -15,18 +15,157 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
-## [1.0.30] - 2026-11-07
-
-### Fixed
-- **Working-tree regression repaired**: the working tree had regressed to a 1.0.28 state (VERSION, Go buildinfo, 35 package.json refs, plus reverted CHANGELOG/HANDOFF/ROADMAP/TODO/SUBMODULES text, a dashboard decomposition revert, and a dropped `claude-code` supervisor mapping). All restored to the committed 1.0.29 state; the inline dashboard duplicate was discarded in favor of the agreed `DashboardConsolidatedSections` extraction, and the `claude-code` → `claude` supervisor mapping retained. Temp artifacts (`_pong_*`, codex-gui swarm out/err logs) deleted; `.claude-flow/` added to `.gitignore` alongside the other harness working dirs.
-- **Branch reconciliation**: all 4 local feature branches (`clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`) verified at 0 unique commits vs `main` (fully merged ancestors) and fast-forwarded to `main` tip (reverse-merge, no drift). Remote-only `feature/cloud-dashboard-mcp-sse-*` and `gh-pages-*` branches left untouched (archival/deploy).
+## [1.0.50] - 2026-11-13
 
 ### Changed
-- **Upstream sync**: `git fetch --all --tags` on root + all 3 submodules (no nested submodules). `github/main` trails local `main` by 2 commits (memory/session state); `gitlab/main` in sync. Submodules (`vendor/deepseek-harness` fcc0ad4621, `vendor/grok-build` 2bdd1d6a, `lumbros.me` 16261e0) at upstream tips, no feature branches. Structural map re-verified in `docs/SUBMODULES.md`.
-- **Version sync**: VERSION 1.0.29 -> 1.0.30 propagated to 35 package/buildinfo references via `scripts/sync-versions.mjs`.
+- **Dashboard lazy loading**: the eight below-fold home sections (memory, MCP, research-workflows, governance-security, system-recovery, prompts-deployments, workflow-orchestration, integrations) now load via `next/dynamic` with a shared loading placeholder, so the initial bundle only parses Mission Control + consolidated sections; anchors resolve as sections mount in order. The two SSR render test files gained a settled-stream render helper (waits for dynamic chunks, strips `<!-- -->` SSR text separators) plus a `next/dynamic`→`React.lazy` vitest mock. Suite: 107/107, tsc + `next build` green; dashboard restarted (pid 32600).
+
+## [1.0.49] - 2026-11-13
+
+### Fixed
+- **Kernel memory write hang (P0)**: `POST /api/memory/facts/add` blocked >120s under multi-agent load — the L2 dual-write `VectorStore.Commit` ran inline under the store-wide mutex that semantic searches hold while embedding, behind the durable local write. The dual-write is now async with a 30s bounded context; the endpoint answers in ~2s (the 41MB `memories.json` rewrite dominates). This unblocks the Codex swarm bus (live legs 11/11 again), droid memory writes (battery 68/4 → 74/2), and MCP `add_memory`.
+- **Attestation strip coverage (P1)**: `stripAttestationTools` only read the top-level tool `name`, missing the Chat Completions shape (`function.name`) — shell-named chat tools now strip on the denial-retry path too (name match already case-insensitive). New regression test `TestStripAttestationToolsChatShapeAndCase`; full `internal/httpapi` suite green.
+- **`/v1/models`** now lists `muse-wonder-1.0-contributor` (+ `meta/` alias) — it was served (200) but unlisted.
+
+### Added
+- **Hermetic batteries for the 10 battery-less CLI harnesses** (`addons/<h>/bin/test-<h>-ext.mjs`: codewhale, jcode, maki, prime-agent, freebuff, crush, hax, reasonix, open-interpreter, grok) — layout, dual-model pin, shared-minter shim, swarm floor, no-shell-tools policy. All pass.
+- **Session-bus swarm floor** (`swarm-prompt-block.md`) for the 13 harnesses that had no session-control surface, plus bus sections appended to the crush/freebuff blocks; `preferred-tools.md` for hax, open-interpreter, grok. `reasonix-plugin.json` 1.0.28 → 1.0.49.
 
 ### Notes
-- Live-kernel churn left unstaged deliberately: `catalog.db` (31MB→78KB rewrite), `hypernexus.db`, ~200 pruned/rotated `.hypernexus/imported_sessions` archives, and truncated `.hypernexus/logs/a2a_traffic.jsonl` are being rewritten by the running kernel — committing them would bake in unquiesced state (same rationale as the `data/tormentnexus.db` LFS note). Memory facts (`.hypernexus/agent_memory/memories.json`) staged normally.
+- Harness-matrix workflow (33 harnesses × wonder/spark): 20 WORKING / 13 PARTIAL / 0 MISSING. All four model×endpoint parity combos return 200 with the exact token; the 403 root cause is upstream Meta attestation on shell-named tools, neutralized by parity tools (`code_interpreter`) + kernel stripping. Remaining reds are owner-gated (pi Meta session expired — `/login meta` in pi) or user-pinned choices (droid session default).
+
+## [1.0.48] - 2026-11-12
+
+### Changed
+- **Win32 systray polish (`go/internal/systray/systray_windows.go`)**: tray menu now opens with a grayed status header (`<product> v<version> — Kernel :7778`, version from `internal/buildinfo`), adds an "Open Kernel API Index (:7778)" item, renders recent-log items from a lock-safe snapshot with rune-boundary truncation (no split UTF-8 glyphs), and shows an explicit empty-state line. Full-shutdown cleanup now uses a scoped PowerShell CIM sweep (`buildBackgroundCleanupScript`) instead of `wmic` (removed in Windows 11 24H2), targeting only HyperNexus Python workers + the :7779 dashboard and leaving sibling `hypernexus.exe mcp` stdio sessions intact; kernel-only exit removes the tray icon first (no ghost icon). `Start` also guards a nil EventBus. Started by the Antigravity/Gemini lane (session `ff90f2fd`, quota-interrupted) and finished/verified here.
+- **Deployment**: kernel rebuilt from `go/cmd/tormentnexus` and swapped live by exact PID (18336 → 30676, BelowNormal); `:7778/health` reports v1.0.48.
+
+## [1.0.47] - 2026-11-12
+
+### Added
+- **Modular Omni-Console section components (`apps/web/src/app/dashboard/`)**:
+  - `dashboard-workflow-orchestration-section.tsx` (`#workflow-orchestration`): autonomous DAG workflow library, live `WorkflowVisualizer` node inspector, and Pause/Resume execution controls with descriptive tooltips.
+  - `dashboard-prompts-deployments-section.tsx` (`#prompts-deployments`): compiled Go system prompt inspector, independent static landing deploy cards (`tormentnexus.site` vs `hypernexus.site`), Cloud portal, and `hypernexus://` OS URI protocol registry + deep-link actions.
+  - `dashboard-system-recovery-section.tsx` (`#system-recovery`): SQLite restoration probe, catalog schema sync, integrity console, cross-harness session import bridge, git chronicle, `SettingsDashboard`, immune self-healing radar, and L2 vector vault telemetry.
+- **Expanded Operator Manual (`apps/web/src/app/dashboard/manual/view.tsx`)**: live `/api/go/health` kernel probe + fallback `VERSION` reader, interactive map of all 13 Omni-Console quick-jump anchors, L1/L2/L3 + GraphRAG memory tier guide, Win32 systray & `hypernexus://` reference, and Cross-Harness Session Bus + Edge CDP `9222` bridge documentation.
+
+### Fixed
+- **Web Deployment Operations state collision**: fixed duplicate `"hypernexus.site"` deployment state key so `tormentnexus.site` and `hypernexus.site` deploy independently without cross-disabling buttons.
+- **Live diagnostics & schema sync probes (`dashboard-home-view.tsx`)**: replaced simulated `setTimeout` placeholder banners with live `/api/go/health` + `/api/go/api/mcp/status` and `/api/go/api/mcp/servers` kernel probes.
+- **Next.js tRPC upstream resolution & route test suite (`apps/web/src/lib/trpc-upstream.ts`, `apps/web/src/app/api/trpc/[trpc]/route.ts`, `route.test.ts`, `apps/web/vitest.config.ts`)**: replaced dummy `resolveUpstreamBases` stub with real ordered upstream/Go-API resolution (`HYPERNEXUS_*` + `TORMENTNEXUS_*` env support), isolated `vitest.config.ts` to `root: webRoot` (excluding `archive/` and `deploy-artifacts/`), and updated `route.test.ts` for the Go-native kernel proxy contract — bringing the full dashboard test suite to **15/15 files, 107/107 tests green**.
+
+### Changed
+- **Completed `dashboard-home-view.tsx` decomposition**: reduced `dashboard-home-view.tsx` from `1,883` lines to `760` lines, updated top-nav branding (`⚡ HyperNexus`), and wired all 13 sticky-header quick-jump anchors with `title` tooltips.
+- **Version sync**: `VERSION` `1.0.46` → `1.0.47` across all workspace manifests + Go `buildinfo`.
+
+## [1.0.46] - 2026-11-12
+
+### Added
+- **Cross-harness Edge CDP 9222 bridge (`addons/shared/cdp-bridge.mjs`)**: added `--target chatgpt` (`chatgpt.com` / `chat.openai.com` ProseMirror `#prompt-textarea` + fallback `textarea` + `[data-testid="send-button"]`) alongside `muse` and `gemini`, with kernel scratchpad SHA-256 deduplication guard (`bus:acked:<hash12>`). Registered `antigravity-gemini` on `addons/shared/session-bus.mjs`.
+- **Codex Wonder 1.0 wiring (`addons/codex/*`, `AGENTS.md`)**: aligned Codex default contributor model wiring to `meta/muse-wonder-1.0-contributor` (22/22 static + kernel health/MCP battery checks green; Meta OAuth mint awaits `/login meta` refresh in `pi`).
+
+### Fixed
+- **Root build & launch scripts**:
+  - `start.sh`: fixed silent Go kernel build target (`./cmd/hypernexus` → `./cmd/tormentnexus`).
+  - `start.bat`: launches Go sidecar (`:7778`) and Next.js dashboard (`:7779`) with `/BELOWNORMAL` priority per standing host stability rule.
+  - `build-editions.bat`: fixed unreachable `:build_corporate` menu target (`CHOICE==2` previously jumped to `:build_hypernexus`).
+  - `commit-and-push.bat` & `push-to-gitlab.bat`: switched push target from legacy `clean-main` to `main` and added explicit `git reset HEAD` exclusions for live runtime SQLite churn (`catalog.db`, `hypernexus.db`, `.tormentnexus/skills.db`), >100MB `data/tormentnexus.db`, `data/provider_metrics.db*`, and Windows `go/NUL`.
+- **Lockfile regex corruption restored**: reverted sibling regex-replace corruption on `pnpm-lock.yaml`, 4 `Cargo.lock` files, and 2 skill example versions before staging.
+
+### Changed
+- **Repository synchronization (Session SYNC5)**: fetched `--all --tags` across root (`gitlab`, `github`, `origin`) and all 3 submodules (`vendor/deepseek-harness` `e8f7b93a34`, `vendor/grok-build` `2bdd1d6a`, `lumbros.me` `16261e0`). Audited divergent `github/main` (`b37ca5bf08` / `e3fc22dc84`): verified all `alpha.251–253` code commits (`swarm_v7.py`, UDP gossip, Win32 systray, deep-link actions, Chrome extension icons, Reddit tools) are already present in `main`, merged `b37ca5bf08`'s finalized Pricing/Status/License updates into `README.md` without importing `a64d2a842b`'s 3,550 `..go_backup_old/` + 1,823 `third_party/` files, and fast-forwarded `clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, and `fix/test-local-embed` to `main`.
+- **Nondestructive root cleanup**: moved 19 tracked `_tmp_*` debug scratch files from repository root into `archive/root-tmp-2026-11-12/` via `git mv`.
+- **Version sync**: `VERSION` `1.0.45` → `1.0.46` across 35 manifests + Go `buildinfo`.
+
+## [1.0.45] - 2026-11-12
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Commercial Security & Auditing section (license authority, SSO setup, RBAC governance matrix, cryptographic audit logs) from `dashboard-home-view.tsx` (2267→1883 lines) into `dashboard-governance-security-section.tsx`. The whole enterprise-security logic block (state, `fetchCommercial`, `saveSSO`, role editors, `saveRoles`) moved into the component with its own mount effect after static analysis proved no identifier was used outside the logic block + section JSX; the parent's shared mount effect now only fetches imported sessions. This retires the earlier reverted governance extraction. tsc + `next build` green, 97 dashboard tests still pass, dashboard restarted.
+
+## [1.0.44] - 2026-11-12
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Autonomous Swarm Workflows & Pipelines section (`#research-workflows`: Topic Research Center, swarm code-generation queue, live multi-agent swarm topology) from `dashboard-home-view.tsx` (2451→2267 lines) into `dashboard-research-workflows-section.tsx`; shared swarm state (`swarmRunning`, `triggerSwarmGen`) stays in the parent and is passed as props, same pattern as the MCP/memory extractions. tsc + `next build` green, dashboard restarted on the new build; the 97 previously-green dashboard tests still pass (8 failures in `api/trpc/[trpc]/route.test.ts` are pre-existing and environmental — upstream :3100 down, file untouched since v1.0.4).
+
+## [1.0.43] - 2026-11-11
+
+### Deployment
+- **Kernel swap (owner-authorized)**: live :7778 kernel replaced — the installed `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` build (v1.0.0-b1, pid 31112) was stopped by exact PID and the repo build started from `bin/hypernexus-new.exe serve`. The sanctioned `bin/swap-kernel.ps1` was deliberately not used: it kills every `hypernexus` process, including other sessions' `mcp` stdio servers. Git for Windows also reinstalled (2.56.0) after the old install was found gutted.
+
+## [1.0.42] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Native Go MCP Orchestration section (~480 lines: competitor parity gate, swarm code-gen queue, harness parity accessories, JSON-RPC bridge, public MCP registry) from `dashboard-home-view.tsx` into `dashboard-mcp-section.tsx`; shared swarm state stays in the parent and is passed as props. Note: JSX comment siblings at a component root need a fragment wrapper (root cause of the extraction parse failure, now handled). tsc, 97 dashboard tests, and `next build` green; dashboard restarted.
+
+## [1.0.41] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Cognitive Memory + GraphRAG/Cold Archive section (~370 lines with its cold-archive, relation-builder, skill-indexer, and backlog-repair logic moved in) from `dashboard-home-view.tsx` into `dashboard-memory-section.tsx`. tsc, 97 dashboard tests, and `next build` green; dashboard restarted on the new build.
+
+## [1.0.40] - 2026-11-11
+
+### Documentation
+- Governance refresh: `DEPLOY.md` gains the version-stamped kernel build, dashboard start, and current ops notes (remotes, owner-gated kernel swap, BelowNormal rule, Git-for-Windows fork-bomb workaround, systray). `MEMORY.md`/`IDEAS.md`/`VISION.md` gain dated 2026-11-11 sections; `TODO.md`/`ROADMAP.md` now correctly cite `VERSION` (not `VERSION.md`) as the single version source.
+- Attempted governance-section extraction was reverted: its JSX shares workflow/session state with sibling sections, so it stays in the parent until props threading is done deliberately (noted in MEMORY.md).
+
+## [1.0.39] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the Integration Hub section (~200 lines: cloud orchestrator, supported coding surfaces, live clients, user manual, telemetry children + consolidated sections) from `dashboard-home-view.tsx` into `dashboard-integrations-section.tsx`. tsc, 97 dashboard tests, and `next build` green; dashboard restarted on the new build.
+
+## [1.0.38] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (per-section)**: extracted the mission-control header (status badges, diagnostics/schema-sync/shutdown quick actions, ~127 lines) from `dashboard-home-view.tsx` into `dashboard-mission-control-header.tsx` with an explicit props interface. tsc, 97 dashboard tests, and `next build` green; dashboard restarted on the new build.
+
+## [1.0.37] - 2026-11-11
+
+### Added
+- **Embedding cache**: `localEmbed` now caches embeddings in a 256-entry LRU with 10-minute TTL (normalized text key, copy-in/copy-out). Repeated semantic searches and duplicate memory writes skip ONNX inference that previously ran under the store mutex on every call. Unit tests cover normalization, copy isolation, expiry, and eviction (`go test ./internal/memorystore` green). Takes effect when the repo kernel build is swapped in (owner-gated; live kernel is still the installed v1.0.0-b1).
+
+## [1.0.36] - 2026-11-11
+
+### Changed
+- **Legacy dashboard retirement**: the last 10 byte-identical `GenericDashboardPage` JSON viewers (`browser`, `browser-extension`, `cli-harnesses`, `cloud-dev`, `deerflow`, `healer`, `imports`, `logs-metrics`, `observability`, `runtime`) are now `RedirectPage` stubs deep-linking to their consolidated home sections (`#integrations`, `#research-workflows`, `#healer-cognition`, `#memory-graphrag`, `#health-metrics`, `#mission-control`). No unique functionality lost — each was the same generic `/api/go/api/<name>` dump. tsc + 97 dashboard tests + build green; routes verified 200 (client redirect).
+
+## [1.0.35] - 2026-11-11
+
+### Fixed
+- **Dashboard test suite repaired** (was 100% unrunnable): added `apps/web/vitest.config.ts` mirroring tsconfig path aliases (`@hypernexus/ui` from source, `@/*`), single-React dedupe with all deps inlined, and build-output excludes; added tRPC/navigation mocks to the home-view and client tests and updated stale pre-consolidation copy assertions to the consolidated UI. Result: 14 files / 97 tests green.
+- **Crash fix**: `queueQuery.data?.totals.*` and `data?.queue.failed` in the research and manual views crashed when the ingestion payload lacked `totals`/`queue`; now fully optional-chained.
+- **Memory detail shadowing**: `getMemoryContextDetail` preferred the always-truthy disabled `tormentnexus` default over enabled `claudeMem` seeding state; now prefers the enabled store.
+
+## [1.0.34] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (continued)**: extracted the overview/startup model (~830 lines: `buildOverviewMetrics`, `buildStartupChecklist`, `buildDashboardAlerts`, formatters, tone helpers, default startup checks) from `dashboard-home-view.tsx` into `dashboard-overview-model.ts`; home view (now ~3,750 lines) re-exports the public helpers so existing imports are unchanged. `tsc --noEmit` and `next build` green; dashboard restarted on the new build.
+
+## [1.0.33] - 2026-11-11
+
+### Changed
+- **Dashboard decomposition (continued)**: extracted the 17 startup-blocking-reason helpers (~390 lines) from `dashboard-home-view.tsx` into `dashboard-startup-blocking.ts`; home view re-exports them so existing imports/tests are unchanged. `tsc --noEmit` and `next build` green; dashboard restarted on the new build. Note: `dashboard-home-view.test.tsx` fails identically on pristine HEAD (stale `packages/ui/dist` + duplicate `.next-build` test copy) — pre-existing, not a regression.
+
+## [1.0.32] - 2026-11-11
+
+### Changed
+- **Repository synchronization (Session SYNC4)**: full fetch; all named feature branches (`feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`, `clean-main`) confirmed fully merged into `main`; unrelated-history `feature/cloud-dashboard-mcp-sse-3898…` archive and `gh-pages-*` deploy branches retained untouched; upstream dependabot branch ignored per protocol.
+- **Submodule**: `vendor/deepseek-harness` advanced 923 commits to upstream master `e8f7b93a34` (dsh v0.2.2-rc.2); untracked HyperNexus overlays retained. `vendor/grok-build` and `lumbros.me` unchanged.
+- **Ops findings**: system Git for Windows install is gutted (`mingw64/bin` reduced to one file; wrapper fails with `BUG (fork bomb)`) — sync performed with GitHub Desktop's bundled git 2.56.1. Running kernel is now the installed build (`%LOCALAPPDATA%\HyperNexus\hypernexus.exe`, reports v1.0.0-b1, no `/api/system/status` route); dashboard :7779 restarted from `apps/web`.
+
+## [1.0.31] - 2026-11-08
+
+### Changed
+- **Repository synchronization (Session SYNC3)**: re-ran full fetch/branch/submodule audit at v1.0.30 state — no new remote commits; all feature branches still fully contained in `main` (0 unique) except the unrelated-history cloud archive branch and the two `gh-pages` deploy branches (retained untouched). Submodules at upstream tips (`deepseek-harness` fcc0ad4621, `grok-build` 2bdd1d6a, `lumbros.me` 16261e0), no internal feature branches. Root scripts (`start.bat`/`build.bat`) re-validated against ports 7778/7779 + `cmd/tormentnexus`.
+- **Visibility**: Muse session-start hook prints a one-line HyperNexus banner (kernel version, bus sessions, open swarm tasks, goal); fixed latent hook KIND bug. Verified in the active Muse plugin cache (hypernexus plugin enabled/active).
+- **Version sync**: 1.0.30 -> 1.0.31 across 35 references.
+
+## [1.0.30] - 2026-11-08
+
+### Changed
+- Kernel swapped to merged build (session bus + native Go orchestrate live); swarm bus scratchpad mirror; priority rule (heavyweight processes BelowNormal).
+
+### Fixed (2026-11-07 sync pass)
+- **Working-tree regression repaired**: restored committed 1.0.29 state over regressed 1.0.28 working copy, retained `DashboardConsolidatedSections` extraction and `claude-code` → `claude` supervisor mapping, added `.claude-flow/` to `.gitignore`, and fast-forwarded all 4 active feature branches (`clean-main`, `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`) to `main` while leaving live-kernel SQLite/archive churn unstaged.
 
 ## [1.0.29] - 2026-11-05
 

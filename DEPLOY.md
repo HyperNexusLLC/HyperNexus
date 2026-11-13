@@ -26,9 +26,27 @@ pnpm install
 
 ```bash
 cd go
-go build -o ../bin/hypernexus ./cmd/tormentnexus
+# Version-stamped kernel build (single version source: repo-root VERSION file)
+go build -ldflags "-s -w -X gitlab.com/HyperNexusLLC/HyperNexus/internal/buildinfo.Version=$(cat ../VERSION)" -buildvcs=false -o ../bin/hypernexus-new.exe ./cmd/tormentnexus
 go build -o ../bin/hypernexus-cloud ./cmd/cloud
 ```
+
+Or on Windows simply run `build.bat` (reads `VERSION`, stamps the kernel, writes `bin/hypernexus.exe`).
+
+### 3b. Start Dashboard
+
+```bash
+cd apps/web
+node node_modules/next/dist/bin/next start -p 7779   # production, after `npx next build`
+```
+
+Current ops notes (2026-11-11, v1.0.43):
+
+- Canonical remotes: GitLab `gitlab.com/HyperNexusLLC/HyperNexus` (primary). GitHub lags pending the owner's secret-blob unblock/rewrite decision.
+- The live :7778 kernel may be the installed build (`%LOCALAPPDATA%/HyperNexus/hypernexus.exe`); swapping in a repo build is an owner-gated, exact-PID operation (`bin/swap-kernel.ps1`). Never kill pre-existing hypernexus processes.
+- Set heavyweight processes (kernel, llama-server, large node) to BelowNormal priority: `scripts/set-llm-priority.ps1` plus a manual sweep after every start/swap.
+- If system Git for Windows fails with `BUG (fork bomb)`, its `mingw64/bin` is damaged — reinstall Git, or use GitHub Desktop's bundled git (`%LOCALAPPDATA%/GitHubDesktop/app-*/resources/app/git/ucrt64/bin/git.exe`).
+- System tray ships with the repo kernel (`go/internal/systray`): Open Dashboard, last-10 logs, Exit (quits servers).
 
 ### 4. Start Services
 

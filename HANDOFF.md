@@ -7,6 +7,107 @@
 - Built hypernexus.wonder.exe (37.7MB), swapped live; /v1/models advertises wonder; live kernel inference returned ok in 4s.
 ### Next: promote hypernexus.wonder.exe to hypernexus.exe at next window (old binary still on disk); elevated PIDs need Admin pass.
 
+
+# HANDOFF - Dashboard lazy loading v1.0.50 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- `dashboard-home-view.tsx`: 8 below-fold sections switched from static imports to `next/dynamic` (shared `sectionLoading` placeholder); Mission Control header + consolidated sections stay static. Test fallout (3 sync-SSR tests) fixed properly: settled-stream helper (`renderToReadableStream` + `allReady`, comments normalized) + `next/dynamic`→`React.lazy` mock in `dashboard-home-view.test.tsx`/`DashboardHomeClient.test.tsx` — 107/107 green, tsc/build 0, dashboard restarted pid 32600 (BelowNormal, 200).
+- Lane state: Antigravity `ff90f2fd` still at step 423 (Gemini 429; quota reset 2026-11-13T05:50Z has passed, lane resumable in GUI only). Codex workspace session (rollout 2026-11-12T12-10-02) holds the parent-workspace EXECUTIVE PROTOCOL task. Coordination cron renewed: job `a3f104fe` :07/:37.
+- Next queue: cross-driver bus interop check (swarm.mjs vs session-bus.mjs), codewhale `.codewhale` payload, per-GUI live smokes, Git LFS for `data/tormentnexus.db`. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Harness-matrix fix pass v1.0.49 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Workflow synthesis (33×2): 20 WORKING / 13 PARTIAL / 0 MISSING; parity inference 200×4 combos; 403 = upstream attestation on shell-named tools (kernel strips, lowercase observed; chat-shape gap fixed now). Fix pass shipped here:
+  - P0 facts/add hang: dual-write Commit made async+bounded (`go/internal/httpapi/server.go`); endpoint >120s → ~2s. Swarm bus 11/11 + session-bus 12/12 live again; droid 68/4 → 74/2 after facts fix + droid installer (custom model merged into ~/.factory; remaining reds = pi session dead + user-pinned claude-opus default, left alone).
+  - P1 strip: nested `function.name` resolved in `stripAttestationTools` + regression test; `/v1/models` lists wonder. `go test ./internal/httpapi` green (24s).
+  - Batteries: 10 new hermetic `test-<h>-ext.mjs` (all pass; maki battery accepts api.meta.ai base — maki wires Meta direct by design; jcode battery checks its hypernexus-sessions skill since its block is installer-managed). Swarm floor blocks for 13 harnesses; preferred-tools for hax/open-interpreter/grok; grok doc path bug fixed (~/.openinterpreter → ~/.grok); reasonix plugin 1.0.28→1.0.49.
+- Kernel rebuilt + swapped exact-pid 51468→9092 (v1.0.49, BelowNormal); dashboard died at some point and was restarted (pid 15052, BelowNormal, 200).
+- Still open: per-GUI live completion smokes (kernel-level parity proven, GUI launches unexercised); cross-driver bus interop; codewhale `.codewhale` payload install; freebuff/hax CLIs not on PATH. Owner: `/login meta` in pi (all minters 401; kernel inference unaffected), Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Systray v1.0.48 + Antigravity catch-up (2026-11-12) [muse-wonder-1.0 in muse-code]
+- Read latest Antigravity session for this workspace (`~/.gemini/antigravity/conversations/ff90f2fd-*.db`, 424 steps): it shipped v1.0.47 (decomposition complete, route tests 107/107) then started systray work + VERSION 1.0.48 and died on Gemini 429 quota (resets 2026-11-13T05:50Z). Its unstaged systray diff was reviewed (sound), built, and finished here.
+- Systray: version/status header, API-index menu item, lock-safe log snapshot, rune-safe truncation, CIM cleanup replacing `wmic`, ghost-icon fix, nil-bus guard. `go vet ./internal/systray/` 0; kernel `go build ./cmd/tormentnexus` 0 (`go build ./...` still fails on unrelated missing go.sum entries — pre-existing). Kernel swapped exact-pid 18336→30676 (BelowNormal), health v1.0.48, dashboard :7779 200 pid 44476.
+- Codex GUI state (from prior turns, now in v1.0.46): home config on `meta/muse-wonder-1.0-contributor`, stdio MCP (was dead :8080), node_repl removed; battery 22/24 — only pi-token mint legs fail. Kernel-path inference (chat+responses, wonder, parity tool) verified 200. Swarm bus 11/11 live.
+- In flight: harness-matrix verification workflow (33 harnesses × wonder/spark). Owner pending: `/login meta` in pi (expired identity token — kernel proxy works regardless), Groq/HF rotation, GitHub secret-blob decision.
+
+# HANDOFF - Governance/security extraction v1.0.45 (2026-11-12) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardGovernanceSecuritySection` (Commercial Security & Auditing: license authority, SSO, RBAC matrix, audit logs) from `dashboard-home-view.tsx` (2267→1883) into `dashboard-governance-security-section.tsx`. Key move: the entire ENTERPRISE SECURITY LOGIC block (lines ~543–642: license/auditLogs/roles/SSO state, `fetchCommercial`, `saveSSO`, `handleRoleDescChange`, `handleRolePermsChange`, `saveRoles`) moved into the component — python identifier analysis proved zero usages outside logic block + section JSX. Component has its own `useEffect(fetchCommercial)`; parent shared effect now only calls `fetchImportedSessions`. This succeeds where the v1.0.40 attempt was reverted (that attempt kept logic in parent and tried props).
+- Verified: tsc 0, next build 0, tests 97 pass / 8 pre-existing `route.test.ts` failures (upstream :3100 down). Dashboard restarted pid 44476 BelowNormal, :7779 200.
+- Remaining in home view body: system-recovery (~640 lines), prompt-collections (~210), workflow-orchestration (~220, workflow state in parent ~line 413 — thread props or move logic like security). Billing div is already just `<ProviderAuthBillingMatrix />`.
+- Next queue: workflow-orchestration extraction; harness matrix (33 harnesses × wonder/spark contributor models, parity tools only); CDP check-in. Owner pending: Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Research-workflows extraction v1.0.44 (2026-11-12) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardResearchWorkflowsSection` (`#research-workflows`: Topic Research Center + swarm code-gen queue + swarm topology, 186 lines) from `dashboard-home-view.tsx` (2451→2267) into `dashboard-research-workflows-section.tsx`; `swarmRunning`/`triggerSwarmGen` threaded as props (same pattern as MCP section). Removed now-unused `ResearchPage` import from home view. Method: python line-splice of lines 902–1087 with assertions.
+- Verified: `npx tsc --noEmit` 0, `npx next build` 0, dashboard restarted (pid 13544, BelowNormal, :7779 200). Dashboard tests: 97 previously-green still pass; 8 failures in `src/app/api/trpc/[trpc]/route.test.ts` are PRE-EXISTING/environmental (expects upstream :3100, currently down; file untouched since v1.0.4) — not caused by this extraction.
+- Remaining in home view body: system-recovery (~640 lines), prompt-collections (~210), governance-billing + enterprise-security (~280, shared workflow/session state — thread props deliberately), workflow-orchestration (~220, workflow state defined in parent at ~line 413).
+- Standing: kernel pid 18336 (v1.0.43, BelowNormal), all hypernexus/node heavyweights swept BelowNormal. Owner still pending: Groq/HF key rotation + GitHub secret-blob decision.
+
+# HANDOFF - Kernel swap v1.0.43 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Owner authorized fixing kernel drift + Git. Git for Windows reinstalled via winget (2.56.0; verified incl. submodule ops). Kernel: stopped ONLY pid 31112 (installed v1.0.0-b1 `serve`) and started repo build `bin/hypernexus-new.exe serve`; other sessions' `bin/hypernexus.exe mcp` processes untouched. Do NOT use `bin/swap-kernel.ps1` while other sessions' MCP processes run — it kills all hypernexus processes.
+
+# HANDOFF - Per-section decomposition v1.0.42 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardMcpSection` (swarm state via props — a second panel shares it). Gotcha recorded: a `{/* comment */}` sibling before the root element is a second JSX root at component level; wrap returns in fragments when extracting sections that start with a comment.
+- Remaining: research-workflows (~1000 lines), governance-billing/security (shared workflow state).
+
+# HANDOFF - Per-section decomposition v1.0.41 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardMemorySection` with its logic (cold archive, GraphRAG relation builder, scan/link triggers) — self-contained, own mount effect. Remaining sections: mcp-registry (~480 lines), research-workflows (~1000), governance-billing/security (shared workflow state — thread props deliberately).
+
+# HANDOFF - Docs governance v1.0.40 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Refreshed DEPLOY/MEMORY/IDEAS/VISION + fixed VERSION source references. Governance-section extraction attempted and reverted cleanly (shared workflow state) — see MEMORY.md note before retrying.
+- Remaining queue: memory-graphrag / mcp-registry / research-workflows extractions (full props threading), kernel swap (owner), Git LFS for `data/tormentnexus.db` (needs quiesced snapshot; 210MB), harness doctor endpoint (IDEAS).
+
+# HANDOFF - Per-section decomposition v1.0.39 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardIntegrationsSection` (incl. telemetry children + `DashboardConsolidatedSections`, which were nested inside the integrations div — DOM preserved). Remaining sections to extract: memory-graphrag, mcp-registry, research-workflows, governance-billing. Pattern: python line-splice + props for query data + tsc/tests/build/restart per section.
+
+# HANDOFF - Per-section decomposition v1.0.38 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted `DashboardMissionControlHeader` (`dashboard-mission-control-header.tsx`) from the home view; state stays in the parent (also used by the workflows section), passed via props. Remaining decomposition: memory-graphrag / mcp-registry / research-workflows / governance-billing / integrations section bodies follow the same pattern.
+- Note: `activeTab` prop on `DashboardHomeView` is currently unused (single-page consolidated layout renders all sections); per-tab lazy loading would need tab-gating in `DashboardHomeClient.renderActiveTab`.
+
+# HANDOFF - Embedding cache v1.0.37 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Added LRU+TTL embedding cache to `go/internal/memorystore/local_embed.go` (+ `embed_cache_test.go`, 4 tests; full memorystore package green; kernel builds clean to `bin/hypernexus-new.exe` stamped 1.0.37, NOT swapped — live kernel remains installed v1.0.0-b1, owner decision).
+- Remaining queue: per-tab decomposition of `DashboardHomeView` body; kernel swap (owner); Git LFS for `data/tormentnexus.db`; VISION/MEMORY/DEPLOY/IDEAS docs refresh.
+
+# HANDOFF - Legacy dashboard retirement v1.0.36 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Retired the final 10 `GenericDashboardPage` stubs to `RedirectPage` deep-links (see CHANGELOG). All 60 `dashboard/*` dirs are now real views or redirects. Remaining queue: per-tab decomposition of `DashboardHomeView` body; embedding cache for semantic search; kernel swap decision (owner); Git LFS for `data/tormentnexus.db`.
+
+# HANDOFF - Dashboard test repair v1.0.35 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Dashboard tests were 100% unrunnable (stale `packages/ui/dist`, no vitest config). Added `apps/web/vitest.config.ts` (tsconfig-mirroring aliases, single React, inline deps, build-output excludes), tRPC + next/navigation mocks, and refreshed stale pre-consolidation assertions. **14 files / 97 tests green**, tsc + next build green, dashboard restarted (pid 47508, BelowNormal).
+- Real bugs found by the revived tests: research/manual views crashed on `data?.totals.*` / `data?.queue.failed` when payload lacked those keys (fixed with full optional chaining); `getMemoryContextDetail` shadowed enabled `claudeMem` behind the disabled `tormentnexus` default (fixed to prefer enabled store).
+- Next: per-tab decomposition of `DashboardHomeView` body; legacy `dashboard/*` retirement; embedding cache.
+
+# HANDOFF - Dashboard decomposition v1.0.34 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- v1.0.34: extracted overview/startup model (~830 lines) into `apps/web/src/app/dashboard/dashboard-overview-model.ts`; `dashboard-home-view.tsx` now ~3,750 lines. tsc + next build green, dashboard restarted (200, BelowNormal). Remaining decomposition: the `DashboardHomeView` component body itself (tab panels) — split per-tab into lazy components.
+- Fix the SYNC4 label in ROADMAP if it was auto-bumped (it records v1.0.32 historically).
+
+# HANDOFF - Dashboard decomposition v1.0.33 (2026-11-11) [muse-wonder-1.0 in muse-code]
+- Extracted 17 startup-blocking helpers from `dashboard-home-view.tsx` (4888 -> ~4509 lines) into new `apps/web/src/app/dashboard/dashboard-startup-blocking.ts`; home view imports them for internal use and re-exports them, so `dashboard-home-view.test.tsx` / health view-model imports are unchanged. `tsc --noEmit` 0, `next build` 0, dashboard restarted on new build (200).
+- Pre-existing test breakage confirmed on pristine HEAD: `dashboard-home-view.test.tsx` fails via stale `packages/ui/dist` (`@/utils/trpc` unresolved) + duplicate test copy under `.next-build/standalone` — rebuild `packages/ui` and exclude `.next-build` from vitest to fix.
+- Version 1.0.32 -> 1.0.33. Next: extract overview builders (`buildOverviewMetrics`/`buildStartupChecklist`/`buildDashboardAlerts`, lines ~776-1074) into `dashboard-overview-model.ts` the same way.
+
+---
+
+# HANDOFF - Repository synchronization SYNC4 (v1.0.32)
+
+## Session SYNC4 (2026-11-11) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+- Fetch --all --tags root + submodules: no new remote commits; local main == GitLab main at audit time (6578b5145a).
+- Branch audit: `feat/mimo-plugin-max-surface`, `fix/functionality-hardening`, `fix/test-local-embed`, `clean-main` all fully merged into main (0 unique). Retained untouched: `feature/cloud-dashboard-mcp-sse-389806464713532918` (unrelated history, archive), `gh-pages-hypernexus`/`gh-pages-tormentnexus` (deploy). Upstream dependabot branch ignored per protocol. Nothing to forward/reverse merge.
+- Submodules: `vendor/deepseek-harness` advanced 923 commits fcc0ad4621 -> e8f7b93a34 (upstream master, dsh v0.2.2-rc.2); untracked overlays (`README-HYPERNEXUS.md`, `hypernexus.cordis.yml`) retained. `vendor/grok-build` 2bdd1d6a and `lumbros.me` 16261e0 unchanged; overlays retained.
+- Scripts re-validated (`start.bat`/`build.bat`: VERSION-driven, ports 7778/7779, `cmd/tormentnexus`). Version 1.0.31 -> 1.0.32 (35 package/buildinfo refs + VERSION/CHANGELOG).
+- **Environment breaks found (owner action)**: system Git for Windows is gutted (`C:\Program Files\Git\mingw64\bin` has 1 file; wrappers fail `BUG (fork bomb)`) — this sync used GitHub Desktop's bundled git 2.56.1; reinstall Git for Windows. Running kernel is now the installed build `%LOCALAPPDATA%\HyperNexus\hypernexus.exe` pid 31112 reporting v1.0.0-b1 (started externally 2026-11-11 02:44; `/api/system/status` 404 on this build, scratchpad `goal` re-seeded) — repo kernel on :7778 was replaced outside this session; dashboard :7779 was down and restarted from `apps/web`.
+- Still owner-pending: Groq/HF key rotation + GitHub secret-blob unblock/rewrite decision; `data/tormentnexus.db` LFS; stashes `memories-ff`/`ff-blockers` review.
+
+---
+
+# HANDOFF - Repository synchronization SYNC3 (v1.0.31)
+
+## Session SYNC3 (2026-11-08) - repo sync [muse-wonder-1.0 in muse-code in ~/workspace/HyperNexus]
+- Fetch --all --tags root + 3 submodules (recursive, no nested): no new remote commits; local main == gitlab main at audit time.
+- Branch audit: every branch 0 unique vs main except feature/cloud-dashboard-mcp-sse-389806464713532918 (67, unrelated history, retained) + gh-pages-hypernexus/tormentnexus (1 each, deploy, retained). Submodules single-branch at upstream tips; untracked HyperNexus overlays retained. Nothing to forward/reverse merge — completed branches stay as merged ancestors.
+- Scripts validated (start.bat/build.bat ports + build target). Version 1.0.30 -> 1.0.31 (35 refs). Muse banner verified in active plugin cache (hypernexus enabled/active, trust=user-local).
+- GitHub still cannot accept the secret-blob lane history (owner unblock/rewrite decision); Groq/HF rotation still owner-pending. data/tormentnexus.db (210MB) untracked pending LFS; data/provider_metrics.db.local-backup is a local safety copy — do not commit.
+
+---
+
+## Session LIVE2 (2026-11-08) - visibility + priority [muse-wonder-1.0 in muse-code]
+- Muse session-start hook now prints a visible banner (kernel version, bus sessions, open swarm tasks, goal); fixed latent KIND bug (wrappers set argv after import, so hooks always logged 'event') + synchronous stdout write. Battery 8/8, live banner verified. Codex GUI hn-swarm surfaces redeployed (check OK). Priority: scripts/set-llm-priority.ps1 run (4 procs lowered) + manual sweep; rule standing.
+- Git: FF to gitlab 4e171c1e8a (v1.0.30 lane: memory union-merge, swarm watch scratchpad-first, priority watchdog). GitHub still cannot accept secret-blob history (owner decision).
 # HANDOFF - codex-gui steady-state (2026-11-09)
 
 ## Session OPS1 (2026-11-09) - memory union, priority watchdog, swarm verify
@@ -170,6 +271,7 @@
 - Human-gated (unchanged): fresh `/login meta` in pi for the mint; droid Factory auth; hax WSL kernel bind decision; maki TUI seed; installed-exe swap blocked by pre-existing pid 26812 — leave it running.
 - Gemini lane per AGENTS.md: bulk refactoring / recursive scripts / context analysis. Coordinate via scratchpad `goal` + L2 before starting.
 - **Superseded by Session XB (below/above):** native `POST /api/agent/orchestrate` now exists in Go; bus transport is kernel scratchpad. The 404/TS-upstream notes in this block are historical.
+- 2026-11-11 coordination note: Git for Windows binary currently fails with `BUG (fork bomb): C:\Program Files\Git\bin\git.exe` on every invocation (worked earlier same session); 15 stale `git` processes (Oct 28–Nov 6) left untouched. Git state verified read-only via gitdir `../.git/modules/HyperNexus` refs: local `main` == `gitlab/main` == `6578b5145a`. Kernel v1.0.31 / dashboard :7779 healthy; investigate git wrapper before next commit.
 
 ---
 
