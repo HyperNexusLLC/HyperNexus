@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
+## [1.0.48] - 2026-11-12
+
+### Changed
+- **Win32 systray polish (`go/internal/systray/systray_windows.go`)**: tray menu now opens with a grayed status header (`<product> v<version> — Kernel :7778`, version from `internal/buildinfo`), adds an "Open Kernel API Index (:7778)" item, renders recent-log items from a lock-safe snapshot with rune-boundary truncation (no split UTF-8 glyphs), and shows an explicit empty-state line. Full-shutdown cleanup now uses a scoped PowerShell CIM sweep (`buildBackgroundCleanupScript`) instead of `wmic` (removed in Windows 11 24H2), targeting only HyperNexus Python workers + the :7779 dashboard and leaving sibling `hypernexus.exe mcp` stdio sessions intact; kernel-only exit removes the tray icon first (no ghost icon). `Start` also guards a nil EventBus. Started by the Antigravity/Gemini lane (session `ff90f2fd`, quota-interrupted) and finished/verified here.
+- **Deployment**: kernel rebuilt from `go/cmd/tormentnexus` and swapped live by exact PID (18336 → 30676, BelowNormal); `:7778/health` reports v1.0.48.
+
 ## [1.0.47] - 2026-11-12
 
 ### Added

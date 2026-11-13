@@ -1,6 +1,6 @@
 {
   "name": "@extension/module-manager",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "description": "chrome extension - module manager",
   "type": "module",
   "private": true,

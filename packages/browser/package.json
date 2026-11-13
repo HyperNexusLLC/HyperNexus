@@ -1,6 +1,6 @@
 {
   "name": "@hypernexus/browser-legacy",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "scripts": {
     "build": "echo \"stub package\""
   },
