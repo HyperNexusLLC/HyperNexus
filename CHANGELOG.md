@@ -78,6 +78,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - **DEPLOY.md refresh**: ops notes updated from v1.0.43 to the current deploy contract (repo-built kernel, always-deploy, exact-PID WMI swaps with quoted env set, never swap via `/api/shutdown`, dashboard survival, tray inventory).
 
+## [1.0.66] - 2026-11-13
+
+### Notes
+- **Concept verdict recorded**: Key-vault/alias + ring-framing story approved for pitching; radial-vector tenant routing rejected (deterministic tenant IDs only); greenfield timeline rejected. The vault add-on is scoped in TODO as a post-payment item - `vault_engine.go` does not exist in this repo, contrary to the reviewed document's premise.
+
 ## [Unreleased]
 
 ### Added

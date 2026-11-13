@@ -1,3 +1,8 @@
+# HANDOFF - PDF concept verdict recorded v1.0.66 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Reviewed the uploaded verdict table against this repo. Agreements: sell the Zero-Exposure Key Vault / Tree-Ring Isolation story now (Ed25519 tenant scoping + MCP gateway exist); tenant routing stays deterministic - vectors never route tenants (CUT radial-vector routing); reject the 30-120d greenfield timeline.
+- CORRECTIONS: `vault_engine.go` (ChaCha20-Poly1305 + Shamir sharding) does not exist in HyperNexus (no file, no code matches) - the PDF credits MDMAtk/TormentNexus code not present here. Ed25519 exists only in gossip + license verifier. So the 1-day add-on is net-new, scoped in TODO as POST-PAYMENT (Invoice #001): `POST /vault/one-time-link` + MCP proxy header injection, ~half day Go. Zero vault code until payment lands (per verdict).
+- Owner checklist unchanged and untouched: Mercury invite, Hank $500+$500/mo proposal.
+
 # HANDOFF - DEPLOY.md ops notes refreshed v1.0.65 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Refreshed DEPLOY.md ops notes (were v1.0.43): live kernel is repo `bin/hypernexus-new.exe serve`; always-deploy rule; kernel swap = exact :7778 listener PID only via WMI with QUOTed `set "HYPERNEXUS_WORKSPACE_ROOT=..."`; NEVER swap via POST /api/shutdown (full-suite sweep kills dashboard by design); never `bin/swap-kernel.ps1` with MCP processes up; WMI-detached dashboard start; BelowNormal sweep; tray menu inventory.
 - Kernel redeployed v1.0.65 exact-pid; dashboard survives swaps.
