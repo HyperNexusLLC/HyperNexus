@@ -1,3 +1,8 @@
+# HANDOFF - Dashboard lazy loading v1.0.50 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- `dashboard-home-view.tsx`: 8 below-fold sections switched from static imports to `next/dynamic` (shared `sectionLoading` placeholder); Mission Control header + consolidated sections stay static. Test fallout (3 sync-SSR tests) fixed properly: settled-stream helper (`renderToReadableStream` + `allReady`, comments normalized) + `next/dynamic`→`React.lazy` mock in `dashboard-home-view.test.tsx`/`DashboardHomeClient.test.tsx` — 107/107 green, tsc/build 0, dashboard restarted pid 32600 (BelowNormal, 200).
+- Lane state: Antigravity `ff90f2fd` still at step 423 (Gemini 429; quota reset 2026-11-13T05:50Z has passed, lane resumable in GUI only). Codex workspace session (rollout 2026-11-12T12-10-02) holds the parent-workspace EXECUTIVE PROTOCOL task. Coordination cron renewed: job `a3f104fe` :07/:37.
+- Next queue: cross-driver bus interop check (swarm.mjs vs session-bus.mjs), codewhale `.codewhale` payload, per-GUI live smokes, Git LFS for `data/tormentnexus.db`. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - Harness-matrix fix pass v1.0.49 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Workflow synthesis (33×2): 20 WORKING / 13 PARTIAL / 0 MISSING; parity inference 200×4 combos; 403 = upstream attestation on shell-named tools (kernel strips, lowercase observed; chat-shape gap fixed now). Fix pass shipped here:
   - P0 facts/add hang: dual-write Commit made async+bounded (`go/internal/httpapi/server.go`); endpoint >120s → ~2s. Swarm bus 11/11 + session-bus 12/12 live again; droid 68/4 → 74/2 after facts fix + droid installer (custom model merged into ~/.factory; remaining reds = pi session dead + user-pinned claude-opus default, left alone).

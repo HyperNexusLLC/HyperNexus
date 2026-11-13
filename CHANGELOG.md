@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
+## [1.0.50] - 2026-11-13
+
+### Changed
+- **Dashboard lazy loading**: the eight below-fold home sections (memory, MCP, research-workflows, governance-security, system-recovery, prompts-deployments, workflow-orchestration, integrations) now load via `next/dynamic` with a shared loading placeholder, so the initial bundle only parses Mission Control + consolidated sections; anchors resolve as sections mount in order. The two SSR render test files gained a settled-stream render helper (waits for dynamic chunks, strips `<!-- -->` SSR text separators) plus a `next/dynamic`→`React.lazy` vitest mock. Suite: 107/107, tsc + `next build` green; dashboard restarted (pid 32600).
+
 ## [1.0.49] - 2026-11-13
 
 ### Fixed

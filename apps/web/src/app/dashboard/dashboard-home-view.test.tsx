@@ -35,7 +35,31 @@ const { makeTrpcStub } = vi.hoisted(() => {
 });
 vi.mock('../../utils/trpc', () => makeTrpcStub());
 vi.mock('../../../../../packages/ui/src/utils/trpc', () => makeTrpcStub());
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
+
+// Sections below the fold are lazy (next/dynamic); settled SSR needs the
+// readable-stream renderer, which waits for dynamic chunks, unlike the
+// synchronous renderToStaticMarkup used for the pure-markup cases.
+// next/dynamic needs the Next runtime to resolve chunks; in vitest map it to
+// React.lazy over the same loader so tests exercise the real section code.
+vi.mock('next/dynamic', async () => {
+	const React = await import('react');
+	return {
+		default: (loader: () => Promise<unknown>) => {
+			const Lazy = React.lazy(async () => { const mod: any = await loader(); return { default: mod.default ?? mod }; });
+			return function DynamicSection(props: Record<string, unknown>) {
+				return React.createElement(React.Suspense, { fallback: null }, React.createElement(Lazy, props));
+			};
+		},
+	};
+});
+
+async function renderSettledHtml(node: Parameters<typeof renderToReadableStream>[0]): Promise<string> {
+	const stream = await renderToReadableStream(node);
+	await stream.allReady;
+	// Streamed SSR keeps <!-- --> text-node separators; static markup strips them.
+	return (await new Response(stream as unknown as BodyInit).text()).replace(/<!--[\s\S]*?-->/g, "");
+}
 
 import {
   buildDashboardAlerts,
@@ -737,8 +761,8 @@ describe('dashboard home helpers', () => {
     )).not.toThrow();
   });
 
-  it('renders a neutral connecting state before the first live startup snapshot arrives', () => {
-    const html = renderToStaticMarkup(
+  it('renders a neutral connecting state before the first live startup snapshot arrives', async () => {
+    const html = await renderSettledHtml(
       <DashboardHomeView
         generatedAtLabel="12:00:00 PM"
         currentTimestamp={1_700_000_060_000}
@@ -1398,8 +1422,8 @@ describe('dashboard home helpers', () => {
 });
 
 describe('DashboardHomeView', () => {
-  it('renders all four v1 panels with live-style content', () => {
-    const html = renderToStaticMarkup(
+  it('renders all four v1 panels with live-style content', async () => {
+    const html = await renderSettledHtml(
       <DashboardHomeView
         generatedAtLabel="12:00:00 PM"
         currentTimestamp={1_700_000_060_000}

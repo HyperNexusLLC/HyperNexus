@@ -17,16 +17,50 @@ import { useState } from "react";
 import ProviderAuthBillingMatrix from "./billing/view";
 import CommandDashboard from "./command/view";
 // High-value views consolidated into single-page dashboard
+import dynamic from "next/dynamic";
 import { DashboardConsolidatedSections } from "./dashboard-consolidated-sections";
 import { DashboardMissionControlHeader } from "./dashboard-mission-control-header";
-import { DashboardIntegrationsSection } from "./dashboard-integrations-section";
-import { DashboardMemorySection } from "./dashboard-memory-section";
-import { DashboardMcpSection } from "./dashboard-mcp-section";
-import { DashboardResearchWorkflowsSection } from "./dashboard-research-workflows-section";
-import { DashboardGovernanceSecuritySection } from "./dashboard-governance-security-section";
-import { DashboardSystemRecoverySection } from "./dashboard-system-recovery-section";
-import { DashboardPromptsDeploymentsSection } from "./dashboard-prompts-deployments-section";
-import { DashboardWorkflowOrchestrationSection } from "./dashboard-workflow-orchestration-section";
+
+// Below-fold sections are code-split with next/dynamic so the initial bundle
+// only parses Mission Control + consolidated sections; each chunk loads on
+// first render (anchors still resolve once mounted, sections render in order).
+const sectionLoading = () => (
+	<div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-xs text-slate-500">
+		Loading section…
+	</div>
+);
+const DashboardIntegrationsSection = dynamic(
+	() => import("./dashboard-integrations-section").then((m) => m.DashboardIntegrationsSection),
+	{ loading: sectionLoading },
+);
+const DashboardMemorySection = dynamic(
+	() => import("./dashboard-memory-section").then((m) => m.DashboardMemorySection),
+	{ loading: sectionLoading },
+);
+const DashboardMcpSection = dynamic(
+	() => import("./dashboard-mcp-section").then((m) => m.DashboardMcpSection),
+	{ loading: sectionLoading },
+);
+const DashboardResearchWorkflowsSection = dynamic(
+	() => import("./dashboard-research-workflows-section").then((m) => m.DashboardResearchWorkflowsSection),
+	{ loading: sectionLoading },
+);
+const DashboardGovernanceSecuritySection = dynamic(
+	() => import("./dashboard-governance-security-section").then((m) => m.DashboardGovernanceSecuritySection),
+	{ loading: sectionLoading },
+);
+const DashboardSystemRecoverySection = dynamic(
+	() => import("./dashboard-system-recovery-section").then((m) => m.DashboardSystemRecoverySection),
+	{ loading: sectionLoading },
+);
+const DashboardPromptsDeploymentsSection = dynamic(
+	() => import("./dashboard-prompts-deployments-section").then((m) => m.DashboardPromptsDeploymentsSection),
+	{ loading: sectionLoading },
+);
+const DashboardWorkflowOrchestrationSection = dynamic(
+	() => import("./dashboard-workflow-orchestration-section").then((m) => m.DashboardWorkflowOrchestrationSection),
+	{ loading: sectionLoading },
+);
 
 export interface DashboardStatusSummary {
 	initialized: boolean;

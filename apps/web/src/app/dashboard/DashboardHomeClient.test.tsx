@@ -1,5 +1,29 @@
 import { describe, expect, it, vi } from 'vitest';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
+
+// Sections below the fold are lazy (next/dynamic); settled SSR needs the
+// readable-stream renderer, which waits for dynamic chunks, unlike the
+// synchronous renderToStaticMarkup used for the pure-markup cases.
+// next/dynamic needs the Next runtime to resolve chunks; in vitest map it to
+// React.lazy over the same loader so tests exercise the real section code.
+vi.mock('next/dynamic', async () => {
+	const React = await import('react');
+	return {
+		default: (loader: () => Promise<unknown>) => {
+			const Lazy = React.lazy(async () => { const mod: any = await loader(); return { default: mod.default ?? mod }; });
+			return function DynamicSection(props: Record<string, unknown>) {
+				return React.createElement(React.Suspense, { fallback: null }, React.createElement(Lazy, props));
+			};
+		},
+	};
+});
+
+async function renderSettledHtml(node: Parameters<typeof renderToReadableStream>[0]): Promise<string> {
+	const stream = await renderToReadableStream(node);
+	await stream.allReady;
+	// Streamed SSR keeps <!-- --> text-node separators; static markup strips them.
+	return (await new Response(stream as unknown as BodyInit).text()).replace(/<!--[\s\S]*?-->/g, "");
+}
 
 const invalidate = vi.fn(async () => undefined);
 
@@ -347,8 +371,8 @@ describe('DashboardHomeClient', () => {
     ).toEqual(['error', 'restarting', 'running']);
   });
 
-  it('renders live dashboard panels from tRPC hook data', () => {
-    const html = renderToStaticMarkup(<DashboardHomeClient />);
+  it('renders live dashboard panels from tRPC hook data', async () => {
+    const html = await renderSettledHtml(<DashboardHomeClient />);
 
     expect(html).toContain('TORMENTNEXUS');
     expect(html).toContain('Mission Control');
