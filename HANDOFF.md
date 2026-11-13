@@ -1,3 +1,8 @@
+# HANDOFF - Component audit: nothing required is down v1.0.60 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Audited kernel subsystems: `/api/system/overview`, `/api/mcp/status`, `/api/billing/status` all 200 via Go-local fallbacks (the designed degraded mode when the TS upstream bridge is absent). Optional ports DOWN and confirmed optional/non-critical: marketing :8084 (`watchdog.py` critical:False; remote-service checks target the VPS, not this laptop), gossip :7878 (no local expectation found), ollama :11434 (embeddings use bundled MiniLM; TODO already marks optional). No component that should be running is down.
+- Agent-side TODO queue is now empty; everything remaining is owner-gated: LFS quiesced snapshot, `/login meta` in pi, Groq/HF rotation, GitHub decision, per-GUI launches.
+- Kernel redeployed v1.0.60 exact-pid (quoted set env); dashboard survives swaps.
+
 # HANDOFF - pi code_search mode docs corrected v1.0.59 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - `addons/pi/hypernexus.ts` `hypernexus_code_search` documented non-existent modes (`ast|semantic|pattern`, default semantic). Kernel contract (`go/internal/tools/tool_schemas.go`, `codebase_analysis.go`) is `symbols|definitions|references` (default symbols). Fixed description/promptSnippet/guidelines/param enum/default in pi; guarded by a new check in `addons/pi/bin/test-pi-ext.mjs` (**11/11**).
 - Kernel redeployed v1.0.59 exact-pid (quoted set env); dashboard survives swaps.

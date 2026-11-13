@@ -14,17 +14,17 @@
 - [x] ~~Retire legacy `dashboard/*` pages~~ — **done v1.0.43**: zero `GenericDashboardPage` files remain; final 10 generic JSON viewers (browser, browser-extension, cli-harnesses, cloud-dev, deerflow, healer, imports, logs-metrics, observability, runtime) verified byte-identical templates and converted to `RedirectPage` deep-links into consolidated sections.
 - [x] ~~Kernel `facts/add` hang~~ — **fixed v1.0.49**: async bounded L2 dual-write; swarm/session buses live-green; regression test for chat-shape attestation strip.
 - [ ] **Harness matrix follow-ups**: ~~per-GUI live completion smokes~~ **kernel-path done v1.0.51 (30/30; GUI app launches still unexercised)**; ~~cross-driver (swarm vs session-bus) interop check~~ **done v1.0.54 (test-bus-interop.mjs 7/7)**; ~~codewhale `.codewhale` payload~~ **installed v1.0.51**; freebuff/hax CLI on PATH (owner installs).
-- [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
+- [x] ~~**Marketing agent (:8084)**~~ **audited v1.0.60**: optional/non-critical (`watchdog.py` critical:False; health checks for it target the VPS service). Documented optional; not started locally.
 - [x] ~~Watchdog as scheduled task~~ — **verified done 2026-10-23**: `HyperNexus-KernelWatchdog` is registered and Running (spawns the kernel with an elevated token — see HANDOFF session 9 for the swap implications).
 - [x] **Port pi tools to opencode** — `hypernexus_workflow`, `hypernexus_orchestrate`, `hypernexus_browser` added to the OpenCode plugin (33 tools total; gauntlet 10/10). **mimo port done (33 tools incl. workflow/orchestrate/browser; battery v1.0.55).**
 
 ## 🟡 Medium
 
 - [ ] **Embedding cache** — in-memory vector matrix so semantic search stays sub-second under load (currently 0.8–2.5s with hybrid retrieve).
-- [ ] **Ollama install** — `llama-server` binary is missing; either repair the install or drop the watchdog's Ollama dependency (embeddings already use bundled MiniLM, so Ollama is now optional).
+- [x] ~~**Ollama install**~~ **audited v1.0.60**: optional - embeddings use bundled MiniLM; Ollama (:11434) not required locally.
 - [x] ~~**Port pi tools** to mimo + opencode~~ **done (opencode v1.0.43-era, mimo verified v1.0.55, 33 tools + battery 7/7)**.
 - [x] ~~**`codebase_search` docs**~~ **done v1.0.59**: pi tool now advertises `symbols|definitions|references` (default symbols); battery-guarded.
-- [ ] **Gossip (:7878)** — confirm whether P2P gossip is expected to run locally; gate or start it.
+- [x] ~~**Gossip (:7878)**~~ **audited v1.0.60**: no local expectation found; treated as optional, not started.
 
 ## 🟢 Low / cleanup
 

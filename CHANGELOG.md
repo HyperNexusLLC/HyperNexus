@@ -48,6 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **pi `hypernexus_code_search` mode docs**: corrected the advertised modes from the non-existent `ast|semantic|pattern` (default semantic) to the kernel's real `symbols|definitions|references` (default symbols), with a battery guard in `test-pi-ext.mjs` (11/11).
 
+## [1.0.60] - 2026-11-13
+
+### Notes
+- **Component audit**: kernel overview/MCP/billing all answer 200 via Go-local fallbacks (designed degraded mode). Marketing (:8084), gossip (:7878), and Ollama (:11434) are down and confirmed optional/non-critical; embeddings use bundled MiniLM. No required component is down.
+
 ## [Unreleased]
 
 ### Added
