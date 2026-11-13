@@ -1,3 +1,7 @@
+# HANDOFF - DEPLOY.md ops notes refreshed v1.0.65 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Refreshed DEPLOY.md ops notes (were v1.0.43): live kernel is repo `bin/hypernexus-new.exe serve`; always-deploy rule; kernel swap = exact :7778 listener PID only via WMI with QUOTed `set "HYPERNEXUS_WORKSPACE_ROOT=..."`; NEVER swap via POST /api/shutdown (full-suite sweep kills dashboard by design); never `bin/swap-kernel.ps1` with MCP processes up; WMI-detached dashboard start; BelowNormal sweep; tray menu inventory.
+- Kernel redeployed v1.0.65 exact-pid; dashboard survives swaps.
+
 # HANDOFF - Orchestrate endpoint verified live (stale TODO) v1.0.64 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - TODO claimed `/api/agent/orchestrate` needs a Go implementation - STALE: `go/internal/httpapi/orchestrate_handlers.go` already serves it natively (RECALL local agent-memory search -> DISCOVER tool suggestions -> PERSIST scratchpad plan; EXECUTE stays with caller via /api/agent/tool). Live-verified: POST {goal, sessionId, harness} -> 200, persisted=true, recall hits returned; `TestAgentOrchestrate*` green.
 - New coordination cron: job `3d7629b9` every 15m (permanent, skips while active) for 'continue to proceed as you advise', alongside `a3f104fe` :07/:37 coordination loop.

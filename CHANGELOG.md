@@ -73,6 +73,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - **Orchestrate verified**: `POST /api/agent/orchestrate` (native Go RECALL/DISCOVER/PERSIST, EXECUTE via caller) verified live (200, persisted, recall hits) - the TODO entry calling for its implementation was stale. Added a permanent 15-minute autopilot cron (`3d7629b9`).
 
+## [1.0.65] - 2026-11-13
+
+### Notes
+- **DEPLOY.md refresh**: ops notes updated from v1.0.43 to the current deploy contract (repo-built kernel, always-deploy, exact-PID WMI swaps with quoted env set, never swap via `/api/shutdown`, dashboard survival, tray inventory).
+
 ## [Unreleased]
 
 ### Added
