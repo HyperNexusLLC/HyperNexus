@@ -28,7 +28,7 @@
 
 ## 🟢 Low / cleanup
 
-- [ ] **Script consolidation** — `bin/` has many one-off `hypernexus-*.exe.bak` binaries + old `serve-*.log`; archive (non-destructively) to an `archive/` dir. (binaries already `.gitignore`d.)
+- [x] **Script consolidation (bin/)** — done 2026-11-13: 14 `hypernexus*.exe.bak*` binaries (606 MB) archived non-destructively to `archive/bin-legacy-20261113/`; live exes untouched. Dashboard-death root cause also resolved v1.0.53 (`/api/shutdown` full-suite sweep; swaps use exact-pid stop only). Remaining script consolidation: — `bin/` has many one-off `hypernexus-*.exe.bak` binaries + old `serve-*.log`; archive (non-destructively) to an `archive/` dir. (binaries already `.gitignore`d.)
 - [ ] **`bin/_pitest*.txt` + `_mcpall*.txt`** test artifacts — deleted; add to `.gitignore`.
 - [ ] **Docs sweep** — refresh `VISION.md`, `MEMORY.md`, `DEPLOY.md`, `IDEAS.md`, `CHANGELOG.md` to reflect the systray fix, search-coverage fix, hybrid retrieval, and dashboard consolidation plan.
 - [ ] **Version bump** — bump `VERSION.md` + CHANGELOG for this batch of fixes.
