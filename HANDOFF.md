@@ -1,3 +1,8 @@
+# HANDOFF - Mimo battery + stale TODO correction v1.0.55 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- TODO claimed mimo pi-tools port pending - STALE: `addons/mimo/plugin/hypernexus/index.js` already defines 33 typed tools incl. `hypernexus_workflow/orchestrate/browser` (pi ports). Real gap was no battery: added `addons/mimo/bin/test-mimo-ext.mjs` (**7/7 hermetic**: layout, node --check, >=33 tool defs incl. ports, mcp stdio/no-shell-tools/no-secrets, meta doc pins, skills/commands, shared minter).
+- Kernel redeployed v1.0.55 exact-pid (quoted set env); dashboard survives swaps. Interop batteries remain green (bus-interop 7/7, swarm 11/11, session-bus 12/12).
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - Cross-driver bus interop v1.0.54 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - New battery `addons/shared/bin/test-bus-interop.mjs`: **7/7 live**. One worker id registered via session-bus, assigned via swarm (`assign`/`inbox`/`report DONE`), messaged via session-bus (`send`/`inbox`); cross-visibility proven on the shared substrate (swarm records via kernel FTS, bus msgs via shared scratchpad `bus:msg:` keys - session-bus uses scratch transport by design, swarm reports use the same scratchpad endpoint).
 - DEPLOY BUG FOUND+FIXED: kernel started via cmd `set HYPERNEXUS_WORKSPACE_ROOT=... &&` baked a trailing space into the root (`HyperNexus \.hypernexus` mkdir 503 on facts/add). Always use quoted `set "VAR=value"`. Kernel redeployed exact-pid (listener 14552, BelowNormal); dashboard SURVIVED this swap, confirming the /api/shutdown root cause.

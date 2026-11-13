@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Kernel deploy env**: quoted `set "HYPERNEXUS_WORKSPACE_ROOT=..."` in the WMI start command - the unquoted form baked a trailing space into the workspace root and broke facts/add with a mkdir 503. Dashboard now survives kernel swaps (exact-pid stop, no /api/shutdown).
 
+## [1.0.55] - 2026-11-13
+
+### Added
+- **Mimo extension battery** (`addons/mimo/bin/test-mimo-ext.mjs`, 7/7): verifies the MiMoCode plugin surface - 33 typed tools including the pi ports `hypernexus_workflow/orchestrate/browser` (port was already landed; TODO was stale), MCP stdio config with no shell-named tools, meta-model pins, skills and mimocode commands.
+
 ## [Unreleased]
 
 ### Added
