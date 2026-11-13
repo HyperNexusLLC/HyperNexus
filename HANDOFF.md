@@ -1,3 +1,9 @@
+# HANDOFF - Dashboard tooltips + WMI-detached dashboard v1.0.53 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Added descriptive native `title` tooltips to the 5 dashboard section headers missing them (governance, integrations, mcp, memory, research-workflows); other 3 already titled. All 8 covered. Web: tsc 0, vitest 107/107, next build 0.
+- Dashboard restarted on new build via WMI `Win32_Process.Create` (fully detached, listener pid 50280 BelowNormal, 200) to test survival vs session-reaping theory for deaths around kernel swaps.
+- Branch audit: feat/mimo, clean-main, fix/* = 0 ahead of main; cloud-rename branch stale, lane/muse-wonder-dashboard superseded v1.0.30 - left intact, nothing lost.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner), cross-driver interop. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - Harness doctor v1.0.52 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - New kernel endpoint `GET /api/harness/doctor` (`go/internal/httpapi/harness_doctor.go`, route beside facts/add): layout scan of `addons/*` (install/battery/metaDoc/mcpConfig/swarm/connection + ok|partial). Live: 40 total, 37 ok, partial = copilot/mimo/shared (extra non-matrix dirs). Unit test `TestScanHarnessAddons` green; kernel pid 21912 reports v1.0.52.
 - CONFIRMED PATTERN: dashboard dies on every kernel swap (3/3). Always restart + verify :7779 after a swap (pid 52268 now). Root cause unknown (next-start child of a reaped session process is the leading theory); standalone server or supervisor would settle it.

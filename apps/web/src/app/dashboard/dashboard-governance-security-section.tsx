@@ -113,7 +113,7 @@ export function DashboardGovernanceSecuritySection() {
 				{/* SECTION 5: ENTERPRISE SECURITY & AUDITING */}
 				<div className="space-y-4 pt-8 pb-8 border-t border-slate-800">
 					<div className="flex items-center justify-between border-b border-slate-800 pb-2">
-						<h2 className="text-lg font-bold text-white tracking-wide">
+						<h2 title="Licensing, SSO, RBAC roles and audit logs for enterprise governance" className="text-lg font-bold text-white tracking-wide">
 							Commercial Security &amp; Auditing
 						</h2>
 						<span className="text-[10px] text-cyan-400 font-mono uppercase border border-cyan-500/20 bg-cyan-500/5 px-2 py-0.5 rounded font-semibold">

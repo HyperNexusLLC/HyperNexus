@@ -131,7 +131,7 @@ export function DashboardMemorySection() {
 				{/* SECTION 1: COGNITIVE MEMORY ENGINES & SKILL REGISTRIES */}
 				<div id="memory-graphrag" className="scroll-mt-6 space-y-4">
 					<div className="flex items-center justify-between border-b border-slate-800 pb-2">
-						<h2 className="text-lg font-bold text-white tracking-wide">
+						<h2 title="L1/L2/L3 memory engines, GraphRAG relations and skill registries" className="text-lg font-bold text-white tracking-wide">
 							Cognitive Memory Engines &amp; Skill Registries
 						</h2>
 						<span className="text-[10px] text-cyan-400 font-mono uppercase border border-cyan-500/20 bg-cyan-500/5 px-2 py-0.5 rounded font-semibold">

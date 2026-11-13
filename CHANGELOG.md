@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.53] - 2026-11-13
+
+### Added
+- **Dashboard section-header tooltips**: all eight dashboard section headers (governance/security, integrations, MCP, memory, prompts/deployments, research-workflows, system-recovery, workflow-orchestration) now carry descriptive native `title` tooltips explaining scope.
+
+### Fixed
+- **Dashboard survival**: dashboard now started fully detached via WMI `Win32_Process.Create` (listener pid 50280, BelowNormal) instead of as a child of a tool session. Health + dashboard verified 200 on the new build; web tests 107/107, tsc 0, next build 0.
+
 ## [Unreleased]
 
 ### Added
