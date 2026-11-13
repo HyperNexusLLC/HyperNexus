@@ -1,3 +1,8 @@
+# HANDOFF - Cleanup audit: stale refs pruned, deepseek re-verified v1.0.63 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Pruned 8 stale remote-tracking refs (`origin-tormentnexus/*`, `robertpelloni/*` - remotes no longer configured; refs re-creatable by re-adding a remote). All 7 stashes left INTACT: TODO's named `pre-sync-wip-2026-11-05` stash no longer exists under that name (`stash@{0}` is now `memories-ff`), so no drop was performed - owner to confirm which stashes may go.
+- deepseek-harness-gui battery re-run: **8/8 pass** against current vendor submodule (`vendor/deepseek-harness` e8f7b93; the 0.2.2-rc.1 bump TODO referenced is not the checked-out commit - addon verified as-is).
+- TODO decomposition checkbox was stale (done v1.0.47/v1.0.50) - marked done. Kernel redeployed v1.0.63 exact-pid; dashboard survives swaps.
+
 # HANDOFF - Query pre-embed outside store mutex v1.0.62 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - `SemanticSearch` now pre-embeds plain-text queries before taking `s.mu` (localEmbed caches by text, so the locked path re-embeds as a cache hit). ONNX inference no longer serializes concurrent searches/writes behind the store mutex. Single-query latency on this saturated box unchanged (~1.1-2.1s, load-bound); concurrency behavior improved. Suites green.
 - Kernel redeployed v1.0.62 exact-pid (quoted set env); dashboard survives swaps. Agent queue remains owner-gated only.
