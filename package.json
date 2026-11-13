@@ -1,6 +1,6 @@
 {
   "name": "hypernexus-monorepo",
-  "version": "1.0.57",
+  "version": "1.0.58",
   "private": true,
   "packageManager": "pnpm@10.28.0",
   "scripts": {

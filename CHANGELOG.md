@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **cdp-bridge ChatGPT send**: added an Enter-key fallback (CDP Input domain on the focused ProseMirror composer) for layouts with no clickable send button, which previously failed with NO_SEND_BTN. Verified live end-to-end through the bridge.
 
+## [1.0.58] - 2026-11-13
+
+### Added
+- **Git LFS prep**: `.gitattributes` patterns route `data/tormentnexus.db` (210MB), `data/catalog.db` (52MB), and `.tormentnexus/skills.db` (49MB) through LFS when staged. The files stay untracked until an owner-timed quiesced snapshot (kernel + MCP processes stopped, WAL checkpointed) - the live DBs cannot be quiesced without stopping other sessions.
+
 ## [Unreleased]
 
 ### Added

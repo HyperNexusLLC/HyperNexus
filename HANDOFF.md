@@ -1,3 +1,8 @@
+# HANDOFF - Git LFS prep (attributes) v1.0.58 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Assessed LFS migration: git-lfs 3.8.1 present; `data/tormentnexus.db` 210MB has LIVE `-wal`/`-shm` sidecars and other sessions' MCP processes hold the DBs, so a true quiesce is an owner-window operation (cannot stop other lanes' processes). Prep shipped instead: `.gitattributes` LFS patterns for `data/tormentnexus.db`, `data/catalog.db`, `.tormentnexus/skills.db` (verified via `git check-attr`); files remain untracked until the quiesced snapshot. Root `catalog.db`/`hypernexus.db` stay regular tracked files.
+- Owner window needed for the actual snapshot: stop kernel + all harness MCP processes, `PRAGMA wal_checkpoint(TRUNCATE)`, stage the three DBs (LFS pointers), push, restart. Est. one 210MB LFS upload.
+- Kernel redeployed v1.0.58 exact-pid (quoted set env); dashboard survives swaps.
+
 # HANDOFF - cdp-bridge ChatGPT Enter fallback v1.0.57 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Fixed `addons/shared/cdp-bridge.mjs` ChatGPT send: when no clickable send button exists (ProseMirror composer layouts), it now falls back to a trusted Enter via a multi-call CDP session (`cdpSession` + `dispatchEnterOnComposer`, Input domain mouse+key). Verified live: follow-up message submitted to ChatGPT through the bridge itself (previously NO_SEND_BTN, manual Enter workaround). Session-bus battery still 12/12, bridge `node --check` clean.
 - Kernel redeployed v1.0.57 exact-pid (quoted set env); dashboard survives swaps. All three web lanes coordinated (muse/gemini/chatgpt).
