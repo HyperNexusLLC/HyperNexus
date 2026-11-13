@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
 
+## [1.0.51] - 2026-11-13
+
+### Added
+- **GUI kernel-path live smoke** (`addons/shared/bin/test-gui-live-smoke.mjs`): for all 15 GUI addons, verifies the pinned model on both `/v1/chat/completions` and `/v1/responses` through the kernel proxy with the parity `code_interpreter` tool attached and an exact-token reply — 30/30 pass. Scope is explicit: this proves the wiring each GUI uses; launching each GUI app itself remains unverified per-harness.
+
+### Notes
+- CodeWhale install payload (`.codewhale/`, workspace-local) installed and check-green. Swarm bus re-confirmed 11/11 (one earlier assign abort under load was a flake). Dashboard process has died around kernel swaps twice; restarted (pid 14620) — root cause unconfirmed, watch it.
+
 ## [1.0.50] - 2026-11-13
 
 ### Changed

@@ -1,3 +1,9 @@
+# HANDOFF - GUI live smoke v1.0.51 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Added `addons/shared/bin/test-gui-live-smoke.mjs` (15 GUIs × chat+responses on their pinned models, parity tool attached, exact token): **30/30 pass**. Kernel rebuilt/swapped to report v1.0.51 (pid 52692, BelowNormal).
+- CodeWhale `.codewhale` payload installed (check green). Swarm battery re-confirmed 11/11.
+- WATCH: dashboard (pid 14620 now) has died around both recent kernel swaps; err log only shows the standalone notice. If it recurs, run it via the standalone server (`node .next/standalone/server.js`) or a supervisor instead of `next start`.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (needs quiesced window), harness-doctor endpoint, per-GUI app launches (owner-driven). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - Dashboard lazy loading v1.0.50 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - `dashboard-home-view.tsx`: 8 below-fold sections switched from static imports to `next/dynamic` (shared `sectionLoading` placeholder); Mission Control header + consolidated sections stay static. Test fallout (3 sync-SSR tests) fixed properly: settled-stream helper (`renderToReadableStream` + `allReady`, comments normalized) + `next/dynamic`→`React.lazy` mock in `dashboard-home-view.test.tsx`/`DashboardHomeClient.test.tsx` — 107/107 green, tsc/build 0, dashboard restarted pid 32600 (BelowNormal, 200).
 - Lane state: Antigravity `ff90f2fd` still at step 423 (Gemini 429; quota reset 2026-11-13T05:50Z has passed, lane resumable in GUI only). Codex workspace session (rollout 2026-11-12T12-10-02) holds the parent-workspace EXECUTIVE PROTOCOL task. Coordination cron renewed: job `a3f104fe` :07/:37.
