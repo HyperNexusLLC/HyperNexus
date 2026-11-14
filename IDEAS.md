@@ -1,5 +1,29 @@
 # IDEAS.md — Creative Ideas & Pivots
 
+## Nexus Mailroom — Zero-Exposure Key Vault (Managed Hub feature)
+
+**What it is (the pitch):** A highly secure, automated postal sorting facility for digital secrets, paired with an impenetrable safety deposit box. Brokerages and agencies do not want to understand MCP or radial vector sharding — they want their most valuable digital assets locked in a vault, and their AI agents running a flawless, trackable mail system that never touches the raw keys. It completely separates the identity of the human from the automated execution of the machine.
+
+**Decision (2026-11-13):** Feature of the HyperNexus Managed Hub, NOT a new product. It only works because the kernel's MCP gateway, tenant scoping, and proxy boundary already exist; a standalone product would have to rebuild all three.
+
+### The Human Experience: The Digital Vault
+
+- **The Drop-Box:** Humans never carry keys around or paste them into vulnerable dashboards. They drop the raw API key into a secure, one-way ingestion link just once (`POST /vault/one-time-link`).
+- **The Shredder:** As soon as it enters, the backend fragments the key across the inner Verdant Core ring. It is no longer a readable string; it is mathematically shattered.
+- **The Claim Ticket:** The human gets back a simple alias (like `alias://Stripe-Prod-Main` or `alias://MLS-Gateway`) and organizes workflows with that benign ticket, completely shielded from the actual secret.
+
+### The AI Agent Experience: The Abstract Mail System
+
+- **The Couriers (AI Agents):** An agent that needs to send email, update a CRM, or pull MLS data acts as a courier. It never possesses the vault keys, so it can never accidentally leak them.
+- **The Sorting Facility (Nexus Ring):** The agent drops a payload (the "letter") at the outer Nexus Ring and requests delivery to a specific external tool or business silo.
+- **The Postmaster (Tenant Ring):** The system verifies the agent's permissions against the business's Tenant Ring. If approved, it reconstructs the required API key in volatile memory for a fraction of a millisecond, stamps the envelope with the correct authentication (outbound header injection at the MCP proxy boundary), and routes it to its final destination.
+
+### Status & gating
+
+- Pitch-ready story NOW (rings, Ed25519 tenant scoping, MCP gateway routing exist in the kernel).
+- Implementation is a POST-PAYMENT add-on (after Invoice #001 clears): the two endpoints above, est. ~half a day of Go. `vault_engine.go` does not exist in this repo yet — do not pitch it as built.
+- Hard rule: tenant routing stays deterministic (cryptographic IDs in SQL). Vectors classify tools/payloads only; they never route tenants or secrets.
+
 ## Radical Ideas for HyperNexus
 
 ### 1. HyperNexus as a Language Server Protocol (LSP)

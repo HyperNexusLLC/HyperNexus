@@ -1,3 +1,7 @@
+# HANDOFF - Nexus Mailroom named (Managed Hub feature) v1.0.67 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- DECISION: the key-vault concept is a **feature of the HyperNexus Managed Hub**, not a new product (depends on the existing MCP gateway, tenant scoping, proxy boundary). Named **Nexus Mailroom** — postal sorting facility + safety deposit box story (Drop-Box / Shredder / Claim Ticket for humans; Couriers / Sorting Facility / Postmaster for agents), written up in IDEAS.md at the top. Pitch-ready now; implementation stays POST-PAYMENT (Invoice #001), ~half day Go for the 2 endpoints.
+- Kernel redeployed v1.0.67 exact-pid; dashboard survives swaps.
+
 # HANDOFF - PDF concept verdict recorded v1.0.66 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Reviewed the uploaded verdict table against this repo. Agreements: sell the Zero-Exposure Key Vault / Tree-Ring Isolation story now (Ed25519 tenant scoping + MCP gateway exist); tenant routing stays deterministic - vectors never route tenants (CUT radial-vector routing); reject the 30-120d greenfield timeline.
 - CORRECTIONS: `vault_engine.go` (ChaCha20-Poly1305 + Shamir sharding) does not exist in HyperNexus (no file, no code matches) - the PDF credits MDMAtk/TormentNexus code not present here. Ed25519 exists only in gossip + license verifier. So the 1-day add-on is net-new, scoped in TODO as POST-PAYMENT (Invoice #001): `POST /vault/one-time-link` + MCP proxy header injection, ~half day Go. Zero vault code until payment lands (per verdict).

@@ -83,6 +83,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 - **Concept verdict recorded**: Key-vault/alias + ring-framing story approved for pitching; radial-vector tenant routing rejected (deterministic tenant IDs only); greenfield timeline rejected. The vault add-on is scoped in TODO as a post-payment item - `vault_engine.go` does not exist in this repo, contrary to the reviewed document's premise.
 
+## [1.0.67] - 2026-11-13
+
+### Added
+- **Nexus Mailroom**: named the Zero-Exposure Key Vault as a Managed Hub feature (decision: feature, not a new product) and documented the postal/safety-deposit-box story in IDEAS.md — Drop-Box, Shredder, Claim Ticket, Couriers, Sorting Facility, Postmaster. Pitch-ready; build remains gated on Invoice #001.
+
 ## [Unreleased]
 
 ### Added
