@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Protocol sync (protocol/sync-20261113): merged gitlab/main (v1.0.50 dashboard) and github/main (TormentNexus upstream) with intelligent conflict resolution; kernel Go tree kept coherent on gitlab.com/HyperNexusLLC/HyperNexus; VERSION 1.0.50.
+
 ### Added
 - codex-gui swarm bus: FTS-first search (normalized hits) with semantic retry fallback; battery probe-gates search-dependent legs as SKIP while kernel search is down, report-store still verified live.
 

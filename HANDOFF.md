@@ -1,3 +1,12 @@
+# HANDOFF - Protocol sync merges (2026-11-13) [protocol/sync-20261113]
+
+## Session PS (2026-11-13) - executive protocol Steps 1-3 on integration branch
+- Step 1: git fetch --all --tags OK; submodules (3) pinned/clean; git config incident found and repaired (app config/ dir had replaced gitdir config file; app data preserved at .git/modules/HyperNexus/config-appdir-moved-20261113, git config rebuilt, submodule init re-run).
+- Step 2: gitlab/main merged 1a2b4b54c9 (5 conflicts: HANDOFF union, codex spark-or-wonder check, reasonix 1.0.49, dashboard nav union + lazy sections, anthropic gofmt). github/main (TormentNexus upstream) merged 77bfb511d7 (69 conflicts: docs union, VERSION/buildinfo 1.0.50, package.json by higher version, consolidated dashboard ours, Go kernel ours-coherent with module gitlab.com/HyperNexusLLC/HyperNexus, upstream enterprise pkg kept, duplicate shell_helpers dropped, tRPC test aligned 17778->7778). Kernel build: go build ./cmd/tormentnexus/... ./internal/... EXIT 0.
+- Step 3: VERSION 1.0.50 synced (VERSION + buildinfo); this HANDOFF + CHANGELOG entries; start.bat/start.sh kept HyperNexus (7778/7779, VERSION-driven).
+- NOT done: local main NOT advanced (594 uncommitted files in main checkout - snapshot decision is the owner call); full web build + kernel restart not run (live kernel 1.0.30 healthy, restart is a window op). Theirs-only full dashboard pages and TormentNexus Go variants remain reachable on github/main and in merge history.
+- Landing: after main checkout is snapshotted/committed by its owner, merge protocol/sync-20261113 into main (expected fast-forward-able after gitlab+github parents) and push.
+
 # HANDOFF - wonder everywhere (2026-11-09)
 
 ## Session OPS2 (2026-11-09) - kernel wonder support plus fleet flip plus live verify
