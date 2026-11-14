@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": "2026-11-01T02:04:39.075238+00:00",
+  "savedAt": "2026-11-12T08:01:37.903070+00:00",
   "memories": [
     {
       "id": "9ad28ccc6d1e4c06",
@@ -553,6 +553,128 @@
       },
       "createdAt": "2026-11-01T02:04:39.075238+00:00",
       "accessedAt": "2026-11-01T02:04:39.075238+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "8424a31478e9b692",
+      "content": "Gemini B93E and ChatGPT F27F both TYPED+SENT via muse-cdp-wide.js 30/60/120s from repo path. Muse C0C0 already SENT. All three synced from workspace main controller wonder.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "cdp",
+          "retry-success",
+          "wonder"
+        ],
+        "title": "CDP wide retry success"
+      },
+      "createdAt": "2026-11-12T04:52:03.980950+00:00",
+      "accessedAt": "2026-11-12T04:52:03.980950+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "a0fa74558fc2687f",
+      "content": "addons/codex/install.mjs patched spark-only check to accept spark/wonder, defaultsBlock and overlay to wonder-primary. CHECK OK. codex-gui reinstall fixed hn-swarm drift, now install OK. CDP: Muse C0C0 SENT, ChatGPT F27F SENT, old Gemini B93E gone, new tab 69E1 opened and SENT. Kernel 1.0.30 single listener PID 16988, 4 mcp workers. No llama-server running.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "codex",
+          "wonder",
+          "cdp",
+          "install"
+        ],
+        "title": "codex install wonder fix + CDP resync 2026-11-12"
+      },
+      "createdAt": "2026-11-12T06:27:19.565799+00:00",
+      "accessedAt": "2026-11-12T06:27:19.565799+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "557412d730e7366f",
+      "content": "Fixed muse-cdp-send2.js IIFE closes (typeExpr needed closing paren, clickExpr missing close). Probe vs pixel-frame returned NO_COMPOSER as expected. Full wonder-identity sync sent to Muse tab C0C0, awaiting confirm. Next: confirm Muse receipt, send Gemini 69E1, read back both.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "cdp",
+          "codex-gui",
+          "wonder"
+        ],
+        "title": "CDP send2 fixed + Muse sync sent"
+      },
+      "createdAt": "2026-11-12T07:23:49.055016+00:00",
+      "accessedAt": "2026-11-12T07:23:49.055016+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "6489c1c1585e9c9a",
+      "content": "send2 IIFE closes fixed and verified. send3 uses DOM+Input only (no page JS) for hung renderers. Muse C0C0 and Gemini 69E1 renderers CPU-pegged so DOM.getDocument times out; retry after settle, reload Gemini convo as fallback. ChatGPT sync already done.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "cdp",
+          "codex-gui",
+          "wonder"
+        ],
+        "title": "CDP send2 fixed, send3 built, renderers busy"
+      },
+      "createdAt": "2026-11-12T07:34:13.378720+00:00",
+      "accessedAt": "2026-11-12T07:34:13.378720+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "fee3ef2bf10ff7d2",
+      "content": "Gemini new tab 2875: sync TYPED(DIV)+CLICKED+SENT, readback shows message received and Gemini acknowledged shared goal and is working. Old poisoned tab 69E1 closed. Muse C0C0 renderer deaf to Runtime+DOM+Debugger even after reload; new muse.ai tab 1259 opened to test chat restore. ChatGPT synced+replied earlier.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "cdp",
+          "codex-gui",
+          "wonder"
+        ],
+        "title": "Gemini sync SENT+verified, Muse pending"
+      },
+      "createdAt": "2026-11-12T07:56:22.664160+00:00",
+      "accessedAt": "2026-11-12T07:56:22.664160+00:00",
+      "accessCount": 0,
+      "ttl": null
+    },
+    {
+      "id": "9ce56bd3d1803614",
+      "content": "ChatGPT synced+replied (goal-level). Gemini new tab: sync sent, adopted shared goal, proposed hub parity protocol (canonical L2 ledger import, space keywords, watermarked capsule with l2_state_sha256). Muse new tab (chat restored): sync sent; Bobbi rejects lane-signed goals, accepts user words, proposed shared L2.md note, needs transport decision. No llama-server running so priority rule N/A.",
+      "type": "working",
+      "namespace": "project",
+      "metadata": {
+        "memoryKind": "fact",
+        "source": "local_script",
+        "tags": [
+          "cdp",
+          "codex-gui",
+          "wonder",
+          "sync"
+        ],
+        "title": "CDP 3-way sync complete"
+      },
+      "createdAt": "2026-11-12T08:01:37.903070+00:00",
+      "accessedAt": "2026-11-12T08:01:37.903070+00:00",
       "accessCount": 0,
       "ttl": null
     }
