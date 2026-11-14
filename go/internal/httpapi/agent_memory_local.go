@@ -93,6 +93,49 @@ func salvageAgentMemorySnapshot(raw []byte) (localAgentMemorySnapshot, error) {
 // ever observe a complete document; a torn read can no longer corrupt the store).
 var agentMemoryMu sync.Mutex
 
+// Parsed-snapshot cache for memories.json (44MB+): re-reading and
+// unmarshalling it on every request cost 1-2s per memory call. Keyed by
+// path+mtime+size, so in-process rewrites and external writers (sibling
+// kernels, importers) invalidate naturally on their next write.
+var agentMemoryCacheMu sync.RWMutex
+var agentMemoryCache struct {
+	path    string
+	modTime time.Time
+	size    int64
+	records []localAgentMemoryRecord
+}
+
+func cachedAgentMemories(path string) ([]localAgentMemoryRecord, bool) {
+	st, err := os.Stat(path)
+	if err != nil {
+		return nil, false
+	}
+	agentMemoryCacheMu.RLock()
+	defer agentMemoryCacheMu.RUnlock()
+	c := agentMemoryCache
+	if c.path != path || c.size != st.Size() || !c.modTime.Equal(st.ModTime()) || c.records == nil {
+		return nil, false
+	}
+	out := make([]localAgentMemoryRecord, len(c.records))
+	copy(out, c.records)
+	return out, true
+}
+
+func storeAgentMemoriesCache(path string, records []localAgentMemoryRecord) {
+	st, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+	cp := make([]localAgentMemoryRecord, len(records))
+	copy(cp, records)
+	agentMemoryCacheMu.Lock()
+	agentMemoryCache.path = path
+	agentMemoryCache.modTime = st.ModTime()
+	agentMemoryCache.size = st.Size()
+	agentMemoryCache.records = cp
+	agentMemoryCacheMu.Unlock()
+}
+
 func (s *Server) localWriteAgentMemories(records []localAgentMemoryRecord) error {
 	path := s.localAgentMemoryFilePath()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

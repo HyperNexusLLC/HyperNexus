@@ -58,7 +58,7 @@ export function DashboardMcpSection({
 				className="scroll-mt-6 space-y-4 pt-8 border-t border-slate-800"
 			>
 				<div className="flex items-center justify-between border-b border-slate-800 pb-2">
-					<h2 className="text-lg font-bold text-white tracking-wide">
+					<h2 title="MCP servers, tool registry, swarm execution and tool-call control" className="text-lg font-bold text-white tracking-wide">
 						Native Go MCP Orchestration &amp; Tool Control
 					</h2>
 					<span className="text-[10px] text-cyan-400 font-mono uppercase border border-cyan-500/20 bg-cyan-500/5 px-2 py-0.5 rounded font-semibold">

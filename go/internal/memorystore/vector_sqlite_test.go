@@ -375,3 +375,39 @@ func mathAbs(x float64) float64 {
 	return x
 }
 
+// TestVecCacheTopIDsAndDeleteInvalidation covers the in-memory vector matrix:
+// committed embeddings are scoreable via cacheTopIDs, kind filters apply, and
+// DeleteMemory removes the id from the matrix immediately (no TTL wait).
+func TestVecCacheTopIDsAndDeleteInvalidation(t *testing.T) {
+	vs, err := NewVectorStore(":memory:")
+	if err != nil {
+		t.Fatalf("failed to open memory db: %v", err)
+	}
+	defer vs.Close()
+	ctx := context.Background()
+	vec := []float32{1, 0, 0, 0}
+	for _, id := range []string{"vc-1", "vc-2"} {
+		rec := controlplane.L2VaultRecord{
+			ID: id, SessionID: "s", Type: controlplane.MemoryLongTerm,
+			Kind: "fact", Category: "general", Content: "vec cache probe " + id,
+			Importance: 0.9, Embedding: vec,
+		}
+		if err := vs.Commit(ctx, rec); err != nil {
+			t.Fatalf("commit %s: %v", id, err)
+		}
+	}
+	ids, ok := vs.cacheTopIDs(ctx, vec, "", "", nil, 10)
+	if !ok || len(ids) != 2 {
+		t.Fatalf("expected 2 cache hits, got ok=%v ids=%v", ok, ids)
+	}
+	if ids, _ := vs.cacheTopIDs(ctx, vec, "other-kind", "", nil, 10); len(ids) != 0 {
+		t.Fatalf("kind filter leaked hits: %v", ids)
+	}
+	if err := vs.DeleteMemory(ctx, "vc-1"); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	ids, _ = vs.cacheTopIDs(ctx, vec, "", "", nil, 10)
+	if len(ids) != 1 || ids[0] != "vc-2" {
+		t.Fatalf("deleted id still in matrix: %v", ids)
+	}
+}

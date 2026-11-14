@@ -24,3 +24,13 @@ provider_metrics.db filter=lfs diff=lfs merge=lfs -text
 *.db-shm filter=lfs diff=lfs merge=lfs -text
 *.db-wal filter=lfs diff=lfs merge=lfs -text
 *.exe filter=lfs diff=lfs merge=lfs -text
+
+*.sh text eol=lf
+*.mjs text eol=lf
+# Git LFS for large runtime DBs (adopted v1.0.58; files stay untracked until a
+# quiesced snapshot is staged - run PRAGMA wal_checkpoint(TRUNCATE) first and
+# never stage the -wal/-shm sidecars). Root catalog.db/hypernexus.db predate
+# this and remain regular tracked files.
+data/tormentnexus.db filter=lfs diff=lfs merge=lfs -text
+data/catalog.db filter=lfs diff=lfs merge=lfs -text
+.tormentnexus/skills.db filter=lfs diff=lfs merge=lfs -text

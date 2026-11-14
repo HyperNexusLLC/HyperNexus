@@ -17,6 +17,106 @@
 ### Next: promote hypernexus.wonder.exe to hypernexus.exe at next window (old binary still on disk); elevated PIDs need Admin pass.
 
 
+# HANDOFF - Hourly CI failure fixed (bad cloud health path) v1.0.69 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Owner reported 20+ daily GitLab failure emails. Root cause: hourly schedule's `healthcheck` job curled `https://cloud.hypernexus.site/api/cloud/health`, which 404s (verified: site root 200, no health API at any probed path). Fixed `.gitlab-ci.yml` to check the cloud root. Owner may still pause the schedule in GitLab UI if they prefer silence over signal, but failures should stop on the next scheduled run. CDP profile is not logged into GitLab and glab is absent, so schedule management stays owner-side.
+- Kernel redeployed v1.0.69 exact-pid; dashboard survives swaps.
+
+# HANDOFF - Skill collision fix + sync-skills script v1.0.68 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Pi warned of skill collisions (hypernexus/ops/workflows): user copies had diverged - stale Sep builds in `~/.agents/skills`, NOTHING in pi's preferred `~/.pi/agent/skills`, nested duplicate dirs inside user ops/workflows. Canonical = workspace `.agents/skills`. Synced all to both user locations (hash-verified; backups `SKILL.md.bak-20261113`, nested dups moved aside).
+- New `scripts/sync-skills.ps1`: propagates every workspace skill to `~/.agents/skills` + `~/.pi/agent/skills` with hash compare + dated backups (16 skills x 2 targets, run green). Run after any skill edit.
+- Kernel redeployed v1.0.68 exact-pid; dashboard survives swaps.
+
+# HANDOFF - Nexus Mailroom named (Managed Hub feature) v1.0.67 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- DECISION: the key-vault concept is a **feature of the HyperNexus Managed Hub**, not a new product (depends on the existing MCP gateway, tenant scoping, proxy boundary). Named **Nexus Mailroom** — postal sorting facility + safety deposit box story (Drop-Box / Shredder / Claim Ticket for humans; Couriers / Sorting Facility / Postmaster for agents), written up in IDEAS.md at the top. Pitch-ready now; implementation stays POST-PAYMENT (Invoice #001), ~half day Go for the 2 endpoints.
+- Kernel redeployed v1.0.67 exact-pid; dashboard survives swaps.
+
+# HANDOFF - PDF concept verdict recorded v1.0.66 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Reviewed the uploaded verdict table against this repo. Agreements: sell the Zero-Exposure Key Vault / Tree-Ring Isolation story now (Ed25519 tenant scoping + MCP gateway exist); tenant routing stays deterministic - vectors never route tenants (CUT radial-vector routing); reject the 30-120d greenfield timeline.
+- CORRECTIONS: `vault_engine.go` (ChaCha20-Poly1305 + Shamir sharding) does not exist in HyperNexus (no file, no code matches) - the PDF credits MDMAtk/TormentNexus code not present here. Ed25519 exists only in gossip + license verifier. So the 1-day add-on is net-new, scoped in TODO as POST-PAYMENT (Invoice #001): `POST /vault/one-time-link` + MCP proxy header injection, ~half day Go. Zero vault code until payment lands (per verdict).
+- Owner checklist unchanged and untouched: Mercury invite, Hank $500+$500/mo proposal.
+
+# HANDOFF - DEPLOY.md ops notes refreshed v1.0.65 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Refreshed DEPLOY.md ops notes (were v1.0.43): live kernel is repo `bin/hypernexus-new.exe serve`; always-deploy rule; kernel swap = exact :7778 listener PID only via WMI with QUOTed `set "HYPERNEXUS_WORKSPACE_ROOT=..."`; NEVER swap via POST /api/shutdown (full-suite sweep kills dashboard by design); never `bin/swap-kernel.ps1` with MCP processes up; WMI-detached dashboard start; BelowNormal sweep; tray menu inventory.
+- Kernel redeployed v1.0.65 exact-pid; dashboard survives swaps.
+
+# HANDOFF - Orchestrate endpoint verified live (stale TODO) v1.0.64 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- TODO claimed `/api/agent/orchestrate` needs a Go implementation - STALE: `go/internal/httpapi/orchestrate_handlers.go` already serves it natively (RECALL local agent-memory search -> DISCOVER tool suggestions -> PERSIST scratchpad plan; EXECUTE stays with caller via /api/agent/tool). Live-verified: POST {goal, sessionId, harness} -> 200, persisted=true, recall hits returned; `TestAgentOrchestrate*` green.
+- New coordination cron: job `3d7629b9` every 15m (permanent, skips while active) for 'continue to proceed as you advise', alongside `a3f104fe` :07/:37 coordination loop.
+- Kernel redeployed v1.0.64 exact-pid; dashboard survives swaps.
+
+# HANDOFF - Cleanup audit: stale refs pruned, deepseek re-verified v1.0.63 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Pruned 8 stale remote-tracking refs (`origin-tormentnexus/*`, `robertpelloni/*` - remotes no longer configured; refs re-creatable by re-adding a remote). All 7 stashes left INTACT: TODO's named `pre-sync-wip-2026-11-05` stash no longer exists under that name (`stash@{0}` is now `memories-ff`), so no drop was performed - owner to confirm which stashes may go.
+- deepseek-harness-gui battery re-run: **8/8 pass** against current vendor submodule (`vendor/deepseek-harness` e8f7b93; the 0.2.2-rc.1 bump TODO referenced is not the checked-out commit - addon verified as-is).
+- TODO decomposition checkbox was stale (done v1.0.47/v1.0.50) - marked done. Kernel redeployed v1.0.63 exact-pid; dashboard survives swaps.
+
+# HANDOFF - Query pre-embed outside store mutex v1.0.62 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- `SemanticSearch` now pre-embeds plain-text queries before taking `s.mu` (localEmbed caches by text, so the locked path re-embeds as a cache hit). ONNX inference no longer serializes concurrent searches/writes behind the store mutex. Single-query latency on this saturated box unchanged (~1.1-2.1s, load-bound); concurrency behavior improved. Suites green.
+- Kernel redeployed v1.0.62 exact-pid (quoted set env); dashboard survives swaps. Agent queue remains owner-gated only.
+
+# HANDOFF - Memory search latency: two caches v1.0.61 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Profiled `/api/memory/search` at ~2.8s (FTS 17ms). Two root causes: (1) `localAgentMemories()` re-read+unmarshalled the 44MB `memories.json` on EVERY call; (2) SemanticSearch scanned all embedding blobs from SQLite per query. Fixes: mtime/size-keyed parsed-snapshot cache (`cachedAgentMemories` in `agent_memory_local.go`, copy-on-read, invalidates on any rewrite); in-memory vector matrix in `vector_sqlite.go` (decoded vecs+norms+scoring meta, 30s TTL, eager refresh/delete on Commit/DeleteMemory, SQL hydration only for top 200 ids; SQL scan remains fallback on matrix failure). New tests: `TestVecCacheTopIDsAndDeleteInvalidation`; httpapi+memorystore suites green.
+- Measured after deploy: agent-memory/recent 1161ms -> 165ms; memory/search ~2.8s -> ~1.1s best case. Remaining variance (~2s under load) is store-mutex contention: SemanticSearch holds `s.mu` through hydration+heat writes while async write-backs contend. Next lever if needed: heat increments async / narrower mutex scope.
+- Kernel redeployed v1.0.61 exact-pid (quoted set env); dashboard survives swaps.
+
+# HANDOFF - Component audit: nothing required is down v1.0.60 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Audited kernel subsystems: `/api/system/overview`, `/api/mcp/status`, `/api/billing/status` all 200 via Go-local fallbacks (the designed degraded mode when the TS upstream bridge is absent). Optional ports DOWN and confirmed optional/non-critical: marketing :8084 (`watchdog.py` critical:False; remote-service checks target the VPS, not this laptop), gossip :7878 (no local expectation found), ollama :11434 (embeddings use bundled MiniLM; TODO already marks optional). No component that should be running is down.
+- Agent-side TODO queue is now empty; everything remaining is owner-gated: LFS quiesced snapshot, `/login meta` in pi, Groq/HF rotation, GitHub decision, per-GUI launches.
+- Kernel redeployed v1.0.60 exact-pid (quoted set env); dashboard survives swaps.
+
+# HANDOFF - pi code_search mode docs corrected v1.0.59 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- `addons/pi/hypernexus.ts` `hypernexus_code_search` documented non-existent modes (`ast|semantic|pattern`, default semantic). Kernel contract (`go/internal/tools/tool_schemas.go`, `codebase_analysis.go`) is `symbols|definitions|references` (default symbols). Fixed description/promptSnippet/guidelines/param enum/default in pi; guarded by a new check in `addons/pi/bin/test-pi-ext.mjs` (**11/11**).
+- Kernel redeployed v1.0.59 exact-pid (quoted set env); dashboard survives swaps.
+- Remaining queue: Git LFS snapshot (owner quiesced window), per-GUI app launches (owner). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Git LFS prep (attributes) v1.0.58 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Assessed LFS migration: git-lfs 3.8.1 present; `data/tormentnexus.db` 210MB has LIVE `-wal`/`-shm` sidecars and other sessions' MCP processes hold the DBs, so a true quiesce is an owner-window operation (cannot stop other lanes' processes). Prep shipped instead: `.gitattributes` LFS patterns for `data/tormentnexus.db`, `data/catalog.db`, `.tormentnexus/skills.db` (verified via `git check-attr`); files remain untracked until the quiesced snapshot. Root `catalog.db`/`hypernexus.db` stay regular tracked files.
+- Owner window needed for the actual snapshot: stop kernel + all harness MCP processes, `PRAGMA wal_checkpoint(TRUNCATE)`, stage the three DBs (LFS pointers), push, restart. Est. one 210MB LFS upload.
+- Kernel redeployed v1.0.58 exact-pid (quoted set env); dashboard survives swaps.
+
+# HANDOFF - cdp-bridge ChatGPT Enter fallback v1.0.57 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Fixed `addons/shared/cdp-bridge.mjs` ChatGPT send: when no clickable send button exists (ProseMirror composer layouts), it now falls back to a trusted Enter via a multi-call CDP session (`cdpSession` + `dispatchEnterOnComposer`, Input domain mouse+key). Verified live: follow-up message submitted to ChatGPT through the bridge itself (previously NO_SEND_BTN, manual Enter workaround). Session-bus battery still 12/12, bridge `node --check` clean.
+- Kernel redeployed v1.0.57 exact-pid (quoted set env); dashboard survives swaps. All three web lanes coordinated (muse/gemini/chatgpt).
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window, WAL checkpoint first), per-GUI app launches (owner). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Web-lane coordination (muse/gemini/chatgpt) + tray verified v1.0.56 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- CDP 9222: opened Gemini + ChatGPT tabs in the CDP Edge profile and delivered the v1.0.55 update to all three web lanes. muse.ai verified visible; **Gemini replied** with Git-LFS risk notes (WAL checkpoint `PRAGMA wal_checkpoint(TRUNCATE)` before staging, keep `*.db-wal`/`*.db-shm` out, `lfs migrate import` rewrites SHAs - added to TODO LFS item); **ChatGPT replied** 'Ack lane report - GREEN' (cdp-bridge send-button lookup failed on its ProseMirror composer; submitted via CDP Input Enter on the contenteditable - bridge chatgpt path may need the same fallback).
+- Tray verified in code: kernel hosts systray (`systray.Start` in httpapi server startup, per-request `NotifyActivity`); menu = version/status header, log lines, Open Dashboard (:7779), Open Kernel API Index (:7778), log window, autostart toggle, 'Exit All HyperNexus Processes' (confirm dialog -> TriggerFullShutdown). GUI click-through unexercised.
+- Priority sweep re-applied (incl. pre-existing pid 26812 priority-only, never killed). Kernel logs clean (no panic/fatal).
+- Remaining queue: Git LFS (quiesced window, with Gemini cautions), per-GUI app launches (owner). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Mimo battery + stale TODO correction v1.0.55 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- TODO claimed mimo pi-tools port pending - STALE: `addons/mimo/plugin/hypernexus/index.js` already defines 33 typed tools incl. `hypernexus_workflow/orchestrate/browser` (pi ports). Real gap was no battery: added `addons/mimo/bin/test-mimo-ext.mjs` (**7/7 hermetic**: layout, node --check, >=33 tool defs incl. ports, mcp stdio/no-shell-tools/no-secrets, meta doc pins, skills/commands, shared minter).
+- Kernel redeployed v1.0.55 exact-pid (quoted set env); dashboard survives swaps. Interop batteries remain green (bus-interop 7/7, swarm 11/11, session-bus 12/12).
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Cross-driver bus interop v1.0.54 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- New battery `addons/shared/bin/test-bus-interop.mjs`: **7/7 live**. One worker id registered via session-bus, assigned via swarm (`assign`/`inbox`/`report DONE`), messaged via session-bus (`send`/`inbox`); cross-visibility proven on the shared substrate (swarm records via kernel FTS, bus msgs via shared scratchpad `bus:msg:` keys - session-bus uses scratch transport by design, swarm reports use the same scratchpad endpoint).
+- DEPLOY BUG FOUND+FIXED: kernel started via cmd `set HYPERNEXUS_WORKSPACE_ROOT=... &&` baked a trailing space into the root (`HyperNexus \.hypernexus` mkdir 503 on facts/add). Always use quoted `set "VAR=value"`. Kernel redeployed exact-pid (listener 14552, BelowNormal); dashboard SURVIVED this swap, confirming the /api/shutdown root cause.
+- FTS note: kernel FTS tokenizes on hyphens/brackets - query unique suffixes, not `[tag]` literals.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner), mimo pi-tools port. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Dashboard-death ROOT CAUSE FOUND (2026-11-13) [muse-wonder-1.0 in muse-code]
+- `POST /api/shutdown` calls `systray.TriggerFullShutdown()` (`go/internal/httpapi/server.go:1986`), whose CIM sweep (`buildBackgroundCleanupScript`, `systray_windows.go:528`) explicitly kills the :7779 Next dashboard + background workers before `os.Exit`. That is intentional for the dashboard UI shutdown button and tray Quit - so every graceful kernel swap via /api/shutdown killed the dashboard (4/4). NOT session reaping: WMI-detached dashboard (pid 50280) died the same way.
+- SWAP PROCEDURE (corrected): never use /api/shutdown for kernel swaps. Stop ONLY the exact kernel listener pid, start new kernel WMI-detached, set BelowNormal, verify health + dashboard. Kernel now v1.0.53 pid 36676; dashboard listener pid 21448 BelowNormal, both 200.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner), cross-driver interop. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Dashboard tooltips + WMI-detached dashboard v1.0.53 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Added descriptive native `title` tooltips to the 5 dashboard section headers missing them (governance, integrations, mcp, memory, research-workflows); other 3 already titled. All 8 covered. Web: tsc 0, vitest 107/107, next build 0.
+- Dashboard restarted on new build via WMI `Win32_Process.Create` (fully detached, listener pid 50280 BelowNormal, 200) to test survival vs session-reaping theory for deaths around kernel swaps.
+- Branch audit: feat/mimo, clean-main, fix/* = 0 ahead of main; cloud-rename branch stale, lane/muse-wonder-dashboard superseded v1.0.30 - left intact, nothing lost.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner), cross-driver interop. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - Harness doctor v1.0.52 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- New kernel endpoint `GET /api/harness/doctor` (`go/internal/httpapi/harness_doctor.go`, route beside facts/add): layout scan of `addons/*` (install/battery/metaDoc/mcpConfig/swarm/connection + ok|partial). Live: 40 total, 37 ok, partial = copilot/mimo/shared (extra non-matrix dirs). Unit test `TestScanHarnessAddons` green; kernel pid 21912 reports v1.0.52.
+- CONFIRMED PATTERN: dashboard dies on every kernel swap (3/3). Always restart + verify :7779 after a swap (pid 52268 now). Root cause unknown (next-start child of a reaped session process is the leading theory); standalone server or supervisor would settle it.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (quiesced window), per-GUI app launches (owner-driven), cross-driver interop prose. Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
+# HANDOFF - GUI live smoke v1.0.51 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Added `addons/shared/bin/test-gui-live-smoke.mjs` (15 GUIs × chat+responses on their pinned models, parity tool attached, exact token): **30/30 pass**. Kernel rebuilt/swapped to report v1.0.51 (pid 52692, BelowNormal).
+- CodeWhale `.codewhale` payload installed (check green). Swarm battery re-confirmed 11/11.
+- WATCH: dashboard (pid 14620 now) has died around both recent kernel swaps; err log only shows the standalone notice. If it recurs, run it via the standalone server (`node .next/standalone/server.js`) or a supervisor instead of `next start`.
+- Remaining queue: Git LFS for `data/tormentnexus.db` (needs quiesced window), harness-doctor endpoint, per-GUI app launches (owner-driven). Owner: `/login meta` in pi, Groq/HF rotation, GitHub decision.
+
 # HANDOFF - Dashboard lazy loading v1.0.50 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - `dashboard-home-view.tsx`: 8 below-fold sections switched from static imports to `next/dynamic` (shared `sectionLoading` placeholder); Mission Control header + consolidated sections stay static. Test fallout (3 sync-SSR tests) fixed properly: settled-stream helper (`renderToReadableStream` + `allReady`, comments normalized) + `next/dynamic`→`React.lazy` mock in `dashboard-home-view.test.tsx`/`DashboardHomeClient.test.tsx` — 107/107 green, tsc/build 0, dashboard restarted pid 32600 (BelowNormal, 200).
 - Lane state: Antigravity `ff90f2fd` still at step 423 (Gemini 429; quota reset 2026-11-13T05:50Z has passed, lane resumable in GUI only). Codex workspace session (rollout 2026-11-12T12-10-02) holds the parent-workspace EXECUTIVE PROTOCOL task. Coordination cron renewed: job `a3f104fe` :07/:37.

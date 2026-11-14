@@ -356,9 +356,12 @@ healthcheck:
         exit 1
       fi
     - |
+      # cloud.hypernexus.site serves no /api/cloud/health (404 verified
+      # 2026-11-13 - that bad path failed every hourly scheduled run and
+      # flooded the owner inbox). The site root is the live health signal.
       CLOUD_URL="https://cloud.hypernexus.site"
       STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-        "$CLOUD_URL/api/cloud/health")
+        "$CLOUD_URL/")
       if [ "$STATUS" != "200" ]; then
         echo "ERROR: cloud.hypernexus.site returned $STATUS"
         exit 1

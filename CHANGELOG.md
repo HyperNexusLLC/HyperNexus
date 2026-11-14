@@ -7,6 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.53] - 2026-11-13
+
+### Added
+- **Dashboard section-header tooltips**: all eight dashboard section headers (governance/security, integrations, MCP, memory, prompts/deployments, research-workflows, system-recovery, workflow-orchestration) now carry descriptive native `title` tooltips explaining scope.
+
+### Fixed
+- **Dashboard survival (root cause)**: dashboard deaths on kernel swaps were caused by `POST /api/shutdown` -> `systray.TriggerFullShutdown()` CIM sweep explicitly killing the :7779 Next dashboard (by design for tray/UI full shutdown). Kernel swaps must stop the exact kernel pid only, never /api/shutdown. Dashboard restarted WMI-detached (listener pid 21448, BelowNormal); web tests 107/107, tsc 0, next build 0.
+
+## [1.0.54] - 2026-11-13
+
+### Added
+- **Cross-driver bus interop battery** (`addons/shared/bin/test-bus-interop.mjs`, 7/7 live): one worker driven through both swarm.mjs and session-bus.mjs with cross-visibility asserted on the shared kernel facts/FTS + scratchpad substrate.
+
+### Fixed
+- **Kernel deploy env**: quoted `set "HYPERNEXUS_WORKSPACE_ROOT=..."` in the WMI start command - the unquoted form baked a trailing space into the workspace root and broke facts/add with a mkdir 503. Dashboard now survives kernel swaps (exact-pid stop, no /api/shutdown).
+
+## [1.0.55] - 2026-11-13
+
+### Added
+- **Mimo extension battery** (`addons/mimo/bin/test-mimo-ext.mjs`, 7/7): verifies the MiMoCode plugin surface - 33 typed tools including the pi ports `hypernexus_workflow/orchestrate/browser` (port was already landed; TODO was stale), MCP stdio config with no shell-named tools, meta-model pins, skills and mimocode commands.
+
+## [1.0.56] - 2026-11-13
+
+### Added
+- **Web-lane coordination**: v1.0.55 update delivered via Edge CDP 9222 to muse.ai, Gemini, and ChatGPT tabs; Gemini replied with Git-LFS migration cautions (WAL checkpoint, SHA-rewrite tradeoff - now in TODO), ChatGPT acknowledged GREEN. Systray menu verified in code (dashboard/API-index/logs/autostart/Exit All with confirm).
+
+## [1.0.57] - 2026-11-13
+
+### Fixed
+- **cdp-bridge ChatGPT send**: added an Enter-key fallback (CDP Input domain on the focused ProseMirror composer) for layouts with no clickable send button, which previously failed with NO_SEND_BTN. Verified live end-to-end through the bridge.
+
+## [1.0.58] - 2026-11-13
+
+### Added
+- **Git LFS prep**: `.gitattributes` patterns route `data/tormentnexus.db` (210MB), `data/catalog.db` (52MB), and `.tormentnexus/skills.db` (49MB) through LFS when staged. The files stay untracked until an owner-timed quiesced snapshot (kernel + MCP processes stopped, WAL checkpointed) - the live DBs cannot be quiesced without stopping other sessions.
+
+## [1.0.59] - 2026-11-13
+
+### Fixed
+- **pi `hypernexus_code_search` mode docs**: corrected the advertised modes from the non-existent `ast|semantic|pattern` (default semantic) to the kernel's real `symbols|definitions|references` (default symbols), with a battery guard in `test-pi-ext.mjs` (11/11).
+
+## [1.0.60] - 2026-11-13
+
+### Notes
+- **Component audit**: kernel overview/MCP/billing all answer 200 via Go-local fallbacks (designed degraded mode). Marketing (:8084), gossip (:7878), and Ollama (:11434) are down and confirmed optional/non-critical; embeddings use bundled MiniLM. No required component is down.
+
+## [1.0.61] - 2026-11-13
+
+### Fixed
+- **Memory search latency**: `/api/memory/search` ~2.8s -> ~1.1s and `/api/agent-memory/recent` 1161ms -> 165ms. Added an mtime-keyed parsed cache for the 44MB `memories.json` (was re-parsed per request) and an in-memory vector matrix (decoded embeddings + precomputed norms, TTL-refreshed, write-invalidated) so semantic search hydrates only the top 200 candidates from SQL.
+
+## [1.0.62] - 2026-11-13
+
+### Fixed
+- **Search concurrency**: `SemanticSearch` pre-embeds plain-text queries before acquiring the store mutex, so ONNX query inference no longer serializes concurrent searches and writes (the locked path re-embeds as an embed-cache hit).
+
+## [1.0.63] - 2026-11-13
+
+### Notes
+- **Cleanup audit**: pruned stale `origin-tormentnexus/*` and `robertpelloni/*` remote-tracking refs (remotes decommissioned); all git stashes left intact pending owner review (the TODO-named stash no longer exists under that name). deepseek-harness-gui battery re-verified 8/8.
+
+## [1.0.64] - 2026-11-13
+
+### Notes
+- **Orchestrate verified**: `POST /api/agent/orchestrate` (native Go RECALL/DISCOVER/PERSIST, EXECUTE via caller) verified live (200, persisted, recall hits) - the TODO entry calling for its implementation was stale. Added a permanent 15-minute autopilot cron (`3d7629b9`).
+
+## [1.0.65] - 2026-11-13
+
+### Notes
+- **DEPLOY.md refresh**: ops notes updated from v1.0.43 to the current deploy contract (repo-built kernel, always-deploy, exact-PID WMI swaps with quoted env set, never swap via `/api/shutdown`, dashboard survival, tray inventory).
+
+## [1.0.66] - 2026-11-13
+
+### Notes
+- **Concept verdict recorded**: Key-vault/alias + ring-framing story approved for pitching; radial-vector tenant routing rejected (deterministic tenant IDs only); greenfield timeline rejected. The vault add-on is scoped in TODO as a post-payment item - `vault_engine.go` does not exist in this repo, contrary to the reviewed document's premise.
+
+## [1.0.67] - 2026-11-13
+
+### Added
+- **Nexus Mailroom**: named the Zero-Exposure Key Vault as a Managed Hub feature (decision: feature, not a new product) and documented the postal/safety-deposit-box story in IDEAS.md — Drop-Box, Shredder, Claim Ticket, Couriers, Sorting Facility, Postmaster. Pitch-ready; build remains gated on Invoice #001.
+
+## [1.0.68] - 2026-11-13
+
+### Added
+- **`scripts/sync-skills.ps1`**: propagates canonical workspace skills (`.agents/skills`) to `~/.agents/skills` and `~/.pi/agent/skills` with SHA-256 comparison and dated backups. Fixes the pi skill-collision warnings caused by diverged user copies (stale September builds shadowing maintained November skills).
+
+## [1.0.69] - 2026-11-13
+
+### Fixed
+- **Hourly CI failures**: the scheduled `healthcheck` job checked the non-existent `cloud.hypernexus.site/api/cloud/health` (404), failing every hourly run and flooding the owner's inbox. It now checks the cloud site root (verified 200).
+
 ## [Unreleased]
 
 - Protocol sync (protocol/sync-20261113): merged gitlab/main (v1.0.50 dashboard) and github/main (TormentNexus upstream) with intelligent conflict resolution; kernel Go tree kept coherent on gitlab.com/HyperNexusLLC/HyperNexus; VERSION 1.0.50.
@@ -16,6 +107,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - codex-gui swarm worker parsing no longer end-anchored (tolerates FTS tag suffixes).
+
+## [1.0.52] - 2026-11-13
+
+### Added
+- **Harness doctor endpoint** (`GET /api/harness/doctor`): read-only layout scan of every `addons/` harness (install, battery, meta doc, MCP config, swarm surface, connection pin) with ok/partial counts — live result 37 ok / 3 partial of 40 (partials are the non-harness `copilot`, `mimo`, `shared` dirs). New `scanHarnessAddons` + unit test; kernel swapped (pid 21912). Batteries themselves still run per-harness; this is the fast inventory the batteries assert against.
+
+### Notes
+- Dashboard died on the kernel swap again (third time) and was restarted (pid 52268). Correlation with swaps is now consistent — treat dashboard restart as a required step after every kernel swap until root-caused.
+
+## [1.0.51] - 2026-11-13
+
+### Added
+- **GUI kernel-path live smoke** (`addons/shared/bin/test-gui-live-smoke.mjs`): for all 15 GUI addons, verifies the pinned model on both `/v1/chat/completions` and `/v1/responses` through the kernel proxy with the parity `code_interpreter` tool attached and an exact-token reply — 30/30 pass. Scope is explicit: this proves the wiring each GUI uses; launching each GUI app itself remains unverified per-harness.
+
+### Notes
+- CodeWhale install payload (`.codewhale/`, workspace-local) installed and check-green. Swarm bus re-confirmed 11/11 (one earlier assign abort under load was a flake). Dashboard process has died around kernel swaps twice; restarted (pid 14620) — root cause unconfirmed, watch it.
 
 ## [1.0.50] - 2026-11-13
 

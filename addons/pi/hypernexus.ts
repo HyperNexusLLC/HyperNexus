@@ -831,9 +831,9 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "hypernexus_code_search",
     label: "TN Code Search",
-    description: "Search code by AST structure, semantic meaning, or file pattern.",
-    promptSnippet: "Search code via AST, semantic, or pattern matching",
-    promptGuidelines: ["mode='ast' for structural patterns.", "mode='semantic' for natural language.", "mode='pattern' for file globs."],
+    description: "Search codebase symbols, definitions, or references via the repo graph (kernel codebase_search).",
+    promptSnippet: "Search code symbols, definitions, or references",
+    promptGuidelines: ["mode='symbols' (default) for symbol-name search.", "mode='definitions' for where a symbol is defined.", "mode='references' for where a symbol is used."],
     namespace: { name: "mcp__hypernexus", description: "HyperNexus L2 memory, tool catalog, sessions, and skills" },
     exposure: "deferred",
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -842,12 +842,12 @@ export default function (pi: ExtensionAPI) {
     })) }),
     parameters: Type.Object({
       query: Type.String({ description: "Search query" }),
-      mode: Type.Optional(Type.String({ description: "'ast' | 'semantic' | 'pattern'" })),
+      mode: Type.Optional(Type.String({ description: "'symbols' | 'definitions' | 'references' (default symbols)" })),
       path: Type.Optional(Type.String({ description: "Scope path" })),
       limit: Type.Optional(Type.Number({ description: "Max results (default 10)" })),
     }),
     async execute(_toolCallId, params, signal) {
-      const mode = params.mode ?? "semantic";
+      const mode = params.mode ?? "symbols";
       const limit = params.limit ?? 10;
       const res = await tnFetch(`/api/mcp/native/search?query=${encodeURIComponent(`${mode} ${params.query}${params.path ? ` path:${params.path}` : ""}`)}`, {}, signal);
       if (!res.ok) return { content: [{ type: "text", text: "Search failed." }], isError: true };

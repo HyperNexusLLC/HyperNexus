@@ -1445,6 +1445,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/memory/agent-stats", s.handleMemoryAgentStats)
 	s.mux.HandleFunc("/api/memory/agent-search", s.handleMemoryAgentSearch)
 	s.mux.HandleFunc("/api/memory/facts/add", guard(s.handleMemoryAddFact))
+	s.mux.HandleFunc("/api/harness/doctor", guard(s.handleHarnessDoctor))
 	s.mux.HandleFunc("/api/memory/observations/record", s.handleMemoryRecordObservation)
 	s.mux.HandleFunc("/api/memory/observations/recent", s.handleMemoryRecentObservations)
 	s.mux.HandleFunc("/api/memory/observations/search", s.handleMemorySearchObservations)
@@ -17867,6 +17868,9 @@ func (s *Server) localAgentMemoryStats() (map[string]any, error) {
 
 func (s *Server) localAgentMemories() ([]localAgentMemoryRecord, error) {
 	memoriesPath := filepath.Join(s.cfg.WorkspaceRoot, ".hypernexus", "agent_memory", "memories.json")
+	if cached, ok := cachedAgentMemories(memoriesPath); ok {
+		return cached, nil
+	}
 	raw, err := os.ReadFile(memoriesPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -17906,6 +17910,7 @@ func (s *Server) localAgentMemories() ([]localAgentMemoryRecord, error) {
 		}
 		records = append(records, memory)
 	}
+	storeAgentMemoriesCache(memoriesPath, records)
 	return records, nil
 }
 

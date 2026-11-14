@@ -104,13 +104,16 @@ cd apps/web
 node node_modules/next/dist/bin/next start -p 7779   # production, after `npx next build`
 ```
 
-Current ops notes (2026-11-11, v1.0.43):
+Current ops notes (2026-11-13, v1.0.64):
 
 - Canonical remotes: GitLab `gitlab.com/HyperNexusLLC/HyperNexus` (primary). GitHub lags pending the owner's secret-blob unblock/rewrite decision.
-- The live :7778 kernel may be the installed build (`%LOCALAPPDATA%/HyperNexus/hypernexus.exe`); swapping in a repo build is an owner-gated, exact-PID operation (`bin/swap-kernel.ps1`). Never kill pre-existing hypernexus processes.
+- The live :7778 kernel is the repo build `bin/hypernexus-new.exe serve`. Always deploy after changes: rebuild, swap, verify.
+- **Kernel swap procedure (exact-PID only)**: stop ONLY the current :7778 listener PID, then start the new binary detached via WMI `Win32_Process.Create` with a QUOTed env set: `set "HYPERNEXUS_WORKSPACE_ROOT=C:\Users\hyper\workspace\HyperNexus"` (unquoted `set VAR=value &&` bakes a trailing space into the root and breaks facts/add with a mkdir 503). Never use `bin/swap-kernel.ps1` while other sessions' MCP processes run (it kills all hypernexus processes). Never kill pre-existing hypernexus processes (e.g. pid 26812).
+- **Never swap via `POST /api/shutdown`**: it calls `systray.TriggerFullShutdown()`, whose CIM sweep kills the :7779 dashboard and background workers by design (that endpoint backs the tray Quit and the dashboard shutdown button). With exact-PID swaps the dashboard survives; verify :7779 after every swap anyway.
+- Start the dashboard detached (WMI) from `apps/web`: `node node_modules/next/dist/bin/next start -p 7779` (after `npx next build`). Health: `GET :7778/health` (version), `:7779/dashboard` 200, MCP `system_status`.
 - Set heavyweight processes (kernel, llama-server, large node) to BelowNormal priority: `scripts/set-llm-priority.ps1` plus a manual sweep after every start/swap.
 - If system Git for Windows fails with `BUG (fork bomb)`, its `mingw64/bin` is damaged — reinstall Git, or use GitHub Desktop's bundled git (`%LOCALAPPDATA%/GitHubDesktop/app-*/resources/app/git/ucrt64/bin/git.exe`).
-- System tray ships with the repo kernel (`go/internal/systray`): Open Dashboard, last-10 logs, Exit (quits servers).
+- System tray ships with the repo kernel (`go/internal/systray`): version/status header, log lines, Open Dashboard (:7779), Open Kernel API Index (:7778), log window, autostart toggle, Exit All (confirm dialog, full-suite shutdown).
 
 ### 4. Start Services
 

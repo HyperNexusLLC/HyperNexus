@@ -13,15 +13,18 @@ _Last updated: 2026-11-12, version 1.0.0-alpha.254_
 
 - [x] ~~Dashboard consolidation~~ — **verified already consolidated** (nav = 7 value-ordered sections, all tooltips present, all hrefs → home-view anchors). Remaining polish below.
 - [x] **Flesh out 3 thin home-view sections** — `health-metrics`, `skills-workflows`, `security-audit` now carry tooltips (`title`), `aria-label`, `data-testid` wraps, and truth-pass copy (loading/error/empty, never mocked) in `dashboard-home-view.tsx`. Remaining: per-card forms/filters live in sub-pages.
-- [ ] **Decompose `dashboard-home-view.tsx`** → one lazy-loaded component per section. Progress (v1.0.29): consolidated sections extracted to `dashboard-consolidated-sections.tsx` (4698→4631 lines, tsc+build green). Progress (v1.0.33): startup-blocking helpers extracted to `dashboard-startup-blocking.ts` (4888→4509 lines, tsc+build green). Progress (v1.0.43): overview builders extracted to `dashboard-overview-model.ts` (~3750 lines, tsc+build green). Progress (v1.0.44): `#research-workflows` section extracted to `dashboard-research-workflows-section.tsx` (2451→2267 lines, tsc+build green). Progress (v1.0.45): governance/security section extracted to `dashboard-governance-security-section.tsx` with its full logic block (2267→1883 lines, tsc+build green). **Done v1.0.47**: decomposition completed by workspace lane (home view 1883→760 lines; workflow-orchestration, prompts-deployments, system-recovery sections extracted; route tests repaired — 15 files / 107 tests green). Per-tab lazy loading **done v1.0.50** (8 sections via `next/dynamic`; 107/107 tests).
+- [x] ~~**Decompose `dashboard-home-view.tsx`**~~ → one lazy-loaded component per section. Progress (v1.0.29): consolidated sections extracted to `dashboard-consolidated-sections.tsx` (4698→4631 lines, tsc+build green). Progress (v1.0.33): startup-blocking helpers extracted to `dashboard-startup-blocking.ts` (4888→4509 lines, tsc+build green). Progress (v1.0.43): overview builders extracted to `dashboard-overview-model.ts` (~3750 lines, tsc+build green). Progress (v1.0.44): `#research-workflows` section extracted to `dashboard-research-workflows-section.tsx` (2451→2267 lines, tsc+build green). Progress (v1.0.45): governance/security section extracted to `dashboard-governance-security-section.tsx` with its full logic block (2267→1883 lines, tsc+build green). **Done v1.0.47**: decomposition completed by workspace lane (home view 1883→760 lines; workflow-orchestration, prompts-deployments, system-recovery sections extracted; route tests repaired — 15 files / 107 tests green). Per-tab lazy loading **done v1.0.50** (8 sections via `next/dynamic`; 107/107 tests).
 - [x] ~~Fix pre-existing dashboard test breakage~~ — **done v1.0.43**: `apps/web/vitest.config.ts` (source aliases, single React, inline deps, build-output excludes) + test mocks; 14 files / 97 tests green. Also fixed research/manual `data?.totals` crash + memory-detail shadowing found by the revived tests.
 - [x] ~~Retire legacy `dashboard/*` pages~~ — **done v1.0.43**: zero `GenericDashboardPage` files remain; final 10 generic JSON viewers (browser, browser-extension, cli-harnesses, cloud-dev, deerflow, healer, imports, logs-metrics, observability, runtime) verified byte-identical templates and converted to `RedirectPage` deep-links into consolidated sections.
 - [x] ~~Kernel `facts/add` hang~~ — **fixed v1.0.49**: async bounded L2 dual-write; swarm/session buses live-green; regression test for chat-shape attestation strip.
 - [ ] **Harness matrix follow-ups**: per-GUI live completion smokes; cross-driver (swarm vs session-bus) interop check; codewhale `.codewhale` payload install; freebuff/hax CLI on PATH (owner installs).
 - [ ] **Marketing agent (:8084)** — `scripts/autonomous_marketing.py` is down; decide: start it, or document as optional and gate the health check.
 - [x] **Cross-session interconnect in dashboard** (2026-11-13) — `CrossSessionBusPanel` (registry, unanswered, replies, web deliveries; loading/error/empty) under Mission Control + `docs/DASHBOARD_CONSOLIDATION_AUDIT.md`; sidebar duplicate anchors merged, Healer anchor corrected to `#healer-cognition`, tray menu verified (Dashboard/Logs/Autostart/Exit All).
+
+- [ ] **Harness matrix follow-ups**: ~~per-GUI live completion smokes~~ **kernel-path done v1.0.51 (30/30; GUI app launches still unexercised)**; ~~cross-driver (swarm vs session-bus) interop check~~ **done v1.0.54 (test-bus-interop.mjs 7/7)**; ~~codewhale `.codewhale` payload~~ **installed v1.0.51**; freebuff/hax CLI on PATH (owner installs).
+- [x] ~~**Marketing agent (:8084)**~~ **audited v1.0.60**: optional/non-critical (`watchdog.py` critical:False; health checks for it target the VPS service). Documented optional; not started locally.
 - [x] ~~Watchdog as scheduled task~~ — **verified done 2026-10-23**: `HyperNexus-KernelWatchdog` is registered and Running (spawns the kernel with an elevated token — see HANDOFF session 9 for the swap implications).
-- [x] **Port pi tools to opencode** — `hypernexus_workflow`, `hypernexus_orchestrate`, `hypernexus_browser` added to the OpenCode plugin (33 tools total; gauntlet 10/10). **mimo port still pending.**
+- [x] **Port pi tools to opencode** — `hypernexus_workflow`, `hypernexus_orchestrate`, `hypernexus_browser` added to the OpenCode plugin (33 tools total; gauntlet 10/10). **mimo port done (33 tools incl. workflow/orchestrate/browser; battery v1.0.55).**
 
 ## P0 — Must do now (Stability, Testing & Validation)
 - [x] **Chrome Extension Integration**: Point Chrome extension event-stream and websocket URLs to port `7778` (Go Sidecar). (Completed alpha.250)
@@ -48,6 +51,12 @@ _Last updated: 2026-11-12, version 1.0.0-alpha.254_
 - [x] **Git LFS**: Consider tracking large `.db` files (provider_metrics.db 145MB, tormentnexus.db 34MB) with Git LFS to avoid repo bloat.
 - [x] **.out Cleanup**: `swarm_*.out` and `*.pid` added to `.gitignore`. (alpha.133)
 
+- [x] ~~**Embedding cache**~~ **done v1.0.61**: in-memory vector matrix + mtime-keyed memories.json cache; search ~2.8s->~1.1s, recent 1161->165ms. Residual: store-mutex contention under write load (heat writes under `s.mu`).
+- [x] ~~**Ollama install**~~ **audited v1.0.60**: optional - embeddings use bundled MiniLM; Ollama (:11434) not required locally.
+- [x] ~~**Port pi tools** to mimo + opencode~~ **done (opencode v1.0.43-era, mimo verified v1.0.55, 33 tools + battery 7/7)**.
+- [x] ~~**`codebase_search` docs**~~ **done v1.0.59**: pi tool now advertises `symbols|definitions|references` (default symbols); battery-guarded.
+- [x] ~~**Gossip (:7878)**~~ **audited v1.0.60**: no local expectation found; treated as optional, not started.
+
 ## P2 — Enterprise Readiness & Security
 - [x] **License Validation**: Implement Ed25519 license token validation in Go sidecar. (Verified alpha.127)
 - [x] **Compliance Boundary**: Separate SSO/RBAC/Audit logic into enterprise wrapper.
@@ -64,7 +73,7 @@ _Last updated: 2026-11-12, version 1.0.0-alpha.254_
 - [x] **Wails Native Runtime**: Replace Electron with Go-native desktop shell.
 - [x] **Deep Link Protocol**: Expand `tormentnexus://` protocol for browser-to-kernel attachment.
 
-- [ ] **Script consolidation** — `bin/` has many one-off `hypernexus-*.exe.bak` binaries + old `serve-*.log`; archive (non-destructively) to an `archive/` dir. (binaries already `.gitignore`d.)
+- [x] **Script consolidation (bin/)** — done 2026-11-13: 14 `hypernexus*.exe.bak*` binaries (606 MB) archived non-destructively to `archive/bin-legacy-20261113/`; live exes untouched. Dashboard-death root cause also resolved v1.0.53 (`/api/shutdown` full-suite sweep; swaps use exact-pid stop only). Remaining script consolidation: — `bin/` has many one-off `hypernexus-*.exe.bak` binaries + old `serve-*.log`; archive (non-destructively) to an `archive/` dir. (binaries already `.gitignore`d.)
 - [ ] **`bin/_pitest*.txt` + `_mcpall*.txt`** test artifacts — deleted; add to `.gitignore`.
 - [ ] **Docs sweep** — refresh `VISION.md`, `MEMORY.md`, `DEPLOY.md`, `IDEAS.md`, `CHANGELOG.md` to reflect the systray fix, search-coverage fix, hybrid retrieval, and dashboard consolidation plan.
 - [ ] **Version bump** — bump `VERSION.md` + CHANGELOG for this batch of fixes.
@@ -87,10 +96,10 @@ _Last updated: 2026-11-12, version 1.0.0-alpha.254_
 
 - [x] Fast-forward local `main` to remote (258 commits); audit all feature branches (see HANDOFF Session RS).
 - [ ] **Drop `stash@{0}`** ("pre-sync-wip-2026-11-05") after verifying v1.0.28 push landed.
-- [ ] **deepseek-harness 0.2.2-rc.1**: re-verify `addons/deepseek-harness-gui` against bumped `vendor/deepseek-harness` (`fcc0ad4621`); root kernel does not import it, addon untested.
-- [ ] **Git LFS for runtime DBs**: `data/tormentnexus.db` (210MB), `data/catalog.db` (52MB), `.tormentnexus/skills.db` (49MB) exceed GitHub's 100MB file limit and stay untracked until LFS is adopted.
+- [x] ~~**deepseek-harness re-verify**~~ **done v1.0.63**: battery 8/8 against current vendor (e8f7b93; rc.1 bump not checked out).
+- [ ] **Git LFS for runtime DBs**: `data/tormentnexus.db` (210MB), `data/catalog.db` (52MB), `.tormentnexus/skills.db` (49MB) exceed GitHub's 100MB file limit and stay untracked until LFS is adopted. Gemini lane cautions (2026-11-13): run `PRAGMA wal_checkpoint(TRUNCATE)` in the quiesced window so `-wal`/`-shm` sidecars are flushed, keep sidecars untracked, and weigh `git lfs migrate import` (rewrites SHAs across main) vs pointer cutover in a fresh commit (leaves old blobs in history).
 - [ ] **Archive or delete** `feature/cloud-dashboard-mcp-sse-389806464713532918` (unrelated history, superseded layout, features already in main) once archival need lapses; kept for now per retention policy.
-- [ ] Prune stale remote-tracking refs `origin-tormentnexus/*` and `robertpelloni/*` (remotes no longer configured).
+- [x] ~~Prune stale remote-tracking refs~~ **done v1.0.63** (8 refs deleted; remotes decommissioned).
 
 ## Harness Rollout (2026-11-05, v1.0.28)
 
@@ -105,9 +114,11 @@ _Last updated: 2026-11-12, version 1.0.0-alpha.254_
 - [ ] maki headless Meta: Lua provider registers only in interactive TUI sessions on 0.5.6; run one TUI session in-repo to seed `maki.provider.auth` for meta.
 - [ ] hax live from WSL needs the kernel reachable (bind `--host 0.0.0.0` or WSL mirrored networking) - user security-posture decision.
 - [ ] droid live needs Factory account auth; reasonix live needs one interactive `reasonix setup` (provider key); freebuff/codebuff BYOK needs the mint revived.
-- [ ] Kernel-native orchestrate: TS upstream on :4000 no longer exists in-tree (`packages/cli/` removed; root `start` script stale). Needs a Go-native `/api/agent/orchestrate` implementation or restoring the TS core. Paseo + memory-facts are the working control plane meanwhile.
+- [x] ~~Kernel-native orchestrate~~ **done (verified v1.0.64)**: Go-native `/api/agent/orchestrate` serves RECALL/DISCOVER/PERSIST locally; live 200 + tests green.
 - [ ] `claude` command still crashes on system Node 26 - either downgrade global Node to 22/24 LTS or put `%LOCALAPPDATA%\node22` first in PATH; `~/bin/claude.cmd` wrapper does not shadow in PowerShell.
 - [ ] droid 0.71.0 does not surface `customModels` (schema mismatch); copilot-cli Meta route needs the mint revived (`/login meta` in pi).
 
 ---
 *Keep the party going. Never stop. Don't stop the party!!!*
+
+- [ ] **POST-PAYMENT (Invoice #001 clears): Nexus Mailroom (Zero-Exposure Key Vault feature)** — 2 endpoints only: `POST /vault/one-time-link` (ingest a client key once into an alias) + outbound header injection at the MCP proxy boundary so staff/agents invoke `alias://Stripe-Prod-Main` and never see raw keys. NOTE: `vault_engine.go` does NOT exist in this repo yet (verdict PDF assumed MDMAtk/TormentNexus code) — this is new work, gated on payment, est. ~half day Go. Tenant routing stays deterministic (Ed25519/HMAC in SQL); vectors only classify MCP tools/payloads, never route tenants.
