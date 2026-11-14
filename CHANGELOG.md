@@ -88,6 +88,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Nexus Mailroom**: named the Zero-Exposure Key Vault as a Managed Hub feature (decision: feature, not a new product) and documented the postal/safety-deposit-box story in IDEAS.md — Drop-Box, Shredder, Claim Ticket, Couriers, Sorting Facility, Postmaster. Pitch-ready; build remains gated on Invoice #001.
 
+## [1.0.68] - 2026-11-13
+
+### Added
+- **`scripts/sync-skills.ps1`**: propagates canonical workspace skills (`.agents/skills`) to `~/.agents/skills` and `~/.pi/agent/skills` with SHA-256 comparison and dated backups. Fixes the pi skill-collision warnings caused by diverged user copies (stale September builds shadowing maintained November skills).
+
 ## [Unreleased]
 
 ### Added

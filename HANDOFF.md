@@ -1,3 +1,8 @@
+# HANDOFF - Skill collision fix + sync-skills script v1.0.68 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Pi warned of skill collisions (hypernexus/ops/workflows): user copies had diverged - stale Sep builds in `~/.agents/skills`, NOTHING in pi's preferred `~/.pi/agent/skills`, nested duplicate dirs inside user ops/workflows. Canonical = workspace `.agents/skills`. Synced all to both user locations (hash-verified; backups `SKILL.md.bak-20261113`, nested dups moved aside).
+- New `scripts/sync-skills.ps1`: propagates every workspace skill to `~/.agents/skills` + `~/.pi/agent/skills` with hash compare + dated backups (16 skills x 2 targets, run green). Run after any skill edit.
+- Kernel redeployed v1.0.68 exact-pid; dashboard survives swaps.
+
 # HANDOFF - Nexus Mailroom named (Managed Hub feature) v1.0.67 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - DECISION: the key-vault concept is a **feature of the HyperNexus Managed Hub**, not a new product (depends on the existing MCP gateway, tenant scoping, proxy boundary). Named **Nexus Mailroom** — postal sorting facility + safety deposit box story (Drop-Box / Shredder / Claim Ticket for humans; Couriers / Sorting Facility / Postmaster for agents), written up in IDEAS.md at the top. Pitch-ready now; implementation stays POST-PAYMENT (Invoice #001), ~half day Go for the 2 endpoints.
 - Kernel redeployed v1.0.67 exact-pid; dashboard survives swaps.
