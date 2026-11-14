@@ -1,3 +1,7 @@
+# HANDOFF - Hourly CI failure fixed (bad cloud health path) v1.0.69 (2026-11-13) [muse-wonder-1.0 in muse-code]
+- Owner reported 20+ daily GitLab failure emails. Root cause: hourly schedule's `healthcheck` job curled `https://cloud.hypernexus.site/api/cloud/health`, which 404s (verified: site root 200, no health API at any probed path). Fixed `.gitlab-ci.yml` to check the cloud root. Owner may still pause the schedule in GitLab UI if they prefer silence over signal, but failures should stop on the next scheduled run. CDP profile is not logged into GitLab and glab is absent, so schedule management stays owner-side.
+- Kernel redeployed v1.0.69 exact-pid; dashboard survives swaps.
+
 # HANDOFF - Skill collision fix + sync-skills script v1.0.68 (2026-11-13) [muse-wonder-1.0 in muse-code]
 - Pi warned of skill collisions (hypernexus/ops/workflows): user copies had diverged - stale Sep builds in `~/.agents/skills`, NOTHING in pi's preferred `~/.pi/agent/skills`, nested duplicate dirs inside user ops/workflows. Canonical = workspace `.agents/skills`. Synced all to both user locations (hash-verified; backups `SKILL.md.bak-20261113`, nested dups moved aside).
 - New `scripts/sync-skills.ps1`: propagates every workspace skill to `~/.agents/skills` + `~/.pi/agent/skills` with hash compare + dated backups (16 skills x 2 targets, run green). Run after any skill edit.

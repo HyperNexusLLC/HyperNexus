@@ -93,6 +93,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **`scripts/sync-skills.ps1`**: propagates canonical workspace skills (`.agents/skills`) to `~/.agents/skills` and `~/.pi/agent/skills` with SHA-256 comparison and dated backups. Fixes the pi skill-collision warnings caused by diverged user copies (stale September builds shadowing maintained November skills).
 
+## [1.0.69] - 2026-11-13
+
+### Fixed
+- **Hourly CI failures**: the scheduled `healthcheck` job checked the non-existent `cloud.hypernexus.site/api/cloud/health` (404), failing every hourly run and flooding the owner's inbox. It now checks the cloud site root (verified 200).
+
 ## [Unreleased]
 
 ### Added
