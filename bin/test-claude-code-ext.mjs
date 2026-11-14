@@ -184,7 +184,7 @@ ok("use-meta-model.ps1 mints fresh per run (no pasted snapshot)", (() => {
   try {
     const t = fs.readFileSync(path.join(ADDON, "use-meta-model.ps1"), "utf8");
     return /meta-muse-key\.mjs/.test(t) && !/paste-your-token/.test(t)
-      && /--model muse-spark-1\.3-contributor/.test(t);
+      && /--model (\$Model|muse-spark-1\.3-contributor|muse-wonder-1\.0-contributor)/.test(t);
   } catch { return false; }
 })());
 ok("pi auth.json has meta oauth refresh (pi owns refresh)", (() => {
