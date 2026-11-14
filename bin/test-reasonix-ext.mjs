@@ -70,17 +70,20 @@ if (manifest) {
   check("apiVersion reasonix.io/plugin/v2", manifest.apiVersion === "reasonix.io/plugin/v2", manifest.apiVersion);
   check("name hypernexus", manifest.name === "hypernexus", manifest.name);
   check("version matches /VERSION", manifest.version === (read(path.join(REPO, "VERSION")) ?? "").trim(), manifest.version);
-  const tools = (manifest.runtime?.tools ?? []).map((t) => t.name);
-  check("36 runtime tools", tools.length === 36, `${tools.length} declared`);
+  // reasonix v1.39+ strict-decodes the manifest and rejects runtime.tools;
+  // the sidecar declares its tools in the extension/initialize handshake
+  // (mirrors addons/reasonix/install.mjs checkTree).
+  const sidecarSrc = read(path.join(ADDON, "runtime", "bin", "hypernexus-reasonix.mjs")) ?? "";
+  const tools = [...(sidecarSrc.match(/const TOOL_NAMES = \[([^\]]*)\]/)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+  check("manifest carries no runtime.tools (v1.39 strict-decode)", !("tools" in (manifest.runtime ?? {})));
+  check("36 sidecar tools", tools.length === 36, `${tools.length} declared`);
   for (const t of EXPECTED_TOOLS) {
-    if (!tools.includes(t)) check(`runtime.tools[] ${t}`, false, "missing");
+    if (!tools.includes(t)) check(`sidecar TOOL_NAMES ${t}`, false, "missing");
   }
   check("all 36 expected tools present", EXPECTED_TOOLS.every((t) => tools.includes(t)));
-  const badSchema = (manifest.runtime?.tools ?? []).filter((t) => t.inputSchema?.type !== "object" || !t.description || !/^[A-Za-z0-9_-]{1,48}$/.test(t.name));
-  check("tool schemas valid (object type, name shape, description)", badSchema.length === 0, badSchema.map((t) => t.name).join(","));
   for (const i of EXPECTED_INTERCEPTS) check(`intercepts[] ${i}`, (manifest.runtime?.intercepts ?? []).includes(i));
   check("replaces empty (no slot collisions)", JSON.stringify(manifest.runtime?.replaces) === JSON.stringify([]));
-  check("runtime.capabilities == [interceptors,tools]", JSON.stringify(manifest.runtime?.capabilities) === JSON.stringify(["interceptors", "tools"]), JSON.stringify(manifest.runtime?.capabilities));
+  check("runtime.capabilities == [interceptors]", JSON.stringify(manifest.runtime?.capabilities) === JSON.stringify(["interceptors"]), JSON.stringify(manifest.runtime?.capabilities));
   check("contributes.skills == [skills]", JSON.stringify(manifest.contributes?.skills) === JSON.stringify(["skills"]));
   check("contributes.agents present", Array.isArray(manifest.contributes?.agents));
   check("contributes.commands present", Array.isArray(manifest.contributes?.commands));
