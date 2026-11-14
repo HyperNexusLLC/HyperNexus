@@ -14,7 +14,7 @@ export class Installer {
     }
 
     async install(): Promise<string> {
-        console.error(`Attempting to install HyperNexus Supervisor to: ${this.configPath}`);
+        console.error(`Attempting to install TormentNexus Supervisor to: ${this.configPath}`);
 
         try {
             await fs.access(this.configPath);

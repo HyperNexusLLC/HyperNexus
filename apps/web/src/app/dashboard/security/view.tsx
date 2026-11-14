@@ -3,14 +3,14 @@
 
 import React, { useMemo, useState } from 'react';
 import { trpc } from '@/utils/trpc';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@hypernexus/ui';
-import { Badge } from '@hypernexus/ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@hypernexus/ui';
-import { Button } from '@hypernexus/ui';
-import { ScrollArea } from '@hypernexus/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@tormentnexus/ui';
+import { Badge } from '@tormentnexus/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@tormentnexus/ui';
+import { Button } from '@tormentnexus/ui';
+import { ScrollArea } from '@tormentnexus/ui';
 import { Shield, Lock, Rocket, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { OidcConfig, RbacManager } from '@hypernexus/commercial';
+import { OidcConfig, RbacManager } from '@tormentnexus/enterprise';
 
 interface AuditLogEntry {
     timestamp: number;

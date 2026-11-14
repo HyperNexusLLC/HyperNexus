@@ -62,24 +62,22 @@ const A = {
 	coordination: "/dashboard#cross-session-coordination",
 } as const;
 
-// ── High-Value Core (most prominent, first) ──
-
-export const CORE_NAV: NavItem[] = [
+export const META_MCP_NAV: NavItem[] = [
 	{
-		title: "Dashboard Home",
-		href: "/dashboard",
-		icon: LayoutDashboard,
+		title: "MCP Dashboard",
+		href: "/dashboard?tab=page-b",
+		icon: Server,
 		variant: "default",
 		tooltip:
-			"Full system overview: active sessions, MCP servers, health status, recent activity",
+			"MCP server overview: connected servers, tool counts, lifecycle status",
 	},
 	{
-		title: "Mission Control",
-		href: A.mission,
-		icon: Cpu,
+		title: "Always-On Tools",
+		href: "/dashboard?tab=page-b",
+		icon: Power,
 		variant: "ghost",
 		tooltip:
-			"Live runtime status: services, locks, startup readiness, session management, healer",
+			"Toggle which built-in tools are always available to the MCP client",
 	},
 	{
 		title: "Sessions & Coordination",
@@ -95,21 +93,49 @@ export const CORE_NAV: NavItem[] = [
 		icon: Server,
 		variant: "ghost",
 		tooltip:
-			"MCP server registry, tool catalog, inspector, always-on tools, tool chains",
+			"Browse and search the full MCP tool catalog from all registered servers",
 	},
 	{
-		title: "Memory & GraphRAG",
-		href: A.memory,
-		icon: Brain,
+		title: "Tools Inspector",
+		href: "/dashboard?tab=page-b",
+		icon: Wrench,
+		variant: "ghost",
+		tooltip: "Inspect tool definitions, parameters, and schemas in detail",
+	},
+	{
+		title: "MCP Registry",
+		href: "/dashboard?tab=page-b",
+		icon: Download,
 		variant: "ghost",
 		tooltip:
-			"L2 vault, spaced repetition, sleep cycle, FTS5 search, knowledge graph, cold archive",
+			"Discover and install new MCP servers from public registries (Glama, Smithery)",
+	},
+	{
+		title: "Tool Chains",
+		href: "/dashboard?tab=page-b",
+		icon: Webhook,
+		variant: "ghost",
+		tooltip: "Chain multiple tools together into reusable automated workflows",
+	},
+	{
+		title: "MCP Settings",
+		href: "/dashboard?tab=page-b",
+		icon: Settings,
+		variant: "ghost",
+		tooltip: "Configure MCP server connections, endpoints, and preferences",
 	},
 ];
 
-// ── Agents & Automation ──
+// ── Core System ──
 
-export const AGENTS_NAV: NavItem[] = [
+export const MAIN_DASHBOARD_NAV: NavItem[] = [
+	{
+		title: "Dashboard Home",
+		href: "/dashboard?tab=page-a",
+		icon: LayoutDashboard,
+		variant: "ghost",
+		tooltip: "System overview: active sessions, recent activity, health status",
+	},
 	{
 		title: "Swarm, Workflows & Agents",
 		href: A.workflows,
@@ -120,7 +146,7 @@ export const AGENTS_NAV: NavItem[] = [
 	},
 	{
 		title: "Council & Governance",
-		href: A.settings,
+		href: "/dashboard?tab=page-b",
 		icon: Shield,
 		variant: "ghost",
 		tooltip:
@@ -152,7 +178,7 @@ export const TOOLS_NAV: NavItem[] = [
 		icon: FileCode2,
 		variant: "ghost",
 		tooltip:
-			"AutoDev loops, code execution sandbox, LSP diagnostics, symbol search",
+			"Memory system: L2 vault, spaced repetition, sleep cycle, FTS5 search",
 	},
 	{
 		title: "Command Console",
@@ -195,16 +221,32 @@ export const KNOWLEDGE_NAV: NavItem[] = [
 		icon: DownloadCloud,
 		variant: "ghost",
 		tooltip:
-			"Import external sessions from Claude, Gemini, Aider, and other tools",
+			"AutoDev loops, code execution sandbox, LSP diagnostics, symbol search",
 	},
 ];
 
 // ── Infrastructure & Operations ──
 
-export const INFRA_NAV: NavItem[] = [
+export const OPERATIONS_NAV: NavItem[] = [
+	{
+		title: "Runtime Status",
+		href: "/dashboard?tab=page-a",
+		icon: Cpu,
+		variant: "ghost",
+		tooltip:
+			"Live runtime overview: services, locks, startup readiness, imports",
+	},
+	{
+		title: "Mesh Network",
+		href: "/dashboard?tab=page-a",
+		icon: Network,
+		variant: "ghost",
+		tooltip:
+			"P2P memory sync mesh: peers, capabilities, broadcasts across machines",
+	},
 	{
 		title: "Providers & Billing",
-		href: A.settings,
+		href: "/dashboard?tab=page-a",
 		icon: Key,
 		variant: "ghost",
 		tooltip:
@@ -219,32 +261,45 @@ export const INFRA_NAV: NavItem[] = [
 			"System pulse, event streams, logs, provider breakdown, routing history, and snapshots",
 	},
 	{
-		title: "Mesh Network",
-		href: A.integrations,
-		icon: Network,
-		variant: "ghost",
-		tooltip:
-			"P2P memory sync mesh: peers, capabilities, broadcasts across machines",
-	},
-	{
 		title: "Browser Automation",
-		href: A.integrations,
+		href: "/dashboard?tab=page-a",
 		icon: Globe,
 		variant: "ghost",
 		tooltip:
 			"Browser controls: pages, history, console logs, scraping, screenshots",
 	},
 	{
+		title: "Workflows",
+		href: "/dashboard?tab=page-d",
+		icon: Workflow,
+		variant: "ghost",
+		tooltip: "Workflow engine: definitions, executions, canvases, approvals",
+	},
+	{
 		title: "Diagnostics & Research",
-		href: A.workflows,
+		href: "/dashboard?tab=page-c",
 		icon: FlaskRound,
 		variant: "ghost",
 		tooltip:
 			"Deep research, recursive web crawling, URL ingestion, research queue",
 	},
+	{
+		title: "Command Console",
+		href: "/dashboard?tab=page-b",
+		icon: Terminal,
+		variant: "ghost",
+		tooltip: "CLI harness detection, command registry, shell history",
+	},
+	{
+		title: "Healer & Auto-Repair",
+		href: "/dashboard?tab=page-a",
+		icon: Bug,
+		variant: "ghost",
+		tooltip: "Self-healing: diagnose errors, auto-repair, repair history",
+	},
 ];
 
-// ── Integrations & Data ──
+// ── Data & Integrations ──
 
 export const DATA_NAV: NavItem[] = [
 	{
@@ -263,70 +318,77 @@ export const DATA_NAV: NavItem[] = [
 		tooltip: "Browser extension bridge, DOM parsing, DeerFlow models, skills, and memory status",
 	},
 	{
+		title: "DeerFlow",
+		href: "/dashboard?tab=page-a",
+		icon: Radio,
+		variant: "ghost",
+		tooltip: "DeerFlow bridge: models, skills, memory status",
+	},
+	{
+		title: "Integrations Hub",
+		href: "/dashboard?tab=page-a",
+		icon: Globe,
+		variant: "ghost",
+		tooltip:
+			"External integrations: Open WebUI, Ollama, and third-party bridges",
+	},
+	{
 		title: "Git Chronicle",
-		href: A.integrations,
+		href: "/dashboard?tab=page-a",
 		icon: GitBranch,
 		variant: "ghost",
 		tooltip: "Git history, commit log, repository change tracking",
 	},
 ];
 
-// ── Admin & Settings ──
+// ── Security, Settings & Admin ──
 
 export const ADMIN_NAV: NavItem[] = [
 	{
-		title: "Global Settings",
-		href: A.settings,
-		icon: Settings,
-		variant: "default",
-		tooltip: "System settings: environment, providers, config files",
-	},
-	{
 		title: "API Keys & Auth",
-		href: A.settings,
+		href: "/dashboard?tab=page-a",
 		icon: Key,
 		variant: "ghost",
 		tooltip: "Manage API keys, OAuth clients, authentication providers",
 	},
 	{
 		title: "Security & Audits",
-		href: A.settings,
+		href: "/dashboard?tab=page-a",
 		icon: Shield,
 		variant: "ghost",
 		tooltip: "Audit logs, security policies, access control, compliance",
 	},
 	{
 		title: "User Manual",
-		href: A.settings,
+		href: "/dashboard?tab=page-a",
 		icon: BookOpen,
 		variant: "ghost",
-		tooltip: "Built-in documentation for all HyperNexus features",
+		tooltip: "Built-in documentation for all TormentNexus features",
+	},
+	{
+		title: "Global Settings",
+		href: "/dashboard?tab=page-a",
+		icon: Settings,
+		variant: "ghost",
+		tooltip: "System settings: environment, providers, config files",
 	},
 ];
 
 export const SIDEBAR_SECTIONS: NavSection[] = [
 	{
-		title: "Overview",
-		items: CORE_NAV,
+		title: "Agent Core",
+		items: MAIN_DASHBOARD_NAV,
 	},
 	{
-		title: "Agents & Automation",
-		items: AGENTS_NAV,
-	},
-	{
-		title: "Tools & Code",
-		items: TOOLS_NAV,
-	},
-	{
-		title: "Memory & Knowledge",
-		items: KNOWLEDGE_NAV,
+		title: "MCP Control",
+		items: META_MCP_NAV,
 	},
 	{
 		title: "Infrastructure",
-		items: INFRA_NAV,
+		items: OPERATIONS_NAV,
 	},
 	{
-		title: "Integrations",
+		title: "Data & Integrations",
 		items: DATA_NAV,
 	},
 	{

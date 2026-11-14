@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@hypernexus/ui";
-import { Button } from "@hypernexus/ui";
+import { Card, CardContent } from "@tormentnexus/ui";
+import { Button } from "@tormentnexus/ui";
 import { FileText, Loader2, RefreshCw } from "lucide-react";
 import { trpc } from '@/utils/trpc';
 

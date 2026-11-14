@@ -23,7 +23,7 @@ export default function ArchitectureDocsPage() {
                 <section className="mb-16">
                     <h2>System Overview</h2>
                     <p>
-                        HyperNexus is architected as a modular monorepo using Turborepo. It separates concerns between the
+                        TormentNexus is architected as a modular monorepo using Turborepo. It separates concerns between the
                         Core MCP Server (Backend), the Next.js Dashboard (Frontend), and the Browser Extension (Bridge).
                     </p>
 

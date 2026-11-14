@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# HyperNexus Multi-Tenant Deprovisioning Script
+# TormentNexus Multi-Tenant Deprovisioning Script
 # Usage: ./tenant-deprovision.sh <tenant-id>
 # =============================================================================
 set -euo pipefail

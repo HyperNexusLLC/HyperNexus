@@ -1,48 +1,76 @@
-# @hypernexus/core
+# tormentnexus
 
-AI Control Plane with Persistent Memory & 26,000+ MCP Tools
+TormentNexus pi extension — connect pi to the TormentNexus local AI control plane.
 
-## Quick Start
-
-```bash
-# Install globally
-npm install -g @hypernexus/core
-
-# Start the server
-hypernexus serve
-
-# Open dashboard
-open http://localhost:7778
+```
+pi install npm:tormentnexus
 ```
 
-## Or use npx
+## What It Gives You
 
-```bash
-npx @hypernexus/core serve
+### 9 Custom Tools
+
+| Tool | What It Does |
+|------|-------------|
+| `tn_memory_store` | Save decisions, patterns, facts to L2 vault with tags, categories, and optional per-project `.memdb` |
+| `tn_memory_search` | Find memories by keyword, tag filter, or category |
+| `tn_memory_vector_search` | Semantic vector search across L2 |
+| `tn_tool_search` | Find MCP tools across 20+ servers |
+| `tn_session_search` | Browse imported sessions from Claude, Aider, etc. |
+| `tn_skill_manage` | Access 5,776+ reusable skill modules |
+| `tn_code_search` | Search code by AST structure, semantics, or file pattern |
+| `tn_context_harvest` | Pull relevant L2 context for current task |
+| `tn_scratchpad` | Read/write L1 session scratchpad |
+| `tn_subagent` | Dispatch tasks to TN sub-agents via SupervisorManager (sync/async) |
+
+### 6 Slash Commands
+
+`/tn-store`, `/tn-search`, `/tn-status`, `/tn-plan`, `/tn-purge`, `/tn-summary`
+
+### 3 Keyboard Shortcuts
+
+`Ctrl+Shift+M` — memory search; `Ctrl+Shift+T` — tool search; `Ctrl+Shift+P` — status
+
+### Automatic Features
+
+- Session priming with L2 context injection; per-turn context harvesting
+- Enterprise RBAC enforcement on dangerous tool calls
+- Auto-logging of turns and model changes to L2
+- Compaction enrichment with L2 memory
+- Live stats widget (single line below editor, 60s refresh)
+- Inter-extension event bus (`tn:*` events)
+- Input transformation: `@memory:keyword` expands to L2 context inline
+
+## Memory System
+
+### Per-Project .memdb Files
+
+When `tn_memory_store` is called with a `project` parameter, memories are tagged with `project:<name>` and the global index syncs them to a portable `.memdb` file in the project directory. These `.memdb` files are git-tracked and survive clones.
+
+```
+tn_memory_store(content="fix: build bug", project="tormentnexus", tags=["pattern:build"])
 ```
 
-## Features
+On server startup, all `.memdb` files in the workspace are discovered and imported into the global index. Hourly rescan picks up new projects from git pull/clone.
 
-- 🧠 **Persistent Memory** — 4-tier system (L1-L4) remembers across sessions
-- 🔧 **26,000+ MCP Tools** — Search and install from one catalog
-- 🏠 **Local-First** — Works with Ollama, LM Studio, DeepSeek
-- 🤖 **Multi-Agent** — Connect multiple AI agents
-- 📊 **Dashboard** — Beautiful web interface
-- ⚡ **Single Binary** — Zero dependencies
+### Tiers
 
-## Docker
+| Tier | Name | Storage | Retention |
+|------|------|---------|-----------|
+| L1 | Scratchpad | `memory.db` (core_memory_scratchpad) | Session-scoped |
+| L2 | Vault | `memory.db` (l2_vault + FTS5) | While heat > 10 |
+| L3 | Cold Archive | `l3_cold_archive.db` | Indefinite |
+| L4 | Limbo | `memory.db` (l4_limbo) | 90 days |
+| Project | .memdb | `project/.memdb` (git-tracked) | Indefinite |
 
-```bash
-docker run -p 7778:7778 ghcr.io/mdmatk/hypernexus:latest
-```
+## Configuration
 
-## Links
+- Config directory: `~/.tormentnexus` (auto-migrated from `~/.tormentnexus-go`)
+- Override: `TORMENTNEXUS_CONFIG_DIR` env var
+- Workspace root: auto-detected, override with `TORMENTNEXUS_WORKSPACE_ROOT`
 
-- [Website](https://hypernexus.site)
-- [GitHub](https://gitlab.com/hypernexus-org/HyperNexus)
-- [Documentation](https://hypernexus.site/docs)
-- [Discord](https://discord.gg/Hj9P3GbVxR)
+## CodeWhale Integration
 
-## License
+**codewhale** integration at `.codewhale/skills/tormentnexus/SKILL.md` (auto-installed when codewhale is detected).
 
-MIT
+## License MIT

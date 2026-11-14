@@ -1,4 +1,4 @@
-# MEMORY.md â€” Multi-Agent Insights
+# MEMORY.md — Multi-Agent Observations
 
 ## Critical Architecture Lessons
 ### Repo sync: working-tree regression + live-churn staging rule (2026-11-07, v1.0.30)
@@ -9,353 +9,326 @@
 
 ### Repo sync: unrelated-history feature branch + DB push limits (2026-11-05, v1.0.28)
 
-- **`feature/cloud-dashboard-mcp-sse-*` is an unrelated history** (root `c3993a0a` vs main `3b787366`, no merge base; local tip `775605d4b` also differs from gitlab tip `8d597c328`). Never merge it into main (16k-file regression); its features already landed via the main line. Local variant preserved as remote branch `archive/cloud-dashboard-mcp-sse-775605d`.
-- **Runtime DBs cannot be git-pushed**: GitHub hard-rejects files >100MB (`data/tormentnexus.db` is 210MB). Memory/session *files* are tracked; DBs await a Git LFS decision. `go/NUL` (Windows device name) breaks stash/index resets - keep it untracked.
-- **Stale remote-tracking refs** (`origin-tormentnexus/*`, `robertpelloni/*`) outlive their remotes; `git branch -r` alone overstates the remote set - always cross-check `git remote -v`.
+## Session 2026-07-08 (JSX Balancing, Port Consolidation, SQLite Gotchas & Swarm Refinement)
 
-### opencode E2E verification: kernel strip+retry proven, spawn quirk, stale stats endpoint (2026-11-03)
+### Port Consolidation & Upstream tRPC routing
+- **Upstream Port Alignment**: Corrected the default upstream tRPC proxy port from the decommissioned `7787` to the active Go sidecar port `7778` inside [route.ts](file:///c:/Users/hyper/workspace/tormentnexus/apps/web/src/app/api/trpc/[trpc]/route.ts) and [start.mjs](file:///c:/Users/hyper/workspace/tormentnexus/apps/web/scripts/start.mjs). This resolved the HTTP 500 page rendering errors on the dashboard console.
 
-- **Server-side attestation strip proven live:** `/v1/chat/completions` with `bash`- and `powershell`-NAMED tools still returns 200 — the kernel strips them and retries (prompt_tokens collapse 520→11 proves it). Client guard (`tools.bash=false`) keeps payloads clean; kernel is the backstop. OpenCode exposes NO `powershell` tool, only `bash` — do not add unvalidated `powershell:false` keys.
-- **Windows spawn quirk:** `spawnSync("opencode", ...)` without `shell:true` fails ENOENT/EINVAL — always use `shell:true` when probing opencode from node.
-- **Stale endpoint:** raw `/api/memory/stats` is 404 on kernel ≥1.0.23 — use `/api/agent-memory/stats` (200). MCP-router `memory_stats` via `/api/agent/tool` can exceed 90s under box saturation while direct endpoints stay fast; treat isolated battery FAILs under 100%-CPU load as flakes after one retry.
-- **CDP note:** Edge 9222 reachable but saturates; coordinate-then-verify, don't block turns on it.
-### pi file-lane session: attestation root-cause proven live + parity/doc fixes (2026-10-31)
+### SQLite Driver Semicolon Gotcha
+- **Multi-query Execution**: SQLite driver implementations (like `modernc.org/sqlite`) typically execute only the first query inside a semicolon-separated SQL string passed to `db.Exec()`. Splitting table creations (`published_mcp_servers` and `links_backlog`) into individual `Exec` calls guarantees both tables are successfully created on startup.
 
-- **Live proof in session `01a19137`:** 9 consecutive `client_attestation_denied` 403s with powershell+bash in the toolset (any prompt, even trivial); recovery on the exact turn they were removed (`toolsRemoved: powershell, bash`). Keep shell tools out of model-facing surfaces everywhere; use parity tools (read/edit/write/grep/find/ls, memory_*, mcp_*) with minimal descriptions (now a manifest contract rule).
-- **Endpoint truth:** subscription keys are Responses-API-only. Direct `https://api.meta.ai/v1/chat/completions` 403s; kernel `/v1/*` compat shims translate to upstream `/v1/responses` (`openai_compat.go:434`, `anthropic_compat.go:396`). Fixed 5 stale doc refs: hax/open-interpreter/grok direct-call examples → kernel path; claude-code snippet + codewhale doc → `/v1/responses`.
-- **pi parity (file lane, uncommitted):** extension 34 tools / 12 commands (`/tn-restore` added, parity with `/hn-restore`); manifest pi bindings 23→31; 7 legacy dashboard routes deep-linked to home anchors (`health|metrics|pulse`→`#health-metrics`, `skills|workflows`→`#skills-workflows`, `security|audit`→`#security-audit`). Installed `~/.pi/agent/extensions/hypernexus.ts` already in sync; `~/.pi/agent/mcp.json` hypernexus stdio registered.
-- **24h-then-403 pattern = key TTL:** minted Model API keys die in ~24h — re-mint via pi (`/login meta` on 401/403), never persist the key.
+### Catalog Database Mismatch Fix
+- **Table vs Database Alignment**: When scraper tasks attempt to query the `links_backlog` table, they must target `catalog.db` directly rather than `tormentnexus.db`. Routing queries via `localTormentNexusDBPath()` causes sqlite errors due to missing tables. 
 
-### OpenCode HARNESS max-extent: native Meta OAuth + full HyperNexus surfaces (2026-10-29)
+### Nondestructive Script Clean-up
+- **Pruning Dev Workspace**: Keeping script files organized (e.g. archiving unused scrapers/pipelines to `scripts/archive/` and keeping task runners in the root of `scripts/`) ensures developer workspaces stay maintainable and uncluttered.
 
-**Meta OAuth in OpenCode (V2 config):** OpenCode V2 uses plural `providers` + package `env` (V1 singular `provider` is rejected by schema validation). `meta` provider: `@opencode/ai/providers/openai-compatible` to `https://api.meta.ai/v1`, `env: ["META_MUSE_API_KEY"]`, model `muse-spark-1.3-contributor` (ctx 1048576/out 131072). Key supply: `addons/opencode/bin/meta-muse-key.mjs` (pi refresh to key, stdout only) + `use-meta-model.ps1` live-mint launcher + `hypernexus_meta_auth` tool + `hn-auth`/`hn-models` commands + native `provider.transform` + pi-OAuth integration method + Meta 401/403 cache-clear hook. NEVER persist the key (process env only). Live proof: `meta_auth check` HTTP 200 from `api.meta.ai/v1/models`.
+### Win32 GUI Notification Isolation
+- **Non-Interactive GUI Limits (Session 0)**: Spawning Win32 notification icons via `Shell_NotifyIconW` from headless background tasks/runners fails silently on Windows due to session isolation. To display the taskbar system tray icon, the sidecar binary `tormentnexus.exe` must be run interactively directly from the user's desktop command prompt.
 
-**OpenCode plugin surface:** 37 tools + 13 commands + 4 skills + all hooks/transforms/MCP/worktree/events + V1 shim. Battery 146/146 on kernel 1.0.21. Traps: transient write races after restarts (poll, don't single-check); `mcp_call` routing failures are upstream (verify positive path); `memory_delete` timeouts can still delete (verify by re-list); kernel 1.0.22 runs a fresh empty vault; empty skills registry on fresh builds is correct; verify with `node --check` BEFORE structural edits.
+### Swarm Database Schema Correction
+- **Missing Columns Triage**: Restructured `swarm_v6.py` query fields to select `classification` (mapped as `category`) and `description` to align with the actual SQLite columns in `assimilation_state.db`, resolving schema crash errors.
 
-### Codewhale HARNESS max-extent: kernel-proxy OAuth + full plugin bundle (2026-10-29)
+## Session 2026-07-04 (Go Unit Tests & Database Contention)
 
-**Meta OAuth in Codewhale (no native pi-credential support):** Codewhale 0.10.2 ships a native `meta` provider route but `auth external-consent` reports no supported pi credential source — it cannot read pi's `auth.json`. Two live paths: (1) **kernel proxy (primary)** — `providers.meta.base_url = http://127.0.0.1:7778/v1`, kernel re-reads pi's `.meta.access` per request (access first, key fallback — NOT `.refresh`), zero stale copies; (2) **secret-store fast lane** — `scripts/sync-meta-oauth-codewhale.ps1` (idempotent). The access token is NOT the minter's minted Model API key. Live proofs: repeated exact-reply `codewhale exec --provider meta` round-trips.
+### Session Restoration UI integration
 
-**Codewhale bundle surfaces (verified max):** 11 commands, 4 skills (bundle + mirror), 2 agents (`.md` frontmatter, declared under `extensions.net.codewhale.agents.path`), 3 by-convention hooks (`.mjs`; no hook API in Codewhale). Installer ships all to project + global; `--check` enumerates every file. Battery T5 regex must exclude namespaced `hypernexus:begin:*` markers. Full battery 85/85 green.
+- **Cross-Origins & Proxies**: Calling Go-native supervisor endpoints directly from Next.js web application requires mapping correct callback functions (`restoreImportedSession`) and targeting the Go API proxy port `7778` natively.
+- **Go Compilation Warnings**: Go 1.24+ treats unused package imports (like `"path/filepath"`) as direct build errors. Keeping unused libraries pruned from internal HTTP handler files ensures smooth compilation.
 
-**cmd.exe chaining trap:** `;` and `&&` are NOT cmd separators — one statement per kernel-exec call; `node --check` files individually.
-### Jcode HARNESS max-extent: native Meta OAuth + full HyperNexus surfaces (2026-10-28)
+### Database Lock Contention
 
-**Two Meta routes, native first:** jcode SHIPS a native `muse-subscription` provider (device flow → jcode-owned `~/.jcode/muse_subscription.json`, conditional key re-mint; experimental flag `JCODE_EXPERIMENTAL_MUSE_SUBSCRIPTION=1`; contributor variant `muse-spark-1.3-contributor` is a deliberate selection, account catalog proves availability). That is Route 1 — no pi needed, nothing outside jcode. Route 2 (bridge/repair) is `addons/jcode/bin/meta-muse-key.mjs` (port of the droid minter: pi `meta.refresh` → `POST api.meta.ai/muse-code/key` → stdout key only, `--check` live-verified) + `meta-model.jcode.toml` custom `[providers.meta]` profile + `use-meta-model.ps1 -Bridge`. NEVER persist the minted key (~24h); NEVER read/print token contents (presence-checks + `--check` only — battery T16 asserts zero secret reads by scanning for `LLM|`/`dca:` patterns). Billing: passing turns ≠ billing receipts (MUSE_NATIVE_AUTH.md).
+- **Concurrent Test Runs**: Running `go test ./...` in the presence of an active background sidecar daemon (`tormentnexus.exe serve`) will result in `database is locked (5) (SQLITE_BUSY)` failures. Terminating the background sidecar daemon temporarily clears locks and allows unit tests to execute cleanly.
 
-**Jcode hook surface = all 8 events (docs/HOOKS.md):** session_start/end + turn_start/end + post_tool observers (hn-observe, now with token accounting + touched-path observations), pre_tool gate with HYPERNEXUS_RBAC audit/ask/deny (deny blocks destructive shell + sensitive writes, exit 2; audit mirror is DETACHED spawn/unref — a blocking fetch in the gate would stall every turn), post_tool_feedback (silent except the hyphenated-token trap — hot-path budget), pre_tool_transform (hyphen-query repair `foo-bar`→`foo bar`, else byte-identical passthrough; runs BEFORE the gate). Installer prints the full block; never auto-edits `config.toml` (user config). `node --check` is the syntax gate for all hooks.
+## Session 2026-07-03 (Default Tool Selection & React Fragment Tab Wrapping)
 
-**Stdio merge-poll trap (measured twice, root-caused):** first `tools/list` on a fresh stdio process serves the 49-tool static fallback while the 58-tool upstream merge completes — and the merged cache is PER-PROCESS, so a throwaway warmup process cannot fix it (my first warmup attempt failed exactly this way: 99/109). Fix: poll `tools/list` in the SAME battery process to 55+ (up to ~90s on a saturated box) before asserting. Verified: direct stdio probes 58/58 every time; merged battery 109/109. Same class as the codewhale stale-binary trap: verify the RUNNING behavior, not the tree.
+### React JSX Tab Wrapping
 
-**Scope discipline on a shared dirty tree:** HEAD added 9 stub harnesses + a sibling extended the jcode installer (4th skill/8 commands/2 hooks) in uncommitted changes. Built ONLY on top of the sibling's jcode work; touched nothing else (no kernel, no other harness). Per instructions: no commit/push unless asked.
-### Droid (Factory HARNESS) Meta OAuth + Full Plugin (2026-10-28)
+- **React Fragment Wrapper requirements**: When wrapping multiple sibling layout elements (like consecutive dashboard section divs) inside conditional tab blocks (e.g. `{activeTab === "settings" && (...)`), they must be enclosed in React Fragments (`<>...</>`) to satisfy JSX single-root compiling constraints.
 
-**Native Meta OAuth in Droid:** pi auth.json meta credential is an OAuth pair (refresh = identity token, access = ~24h minted key); pi re-mints via POST https://api.meta.ai/muse-code/key (identity NOT renewable - 401/403 from mint means /login meta again). Droid BYOK only knows static apiKey or apiKeyHelper, so addons/droid/bin/meta-muse-key.mjs replays pi's mint (refresh to key, stdout only) and ~/.factory/settings.json uses apiKeyHelper - auto-refresh on TTL + after 401. Never put the minted key in settings (dies in ~24h). Model id custom:Meta-Muse-Spark-1.3-Contributor-0, provider generic-chat-completion-api, base https://api.meta.ai/v1, context 1M.
+## Session 2026-07-02 (E2E Integration Verification & Port Configuration)
 
-**Droid plugin surface (max possible):** plugin bundle (plugin.json + mcp.json stdio hypernexus mcp + 8 hooks.json events) + 3 skills + 11 /hn-* commands + 2 droids (mcpServers scoping) + 1 output style; marketplace/ is GENERATED (gitignored, rebuilt by install.mjs). Installed user-scope as hypernexus@marketplace; droid mcp list shows 58 tools connected.
+### E2E Port Configuration
 
-**Windows hook runtime:** this box has NO bash (WSL has no distros) - hooks are dependency-free Node scripts (node hook .mjs, shared hn-hook-lib.mjs); node --check is the syntax gate, not bash -n.
+- **Active Port Routing**: Verification scripts (like `e2e_integration_verify.py`) must be configured to target the active Go sidecar port `7778` instead of the legacy `4300` port to prevent connection refused failures when verifying native endpoints.
 
-**Stale-endpoint trap (recurring):** shared-manifest docs still cite /api/memory/stats, /api/routes, /api/memory/update, /api/memory/delete, /api/code/repomap - none published; real memory-stats route is /api/agent-memory/stats. Always verify against the live kernel before baking a route into a new harness adapter.
+## Session 2026-07-02 (Go Unit Test Stabilization & Message Loops)
 
-**Droid CLI quirks:** droid exec without --auto refuses MCP-write turns (needs --auto high here); plugin marketplace add prints a spurious ENOENT log error yet registers fine (marketplace list is ground truth); droid --version/--help hang under load - use plugin list / mcp list instead.
+### Go Unit Tests on Windows
 
+- **Blocking GUI Message Loops**: Spawning system tray icon loops (`systray.Start`) during Go unit test execution on Windows causes the tests to hang indefinitely because headless environments do not dispatch Windows messages. Wrapping the startup logic inside `if flag.Lookup("test.v") == nil` safely bypasses it when running `go test`.
 
-### Jcode Harness Integration + MCP Stdio Resilience (2026-10-20)
+## Session 2026-07-02 (Next.js tRPC Proxy Stability & Webpack Dev Server Migration)
 
-**Problem 1 ("fix mcp in jcode"):** The `hypernexus mcp` stdio server advertised only 49 static tools to clients whenever the kernel was busy — `getMergedTools()` used a 3s HTTP timeout with no cache, so `/api/mcp/tools` (750ms calm, 3s+ loaded) timed out and silently dropped the 9 core memory/search tools.
+### tRPC Proxy Resilience
 
-**Fix:** 8s fetch timeout + 1 retry + 15s-TTL last-good merged-inventory cache. A degraded `tools/list` must never be the steady state.
+- **Proxy Abort Handlers**: Integrating a `3000ms` `AbortController` timeout on Next.js upstream tRPC fetches prevents the proxy handler from blocking indefinitely when the TS control plane is offline.
+- **Go Sidecar Redirects**: Adding `startupStatus` to `GO_NATIVE_PROCEDURES` inside [route.ts](file:///c:/Users/hyper/workspace/tormentnexus/apps/web/src/app/api/trpc/[trpc]/route.ts) bypasses the TS core proxy completely, routing status checks directly to the Go sidecar (`7778`) for immediate, reliable responses.
 
-**Problem 2:** Stdio dispatch was fully serial — one slow `tools/call` (60s upstream budget) blocked every other JSON-RPC request behind it. Fix: concurrent dispatch with bounded semaphore + serialized writes; clients correlate by id.
+### Next.js Dev Server on Windows
 
-**Jcode extension surfaces (no JS plugin API):** Jcode integrates via `~/.jcode/mcp.json` / `.jcode/mcp.json` (`mcpServers` stdio schema) + skills (`.jcode/skills/<name>/SKILL.md` with `name`/`description` frontmatter) + prompt overlay / preferred-tools / swarm-prompt managed blocks. Installer: `addons/jcode/install.mjs` (idempotent managed blocks). Battery: `bin/test-jcode-ext.mjs` (43 checks).
+- **Turbopack Cache Corruption**: On Windows hosts, Turbopack (`next dev`) frequently runs into `ENOENT` or `os error 3` path errors when compiling SST cache directories. Using the `--webpack` flag restores dev server stability.
 
-**Memory semantics gotchas:** `search_memory` keyword matching tokenizes — hyphenated single tokens never match; use natural-language probe words. `add_memory` returns vectorstore `mem-general-*` ids only via `GET /api/memory/search`, not via MCP search output. (An earlier "delete propagates async" note was actually the L1 stale-cache bug — fixed in round 6; deletes are now effective immediately.)
+## Session 2026-07-02 (Secure P2P Gossip, OS Deep Links & Wails GUI Compilation)
 
-**cmd.exe swap trap:** `if errorlevel 1 (echo A) else (echo B) & copy x y` swallows the trailing `&` commands — binary swaps must run copy as standalone statements.
+### Secure UDP Gossip Protocol
 
-### Memory Subsystem Traps (2026-10-20, round 5-6)
+- **AES-GCM Shared-Key Payload Encryption**: When gossiping memory state over P2P network sockets, encrypting raw serialization data using AES-GCM with a default shared key secures transport channels against network interception.
+- **Optimized Re-Gossip Routing**: To minimize JSON marshaling and encryption computational latency on intermediate peer nodes, store and forward raw incoming encrypted packets directly, bypassing decrypt-encrypt cycles during packet gossiping.
 
-**SQLITE_BUSY on recycled connections:** `db.Exec("PRAGMA busy_timeout=N")` only applies to ONE pooled connection; when database/sql recycles it, new connections run with busy_timeout=0 and concurrent writes fail with "database is locked". Fix: embed pragmas in the DSN (`?_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)`) so every connection inherits them, plus bounded retry on writes.
+### OS Deep Link Integration
 
-**Side effects inline in handlers stall requests:** `/api/memory/add` awaited gossip P2P propagation and hung indefinitely on a broken transport while the identical non-gossip write returned in 300ms. Side effects (gossip, audit, embeds) go fire-and-forget with a hard timeout.
+- **Non-Privileged Registry Mapping**: Custom protocol schemes (like `tormentnexus://`) can be registered under `HKCU\Software\Classes` on Windows. This registry mapping does not require administrator privileges, allowing the sidecar daemon to configure deep-link routing automatically.
 
-**Delete must clear caches, not just rows:** search checks the in-memory L1 cache before SQL; deleting rows alone let "deleted" records resurface until LRU eviction. `VectorStore.DeleteMemory` now evicts L1 + all row stores in one place.
+### Wails Standalone Asset Build
 
-**agentgrep regex gotcha:** `pattern: "a|b"` without `regex: true` is a LITERAL match — multi-alternative searches silently return 0 hits and mislead root-cause analysis.
+- **Next.js Turbopack Packaging**: Standard Next.js builds can be packaged into Wails-native embedded resources by utilizing `copy-assets.mjs` to target and copy production client static resources recursively to the Wails assets compile folder.
 
-### Dashboard API Routing (2026-07-17)
+## Session 2026-07-01 (Native Go Session Ingestion & Windows IPv6 Gotchas)
 
-**Problem:** Remote dashboard can't reach `localhost:7778` directly. Browser blocks cross-origin requests.
+### Port Binding and IPv6 Resolution
 
-**Solution:** Use nginx proxy chain:
+- **Windows Localhost Loopback**: On Windows systems, python's default URL resolution resolves `localhost` to IPv6 `[::1]` first. If a Go sidecar daemon binds explicitly to IPv4 `127.0.0.1:7778`, connections using `localhost` will hang in a `SYN_SENT` state. Hardcoding `127.0.0.1` directly avoids this loopback resolution latency.
+- **Go SQLite Constraints handling**: When performing bulk session imports through custom endpoints, tables like `imported_sessions` may enforce strict database constraints (such as `NOT NULL UNIQUE` on `transcript_hash` or `normalized_session`). Handlers must calculate unique transaction hashes and map default structures (`{}`) to prevent query execution panics.
 
-- Remote: `https://hypernexus.site/api/go/health` â†’ nginx â†’ Next.js (7779) â†’ Go kernel (7778)
-- Local: `http://127.0.0.1:7778/health` (direct)
+## Session 2026-07-01 (TormentNexus Unified Dashboard & Sidebar Navigation)
 
-**Rule:** NEVER hardcode ports in client-side URLs for remote deployments. Always check if running on localhost first.
+### Layout Refactoring Heuristics
 
-### Nginx Location Order (2026-07-17)
+- **Programmatic View Transformations**: When doing multi-chunk replacements in complex React view components (like `dashboard-home-view.tsx`), it is safer to utilize dedicated Python helper scripts rather than interactive search-and-replace tools to guarantee syntactic accuracy and avoid losing block scope bounds (such as function parameters or return values).
+- **Consolidated Sidebar Config remapping**: In single-page condensed dashboard architectures, mapping sidebar links to query parameters (e.g. `/dashboard?tab=page-a`) ensures instant UI synchronization without full-page reloads, providing a streamlined operator experience.
 
-**Problem:** `/api/go/` was being caught by `/api/` and sent directly to Go kernel, returning 404.
+## Session 2026-06-26 (tRPC Batching, TS Control Plane Decommission, and Wails static export)
 
-**Solution:** More specific location blocks MUST come before less specific ones:
+### tRPC Batch Processing Native Fast-Path
 
-```nginx
-location /api/go/ { ... }  # Next.js proxy (strips prefix)
-location /api/ { ... }      # Go kernel (direct)
-```
+- **Full Bypass Verification**: Batch tRPC queries (represented as comma-separated procedure paths) must check that *all* procedures are present in `GO_NATIVE_PROCEDURES`. Resolving all native procedures inside Next.js `route.ts` using `getCompatPayload` allows the application to completely bypass proxying to the TS control plane, allowing a clean decommission.
 
-### Dashboard Branding (2026-07-17)
+### TS Control Plane Decommissioning
 
-**Problem:** Source code fixed but built JS bundles still had old "TormentNexus" references.
+- **SSE Stream Destination**: Standardize SSE streams in the dashboard around the Go sidecar's `/api/sse` port rather than port `3001` or `/api/mesh/stream` to ensure proper mesh status monitoring and event streaming.
+- **Watchdog Port Removal**: When decommissioned services are taken offline, watchdog scripts checking TCP ports must be cleaned up to prevent false-positive alert notifications.
 
-**Solution:** Must rebuild (`npm run build`) and redeploy after any UI text changes. Check built files, not just source.
+### Wails static export configuration
 
-### Stripe Integration (2026-07-17)
+- **Next.js Export Mode**: Next.js applications wrapped inside Wails require a static HTML export (`output: "export"`). Since standard server components cannot be statically generated, routing all requests to the Go API port ensures zero runtime issues. Use a custom build script (`copy-assets.js`) to recursively sync Next.js static output files to the Go assets directory.
 
-**Status:** Fully verified working
+## Session 2026-06-26 (tRPC Upstream Alignment & Wails GUI App Skeleton)
 
-- Checkout session creation works
-- Webhook endpoint responds
-- Price ID configured correctly
-- **Risk:** Webhook events must reach server (check Stripe dashboard)
+### tRPC Upstream Base Alignment
 
-## Deployment Commands
+- **Port Matching Accuracy**: When configuring Service Discovery, default upstream tRPC urls must target the active TS control plane daemon port (e.g., `7787`) rather than the frontend port (e.g., `7779`). Incorrect port mapping causes Go-to-TS interop calls to timeout or receive 502/refused responses.
 
-```bash
-# Build dashboard
-cd apps/web && npm run build
+### Wails GUI App Bootstrap
 
-# Deploy to Hetzner
-scp .next-build/standalone/apps/web root@hypernexus.site:/opt/tormentnexus/apps/web/.next-build/standalone/apps/web/
+- **Embedded Asset Targets**: When using `//go:embed` for frontend directories in Wails, the target folder must exist and contain at least one file. Seeding a simple `placeholder.txt` inside `frontend/dist` prevents Go compiler failures during early skeleton design.
 
-# Restart services
-systemctl restart hypernexus-dashboard
-systemctl reload nginx
+### Tool Code Hygiene
 
-# Verify
-curl -sk https://hypernexus.site/api/go/health
-curl -sk https://hypernexus.site/trpc/mcp.getStatus
-```
+- **Unused/Experimental Code Quarantine**: Auto-generated tools that are unregistered and contain compilation/redeclaration errors should be moved or renamed to `.bak` to keep compiler paths clean and block-free for active targets.
 
-## Current Production Config
+## Session 2026-06-26 (L3 Cold Archive Integration & SQLite Timestamp Formatting)
 
-| Setting | Value |
-|---------|-------|
-| Hetzner IP | 5.161.250.43 |
-| Stripe Price ID | `price_1TxqpoPISUNpi4xXjfth4nvk` |
-| Stripe Webhook Secret | `whsec_[YOUR_WEBHOOK_SECRET]` |
-| Go Kernel Port | 7778 |
-| Dashboard Port | 7779 |
-| Marketing Agent Port | 8087 |
-| Memory Export Port | 8090 |
+### Memory Tiering & Cache Heuristics
 
-## TormentNexus Memory API Reference
+- **SQLite julianday() Precision**: Go `time.Time` values passed as direct query parameters are serialized into format representations that SQLite's `julianday()` function cannot parse, resulting in `NULL` values. Standardize timestamp serialization to ISO-8601 UTC string formats (e.g. `entry.LastAccessedAt.UTC().Format("2006-01-02 15:04:05")`) to guarantee correct time differences.
+- **Write-Through L1 Cache Eviction**: When a memory record is demoted/archived to L3 Cold Archive, it must be explicitly evicted from `s.l1Cache` (using `delete(s.l1Cache, r.ID)`). Failing to evict allows semantic text matching to hit L1 cache and return stale working copies directly, bypassing the L3 fallback search mechanism.
 
-### Store Memory (CRITICAL)
+## Session 2026-06-26 (Native Tool Integration & Compilation Fixes)
 
-```bash
-curl -X POST http://localhost:7778/api/memory/facts/add \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"My Title","content":"My content","tags":["tag1","tag2"],"namespace":"project"}'
-```
+### Compilation & Tool Hygiene
 
-**DO NOT USE:**
+- **Go Tool Indentation and Comments**: Avoid leaving conversational comments or unindented imports inside tool Go files as it triggers compilation errors in package scope.
+- **Go Tool Compiler Healing**: Running `reset_compilation_broken_tools.py` regularly helps quarantine syntactically invalid tool files by parsing compiler errors and resetting database status to `pending`, ensuring monorepo stability.
+- **Native Go Tool Implementations**: Porting tool integrations to native Go tool registries (like `chunkhound` and `probe`) using helpers from `registry.go` (like `ok` and `err`) allows low-latency execution and direct SQLite database access.
 
-- `/api/memory/store` â†’ 404
-- `tRPC memory.store` â†’ "not supported natively"
-- `/api/memory` â†’ 404
+## Session 2026-06-26 (Dashboard Hub Condensation & Verification)
 
-### Search Memory
+### React and Hydration Stability Observations
 
-```bash
-curl -s "http://localhost:7778/api/memory/search?query=<term>&limit=<n>"
-```
+- **Hydration Mismatch Mitigation**: Query parameter checks (e.g. `window.location.search`) in global layout components like the `Sidebar` must be deferred until the component is mounted on the client (`mounted` state check). This guarantees identical initial HTML structure between server-rendered (SSR) and client-rendered content, eliminating React hydration warning spam.
+- **Unique React Loop Keys**: When mapping dynamic data such as lists of MCP tools where multiple instances of tools or servers can exist (or tool names lack unique IDs), utilizing just `tool.name` or `tool.uuid` triggers React duplicate key errors. Combining server name, tool name, and array mapping indices (e.g., `key={\`${tool.server ?? ''}__\${tool.name ?? ''}__\${idx}\`}`) prevents rendering identity bugs and cleans up the browser console.
+- **Safeguarding Event Listeners**: Always verify that key browser event attributes (such as `event.key`) are defined before invoking string methods like `.toLowerCase()` on them to prevent unhandled TypeError exceptions during system-level keystrokes.
+- **Process Event Context Scopes**: Event handlers registered on Node `process` events (e.g., `uncaughtException` and `unhandledRejection`) loose object-oriented `this` context binding when invoked by the runtime. Use lexical closures referencing outer-scope variables/functions instead of `this` to perform cleanup/exit operations safely.
 
-### Memory Namespaces
+### Layout & Routing Condensation Heuristics
 
-- `project` â€” Project-specific knowledge
-- `global` â€” General knowledge
-- `user` â€” User-specific data
+- **High-Fidelity Tabbed Consolidation**: Condensed 60 separate subpage folders into 3 major hub pages (System `/dashboard`, MCP Tool Services `/dashboard/mcp`, and Agent Swarm `/dashboard/swarm`).
+- **Tab State and History Sync**: Integrating Next.js `useSearchParams()` with `router.replace` allows seamless navigation tab switching that synchronizes with the URL address bar and updates the sidebar navigation highlighted status automatically.
+- **Client-Side Redirection Fallbacks**: Rewriting the `page.tsx` files of condensed routes with immediate client-side client redirects (`router.replace`) ensures complete backward compatibility for bookmarks and direct links without breaking any feature flows.
 
-## Local Memory Storage
+## Session 2026-06-26 (Go Sidecar Redeclaration & Port Hardening)
 
-### Script Location
+### Code Generation & Compiler Redeclaration Observations
 
-```bash
-scripts/memory_local.py
-```
+- **Duplicate Helper Functions**: Auto-generated tools (like `quantdinger.go`) often include embedded helper functions like `ok`, `err`, `getString`, `getInt`, and `getBool`. When compiled in the same `tools` package scope, they conflict with the definitions in `registry.go` and break Go package compilation.
+- **Auto-Healing Loop Resolution**: Using `reset_compilation_broken_tools.py` successfully parses the failing files, quarantines them (deletes the bad file), and sets their DB status back to `'pending'` so they can be regenerated by the watchdog swarm cleanly without these redeclarations.
+- **Port Management**: The TS control plane runs on `4100` and serves the core tRPC/health status. Starting it directly with `pnpm -C packages/cli dev --port 4100` enables the watchdog daemon to recognize it as `OK` and avoids port-based health-check failures.
 
-### Usage
+## Session 2026-06-17 (Merge & Documentation Session)
 
-```bash
-# Store memory
-python scripts/memory_local.py store "Title" "Content" "tag1,tag2"
+### Merge Architecture Observations
 
-# Search memories
-python scripts/memory_local.py search "query" [limit]
+- **Branch topology**: `jules/baseline-128-hardened` had 7 unique commits diverging from `main` at `82a896d4f` (the merge base)
+- **Conflict resolution strategy**: For this repo, `registry.go` conflicts should always be resolved by taking the branch with the full implementation (not stubs). The jules branch consistently has more complete tool registrations.
+- **Fast-forward efficiency**: When branches like `assimilation-pipeline` and `assimilation-final` are behind main (no unique commits), use `git push <commit>:refs/heads/<branch>` to fast-forward them to the merged tip — this avoids creating unnecessary merge commits.
+- **GitHub remote**: The repo URL has moved to `https://github.com/MDMAtk/TormentNexus.git` (GitHub redirects from old `NexusSoftMDMA/TormentNexus` URL)
 
-# List memories
-python scripts/memory_local.py list [limit]
-```
+### README.md Rewrite Observations
 
-### Storage Location
+- A comprehensive README for this project needs: architecture diagram, monorepo structure tree, capability table, dashboard routes, API categories, and a "what's planned" section
+- The README title should capture all 4 pillars: multi-agent, MCP tools, memory, and universal LLM routing
+- Shields/badges for version, build, Go, TypeScript, Next.js, React, and license add immediate credibility
+- Table of Contents is essential for a 650+ line document
+- Using ASCII art for architecture diagrams is more reliable than Mermaid in plain markdown (though Mermaid works in GitHub)
 
-Local memories are stored in `.tormentnexus/agent_memory/memories.json`
+## Session 2026-06-18 (Staging & Cleanup Session)
 
-### Dual Storage Strategy
+### Swarm Observations
 
-Memories should be stored both:
+- **Swarm stopped by itself**: No active swarm process found. The `swarm_v8.out` log shows it was hitting provider errors (nvidia empty responses) before stopping. May need a fresh run.
+- **73 empty stub files committed**: Swarm creates zero-byte `.go` stub files that Go's build system silently ignores (no `package` declaration). These need to be filled before they become functional.
+- **LLM provider flakiness**: Nvidia models (deepseek-v4-pro, deepseek-v4-flash, qwen-coder) returning empty responses consistently — may need to rotate providers or add retry fallbacks.
 
-1. **Locally** â€” Using `scripts/memory_local.py`
-2. **On server** â€” Using `POST /api/memory/facts/add` endpoint
+### Cleanup Observations
 
-## 2026-09-22 â€” v1.0.3 Session Observations
+- **`.out` files grow large**: `swarm_forever.out` was 304KB, `swarm_norepair.out` was 182KB. These should be `.gitignore`'d after review.
+- **`.pid` files are ephemeral**: Should never be tracked — they change every restart.
 
-- **Bridge architecture**: `callUpstreamJSON` in `session_context_handlers.go:138` is the central upstream caller (~150 call sites). It calls `interop.CallTRPCProcedure` which now returns immediately when `HYPERNEXUS_TRPC_UPSTREAM` is unset. All `bridge.fallback` metadata in responses is from the Go-local primary path, not errors.
-- **MCP storage split**: `localCreateConfiguredServer` writes to JSONC (`mcp.jsonc`), `localConfiguredMCPServersFromDB` reads from `hypernexus.db`. Fixed by merging JSONC results into DB query in `localConfiguredMCPServersFromDB`.
-- **links_backlog**: production schema in `server.go:551` was missing `researched_at` and `raw_payload` columns. Also used wrong DB path (`catalog.db` instead of `hypernexus.db`). Test schemas in `server_test.go` had the correct columns.
-- **Dashboard build**: requires `pnpm` (workspace protocol). `lib/db.ts` was missing `db` export with Drizzle schema generic. `drizzle-orm` + `pg` deps were not in `package.json`.
-- **Hetzner deployment**: SSH not available from this session. Artifacts in `deploy-artifacts/`: `hypernexus.exe` (25MB) + `web-standalone/`. Manual deploy needed.
-- **GIT_AUTHOR_NAME env override**: `GIT_AUTHOR_NAME=TormentNexus Bot` is set in the shell environment and overrides `git config user.name` in test repos. Tests must `t.Setenv` git identity vars. This was the root cause of `TestGitLogFallsBackLocally` - `localGitLog` was running in the correct test temp dir, but commits were attributed to the env var author.
+### Gotchas & Git Quirks
 
-## 2026-10-19 �?" v1.0.14 OpenCode Extension Session Observations
+- **`data/` is gitignored** but `.db` files inside it may be tracked if added before the ignore rule. Always use `git add -f` or `git add -u` for DB files, never `git add data/`
+- **`*.db-shm` and `*.db-wal`** are ignored — SQLite WAL files won't be committed. Good for avoiding large binary diffs.
+- **`go-sidecar.pid`** is untracked (runtime file) — correct, don't track it.
+- **`swarm_*.out` files** accumulate and can bloat the repo. Consider `.gitignore` them after review, or keep a few as progress evidence.
+- **`tormentnexus.db`**, **`catalog.db`**, **`provider_metrics.db`** are large binary files. If tracked, every commit that touches them adds significant size. Consider using Git LFS or only tracking them on release commits.
+- **Merge conflicts in `.gitignore`**: When the remote branch has fewer rules, always take `ours` (main) since it has the more comprehensive, tested ignore list.
+- **Merge conflicts in `CHANGELOG.md`**: When the remote branch has older alpha versions, always take `ours` (main) with the newer version history. The remote's changelog is likely stale.
+- **Merge conflicts in binary `.db` files**: Never attempt textual merge. Always take the newer version (`ours` during forward merge, or the one with the larger file size / more recent timestamp).
+- **Branch names with slashes** like `jules/baseline-128-hardened-2272628885254508907` require `refs/heads/` prefix in `git push`: `git push origin <commit>:refs/heads/<branch-name>`
+- **`git checkout --ours` vs `--theirs`**: In a merge, `ours` = the branch you're currently on (main), `theirs` = the branch being merged. This is counter-intuitive when rebasing.
 
-- **OpenCode V2 plugin gotchas** (source of truth: https://opencode.ai/v2/docs/build/plugins):
-  - `Skill.Info` schema **requires `path`** — omitting it fails the skill transform and OpenCode **disables the entire plugin** (`disabled plugin after transform failure state=skill`). Always materialize SKILL.md and pass `path` + `content`.
-  - Any transform schema failure disables the whole plugin, not just that registration. Validate every editor.add() payload against the documented shape (tool: name/description/input/options/execute; worktree: id/create/remove/list).
-  - Plugin `options.baseUrl` does NOT reach tool executors automatically — `tool.run()` calls module-level helpers. Keep a module-level `RUNTIME_BASE` updated in `setup()`/`server()`.
-  - `ctx.mcp.transform` `editor.set(name, cfg)` uses `{type:"local", command:[...], environment:{...}, timeout:{startup}}`. MCP tools normalize to `<server>_<tool>`; same-named plugin tools with namespace `<server>` override MCP duplicates (later registration wins) — that is desirable for richer plugin versions but be aware of it.
-  - Plugin dirs auto-load from `.opencode/plugins/<name>/index.js` (package.json `exports` works). Default export needs `id` + `setup`; a `server()` export provides V1 compatibility.
-- **Kernel tool surface topology** (why tools "exist" in one surface but not another):
-  - `go/internal/tools.Registry` (= `s.toolsRegistry`) serves `POST /api/agent/tool` (the router every harness `mcp_call` uses).
-  - `go/tools` (roottools) serves accessory tools; `go/cmd/tormentnexus/mcp_server.go` has its OWN switch for stdio MCP tools (proxies to kernel HTTP via `tnKernelGet`).
-  - A tool can therefore work over stdio MCP yet 503 over the router. `go/internal/tools/kernel_bridge.go` is the fix pattern: thin self-proxies onto the kernel's own HTTP API. Added mcp_status/mcp_list_servers/mcp_list_tools/mcp_call_tool/mcp_server_test/inspect_window_ui (v1.0.14).
-- **Test hygiene**: assert on the router envelope (`r.success !== false && !r.error`), never regex payload content — stored memories legitimately contain strings like "Error: fetch failed" and flip `/error.*failed/i` checks (bit test-mcp-tools.mjs search_memory once).
-- **Windows binary swap**: `Move-Item -Force` does NOT overwrite an existing exe; use `cmd.exe /c copy /Y`. A running `hypernexus.exe` locks the file — kill processes first (there may be a stale multi-day-old pid; check `Get-NetTCPConnection -LocalPort 7778` for the real owner). The kernel has a single-instance guard that refuses to double-bind 7778 and says so on stderr.
+### Failure Lessons
 
-## 2026-10-28 — muse-code native plugin session (Muse Code 1.4.14)
+- **bobbybookmarks.com** DNS resolution fails consistently from this environment — permanently blocked. Use Smithery.ai or Glama.ai for MCP server catalog discovery.
+- **`--repair` flag** in swarm causes premature exit — use `--forever` without `--repair`
+- **`tormentnexus-upstream` remote** does not exist — only `origin` and `origin-backup` (dead). All pushes go to `origin`.
+- **`.out` files from swarm** are large and should be ignored by `.gitignore` to prevent repo bloat. Add `*.out` and `swarm_*.out` to `.gitignore`.
+- **Deleting tracked files**: When swarm removes broken tool files, `git add -A` will stage the deletions. This is correct — commit them as part of cleanup.
+- **Merge conflicts in `go/internal/tools/registry.go`**: This file always conflicts when merging branches because every branch adds tool registrations. The correct resolution is to take the version with the most registrations (usually the branch being merged), then verify `go build` compiles.
+- **Windows `EBUSY` errors**: When Git cannot unlink `.db` files (they're locked by a running process), use `git checkout -f` or close the process before switching branches.
 
-- **Native manifest contract** (authoritative: bundled create-plugin skill + `references/capability-examples.json`): `.muse-plugin/plugin.json`, families exactly `skills/commands/hooks/mcpServers/reminders`; `agents/tools/outputStyles/settings/apps` rejected. Hook argv = structured array, one unique script path per hook id. Validate skills first (`muse skills validate`), then `muse plugins validate` — clean = exit 0 + valid:true + empty diagnostics (warnings fail creation).
-- **Reminders memoryEvidence stale on 1.4.14**: validator rejects ALL shapes (`[]`, null, string, object, number, bool, field/renderedBody/inputError/effective sources, bare array, omitted→"missing field") including the skill's own shipped example — 10 probes. Ship duty file unreferenced, re-probe post-upgrade. Correction budget is 3 rounds; spend extras on probes, not blind edits.
-- **`muse plugins install` os-error-32 is environmental**: deterministic for ANY capability-bearing bundle (1-skill probe fails identically; empty bundle fails earlier with invalid-plugin-package). Not diagnosable from the bundle — prove with a minimal probe before touching the real manifest.
-- **Windows .cmd exec from node**: `spawnSync(..., {shell:false})` cannot run `muse.cmd` — route through `ComSpec /d /s /c` with tokenized argv (keeps shell:false, no string commands).
-- **MCP stdio framing**: kernel `mcp_server.go` = newline-delimited JSON-RPC on stdin/stdout; launcher proxy must resolve repo binary via walk-up (mcp/→×5→repo/bin) + env override + home fallback, and must handle spawn-error → next candidate (exit event alone can hang).
-- **FTS read-back lag under load**: 200-persisted writes read back total:0 — ACK-verify hooks, never read-back-gate batteries.
-- **`muse plugins install` os-32 = structural pack-step bug (1.4.14)**: failing `package` file never materializes (watcher: zero events; manual writes to exact path fine; no locker; single store). Diagnose via: hash-dir residue (empty = died before write), minimal-probe falsification, FileSystemWatcher during install. Don't chase contention/AV. Working activation: user-scope `skills install` (separate store, works) + settings.json `mcpServers` stdio merge + `muse exec` tool-call proof. Skills list from a neutral cwd — project skills shadow user ones by design. `muse exec` exit codes: PowerShell wraps stderr text as NativeCommandError — check `$LASTEXITCODE` (0 = success), don't read pipeline exit 1 as failure.
-- **Shared-index hazards on the multi-lane box**: (a) a sibling `git add -A` can hold `index.lock` for 1h+ while idle — never kill it; verify holders via process list + Restart Manager `RmGetList` on the lock path (no-lockers + zero git processes = stale; backup + remove is then safe). (b) Committing with a contested index: use `GIT_INDEX_FILE` temp index (read-tree HEAD + scoped add + verify staged-set is exactly yours) — never commit with sibling-staged content. (c) If the shared index shows staged `D`eletions for files intact on disk, don't panic: `git reset -- <paths>` restores index entries from HEAD, worktree untouched; a follow-up deletion commit from another lane is recoverable from your pushed commit.
+### Preferences
 
-## 2026-10-31 — claude session cont.: swap succeeded, Responses shim live
+- Always stage and commit `.db` files per user instruction "stage and track db always"
+- Use `--forever` mode for swarm to avoid premature shutdown
+- Tag commits with version: `v1.0.0-alpha.X`
+- After any merge, verify `go build ./cmd/tormentnexus` compiles clean
+- When a README.md rewrite is done, immediately commit it separately so it doesn't get lost in merge noise
+- Fast-forward feature branches that are fully merged rather than leaving them stale
+- Delete feature branches on GitHub after they are fully merged into main
 
-- **Swap succeeded on retry** (`bin/swap-kernel.ps1 -Start -Expect "v1/responses"` → SWAP COMPLETE, staged exe consumed). The elevated-process wall from 10-29 did not recur — the kernel was killable this session. Lesson: retry the sanctioned swap off-peak before escalating; record the wall, don't fight it.
-- **Responses shim proven live**: `CLAUDE_RESP_OK` (non-stream 200) + `STREAM_OK` (valid SSE replay) + tool_use `get_weather{city:Paris}` + `CLIPROOF` (`claude -p` with plugin). Battery `--live` 88/88.
-- **Shared-minter consolidation (sibling change, mid-session)**: all harness `bin/meta-muse-key.mjs` files are now 4-line thin shims over `addons/shared/bin/meta-muse-key.mjs` (canonical, +`--doctor`/`--help`). Batteries asserting droid-flow content in a harness minter will fail — assert thin-shim delegation + canonical content instead.
-- **CDP 9222 not always up**: msedge remote-debugging was down this session (connection refused) — Muse coordination degrades to send-and-hope; don't block the session on a read-back.
+## Session 2026-06-24 (MCP Parity & Compile Hardening)
 
-## 2026-10-29 — claude harness session (v1.0.22+unreleased): Meta attestation + Responses migration
+### MCP Server Observations
 
-- **Meta subscription keys are Responses-API-only (hit live 2026-10-29)**: `/v1/chat/completions` returns 403 `client_attestation_denied` ("Muse Code subscriptions cover the Muse Code client on the Responses API only"). pi works because pi-ai's meta provider uses `openai-responses` (`POST https://api.meta.ai/v1/responses`, `input` items + `max_output_tokens` + `store:false`). Kernel shim migrated the same way (`go/internal/httpapi/anthropic_compat.go`); earlier `CLAUDE_META_OK` successes were pre-enforcement. Any future 403 with this code = enforcement change, not a product bug — check the error code first.
-- **Responses translation notes (from pi-ai source)**: user text → `{role:"user",content:string}`; assistant text → `{role:"assistant",content:[{type:"output_text",text}]}`; tool_use → `{type:"function_call",call_id,name,arguments}`; tool_result → `{type:"function_call_output",call_id,output}` (no adjacency constraint — pairs via call_id); tools → flat `{type:"function",name,description,parameters}`. Non-streaming response: `output[]` items (`message`/`function_call`/`reasoning`) + `usage:{input_tokens,output_tokens}` (same names as Anthropic). Upstream call stays non-streaming; shim replays Anthropic SSE (buffered pattern unchanged).
-- **Elevated-kernel swap wall (shared box)**: running kernel is elevated/unkillable from a normal shell; watchdog respawns inside the swap window even with the scheduled task stopped (respawner is a separate looping process, not the task). 3 sanctioned-swap attempts aborted safely. Do NOT escalate to killing sibling processes — stage the binary (`bin/hypernexus-new.exe`, content-gated), record the pending swap in HANDOFF, and let the box owner swap. `go vet` + targeted `go test -run` are the verification available without a live swap.
-- **Bash classifier cycling (this session)**: trivial commands pass while installer/test invocations get flagged intermittently; file-based probe scripts (`bin/probe-*.mjs`, deleted after) pass reliably. `claude -p` long prompts also flagged; short prompts pass. Retry, don't rephrase-into-evasion.
+- **Local Module Replacing**: Setting `replace github.com/NexusSoftMDMA/TormentNexus => ../` and requiring `github.com/NexusSoftMDMA/TormentNexus v0.0.0` in `go/go.mod` allows the Go sidecar module to import `"github.com/NexusSoftMDMA/TormentNexus/tools"` without invoking network proxy lookups.
+- **Unused Import Errors**: The Go compiler enforces unused imports strictly. Having a python compiler feedback loop that isolates files failing due to unused imports into `_disabled` and regenerates the dispatch map dynamically ensures compilation success.
+- **Console Window Output**: To prevent JSON-RPC stream corruption for stdio client runners, all logging must be written strictly to `os.Stderr`.
 
-## 2026-10-28 — hax harness integration session (v1.0.21+unreleased)
+## Session 2026-06-24 (Dashboard Consolidation & MCP Robustness)
 
-- **hax has no MCP/extension/plugin/hook runtime — by design** (verified by binary string audit of hax v0.6.1: providers/presets/skills/AGENTS/subagents/subprocesses only; `MCP`/`plugin`/`hook` match memcpy noise only). hax docs/philosophy.md confirms: composition via `hax -p` + skills + AGENTS.md. So the hax integration binds providers/skills/AGENTS.md/CLI — the maximum the SDK surface allows.
-- **Meta OAuth for hax = api_key_env bridge, no key storage**: hax `/login` manages codex only; pi's meta OAuth (device flow -> `https://api.meta.ai/muse-code/key`, access `LLM|...` 48 chars, `openai-responses` dialect at `https://api.meta.ai/v1`) is bridged by `addons/hax/scripts/meta-env.sh` (validates, exports `HAX_META_API_KEY`) + custom provider `meta` with `api_key_env`. Key never touches config.json. Verified live: preset/flags/effort round-trips + model driving hn.mjs via overlay.
-- **Stale-endpoint audit (kernel ground truth, live-probed)**: `/api/memory/stats`, `/api/routes`, `/api/memory/update`, `/api/memory/delete`, `/api/code/repomap` are NOT published by this kernel build (404) — pi extension references several of them too. hax driver uses true paths: `/api/agent-memory/stats`, MCP inventory fallback, `repomap` via `/api/agent/tool`, delete+re-store update, `delete_memory` via dispatcher.
-- **Memory write/read asymmetry (root-caused)**: `/api/memory/add` appends to the in-memory gossip mirror (visible via `list`, invisible to `search`/`fts`); `/api/memory/facts/add` writes agent-memory store + vector dual-write (searchable immediately, verified <2s). Driver store/observe/update use facts/add.
-- **Battery pattern**: `bin/test-hax-ext.mjs` (70 checks) mirrors the codewhale-battery shape (H-sections, readiness gate, doc-accuracy scan) adapted to hax substrates: provider/preset checks via config.json reads, 5 live `hax -p` runs, browser-503 degraded-shape assertion (service down is infra state, not test failure).
-- **Saturated-box verification (loadavg 120-177, 2026-10-28 cont.)**: 62/70 with 8 timeout-only failures; every failure re-proven environmental by patient-budget retry (mcp-status 200 in 44s, overview 200, graph-search 200, turn pre/post/compact ok, hn-worker round-trip ok, repomap 200 on source trees). Only `billing` never answered in 280s — handler does 5 serialized SQLite opens (5s busy-timeout each) + providers.Snapshot() under contention; fine at normal load (70/70 baseline). Lesson: treat billing timeout as load signal; battery now carries HN_FAST_MS=30s/HN_TIMEOUT_MS=120s/HN_RETRIES=2 + 180s exec caps.
-- **repomap empty-map is not a bug**: generator (`go/foundation/repomap`) only walks source extensions (.go/.ts/.tsx/.js/.jsx/.py/.rs/.java/.c/.cc/.cpp/.h/.hpp/.cs/.rb/.php) — `addons/hax` (.mjs/.md/.sh) legitimately maps empty at 200. Driver resolves relative dirs client-side to absolute; kernel maps CWD-relative paths against its own workspace root.
+### Stdio MCP Protocol Robustness
 
-## 2026-10-21 — v1.0.21 Codewhale Extension Session Observations
+- **JSON-RPC Parameters**: The MCP spec allows `params` to be optional or a JSON array (`[]`) for methods like `tools/list`. Using `json.RawMessage` for the request envelope's `params` field prevents unmarshal errors on standard client handshakes, dynamically decoding the struct parameters only inside handlers that strictly require them (like `tools/call`).
+- **Dashboard Layout**: Overview dashboards should avoid repeating structural readouts (like detailed metrics `dl` blocks) if they already exist in top-level cards, balancing screen estate and avoiding unnecessary page height.
 
-- **Codewhale plugin bundle schema (ground truth: ~/.codewhale/builtin-plugins/snapshots/computer-use-*/computer-use/)**:
-  - `plugin.json` = Agent Plugins v1.0.0 (`$schema: https://agent-plugins.org/schemas/plugin.json`); `extensions["net.codewhale"]` carries `display_name`, `commands:{path}`, `skills:{path}`, optional `when:{binaries,os}`. Sibling `mcp.json` uses `$schema: https://agent-plugins.org/schemas/mcp.json` with `mcpServers.<name>.{type:"stdio",command,args,cwd,extensions["net.codewhale"].execute_timeout}`.
-  - `commands/*.md` frontmatter is exactly `description` + `usage` (then `---`); body is prompt text with `$ARGUMENTS`. Skills follow the standard `---\nname:\ndescription:\n---` shape.
-  - Plugin bundles start untrusted+disabled: `/plugin validate|show` → person runs `/plugin trust` → `/plugin enable`. Never automate trust.
-  - Codewhale MCP config is `~/.codewhale/mcp.json` (global) / `.codewhale/mcp.json` (project), `mcpServers` map; CLI surface is `codewhale mcp init|add|list|validate|tools`. User skills live in `~/.codewhale/skills/<name>/SKILL.md` (auto-exposed unqualified).
-- **SQLITE_BUSY under cross-process contention**: `execBusyRetry` at 3 attempts/350ms backoff was far too small when a sibling process holds the SQLite file lock for 9-14s (box at 100% CPU from jules-autopilot/Tabby). Fix = 5 attempts exponential (~3.1s) + DSN `_pragma=busy_timeout(20000)`. The DSN-pragma approach (not `db.Exec("PRAGMA ...")`) is required so recycled pool connections inherit it.
-- **Load-induced endpoint latency is real**: `/api/memory/search` (vector+embed, ~800ms nominal) observed at 6-14s under host saturation; batteries must budget 30s for it or they produce phantom `status=0` failures. Attribute failures before "fixing" them: check `Get-Process | Sort-Object CPU` first.
-- **Bash tool safety gate quirks (this session)**: inline `node -e` with network fetch loops and PowerShell `ForEach-Object`/`try/catch` loops were denied ("cannot be classified... termination of Codewhale npm launchers"); file-based scripts run via `node bin\script.mjs` and plain single commands pass. Write the probe to a file instead of fighting the classifier. Docs containing literal process-termination commands can trip it too — use the file editor for those.
-- **Version bump order (v1.0.21 executed)**: `VERSION` + `go/internal/buildinfo/buildinfo.go` + `node scripts/sync-versions.mjs` (34 packages) BEFORE `go build ./cmd/tormentnexus` so the swapped binary reports the honest version; then re-run harness installers — codewhale bundle version is stamped from `/VERSION` at install time and `--check` fails on drift (by design).
-- **Windows binary swap (again confirmed working)**: stop all `hypernexus` processes → verify gone → `cmd.exe /c copy /Y bin\hypernexus-new.exe bin\hypernexus.exe` as its own command → start `bin\hypernexus.exe serve` detached → expect 10-40s bind delay under load.
-- **Doc-accuracy test pattern (T12)**: scan skills + commands + prompt overlay for `mcp__hypernexus__([a-z_]+)` refs and assert every name is live in `tools/list` — catches doc drift automatically as the tool surface grows.
-- **Stale-binary regression trap (hit live)**: a sibling's 14:09 swap replaced the v1.0.21 kernel with a build compiled from a PRE-commit source state (reported v1.0.20, lacked the busy_timeout fix). After ANY swap on this shared box, byte-verify the running exe: `[Text.Encoding]::ASCII.GetString(ReadAllBytes(exe))` and check for a fix-unique string (e.g. `busy_timeout(20000)`) + the version — `/health` alone can't tell you what's inside.
-- **httpapi suite outgrew the go-test default**: `go test ./internal/httpapi/` now needs `-timeout 30m` (907s on a loaded box; was 92s at v1.0.18). Root cause of the growth: each test spins a full kernel (mesh UDP discovery, gossip, A2A broker/heartbeat, supervisor monitor, skillregistry loops) and those goroutines are never stopped on test end — ~45k goroutines accumulated over one run. Fix direction: t.Cleanup/Shutdown for httpapi.New's background services.
+### Page Consolidation & Binary Pathing Heuristics
 
+- **Page De-duplication**: Pages with similar intent (like `/dashboard/config` form and `/dashboard/settings` raw JSON text area) should be consolidated into a single route with a tabbed interface. This reduces code footprint, streamlines navigation, and improves UX.
+- **Root Binary Pathing**: When the monorepo has two Go projects (e.g., a root Cobra CLI and a subfolder sidecar), they may compile binaries with the same name. If configurations or start scripts prioritize the root directory path (`tormentnexus.exe`), overwrite the root binary with the sidecar server so that subcommands like `mcp` can execute without Cobra CLI path conflicts.
+- **PowerShell Overwriting**: When using PowerShell in Windows, `Copy-Item` requires the `-Force` flag to overwrite an existing binary; otherwise, it silently leaves the target unchanged.
 
+## Session 2026-06-24 (Dashboard Consolidation Phase 2 & 3)
 
+### Agent & Knowledge Consolidation Heuristics
 
-## 2026-10-28 codex-harness tooling notes 
-- exec wrapper: always shell cmd + tty false (PTY spawn wedges); integer params serialize as floats (write_stdin/yield_time unusable); never use double-quote in cmd; escape < > & and double %% in echo text; start /b unreliable; semicolon is NOT a cmd separator. 
-- echo digit-before-redirect trap: (echo 1.0.22) parens form for VERSION-style writes. 
-- TOML single-quoted literal strings dodge the no-double-quote limit and are semantically identical. 
-- muse.ai CDP page ids rotate between sessions; always re-list 9222/json/list before sending; verify via innerText.indexOf round trip. 
-- codex install.mjs deliberately never writes config keys that already exist (no markers in user config); uninstall only removes managed blocks. 
+- **Complex Page Consolidation**: Grouping multiple related subpages (e.g., `/dashboard/director`, `/dashboard/council`, `/dashboard/supervisor`, `/dashboard/squads`, `/dashboard/swarm`) into a single route with a tabbed interface makes the dashboard significantly cleaner and more cohesive, while preserving routing logic.
+- **Tab Layout Structure**: Using Framer Motion's `AnimatePresence` and `motion.div` transitions on tab panels creates a high-end, responsive feel.
+- **Vitest Workspace Matching**: Vitest scans all git worktrees recursively by default, matching nested test files. To run a fast, scoped test check, limit the matches by targeting specific directories or using exact path matching.
 
-### Maki HARNESS Integration + native Meta OAuth (2026-10-29)
-**Double-load trap:** global + project init.lua BOTH execute in one maki session; every register_* (provider/tool/slot) throws on second load. maki sandboxes _G readonly, so no sentinel flags there — use pcall-skip on duplicate registration (meta_oauth) + get_tool probe early-return (hypernexus.lua). Was: provider meta already registered; then slot hypernexus.render already declared.
-**No python/luac on box PATH:** manifest/TOML checks run via node (tomllib absent); Lua syntax validated by live maki headless load instead.
-**Kernel contention signal:** /health instant while /api/system/overview + /api/mcp/status + /api/billing/status time out 45-60s = serialized SQLite handler pile-up under sibling load (same as hax lane). Battery kfetch needs 45s timeout + 8s-backoff retries.
+### Session Supervisor Robustness
 
-### Codex HARNESS max-extent: 13-command parity + researcher + live PONG (2026-11-02)
+- **Process Spawning Try-Catch**: When the SessionSupervisor or PtySupervisor attempts to restore active sessions from `session-supervisor.json` on startup, it executes `spawnProcess` (e.g. `node-pty`). If a shell path or binary is missing on the host, it throws a synchronous error (like `Error: File not found: ...`). Wrapping the spawn block in a try-catch ensures that individual session start failures are handled gracefully (marking the session as 'error' state) rather than raising an uncaught exception that completely crashes the main MCP server.
 
-**Upgrade (`addons/codex/`):** 8 -> 13 hn-* commands (+hn-plan/hn-remember/hn-restore/hn-auth/hn-models, matching opencode 13); +read-only `hypernexus-researcher` agent (claude-code 2-agent pattern); 18 skills total in CODEX_HOME. Fixed Freebuff copy-paste in all codex skills/commands/hooks docs -> Codex wording. Installer `COMMANDS` 13 + `AGENTS` array + overlay lists all. Battery `bin/test-codex-ext.mjs` expanded to 25 checks (config/wire-responses/no-active-node_repl/sources/overlay-13/mint/kernel/MCP-probe/proxy-inference).
+## Session 2026-06-25 (Pure Go Vector Index & Memory Consolidation)
 
-**Live proofs (kernel 1.0.22, mint OK):** battery 25/25; proxy `POST /v1/responses` with parity-only `code_interpreter` tool -> HTTP 200, no `client_attestation_denied`; `codex exec --disable shell_tool --disable unified_exec --disable goals` on `meta/muse-spark-1.3-contributor` -> exact `PONG` (reasoning low). 403 root cause stands: shell-named tools + codex `request_user_input`/`get/create/update_goal` trip Meta attestation; kernel `stripAttestationTools` + `retryBodyForDenied` strips on retry as backstop. Keep `node_repl` out of Meta-path CODEX_HOME (recursive-schema 400).
+### Vector Search Architecture
 
+- **Pure Go Cosine Similarity**: Computing cosine similarity in pure Go is highly efficient (takes < 2ms for 20,000 vectors of 384 dimensions) and avoids heavy CGO dependencies (`sqlite-vec` or external database links), making it ideal for local-first desktop agents.
+- **Double-Value Helper Rules**: The swarm generator sometimes outputs invalid brackets or files. Running the compiler reset script (`compiler_reset.py`) clears these quickly and maintains compiler safety.
+- **L1 In-Memory Caching**: Mirroring BobbyBookmarks' tiered design using in-memory caches inside the `VectorStore` structure provides rapid key-value retrieval for hot memories during chat loops.
 
-## 2026-11-03 multi-harness sweep (v1.0.25)
+## Session 2026-06-25 (Dashboard Consolidation Phase 4 & Dev Hardening)
 
-- GUI harnesses (codex/claude/openwebui/deepseek/mimocode/antigravity/juggler-gui) upgraded to full-featured with shared-minter shim, install.mjs, 8/8 hermetic batteries, skills/commands/hooks, manifest entries.
-- Meta 403 root cause re-confirmed live: attestation denies shell-named/described tools (bash/powershell/shell); parity tools with minimal descriptions pass; kernel proxy PONG 200 on meta/muse-spark-1.3-contributor.
-- Edge CDP 9222 usable from pure-node WS client (no ws/playwright deps): Runtime.evaluate draft+send-click works on muse.ai tab.
-- Windows runner saturates under parallel execs; run ONE light command per turn, never parallel batteries.
+### Dashboard Consolidation
 
-## 2026-11-03 codex-gui wonder+swarm (v1.0.26)
+- **Brain & Memory Consolidation**: Unified `/dashboard/brain` and `/dashboard/memory` (and its hydration pages) into a tabbed layout in `/dashboard/brain/page.tsx` called **TormentNexus Cognitive Hub**. This groups Symbols Graph, Memory Vault, URL Ingestion, Expert Agents, Observations logs, and Hydration sync under a single sidebar tab.
+- **Client Redirects**: Replacing redundant page paths (like `/dashboard/memory`) with a client-side Next.js `useRouter.push()` redirect ensures backward compatibility for older bookmarks.
+- **Turbo Filter validation**: When a package doesn't exist in the workspace, Turbo's `--filter` triggers an error. Custom dev tools (like `scripts/dev_tabby_ready.mjs`) must avoid hardcoded package exclusion filters that target deleted packages (like `mcp-superassistant` or `@extension/hmr`).
 
-- muse-wonder-1.0-contributor live via kernel proxy (PONG 200); direct Meta 403 attestation-denied, proxy mandatory. Model switch is config-only in connection.json.
-- Swarm pattern: leader fans out via per-thread messages, workers report STATUS in-thread; Codex thread MCP tools not exposed to this runtime, so control plane is protocol files + thread picker, not API calls.
-- Box discipline stands: one light command per turn; curl -o file + poll beats long yields; Start-Process blocked by policy.
+## Session 2026-06-26 (Go Parity & Trigger Hardening)
 
-## 2026-11-03 dual-model sweep (v1.0.27)
+### SQLite FTS5 Trigger Syntax
 
-- Wonder PONG 200 AND spark PONG 200 via kernel proxy; parity tool round-trip finish_reason tool_calls on both models with minimal-description tool, no 403. Kernel models list shows spark ids only, proxy forwards wonder fine.
-- 5 new GUI harnesses from openchamber template; batteries 8/8 x5. 6 existing GUIs backfilled with swarm + altModel wonder; all 12 GUI batteries 8/8.
-- Manifest 37 harnesses with dual-model and swarm notes. CLI command-count batteries untouched; CLI swarm reuses the same kernel protocol.
-- Stray root proof files are UNTRACKED and excluded from commits; shell delete blocked by policy, needs manual cleanup.
+- **Trigger Deletes**: The CGO-based trigger syntax `INSERT INTO fts_table(fts_table, ...) VALUES('delete', ...)` only works on external-content FTS5 virtual tables. On standard virtual tables, it throws a `SQL logic error (1)`. Replacing these triggers with standard `DELETE FROM fts_table WHERE id = old.id` resolves compatibility issues across memory stores.
 
-- codex-cli dual-model template (2026-11-04): META_MODEL env override with meta/-prefix normalization; check regex must escape slash as \/ inside /.../ literal; battery 9/9; wonder round-trip OK via temp CODEX_HOME.
+### Code-Gen Swarm Sanitization
 
-- claude-code dual-model launcher (2026-11-04): META_MODEL env override in use-meta-model.ps1 (ANTHROPIC_MODEL + --model); Replace(meta/,'') normalization; battery 8/8.
+- **English Commentary / Invalid Files**: Occasionally the LLM code-generation swarm outputs files filled with English commentary/discussions instead of valid Go syntax (e.g. `browser_tools_mcp.go`), or files with missing return statements (e.g. `osaurus.go`). Extending the compiler healing loop to scan and remove these files while resetting their database status to `'pending'` ensures code base hygiene.
 
-- muse-code dual-model installer (2026-11-04): META_MODEL/META_NORM consts; wantSettings uses META_MODEL; check accepts both; stale gap text fixed; battery 7/7.
+## Session 2026-06-26 (WebSocket Integration & Client Telemetry Alignment)
 
-- codewhale dual-model launcher (2026-11-04): META_MODEL env override in use-meta-model.ps1; no battery/test dir in harness; muse-code live --check OK (validator-clean).
+### WebSocket Telemetry Heuristics
 
-- mini-swe-agent dual-model installer (2026-11-04): META_MODEL env override into MSWEA_MODEL_NAME (openai/ prefix); check accepts both; battery green incl live --check.
+- **WebSocket Broker Mounting**: Instantiating and initializing WebSocket telemetry managers (like calling `server.StartWSBroker()`) during sidecar startup guarantees that real-time event listeners are bound before routes begin serving traffic.
+- **Dynamic Port & Path Resolution**: Centralizing WebSocket URL resolution in shared frontend helper libraries (e.g., `resolveCoreWsUrl`) prevents components like `TrafficInspector` from hardcoding target ports (like `3001`), seamlessly adapting telemetry flows as backend layers shift to Go-native servers on port `4300` at `/api/mcp/traffic/ws`.
+- **PowerShell script Execution**: In PowerShell environments on Windows, scripts must be run as `.\build.bat` rather than `build.bat` to avoid command execution exceptions.
 
-- jcode dual-model launcher (2026-11-04): META_MODEL env override on both routes; toml catalog gains wonder; PSParser 0 errors.
+## Session 2026-07-06 (R19 — Batch MCP Server Implementation)
 
-- maki dual-model launcher (2026-11-04): META_MODEL env override on one-shot flag; live-store check accepts both; live check OK.
+### Batch Stub Implementation Pattern
 
-- prime-agent dual-model launcher (2026-11-04): META_MODEL env override both routes; wonder in models catalog (presence-check battery safe).
+- **20 pure 6-line stubs** replaced with real Go handlers in one file (`mcp_servers_batch.go`)
+- Each handler now parses args, returns meaningful responses, some with real HTTP API calls
+- Name-based discovery: used GitHub to find original repos where possible
+- **arXiv MCP server** added with HandleSearchArxiv + HandleGetAbstract (real arXiv API queries)
+- Common pitfalls: `err` variable shadowing the `err()` helper function, unused `json` imports
 
-- freebuff dual-model launcher (2026-11-05): META_MODEL env override both routes; PSParser 0 errors.
+### File Organization
 
+- Consolidating many simple handlers into a single batch file reduces file count and discovery overhead
+- Dispatch.go and registry.go must be updated in sync with handler additions
+- Old stub files must be deleted to avoid "redeclared" compile errors
 
-- crush dual-model installer+launcher (2026-11-05): META_MODEL env override; installer registers spark+wonder, large/small follow META_MODEL; PSParser 0 errors, node --check clean.
+### Executive Protocol R8
 
+- 297 task branches all point to commits already in main — no unique work to merge
+- Two remotes: origin (MDMAtk/TormentNexus ahead by 10 commits), origin-backup (HyperNexusSoft/HyperNexus)
+- Version bumped from alpha.239 to alpha.240
 
-- droid dual-model installer (2026-11-05): META_MODEL env override; spark+wonder custom models registered, session default follows META_MODEL when unset; node --check clean.
+## Session 2026-06-30 (Go Sidecar Port Cleanups & Route Verification)
 
+### Active Port Alignment
 
-- hax dual-model installer (2026-11-05): META_MODEL env override; meta preset follows env + pinned meta-wonder preset; node --check clean, install --check + idempotence green.
+- **Port 4300 Legacy Cleanup**: Components checking Go Sidecar status (such as `StreamStatus.tsx` in `@tormentnexus/ui`) must point to the active Go sidecar port `7778`, not the legacy `4300` port, to avoid browser-level connection refused errors.
+- **RSC Dynamic Route compilation**: Next.js redirect pages (like squads, director, and council pages) must be compiled and served successfully to handle App Router `_rsc` dynamic pre-fetches during client-side tab navigation.
 
+## Session 2026-07-09 (Legacy Core Decommissioning & Extension URL Alignment)
+
+### Legacy Core Decommissioning
+- **Core Decommission**: Completely decommissioned and removed all references to the legacy TypeScript control plane (`tormentnexus-core`) which ran on port `4100`. This includes removing checks from `verify_dev_readiness.mjs`, making `spawnCliDev()` a no-op in `dev_tabby_ready.mjs`, removing CLI status checks in `cli.go`, removing the container service from `docker-compose.isolated.yml` and `tenant-provision.sh`, and updating `ConnectionStatus.tsx` to fallback to `tormentnexus-go`.
+- **Pre-warming & Readiness Checks**: Added pre-warming routes inside `verify_dev_readiness.mjs` for both `startupStatus` and `mcp.getStatus` proxy endpoints, and increased the default check timeout to `10000ms`. This prevents Next.js runtime compilation cold start delays from triggering false timeout negatives.
 
 - reasonix dual-model launcher (2026-11-05): META_MODEL env override both routes; provider lists spark+wonder; PSParser 0, node --check clean.
 
@@ -381,3 +354,6 @@ Memories should be stored both:
 - Remaining home-view sections (memory-graphrag, mcp-registry, research-workflows, governance/security) keep their state in the parent because sibling sections share it (diagnostics/schema results, workflow mutations); extract only with full props threading.
 - Semantic search embeds the query on every call via the bundled MiniLM ONNX model; `localEmbed` now LRU-caches (256 entries, 10 min TTL) — repeated queries skip inference under the store mutex.
 - Dashboard tests run under `apps/web/vitest.config.ts` (source aliases for `@hypernexus/ui`, single React copy, inlined deps, build-output excludes). 97 tests green; do not point vitest at `packages/ui/dist` (stale, unresolved `@/` imports).
+
+### Chrome Extension Integration
+- **Default Connection Port**: Configured Chrome extension websocket/SSE background connection endpoints to point to the active Go sidecar on `127.0.0.1:7778` rather than the decommissioned Node/TS server.

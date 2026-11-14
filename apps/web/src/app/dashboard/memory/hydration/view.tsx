@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@hypernexus/ui";
-import { Button } from "@hypernexus/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@tormentnexus/ui";
+import { Button } from "@tormentnexus/ui";
 import {
 	Brain,
 	Database,
@@ -132,7 +132,7 @@ export default function MemoryHydrationPage() {
 					continue;
 				}
 			}
-			setError("Hydration failed — could not reach TN Kernel");
+			setError("Hydration failed — could not reach Go sidecar");
 		} finally {
 			setHydrating(false);
 		}
@@ -181,7 +181,7 @@ export default function MemoryHydrationPage() {
 						Memory Hydration
 					</h1>
 					<p className="text-zinc-500 mt-1">
-						Bootstrap the TN Kernel context store with essential project
+						Bootstrap the Go sidecar context store with essential project
 						knowledge for autonomous operation
 					</p>
 				</div>

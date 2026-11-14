@@ -16,7 +16,7 @@ import {
 	Badge,
 	ScrollArea,
 	KnowledgeGraph,
-} from "@hypernexus/ui";
+} from "@tormentnexus/ui";
 import {
 	Loader2,
 	Brain,
@@ -78,7 +78,7 @@ type MemoryInterchangeFormat =
 	| "csv"
 	| "jsonl"
 	| "json-provider"
-	| "hypernexus-store";
+	| "tormentnexus-store";
 
 type HydrationReport = {
 	startedAt: string;
@@ -136,8 +136,8 @@ const MEMORY_FORMAT_OPTIONS: Array<{
 	{ value: "json", label: "Canonical JSON" },
 	{ value: "csv", label: "Canonical CSV" },
 	{ value: "jsonl", label: "Canonical JSONL" },
-	{ value: "json-provider", label: "HyperNexus JSON Provider" },
-	{ value: "hypernexus-store", label: "HyperNexus Store" },
+	{ value: "json-provider", label: "TormentNexus JSON Provider" },
+	{ value: "tormentnexus-store", label: "tormentnexus Store" },
 ];
 
 export default function CognitiveBrainDashboard() {
@@ -201,7 +201,7 @@ export default function CognitiveBrainDashboard() {
 	const [exportFormat, setExportFormat] =
 		useState<MemoryInterchangeFormat>("json");
 	const [convertToFormat, setConvertToFormat] =
-		useState<MemoryInterchangeFormat>("hypernexus-store");
+		useState<MemoryInterchangeFormat>("tormentnexus-store");
 	const [importing, setImporting] = useState(false);
 	const [converting, setConverting] = useState(false);
 	const [selectedRecordKey, setSelectedRecordKey] = useState<string | null>(
@@ -218,13 +218,9 @@ export default function CognitiveBrainDashboard() {
 	const handleConsolidate = async () => {
 		setConsolidating(true);
 		try {
-			const res = await fetch("/api/go/api/memory/sleep-cycle", {
-				method: "POST",
-			});
+			const res = await fetch("/api/go/api/memory/sleep-cycle", { method: "POST" });
 			if (res.ok) {
-				toast.success(
-					"Memory consolidation & sleep cycle executed successfully!",
-				);
+				toast.success("Memory consolidation & sleep cycle executed successfully!");
 				// Invalidate the cache to refresh data
 				utils.memory.invalidate();
 			} else {
@@ -284,18 +280,14 @@ export default function CognitiveBrainDashboard() {
 		setResourceScraping(true);
 		setScraperLog("Initializing prompts & skills assimilation scanner...\n");
 		try {
-			const res = await fetch("/api/go/api/assimilation/trigger/resources", {
-				method: "POST",
-			});
+			const res = await fetch("/api/go/api/assimilation/trigger/resources", { method: "POST" });
 			const d = await res.json();
 			if (res.ok && d.success) {
 				toast.success("Skill & prompt resources successfully assimilated!");
 				setScraperLog((prev) => prev + d.output);
 			} else {
 				toast.error("Resource assimilation failed");
-				setScraperLog(
-					(prev) => prev + `Error: ${d.error || "unknown"}\n${d.output || ""}`,
-				);
+				setScraperLog((prev) => prev + `Error: ${d.error || "unknown"}\n${d.output || ""}`);
 			}
 		} catch (e: any) {
 			toast.error("Failed to run resource scraper");
@@ -308,18 +300,14 @@ export default function CognitiveBrainDashboard() {
 		setServerScraping(true);
 		setScraperLog("Initializing MCP servers catalog assimilation scanner...\n");
 		try {
-			const res = await fetch("/api/go/api/assimilation/trigger/servers", {
-				method: "POST",
-			});
+			const res = await fetch("/api/go/api/assimilation/trigger/servers", { method: "POST" });
 			const d = await res.json();
 			if (res.ok && d.success) {
 				toast.success("MCP servers successfully catalogued and synced!");
 				setScraperLog((prev) => prev + d.output);
 			} else {
 				toast.error("MCP server catalog sync failed");
-				setScraperLog(
-					(prev) => prev + `Error: ${d.error || "unknown"}\n${d.output || ""}`,
-				);
+				setScraperLog((prev) => prev + `Error: ${d.error || "unknown"}\n${d.output || ""}`);
 			}
 		} catch (e: any) {
 			toast.error("Failed to run server scraper");
@@ -327,6 +315,8 @@ export default function CognitiveBrainDashboard() {
 		}
 		setServerScraping(false);
 	};
+
+
 
 	const trimmedSearchQuery = searchQuery.trim();
 	const hasSearchQuery = trimmedSearchQuery.length > 0;
@@ -478,7 +468,7 @@ export default function CognitiveBrainDashboard() {
 					// Ignore fetch errors, will show hydration error below
 				}
 			}
-			setHydrationError("Hydration failed — could not reach TN Kernel");
+			setHydrationError("Hydration failed — could not reach Go sidecar");
 		} finally {
 			setHydrating(false);
 		}
@@ -705,10 +695,7 @@ export default function CognitiveBrainDashboard() {
 		if (!selectedMemory) {
 			return [];
 		}
-		return groupMemoryWindowAroundAnchor(
-			sessionWindowRecords,
-			selectedMemory.id,
-		);
+		return groupMemoryWindowAroundAnchor(sessionWindowRecords, selectedMemory.id);
 	}, [selectedMemory, sessionWindowRecords]);
 
 	const crossSessionLinks = useMemo(() => {
@@ -844,7 +831,7 @@ export default function CognitiveBrainDashboard() {
 					<div className="flex items-center gap-4">
 						<h1 className="text-3xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent flex items-center gap-2">
 							<Brain className="h-8 w-8 text-pink-500 animate-pulse" />
-							HyperNexus Cognitive Hub
+							TormentNexus Cognitive Hub
 						</h1>
 						<button
 							onClick={handleConsolidate}
@@ -861,47 +848,34 @@ export default function CognitiveBrainDashboard() {
 						</button>
 					</div>
 					<p className="text-zinc-400 text-sm">
-						Unified control plane for Vector Memory, Knowledge Graphs, Web
-						Ingestion, and Expert Systems.
+						Unified control plane for Vector Memory, Knowledge Graphs, Web Ingestion, and Expert Systems.
 					</p>
 				</div>
 
 				{/* Stats panel in header */}
 				<div className="flex flex-wrap gap-2 text-xs">
-					<div
-						className="flex items-center"
-						title="Transient cache of recent chat sessions and temporary data"
-					>
+					<div className="flex items-center" title="Transient cache of recent chat sessions and temporary data">
 						<StatCard
 							label="Session"
 							value={(stats as any)?.sessionCount || 0}
 							icon={<History className="h-3.5 w-3.5 text-zinc-400" />}
 						/>
 					</div>
-					<div
-						className="flex items-center"
-						title="Active short-term workspace memory containing high-frequency variables"
-					>
+					<div className="flex items-center" title="Active short-term workspace memory containing high-frequency variables">
 						<StatCard
 							label="Working"
 							value={(stats as any)?.workingCount || 0}
 							icon={<Zap className="h-3.5 w-3.5 text-yellow-500" />}
 						/>
 					</div>
-					<div
-						className="flex items-center"
-						title="Persistent vector database memory that survives across runs"
-					>
+					<div className="flex items-center" title="Persistent vector database memory that survives across runs">
 						<StatCard
 							label="Long Term"
 							value={(stats as any)?.longTermCount || 0}
 							icon={<Database className="h-3.5 w-3.5 text-pink-500" />}
 						/>
 					</div>
-					<div
-						className="flex items-center"
-						title="Accumulated cognitive observations made during execution analysis"
-					>
+					<div className="flex items-center" title="Accumulated cognitive observations made during execution analysis">
 						<StatCard
 							label="Observations"
 							value={(stats as any)?.observationCount || 0}
@@ -981,9 +955,7 @@ export default function CognitiveBrainDashboard() {
 									Letta Core Memory Block (Active Ephemeral Instructions)
 								</CardTitle>
 								<p className="text-zinc-500 text-xs mt-1">
-									Directly view and edit the active scratchpad blocks. Pinned
-									instruction values are embedded inside the agent's short-term
-									system instructions.
+									Directly view and edit the active scratchpad blocks. Pinned instruction values are embedded inside the agent's short-term system instructions.
 								</p>
 							</CardHeader>
 							<CardContent>
@@ -994,20 +966,11 @@ export default function CognitiveBrainDashboard() {
 								) : (
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 										{Object.entries(scratchpad).map(([key, val]) => (
-											<div
-												key={key}
-												className="border border-zinc-800 bg-zinc-950 p-4 rounded-lg space-y-3"
-											>
+											<div key={key} className="border border-zinc-800 bg-zinc-950 p-4 rounded-lg space-y-3">
 												<div className="flex items-center justify-between border-b border-zinc-900 pb-2">
 													<span className="font-mono text-sm font-semibold text-emerald-400 capitalize flex items-center">
 														{key} Block
-														<InfoTooltip
-															text={
-																key === "persona"
-																	? "Defines the agent's style, format constraints, response demeanor, and core behavior directives."
-																	: "Contains information about the operator user, workspace preferences, environment parameters, and active task parameters."
-															}
-														/>
+														<InfoTooltip text={key === "persona" ? "Defines the agent's style, format constraints, response demeanor, and core behavior directives." : "Contains information about the operator user, workspace preferences, environment parameters, and active task parameters."} />
 													</span>
 													{editingKey !== key ? (
 														<Button
@@ -1034,9 +997,7 @@ export default function CognitiveBrainDashboard() {
 															<Button
 																size="sm"
 																className="text-xs bg-emerald-700 hover:bg-emerald-600 text-white"
-																onClick={() =>
-																	handleSaveScratchpad(key, editingValue)
-																}
+																onClick={() => handleSaveScratchpad(key, editingValue)}
 															>
 																Save Block
 															</Button>
@@ -1162,8 +1123,7 @@ export default function CognitiveBrainDashboard() {
 								<div className="space-y-3">
 									<div className="flex flex-wrap gap-1.5">
 										{MEMORY_SEARCH_MODES.map((mode) => {
-											const modeValue =
-												(mode as any).key || (mode as any).value;
+											const modeValue = (mode as any).key || (mode as any).value;
 											return (
 												<button
 													key={modeValue}
@@ -1375,16 +1335,12 @@ export default function CognitiveBrainDashboard() {
 						{dueLoading ? (
 							<div className="flex flex-col items-center gap-3">
 								<Loader2 className="h-8 w-8 animate-spin text-pink-500" />
-								<p className="text-sm font-mono text-zinc-400">
-									Loading synapses due for review...
-								</p>
+								<p className="text-sm font-mono text-zinc-400">Loading synapses due for review...</p>
 							</div>
 						) : dueMemories.length === 0 ? (
 							<Card className="bg-zinc-900 border border-zinc-800 p-8 text-center max-w-md w-full shadow-xl">
 								<Sparkles className="h-12 w-12 text-pink-500 mx-auto mb-4 animate-bounce" />
-								<h3 className="text-xl font-bold text-white mb-2">
-									All Caught Up!
-								</h3>
+								<h3 className="text-xl font-bold text-white mb-2">All Caught Up!</h3>
 								<p className="text-sm text-zinc-400">
 									No memories are due for spaced repetition review right now.
 									Check back later or ingest more facts!
@@ -1394,10 +1350,7 @@ export default function CognitiveBrainDashboard() {
 							<div className="w-full space-y-6">
 								{/* Progress Header */}
 								<div className="flex justify-between items-center text-xs text-zinc-400">
-									<span>
-										Reviewing memory {currentReviewIndex + 1} of{" "}
-										{dueMemories.length}
-									</span>
+									<span>Reviewing memory {currentReviewIndex + 1} of {dueMemories.length}</span>
 									<span className="bg-pink-500/10 text-pink-300 border border-pink-500/20 px-2.5 py-0.5 rounded-full font-mono font-bold">
 										{dueMemories.length} due
 									</span>
@@ -1407,13 +1360,8 @@ export default function CognitiveBrainDashboard() {
 								<Card className="bg-zinc-900/80 border border-zinc-800 p-8 shadow-2xl rounded-2xl flex flex-col gap-6 relative min-h-[250px] justify-between backdrop-blur-md">
 									<div className="space-y-4">
 										<div className="flex justify-between items-center">
-											<Badge
-												variant="outline"
-												className="text-[10px] uppercase font-mono px-2 py-0.5 border-zinc-700 text-zinc-300"
-											>
-												{dueMemories[currentReviewIndex]?.memory_kind ||
-													dueMemories[currentReviewIndex]?.memory_type ||
-													"memory"}
+											<Badge variant="outline" className="text-[10px] uppercase font-mono px-2 py-0.5 border-zinc-700 text-zinc-300">
+												{dueMemories[currentReviewIndex]?.memory_kind || dueMemories[currentReviewIndex]?.memory_type || "memory"}
 											</Badge>
 											{dueMemories[currentReviewIndex]?.category && (
 												<span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
@@ -1441,86 +1389,37 @@ export default function CognitiveBrainDashboard() {
 												{/* Additional info revealed */}
 												<div className="grid grid-cols-2 gap-4 text-xs bg-black/40 p-3 rounded-lg border border-zinc-800 font-mono text-zinc-400">
 													<div>
-														<span className="text-zinc-500">Importance:</span>{" "}
-														{(
-															dueMemories[currentReviewIndex]?.importance * 100
-														).toFixed(0)}
-														%
+														<span className="text-zinc-500">Importance:</span> {(dueMemories[currentReviewIndex]?.importance * 100).toFixed(0)}%
 													</div>
 													<div>
-														<span className="text-zinc-500">Heat Score:</span>{" "}
-														{dueMemories[
-															currentReviewIndex
-														]?.heat_score?.toFixed(1) || "100.0"}
+														<span className="text-zinc-500">Heat Score:</span> {dueMemories[currentReviewIndex]?.heat_score?.toFixed(1) || "100.0"}
 													</div>
 													{dueMemories[currentReviewIndex]?.tags && (
 														<div className="col-span-2">
-															<span className="text-zinc-500">Tags:</span>{" "}
-															{dueMemories[currentReviewIndex]?.tags}
+															<span className="text-zinc-500">Tags:</span> {dueMemories[currentReviewIndex]?.tags}
 														</div>
 													)}
 												</div>
 
 												{/* Grade Buttons */}
 												<div className="space-y-2">
-													<p className="text-[11px] font-bold text-center text-zinc-500 uppercase tracking-widest">
-														How well did you recall this memory?
-													</p>
+													<p className="text-[11px] font-bold text-center text-zinc-500 uppercase tracking-widest">How well did you recall this memory?</p>
 													<div className="grid grid-cols-6 gap-2">
 														{[
-															{
-																val: 0,
-																label: "Forgot",
-																color:
-																	"bg-red-900/50 hover:bg-red-800 text-red-200 border-red-800/40",
-															},
-															{
-																val: 1,
-																label: "Wrong",
-																color:
-																	"bg-orange-950 hover:bg-orange-900 text-orange-200 border-orange-900/40",
-															},
-															{
-																val: 2,
-																label: "Hard",
-																color:
-																	"bg-amber-950 hover:bg-amber-900 text-amber-200 border-amber-900/40",
-															},
-															{
-																val: 3,
-																label: "Good",
-																color:
-																	"bg-yellow-950/80 hover:bg-yellow-900 text-yellow-200 border-yellow-800/40",
-															},
-															{
-																val: 4,
-																label: "Easy",
-																color:
-																	"bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border-emerald-900/40",
-															},
-															{
-																val: 5,
-																label: "Perfect",
-																color:
-																	"bg-green-900/50 hover:bg-green-800 text-green-200 border-green-800/40",
-															},
+															{ val: 0, label: "Forgot", color: "bg-red-900/50 hover:bg-red-800 text-red-200 border-red-800/40" },
+															{ val: 1, label: "Wrong", color: "bg-orange-950 hover:bg-orange-900 text-orange-200 border-orange-900/40" },
+															{ val: 2, label: "Hard", color: "bg-amber-950 hover:bg-amber-900 text-amber-200 border-amber-900/40" },
+															{ val: 3, label: "Good", color: "bg-yellow-950/80 hover:bg-yellow-900 text-yellow-200 border-yellow-800/40" },
+															{ val: 4, label: "Easy", color: "bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border-emerald-900/40" },
+															{ val: 5, label: "Perfect", color: "bg-green-900/50 hover:bg-green-800 text-green-200 border-green-800/40" },
 														].map((grade) => (
 															<button
 																key={grade.val}
-																onClick={() =>
-																	handleGradeMemory(
-																		dueMemories[currentReviewIndex].id,
-																		grade.val,
-																	)
-																}
+																onClick={() => handleGradeMemory(dueMemories[currentReviewIndex].id, grade.val)}
 																className={`border rounded-lg p-2 flex flex-col items-center transition-all ${grade.color}`}
 															>
-																<span className="text-base font-bold">
-																	{grade.val}
-																</span>
-																<span className="text-[9px] font-medium tracking-tight mt-0.5">
-																	{grade.label}
-																</span>
+																<span className="text-base font-bold">{grade.val}</span>
+																<span className="text-[9px] font-medium tracking-tight mt-0.5">{grade.label}</span>
 															</button>
 														))}
 													</div>
@@ -1579,7 +1478,7 @@ export default function CognitiveBrainDashboard() {
 							<CardContent className="p-0 flex flex-col gap-4">
 								<p className="text-sm text-zinc-400">
 									Parse documentation, API references, or articles directly into
-									the HyperNexus context engine.
+									the TormentNexus context engine.
 								</p>
 								<div className="flex gap-2">
 									<Input
@@ -1609,15 +1508,12 @@ export default function CognitiveBrainDashboard() {
 						<Card className="bg-zinc-900 border-zinc-800 p-6 flex flex-col gap-4">
 							<CardHeader className="p-0">
 								<CardTitle className="text-lg font-bold text-violet-400 flex items-center gap-2">
-									<RefreshCw className="h-5 w-5 text-violet-500 animate-pulse" />{" "}
-									Comprehensive Library Scrapers
+									<RefreshCw className="h-5 w-5 text-violet-500 animate-pulse" /> Comprehensive Library Scrapers
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="p-0 flex flex-col gap-4">
 								<p className="text-sm text-zinc-400">
-									Scan known libraries, local registers, and remote indexes to
-									discover, categorise, and ingest MCP server schemas, skill
-									scripts, and prompt templates.
+									Scan known libraries, local registers, and remote indexes to discover, categorise, and ingest MCP server schemas, skill scripts, and prompt templates.
 								</p>
 								<div className="grid grid-cols-2 gap-4">
 									<Button
@@ -1625,21 +1521,15 @@ export default function CognitiveBrainDashboard() {
 										disabled={resourceScraping}
 										className="bg-violet-700 hover:bg-violet-600 text-white font-semibold flex items-center justify-center gap-1.5 transition-colors"
 									>
-										{resourceScraping && (
-											<Loader2 className="w-3.5 h-3.5 animate-spin" />
-										)}
-										{resourceScraping
-											? "Scraping..."
-											: "Scrape Prompts & Skills"}
+										{resourceScraping && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+										{resourceScraping ? "Scraping..." : "Scrape Prompts & Skills"}
 									</Button>
 									<Button
 										onClick={handleTriggerServerScraper}
 										disabled={serverScraping}
 										className="bg-indigo-700 hover:bg-indigo-600 text-white font-semibold flex items-center justify-center gap-1.5 transition-colors"
 									>
-										{serverScraping && (
-											<Loader2 className="w-3.5 h-3.5 animate-spin" />
-										)}
+										{serverScraping && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
 										{serverScraping ? "Scraping..." : "Scrape MCP Servers"}
 									</Button>
 								</div>
@@ -2077,7 +1967,7 @@ export default function CognitiveBrainDashboard() {
 												const url = URL.createObjectURL(blob);
 												const a = document.createElement("a");
 												a.href = url;
-												a.download = `hypernexus-memories.${extension}`;
+												a.download = `tormentnexus-memories.${extension}`;
 												a.click();
 												URL.revokeObjectURL(url);
 												toast.success(
@@ -2220,7 +2110,7 @@ export default function CognitiveBrainDashboard() {
 														const url = URL.createObjectURL(blob);
 														const a = document.createElement("a");
 														a.href = url;
-														a.download = `hypernexus-memory-converted.${extension}`;
+														a.download = `tormentnexus-memory-converted.${extension}`;
 														a.click();
 														URL.revokeObjectURL(url);
 														toast.success(
@@ -2284,8 +2174,8 @@ export default function CognitiveBrainDashboard() {
 								</CardHeader>
 								<CardContent className="p-0 pt-2 space-y-4">
 									<p className="text-sm text-zinc-400">
-										Bootstrap the TN Kernel context store with essential project
-										knowledge for autonomous operation.
+										Bootstrap the Go sidecar context store with essential
+										project knowledge for autonomous operation.
 									</p>
 
 									{/* Hydration Report */}

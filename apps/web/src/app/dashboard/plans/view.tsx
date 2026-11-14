@@ -2,13 +2,13 @@
 
 import { trpc } from '@/utils/trpc';
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@hypernexus/ui';
-import { Button } from '@hypernexus/ui';
-import { Badge } from '@hypernexus/ui';
-import { ScrollArea } from '@hypernexus/ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@hypernexus/ui";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@tormentnexus/ui';
+import { Button } from '@tormentnexus/ui';
+import { Badge } from '@tormentnexus/ui';
+import { ScrollArea } from '@tormentnexus/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tormentnexus/ui";
 import { GitBranch, GitCommit, Play, Rewind, CheckCircle, XCircle, AlertCircle, FileCode } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@hypernexus/ui";
+import { Alert, AlertDescription, AlertTitle } from "@tormentnexus/ui";
 
 export default function PlansDashboard() {
     const [activeTab, setActiveTab] = useState('diffs');

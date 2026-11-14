@@ -1,7 +1,5 @@
-"use client";
-
-import { UnifiedDashboard } from "@/components/UnifiedDashboard";
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-	return <UnifiedDashboard />;
+  redirect('/dashboard/ecosystem');
 }

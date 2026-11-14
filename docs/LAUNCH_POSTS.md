@@ -4,21 +4,21 @@ Use this file for posting and live comment operations during launch day.
 
 ## Canonical links
 
-- Repo: `https://gitlab.com/HyperNexusLLC/HyperNexus`
-- Quick Start: `https://gitlab.com/HyperNexusLLC/HyperNexus#-quick-start`
+- Repo: `https://github.com/NexusSoftMDMA/TormentNexus`
+- Quick Start: `https://github.com/NexusSoftMDMA/TormentNexus#-quick-start`
 - Security FAQ replies: `docs/LAUNCH_SECURITY_FAQ.md`
 
 ## Show HN draft
 
 ### Title options
-1. Show HN: hypernexus — local MCP control plane for routing, memory, and observability
-2. Show HN: hypernexus, a local-first MCP router with memory + dashboard
-3. Show HN: I built hypernexus to run multi-MCP setups without orchestration chaos
+1. Show HN: tormentnexus — local MCP control plane for routing, memory, and observability
+2. Show HN: tormentnexus, a local-first MCP router with memory + dashboard
+3. Show HN: I built tormentnexus to run multi-MCP setups without orchestration chaos
 
 ### Body
-I built **hypernexus** to make multi-server MCP setups manageable in practice.
+I built **tormentnexus** to make multi-server MCP setups manageable in practice.
 
-When tool count grows, things get messy: routing, naming collisions, poor visibility, brittle workflows. hypernexus is a local-first control plane that sits between AI clients and MCP infrastructure.
+When tool count grows, things get messy: routing, naming collisions, poor visibility, brittle workflows. tormentnexus is a local-first control plane that sits between AI clients and MCP infrastructure.
 
 What it does:
 - Unified MCP routing + namespacing
@@ -27,8 +27,8 @@ What it does:
 - Observability dashboard (health/logs/system views)
 - Local-first architecture for operator control
 
-Repo: `https://gitlab.com/HyperNexusLLC/HyperNexus`
-Quickstart: `https://gitlab.com/HyperNexusLLC/HyperNexus#-quick-start`
+Repo: `https://github.com/NexusSoftMDMA/TormentNexus`
+Quickstart: `https://github.com/NexusSoftMDMA/TormentNexus#-quick-start`
 
 I’d really value feedback on:
 1. Routing/policy model for larger MCP fleets
@@ -40,10 +40,10 @@ Happy to answer technical questions.
 ## Reddit r/mcp draft
 
 ### Title
-Built hypernexus: local-first MCP control plane (routing + memory + observability) — feedback wanted
+Built tormentnexus: local-first MCP control plane (routing + memory + observability) — feedback wanted
 
 ### Body
-Hey everyone — I built **hypernexus** to help manage complex MCP environments without glue-code sprawl.
+Hey everyone — I built **tormentnexus** to help manage complex MCP environments without glue-code sprawl.
 
 It includes:
 - MCP server/tool routing with namespacing
@@ -51,8 +51,8 @@ It includes:
 - Memory layer (vector + graph context)
 - Operator dashboard for logs/health/status
 
-Repo: `https://gitlab.com/HyperNexusLLC/HyperNexus`
-Quickstart: `https://gitlab.com/HyperNexusLLC/HyperNexus#-quick-start`
+Repo: `https://github.com/NexusSoftMDMA/TormentNexus`
+Quickstart: `https://github.com/NexusSoftMDMA/TormentNexus#-quick-start`
 
 I’m looking for concrete feedback from people running real MCP stacks:
 - Where routing breaks first
@@ -90,18 +90,18 @@ If this belongs in a different thread format, I’m happy to repost accordingly.
 ## Comment triage templates
 
 ### “How is this different from existing MCP clients?”
-hypernexus is an operator-layer control plane rather than a single client UX. It focuses on routing, memory, and observability across multiple MCP servers/tools.
+tormentnexus is an operator-layer control plane rather than a single client UX. It focuses on routing, memory, and observability across multiple MCP servers/tools.
 
 ### “Can I trust this in production?”
 Current focus is strong local/operator workflows with active hardening. Feedback-driven stabilization is part of the launch plan.
 
 ### “What should I test first?”
-Route your existing MCP setup through hypernexus, then compare tool discovery speed, debugging clarity, and memory-assisted workflow continuity.
+Route your existing MCP setup through tormentnexus, then compare tool discovery speed, debugging clarity, and memory-assisted workflow continuity.
 
 ## Day-2 follow-up template
 
 ### Title
-hypernexus launch update: what we learned in 24 hours + what we shipped
+tormentnexus launch update: what we learned in 24 hours + what we shipped
 
 ### Body
 Quick update after launch:
@@ -109,6 +109,6 @@ Quick update after launch:
 - What shipped: [list 2–3 concrete changes]
 - Next 72h priorities: [list 2–3]
 
-Repo: `https://gitlab.com/HyperNexusLLC/HyperNexus`
+Repo: `https://github.com/NexusSoftMDMA/TormentNexus`
 
 If you tried it, I’d love your next round of feedback on routing/policies, memory signal quality, and observability gaps.

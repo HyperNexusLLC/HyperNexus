@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@hypernexus/ui";
-import { Badge } from "@hypernexus/ui";
-import { Button } from "@hypernexus/ui";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@tormentnexus/ui";
+import { Badge } from "@tormentnexus/ui";
+import { Button } from "@tormentnexus/ui";
 import { Activity, Server, AlertTriangle, RefreshCcw, HardDrive, Cpu, Network, Radio } from "lucide-react";
 import { trpc } from '@/utils/trpc';
 import { toast } from 'sonner';
@@ -12,16 +12,15 @@ import { buildSystemEnvironmentRows, buildSystemStartupNotice } from '../mcp/sys
 import { getEventBusMetric, getMcpRouterMetric } from './health-metrics';
 import { getConnectedServerKeys, normalizeHealthServers } from './health-server-list';
 import { buildHealthStartupViewModel } from './health-startup-view-model';
-import { useStartupStatus, useMcpStatus } from '@/hooks/use-startup-status';
 
 export default function HealthDashboard() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const utils = trpc.useUtils();
     const toolsClient = trpc.tools as any;
 
-    const { data: mcpStatus, refetch: refetchMcpStatus } = useMcpStatus();
-    const { data: startupStatus, refetch: refetchStartup } = useStartupStatus(5000);
-    const { data: servers, refetch: refetchServers } = trpc.mcpServers.list.useQuery(undefined, { retry: false });
+    const { data: mcpStatus, refetch: refetchMcpStatus } = trpc.mcp.getStatus.useQuery();
+    const { data: startupStatus, refetch: refetchStartup } = trpc.startupStatus.useQuery(undefined, { refetchInterval: 5000 });
+    const { data: servers, refetch: refetchServers } = trpc.mcpServers.list.useQuery();
     const installArtifactsQuery = toolsClient?.detectInstallSurfaces?.useQuery
         ? toolsClient.detectInstallSurfaces.useQuery(undefined, { refetchInterval: 10000 })
         : ({ data: null, refetch: async () => undefined } as { data: null; refetch: () => Promise<unknown> });
@@ -69,7 +68,7 @@ export default function HealthDashboard() {
                         System Health
                     </h1>
                     <p className="text-zinc-500 mt-1">
-                        Monitor HyperNexus infrastructure status, component uptime, and server crash rates.
+                        Monitor TormentNexus infrastructure status, component uptime, and server crash rates.
                     </p>
                 </div>
                 <Button 

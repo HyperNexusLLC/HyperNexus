@@ -1,12 +1,18 @@
-# IDEAS.md — Creative Ideas & Pivots
+# TormentNexus Innovation & Refactoring Ideas
 
-## Radical Ideas for HyperNexus
+This document gathers innovative concepts, architectural pivots, and optimization ideas for future releases.
 
-### 1. HyperNexus as a Language Server Protocol (LSP)
+## 1. Dynamic Cost-Latency Model Router
+- **Concept**: A local routing layer that reads historical response times from `provider_metrics.db` and selects the cheapest/fastest model provider dynamically for every tool invocation.
+- **Benefits**: Minimizes api token consumption and maximizes user interaction speeds.
 
-**Idea:** Instead of being a separate service, HyperNexus could be an LSP server that integrates directly into VS Code, Cursor, and other editors.
+## 2. Autonomous Go Tool Self-Healer Loop
+- **Concept**: Integrate the python compiler healer into the Go sidecar natively. The sidecar compiles generated stubs and forwards any compile logs to a lightweight local coder model to auto-repair formatting errors, redeclared helpers, or missing returns.
+- **Benefits**: Uninterrupted, fully autonomous tool registry expansion.
 
-**Benefits:**
+## 3. SQLite Vector Sync over CRDT/Gossip
+- **Concept**: Synchronize vector database updates across instances using conflict-free replicated data types (CRDTs) over Gossip UDP packets.
+- **Benefits**: Fleet-wide decentralized shared intelligence.
 
 - Zero configuration for developers
 - Works with any language/IDE
@@ -386,3 +392,7 @@ SELECT * FROM users WHERE hn_match('find active users from last week');
 - **Embedding-cache telemetry**: expose cache hit-rate + embed latency in `/api/system/status` so the sub-second-search goal is measurable, then cache record embeddings' cosine top-K per query hash.
 - **One-command harness doctor**: a kernel endpoint that reports, per harness (Codex/Muse/pi/...), plugin version, MCP reachability, and banner-hook health — the CLI/desktop visibility work made self-diagnosing.
 - **Tray as supervisor**: systray menu gains "Restart dashboard" and live kernel version/build channel (repo vs installed), closing the build-drift gap without a terminal.
+
+## 4. WebAssembly Tool Sandboxing (Wasmtime)
+- **Concept**: Instead of spawning arbitrary binaries as STDIO subprocesses, compile assimilated MCP tools into WebAssembly and execute them within a sandboxed Wasmtime container.
+- **Benefits**: Advanced sandbox isolation for secure, multi-tenant enterprise deployments.

@@ -3,7 +3,7 @@
 
 
 import { trpc } from '@/utils/trpc';
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@hypernexus/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '@tormentnexus/ui';
 
 export function SystemPulse() {
     // Polling System Pulse

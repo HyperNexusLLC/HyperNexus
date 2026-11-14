@@ -1,8 +1,8 @@
 @echo off
-title HyperNexus Watchdog
+title TormentNexus Watchdog
 cd /d "%~dp0"
 echo ========================================
-echo  HyperNexus Watchdog
+echo  TormentNexus Watchdog
 echo  Started: %date% %time%
 echo  CWD: %cd%
 echo ========================================

@@ -55,10 +55,14 @@ Thumbs.db
 .jules/
 .kilo/
 
+
 # === Taskplane working files ===
 .pi/
 **/.pi/
 .pi-logs/
+
+# === pi-lens cache (auto-generated) ===
+.pi-lens/cache/
 
 # === pi-lens cache (auto-generated) ===
 .pi-lens/cache/
@@ -98,12 +102,23 @@ push_out.txt
 screenshot*.png
 audit-*.jsonl
 
+# === Temp files ===
+tmp_*/
+temp_*/
+
 # === Standalone test/experiment files ===
 test_*.py
 test*.txt
 fix_build*.py
 cleanup_tools.py
 batch_generate.py
+build_watchdog.py
+
+# === Cloned/imported repos ===
+yorck-mcp-src/
+akb/
+akb_repo/
+appwrite_utils_temp/
 
 # === Next.js / Turbopack ===
 .next/
@@ -114,7 +129,8 @@ batch_generate.py
 **/.turbo/
 
 # === TormentNexus runtime state ===
-# Protocol: memory, sessions, databases MUST stay tracked (not ignored)
+.tormentnexus/
+**/.tormentnexus/
 .tormentnexus-session.json
 .tormentnexus_startup_marker
 **/.tormentnexus_startup_marker
@@ -122,21 +138,40 @@ batch_generate.py
 **/.cli_startup_marker
 .tormentnexus_boot_check
 **/.tormentnexus_boot_check
+# .tormentnexus/skills/ and .tormentnexus/db/ are internal registry — tracked
+.tormentnexus/agent_memory/
+.tormentnexus/handoffs/
+.tormentnexus/memory/
 .tormentnexus/worktrees/
 .tormentnexus/workflows_test_*/
 .tormentnexus/shell_history.json
 .tormentnexus/policy.json
+.tormentnexus/imported_sessions/
+
+# === TormentNexus legacy (deprecated) ===
+.tormentnexus/
+**/.tormentnexus/
+.antigravity/
+.tormentnexus-session.json
+.tmp-tormentnexus-dist-probe.mjs
+apps/web/.tormentnexus-dev-port.json
+apps/web/.tormentnexus-dev-port.json
 
 # === Database runtime ===
-# Protocol: databases must be tracked
-*.db-shm
-*.db-wal
+# .db files are the internal registry — always track
+# resources.db and context.db are internal registries — tracked
 
 # === LanceDB / Vector data ===
+data/
+!data/*.db
+!data/init_state.py
 data/lancedb/
+data/memory/
 data/vectordb/
 
 # === Session state ===
+.pi/
+.tormentnexus/
 .git-rewrite/
 **/.git-rewrite/
 
@@ -159,10 +194,11 @@ apps/web/.tsc-current.txt
 **/test-results/
 test_logs/
 logs/
+docs/sessions/
+docs/sessions/*.json
 
 # === Archive (dead code, kept on disk only) ===
-# archive/ is now tracked for preserving removed files
-# archive/
+/archive/
 
 # === Reference material (not part of project) ===
 collection-claude-code-source-code-main/
@@ -177,14 +213,91 @@ hyperharness/
 jules-autopilot/
 
 # === Misc generated ===
+**/dist-chromium/
+**/dist-firefox/
+# tormentnexus.db is the primary registry DB — tracked
 tmp_*.ts
 tmp_*.tsx
 tmp_*.js
 
-# === Large binary files ===
-*.mp4
-*.exe
+# Jules AI session logs (auto-generated, not needed in repo)
+.jules/sessions/
+
+# Auto-generated MCP server context (added automatically)
+.mcp-server-context.md
+nul
+.wwebjs_auth/
+
+
+# Taskplane runtime artifacts (machine-specific, do not commit)
+.pi/batch-state.json
+.pi/batch-history.json
+.pi/lane-state-*
+.pi/merge-result-*
+.pi/merge-request-*
+.pi/worker-conversation-*
+.pi/orch-logs/
+.pi/orch-abort-signal
+.pi/settings.json
+.worktrees/
+.taskplane-tasks/
+
+# Pi project-local packages (if using pi install -l)
+.pi/npm/
+go_backup/
+
+# === Large/cache DB files (too large for git, or temporary restore artifacts) ===
+provider_metrics.db
+tormentnexus_restored.db
+old_db_restored.db
+db_v1_*.db
+db_v2_*.db
+db_v3_*.db
+db_v4_*.db
+db_v5_*.db
+scratch/
+
+# === Temp working files (not DBs) ===
+data/*.txt
+data/*.json
+data/fast_clean_tools.py
+data/surgical_clean_tools*.py
+data/bulk_clean_tools.py
+data/clean_broken_go.py
+data/find_broken_files.py
+data/assimilate_skills.py
+
+# === Temporary/Cache artifacts ===
+*.tmp
+akb*
+_llm_*
+*.pid
+*.tar.gz
+watchdog.bat
+run.bat
+go/*.exe~
+finalize_swarm.pid
+backup_*.tar.gz
+
+# === Generated/backup files ===
+americandefaultresearch.go
+binance.go
+bravesearch.go
+ccoreguidelines.go
 *.exe~
+watchdog.py
+
+# Swarm build artifacts
+go/internal/tools/_staging/
+go/internal/tools/_broken/
+# Large local databases — excluded from push
+/tormentnexus.db
+/tormentnexus.db-shm
+/tormentnexus.db-wal
+
+# Workspace pi extensions � global copy lives in ~/.pi/agent/
+.pi/extensions/
+*.exe
 tormentnexus-linux
 go/catalog.db
 go/tormentnexus.db
@@ -227,3 +340,4 @@ bin/*.bak*
 bin/*.exe.bak*
 .hypernexus/memory/
 .codex-gui/
+

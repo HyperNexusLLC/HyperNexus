@@ -96,7 +96,7 @@ Add-Type @"
 using System;
 using System.Runtime.InteropServices;
 
-public static class HyperNexusNativeAutomation {
+public static class TormentNexusNativeAutomation {
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
 
@@ -120,19 +120,11 @@ function Get-ControlTypeName($element) {
 
 function Convert-Bounds($rect) {
     if ($null -eq $rect) { return $null }
-    $left = $rect.Left; $top = $rect.Top; $w = $rect.Width; $h = $rect.Height
-    if ([double]::IsNaN($left) -or [double]::IsInfinity($left)) { $left = 0 }
-    if ([double]::IsNaN($top) -or [double]::IsInfinity($top)) { $top = 0 }
-    if ([double]::IsNaN($w) -or [double]::IsInfinity($w)) { $w = 0 }
-    if ([double]::IsNaN($h) -or [double]::IsInfinity($h)) { $h = 0 }
-    # Clamp to safe Int32 range to avoid overflow on minimized/offscreen windows
-    $maxInt = [int]::MaxValue; $minInt = [int]::MinValue
-    function Clamp([double]$v) { if ($v -gt $maxInt) { return $maxInt }; if ($v -lt $minInt) { return $minInt }; return [int][Math]::Round($v) }
     return @{
-        left = Clamp $left
-        top = Clamp $top
-        width = Clamp $w
-        height = Clamp $h
+        left = [int][Math]::Round($rect.Left)
+        top = [int][Math]::Round($rect.Top)
+        width = [int][Math]::Round($rect.Width)
+        height = [int][Math]::Round($rect.Height)
     }
 }
 
@@ -239,7 +231,7 @@ function Test-IsLikelyChatInput($element) {
 }
 
 function Get-ForegroundAutomationWindow() {
-    $handle = [HyperNexusNativeAutomation]::GetForegroundWindow()
+    $handle = [TormentNexusNativeAutomation]::GetForegroundWindow()
     if ($handle -eq [IntPtr]::Zero) {
         throw 'No foreground window available'
     }
@@ -403,13 +395,13 @@ function Invoke-Element([System.Windows.Automation.AutomationElement]$element) {
     }
 
     $rect = $element.Current.BoundingRectangle
-    if ($rect.Width -gt 0 -and $rect.Height -gt 0 -and -not [double]::IsNaN($rect.Left) -and -not [double]::IsNaN($rect.Top)) {
-        $x = [int][Math]::Max([int]::MinValue, [Math]::Min([int]::MaxValue, [Math]::Round($rect.Left + ($rect.Width / 2))))
-        $y = [int][Math]::Max([int]::MinValue, [Math]::Min([int]::MaxValue, [Math]::Round($rect.Top + ($rect.Height / 2))))
-        [HyperNexusNativeAutomation]::SetCursorPos($x, $y) | Out-Null
+    if ($rect.Width -gt 0 -and $rect.Height -gt 0) {
+        $x = [int][Math]::Round($rect.Left + ($rect.Width / 2))
+        $y = [int][Math]::Round($rect.Top + ($rect.Height / 2))
+        [TormentNexusNativeAutomation]::SetCursorPos($x, $y) | Out-Null
         Start-Sleep -Milliseconds 50
-        [HyperNexusNativeAutomation]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
-        [HyperNexusNativeAutomation]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
+        [TormentNexusNativeAutomation]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
+        [TormentNexusNativeAutomation]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
         return 'mouse-click'
     }
 

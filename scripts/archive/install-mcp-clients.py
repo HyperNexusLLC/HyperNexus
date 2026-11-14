@@ -41,9 +41,7 @@ DICT_CONFIGS = {
     "Pi-Agent": HOME / ".pi-agent" / "mcp.json",
     "OpenCode": HOME / ".opencode" / "mcp.json",
     "Codex-cli": HOME / ".codex-cli" / "mcp.json",
-    "Codex Desktop": HOME / ".codex" / "mcp.json",
-    "Chrome Extension": HOME / ".chrome-mcp-extensions" / "mcp.json",
-    "Firefox Extension": HOME / ".firefox-mcp-extensions" / "mcp.json",
+    "Codex Desktop": HOME / ".codex" / "mcp.json"
 }
 
 # Array-based MCP config files (e.g. Continue)
@@ -168,39 +166,21 @@ INJECTION_BLOCK = """<!-- [TORMENTNEXUS_AUTO_INJECTED] -->
 > 3. **Context Harvesting & Compaction**: Perform automatic context harvesting and compaction/pruning of the LLM context to prevent token blowups. Summarize or discard old logs/history dynamically.
 > 4. **Tool Output Compaction & Deduplication**: Deduplicate and compact verbose tool outputs. Avoid displaying duplicate or redundant logs in responses.
 > 5. **Session & Skill Injection**: Inspect and update sessions and memory states using scratchpads (`memory_scratchpad_set`) to persist key findings, rules, and skill recommendations.
-> 6. **Session Inspection**: Continuously inspect the current session context to understand what tools and skills are available and recommend new skills for injection.
 
 """
 
 instruction_files = ["AGENT.md", "AGENTS.md", "CLAUDE.md", "JULES.md", "SKILL.md"]
-
-# Scan current working directory and one level deep to avoid uncontrolled recursion
-cwd = Path.cwd()
-candidate_files = []
-
-# Current directory
 for f_name in instruction_files:
-    target = cwd / f_name
-    if target.exists() and target.suffix == '.md':
-        candidate_files.append(target)
-
-# One level deep (including .zed for agent files, but we DO NOT inject markdown into .json files)
-for item in cwd.iterdir():
-    if item.is_dir() and (not item.name.startswith('.') or item.name == '.zed'):
-        for f_name in instruction_files:
-            target = item / f_name
-            if target.exists() and target.suffix == '.md':
-                candidate_files.append(target)
-
-for target_file in candidate_files:
-    try:
-        content = target_file.read_text(encoding="utf-8")
-        if INJECTION_MARKER not in content:
-            target_file.write_text(INJECTION_BLOCK + content, encoding="utf-8")
-            print(f"[Installer] Injected tool instructions into local {target_file.relative_to(cwd)}")
-        else:
-            print(f"[Installer] local {target_file.relative_to(cwd)} already contains instructions.")
-    except Exception as e:
-        print(f"[Installer] FAILED to inject into local {target_file.relative_to(cwd)}: {e}")
+    target_file = REPO_ROOT / f_name
+    if target_file.exists():
+        try:
+            content = target_file.read_text(encoding="utf-8")
+            if INJECTION_MARKER not in content:
+                target_file.write_text(INJECTION_BLOCK + content, encoding="utf-8")
+                print(f"[Installer] Injected tool instructions into local {f_name}")
+            else:
+                print(f"[Installer] local {f_name} already contains instructions.")
+        except Exception as e:
+            print(f"[Installer] FAILED to inject into local {f_name}: {e}")
 
 print("\n--- MCP Client Installation Complete! ---")

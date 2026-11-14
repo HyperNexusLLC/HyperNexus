@@ -46,17 +46,17 @@ export async function POST(request: NextRequest) {
 		config.tools[name] = native === true;
 		saveConfig(config);
 
-		// Also try to hit TN Kernel endpoint for synchronizing internal registries if active
+		// Also try to hit Go sidecar endpoint for synchronizing internal registries if active
 		try {
-			const TN_KERNEL = process.env.TORMENTNEXUS_TN_KERNEL_URL || "http://127.0.0.1:7778";
-			await fetch(`${TN_KERNEL}/api/tools/native`, {
+			const GO_SIDECAR = process.env.TORMENTNEXUS_GO_SIDECAR_URL || "http://127.0.0.1:7778";
+			await fetch(`${GO_SIDECAR}/api/tools/native`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ name, native }),
 				signal: AbortSignal.timeout(1000),
 			});
 		} catch {
-			// ignore if TN Kernel is temporarily unreachable during Next.js standalone compile
+			// ignore if Go sidecar is temporarily unreachable during Next.js standalone compile
 		}
 
 		return NextResponse.json({

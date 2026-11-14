@@ -29,52 +29,32 @@ WORKERS = {
         "critical": True,
         "pid_file": "data/swarm.pid",
     },
-    "bobbybookmarks_sync": {
-        "script": "scripts/bobbybookmarks_sync.py",
-        "args": [],
-        "log": "data/bobby_sync_watchdog.log",
-        "type": "python",
-        "critical": True,
-        "pid_file": "data/bobby_sync.pid",
-    },
-    "trends_analyzer": {
-        "script": "scripts/trends_analyzer.py",
-        "args": [],
-        "log": "data/trends_watchdog.log",
-        "type": "python",
-        "critical": False,
-        "pid_file": "data/trends.pid",
-    },
     # Core TormentNexus services (checked by port)
     "freellm_proxy": {
         "binary": "freellm.exe",
         "port": 4000,
         "type": "port",
         "critical": True,
+        "cmd": ["../freellm/freellm.exe"],
+        "log": "data/freellm_proxy_watchdog.log",
     },
     "go_sidecar": {
         "binary": "tormentnexus.exe",
         "port": 7778,
         "type": "port",
         "critical": True,
+        "cmd": ["cmd.exe", "/c", "start.bat"],
+        "log": "data/go_sidecar_watchdog.log",
     },
-    "go_sidecar_legacy": {
-        "binary": "tormentnexus.exe",
-        "port": 4300,
-        "type": "port",
-        "critical": False,
-    },
-    "ts_control_plane": {
-        "binary": "node.exe",
-        "port": 4100,
-        "type": "port",
-        "critical": True,
-    },
+
+
     "dashboard": {
         "binary": "node.exe",
         "port": 7779,
         "type": "port",
         "critical": True,
+        "cmd": ["cmd.exe", "/c", "start.bat"],
+        "log": "data/dashboard_watchdog.log",
     },
     "lm_studio": {
         "binary": "lm-studio.exe",
@@ -238,9 +218,27 @@ def check_and_repair():
             log(f"{name}: DOWN — restarting...")
             all_ok = False
             if config.get("type") == "port":
-                log(
-                    f"{name} is a port-based service — cannot auto-restart. Check manually."
-                )
+                if "cmd" in config:
+                    try:
+                        cmd = config["cmd"]
+                        log_path = str(WORKSPACE / config.get("log", "data/port_service.log"))
+                        logfile = open(log_path, "a", buffering=1)
+                        proc = subprocess.Popen(
+                            cmd,
+                            stdout=logfile,
+                            stderr=subprocess.STDOUT,
+                            cwd=str(WORKSPACE),
+                            creationflags=subprocess.CREATE_NO_WINDOW
+                            | subprocess.CREATE_NEW_PROCESS_GROUP
+                            | subprocess.DETACHED_PROCESS,
+                        )
+                        log(f"{name}: started successfully via watchdog (PID {proc.pid})")
+                    except Exception as e:
+                        log(f"{name}: FAILED to start port-based service: {e}")
+                else:
+                    log(
+                        f"{name} is a port-based service — cannot auto-restart. Check manually."
+                    )
             else:
                 pid = start_worker(name, config)
                 if pid:
@@ -260,23 +258,36 @@ def main():
 
     # Initial startup: start all workers
     for name, config in WORKERS.items():
-        if config.get("type") == "port":
-            pids = find_process(name, config)
-            if pids:
-                log(f"{name}: OK (port {config['port']}, PID {pids[0]})")
-            else:
+        pids = find_process(name, config)
+        if not pids:
+            if config.get("type") == "port" and "cmd" in config:
+                log(f"Starting port service {name} for first time...")
+                try:
+                    cmd = config["cmd"]
+                    log_path = str(WORKSPACE / config.get("log", "data/port_service.log"))
+                    logfile = open(log_path, "a", buffering=1)
+                    proc = subprocess.Popen(
+                        cmd,
+                        stdout=logfile,
+                        stderr=subprocess.STDOUT,
+                        cwd=str(WORKSPACE),
+                        creationflags=subprocess.CREATE_NO_WINDOW
+                        | subprocess.CREATE_NEW_PROCESS_GROUP
+                        | subprocess.DETACHED_PROCESS,
+                    )
+                    log(f"{name}: started successfully via startup (PID {proc.pid})")
+                except Exception as e:
+                    log(f"{name}: FAILED to start port-based service on startup: {e}")
+            elif config.get("type") == "port":
                 log(f"{name}: port {config['port']} not listening — check manually")
-        else:
-            pids = find_process(name, config)
-            if not pids:
-                log(f"Starting {name} for first time...")
-                start_worker(name, config)
             else:
-                log(f"{name} already running (PID{'/'.join(str(p) for p in pids)})")
+                log(f"Starting script {name} for first time...")
+                start_worker(name, config)
+        else:
+            log(f"{name} already running (PID {'/'.join(str(p) for p in pids)})")
 
     cycles = 0
     while True:
-        time.sleep(CHECK_INTERVAL)
         cycles += 1
 
         log(f"--- Health check #{cycles} ---")
@@ -291,6 +302,8 @@ def main():
         if cycles % 1000 == 0:
             log(f"Watchdog running for {cycles * CHECK_INTERVAL / 3600:.1f} hours")
             log(f"Last check: {datetime.now().isoformat()}")
+
+        time.sleep(CHECK_INTERVAL)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@hypernexus/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@tormentnexus/ui';
 import { trpc } from '@/utils/trpc';
 import { Terminal, Globe, Wrench, Layers, ExternalLink, ShieldCheck, Cpu, Box, Clock } from 'lucide-react';
 import { normalizeShellHistory } from './tools-page-normalizers';

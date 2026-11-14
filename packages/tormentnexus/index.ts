@@ -9,11 +9,11 @@ const TN_BASE = "http://127.0.0.1:7778";
 /**
  * tormentnexus pi extension v4
  *
- * Full bridge: pi ↔ HyperNexus
+ * Full bridge: pi ↔ TormentNexus
  * ───────────────────────────────────────────
  * - 9 custom tools (memory, tools, sessions, skills, code, context, scratchpad)
  * - Session priming + per-turn context harvesting + compaction hooks
- * - tool_call RBAC enforcement via commercial API
+ * - tool_call RBAC enforcement via enterprise API
  * - tool_result auto-storage to L2 memory
  * - user_bash audit logging through TN
  * - model_select tracking to L2
@@ -58,9 +58,9 @@ function now() {
 
 // ─── System prompt guidance ────────────────────────────────────────────
 const TN_SYSTEM_PROMPT = `
-## HyperNexus Integration
+## TormentNexus Integration
 
-You have access to HyperNexus — a local AI control plane running on port 7778 with persistent L2 vector memory, semantic tool discovery, imported sessions, and a skill registry. Use these tools:
+You have access to TormentNexus — a local AI control plane running on port 7778 with persistent L2 vector memory, semantic tool discovery, imported sessions, and a skill registry. Use these tools:
 
 ### Memory Tools
 - \`tn_memory_store\` — Save important decisions, patterns, and facts with tags
@@ -82,8 +82,8 @@ You have access to HyperNexus — a local AI control plane running on port 7778 
 - \`/tn-summary\` — Summarize current session using TN context
 - \`/tn-purge\` — Remove stale memories from L2
 
-### Commercial Security
-All tool calls are checked against HyperNexus commercial RBAC. Blocked tools show a security notice.
+### Enterprise Security
+All tool calls are checked against TormentNexus enterprise RBAC. Blocked tools show a security notice.
 
 ### Best Practices
 1. Use \`tn_memory_search\` before significant tasks to recall past context
@@ -122,7 +122,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("before_agent_start", async (event, ctx) => {
-		const isFirstTurn = event.systemPrompt.includes("HyperNexus");
+		const isFirstTurn = event.systemPrompt.includes("TormentNexus");
 		if (!isFirstTurn) {
 			// Inject L2 context on subsequent turns
 			try {
@@ -143,7 +143,7 @@ export default function (pi: ExtensionAPI) {
 							)
 							.join("\n");
 						return {
-							systemPrompt: `${event.systemPrompt}\n\n## Relevant Context from HyperNexus L2\n${contextBlock}`,
+							systemPrompt: `${event.systemPrompt}\n\n## Relevant Context from TormentNexus L2\n${contextBlock}`,
 						};
 					}
 				}
@@ -274,13 +274,11 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	// ══════════════════════════════════════════════
-	// COMMERCIAL RBAC — TOOL CALL ENFORCEMENT
+	// ENTERPRISE RBAC — TOOL CALL ENFORCEMENT
 	// ══════════════════════════════════════════════
 
 	pi.on("tool_call", async (event, ctx) => {
-		// Check dangerous operations against TN commercial RBAC
-		// Only check bash/shell commands, not file content (write/edit tools can contain any text)
-		if (event.toolName === "bash" || event.toolName === "shell") {
+		// Check dangerous operations against TN enterprise RBAC
 		const dangerousPatterns = [
 			"rm -rf",
 			"sudo ",
@@ -294,7 +292,7 @@ export default function (pi: ExtensionAPI) {
 		for (const pattern of dangerousPatterns) {
 			if (inputStr.includes(pattern.toLowerCase())) {
 				const res = await tnJson(
-					"/api/commercial/authorize",
+					"/api/enterprise/authorize",
 					{
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
@@ -310,17 +308,14 @@ export default function (pi: ExtensionAPI) {
 				if (!allowed) {
 					return {
 						block: true,
-						reason: `Commercial policy blocks: ${pattern}. Use tn_memory_store for destructive operations.`,
+						reason: `Enterprise policy blocks: ${pattern}. Use tn_memory_store for destructive operations.`,
 					};
 				}
 			}
 		}
 
-
-		} // end bash-only RBAC guard
-
 		// Log tool execution to TN audit
-		await tnOk("/api/commercial/audit/log", {
+		await tnOk("/api/enterprise/audit/log", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -373,7 +368,7 @@ export default function (pi: ExtensionAPI) {
 	// ══════════════════════════════════════════════
 
 	pi.on("user_bash", async (event, ctx) => {
-		await tnOk("/api/commercial/audit/log", {
+		await tnOk("/api/enterprise/audit/log", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -597,7 +592,7 @@ export default function (pi: ExtensionAPI) {
 		name: "tn_memory_store",
 		label: "TN Memory Store",
 		description:
-			"Store a memory in HyperNexus L2 vault and optionally in a project .memdb for git-tracked per-project portable memories.",
+			"Store a memory in TormentNexus L2 vault and optionally in a project .memdb for git-tracked per-project portable memories.",
 		promptSnippet: "Store knowledge in persistent L2 memory",
 		promptGuidelines: [
 			"Use tn_memory_store to save important patterns, decisions, and facts across sessions.",
@@ -944,7 +939,7 @@ export default function (pi: ExtensionAPI) {
 		name: "tn_skill_manage",
 		label: "TN Skill Management",
 		description:
-			"Manage 5,776+ HyperNexus skills: list, search, read, create.",
+			"Manage 5,776+ TormentNexus skills: list, search, read, create.",
 		promptSnippet: "Manage skills (list, search, read, create)",
 		promptGuidelines: [
 			"Use to discover/create reusable skill modules.",
@@ -1335,7 +1330,7 @@ export default function (pi: ExtensionAPI) {
 
 	// 3. /tn-status — system status
 	pi.registerCommand("tn-status", {
-		description: "Show HyperNexus system status",
+		description: "Show TormentNexus system status",
 		handler: async (_args, ctx) => {
 			const [fts, cold, mesh] = await Promise.all([
 				tnJson("/api/memory/fts-search?q=the&limit=1"),
@@ -1575,7 +1570,7 @@ export default function (pi: ExtensionAPI) {
 		name: "tn_subagent",
 		label: "TN Subagent",
 		description:
-			"Dispatch a task to a HyperNexus sub-agent. Uses TN's SupervisorManager for distributed execution with session isolation and result storage back to L2 memory.",
+			"Dispatch a task to a TormentNexus sub-agent. Uses TN's SupervisorManager for distributed execution with session isolation and result storage back to L2 memory.",
 		promptSnippet: "Dispatch a task to a sub-agent",
 		promptGuidelines: [
 			"Use tn_subagent when a task can run independently — parallelizable work, background research, batch operations.",

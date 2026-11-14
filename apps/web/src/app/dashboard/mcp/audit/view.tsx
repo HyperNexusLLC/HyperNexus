@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { Card } from "@hypernexus/ui";
-import { Button } from "@hypernexus/ui";
+import { Card } from "@tormentnexus/ui";
+import { Button } from "@tormentnexus/ui";
 import { Loader2, Calendar, User, Search, FileText } from "lucide-react";
 import { trpc } from '@/utils/trpc';
 import { toast } from 'sonner';

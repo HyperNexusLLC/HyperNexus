@@ -1,14 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-const TN_KERNEL_BASE =
-	process.env.TORMENTNEXUS_TN_KERNEL_URL || "http://127.0.0.1:7778";
+const GO_SIDECAR_BASE =
+	process.env.TORMENTNEXUS_GO_SIDECAR_URL || "http://127.0.0.1:7778";
 
 /**
- * TN Kernel reverse proxy.
+ * Go sidecar reverse proxy.
  *
- * Browser requests to /api/go/<path> are forwarded to the TN Kernel
- * at TN_KERNEL_BASE/<path>.  The path is passed through verbatim so
- * that callers can target any kernel endpoint — e.g. /api/go/health
+ * Browser requests to /api/go/<path> are forwarded to the Go sidecar
+ * at GO_SIDECAR_BASE/<path>.  The path is passed through verbatim so
+ * that callers can target any sidecar endpoint — e.g. /api/go/health
  * → http://127.0.0.1:7778/health, or /api/go/api/mcp/status →
  * http://127.0.0.1:7778/api/mcp/status.
  */
@@ -49,8 +49,7 @@ export async function GET(
 ) {
 	const resolvedParams = await params;
 	const pathSegments = resolvedParams.path.join("/");
-	const search = request.nextUrl.search || "";
-	const targetURL = `${TN_KERNEL_BASE}/${remapPath(pathSegments)}${search}`;
+	const targetURL = `${GO_SIDECAR_BASE}/${remapPath(pathSegments)}`;
 
 	try {
 		const response = await fetch(targetURL, {
@@ -78,9 +77,9 @@ export async function GET(
 		});
 	} catch (error) {
 		const message =
-			error instanceof Error ? error.message : "TN Kernel unreachable";
+			error instanceof Error ? error.message : "Go sidecar unreachable";
 		return NextResponse.json(
-			{ success: false, error: message, kernelURL: targetURL },
+			{ success: false, error: message, sidecarURL: targetURL },
 			{ status: 502 },
 		);
 	}
@@ -92,8 +91,7 @@ export async function POST(
 ) {
 	const resolvedParams = await params;
 	const pathSegments = resolvedParams.path.join("/");
-	const search = request.nextUrl.search || "";
-	const targetURL = `${TN_KERNEL_BASE}/${remapPath(pathSegments)}${search}`;
+	const targetURL = `${GO_SIDECAR_BASE}/${remapPath(pathSegments)}`;
 
 	try {
 		let body: string | null = null;
@@ -123,9 +121,9 @@ export async function POST(
 		});
 	} catch (error) {
 		const message =
-			error instanceof Error ? error.message : "TN Kernel unreachable";
+			error instanceof Error ? error.message : "Go sidecar unreachable";
 		return NextResponse.json(
-			{ success: false, error: message, kernelURL: targetURL },
+			{ success: false, error: message, sidecarURL: targetURL },
 			{ status: 502 },
 		);
 	}

@@ -1,5 +1,4 @@
 const isDev = process.env.NODE_ENV === "development";
-const isWin = typeof process !== 'undefined' && process.platform === 'win32';
 const isExport = process.env.NEXT_EXPORT === "true";
 
 /** @type {import('next').NextConfig} */
@@ -22,7 +21,7 @@ const nextConfig = {
 	reactStrictMode: false,
 
 	// Transpile packages
-	transpilePackages: ["@hypernexus/ui"],
+	transpilePackages: ["@tormentnexus/ui"],
 
 	// Turbopack config (Next.js 16 default)
 	turbopack: {

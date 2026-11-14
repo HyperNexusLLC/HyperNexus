@@ -7,7 +7,7 @@ export default function GuidePage() {
         <div className="min-h-screen bg-zinc-50 dark:bg-black">
             <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
                 <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">📚 HyperNexus User Guide</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">📚 TormentNexus User Guide</h1>
                     <Link href="/" className="text-sm text-blue-500 hover:text-blue-400">← Dashboard</Link>
                 </div>
             </header>
@@ -143,7 +143,7 @@ export default function GuidePage() {
 
                 {/* Footer */}
                 <footer className="mt-12 pt-8 border-t border-zinc-200 dark:border-zinc-800 text-center text-sm text-zinc-500">
-                    <p>HyperNexus Mission Control • Complete Documentation</p>
+                    <p>TormentNexus Mission Control • Complete Documentation</p>
                     <div className="mt-4 flex justify-center gap-4">
                         <Link href="/" className="text-blue-500 hover:text-blue-400">Dashboard</Link>
                         <Link href="/docs" className="text-blue-500 hover:text-blue-400">Feature Docs</Link>

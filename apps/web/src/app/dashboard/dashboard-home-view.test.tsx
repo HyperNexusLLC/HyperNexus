@@ -1242,7 +1242,7 @@ describe('dashboard home helpers', () => {
   it('deduplicates startup blocking actions while preserving first-seen order', () => {
     expect(getStartupBlockingReasonActions([
       { code: 'memory_not_ready', detail: 'Memory pending' },
-      { code: 'claude_mem_not_ready', detail: 'HyperNexus pending' },
+      { code: 'claude_mem_not_ready', detail: 'TormentNexus pending' },
       { code: 'extension_bridge_not_ready', detail: 'Bridge offline' },
       { code: 'browser_service_not_ready', detail: 'Browser service offline' },
     ])).toEqual([

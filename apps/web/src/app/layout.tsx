@@ -16,21 +16,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "HyperNexus",
-    template: "%s | HyperNexus",
+    default: "TormentNexus",
+    template: "%s | TormentNexus",
   },
   description: "Local AI operations control plane for MCP routing, provider fallback, session supervision, and a unified dashboard.",
 };
 
 import { TRPCProvider } from "../utils/TRPCProvider";
-import { Toaster, commercialRegistry } from "@hypernexus/ui";
+import { Toaster, enterpriseRegistry } from "@tormentnexus/ui";
 import { Navigation } from "../components/Navigation";
-import { OidcConfig, RbacManager, AuditLogViewer } from "@hypernexus/commercial";
+import { OidcConfig, RbacManager, AuditLogViewer } from "@tormentnexus/enterprise";
 
-// Bind the commercial compliance components to the runtime registry
-commercialRegistry.OidcConfig = OidcConfig;
-commercialRegistry.RbacManager = RbacManager;
-commercialRegistry.AuditLogViewer = AuditLogViewer;
+// Bind the enterprise compliance components to the runtime registry
+enterpriseRegistry.OidcConfig = OidcConfig;
+enterpriseRegistry.RbacManager = RbacManager;
+enterpriseRegistry.AuditLogViewer = AuditLogViewer;
 
 
 function getVersionLabel(): string {

@@ -1,10 +1,10 @@
 {
   "mcpServers": {
-    "hypernexus": {
-      "command": "C:\\Users\\hyper\\workspace\\hypernexus\\hypernexus.exe",
+    "tormentnexus": {
+      "command": "C:\\Users\\hyper\\workspace\\tormentnexus\\tormentnexus.exe",
       "args": ["mcp"],
       "env": {
-        "HYPERNEXUS_WORKSPACE_ROOT": "C:\\Users\\hyper\\workspace\\hypernexus"
+        "TORMENTNEXUS_WORKSPACE_ROOT": "C:\\Users\\hyper\\workspace\\tormentnexus"
       }
     }
   }

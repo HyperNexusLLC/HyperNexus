@@ -1,28 +1,28 @@
-# Universal AI Agent Instructions (HyperNexus Kernel & HyperNexus)
+# Universal AI Agent Instructions (TormentNexus Kernel & TormentNexus)
 
 > **MANDATORY**: These instructions apply to ALL agents (Claude, Gemini, GPT, etc.) regardless of model family. Model-specific overrides in `CLAUDE.md`, `GEMINI.md`, etc., MUST NOT contradict these rules.
 
 ## 1. Project Context & Identity
-- **The Brand**: We are building the **HyperNexus AI HyperNexus** (Kernel) and **HyperNexus** (Product).
+- **The Brand**: We are building the **TormentNexus AI TormentNexus** (Kernel) and **TormentNexus** (Product).
 - **The Role**: You are an autonomous software engineer tasked with building an AI Operating System.
 - **The Strategy**: Separation of Concern. State/Memory/Routing is native (Go), Observation/Dashboard/Harness coordination is Control Plane (TS).
 
 ## 2. Core Heuristics
 - **Truth Pass**: Never show "reassuring fiction" in the UI. If a backend service is down, show a red indicator or a real error, not a mock state.
-- **Modular Monolith**: Keep logic in shared packages (e.g., `@hypernexus/core`, `@hypernexus/ui`) before extracting new services.
-- **Authority**: The HyperNexus Go Kernel is the ground truth for system state. The TypeScript Control Plane is the observation deck.
+- **Modular Monolith**: Keep logic in shared packages (e.g., `@tormentnexus/core`, `@tormentnexus/ui`) before extracting new services.
+- **Authority**: The TormentNexus Go Kernel is the ground truth for system state. The TypeScript Control Plane is the observation deck.
 
 ## 3. Implementation Standards
-- **Go (HyperNexus Kernel)**:
+- **Go (TormentNexus Kernel)**:
   - Standardized on Port 4300.
   - State must be stored in SQLite with `sqlite-vec` for semantic search.
   - Use `Go Context` for all network and DB operations.
   - Follow the `internal/` package structure for encapsulation.
-- **TypeScript (HyperNexus)**:
+- **TypeScript (TormentNexus)**:
   - Standardized on Port 3000 (Web), 4100 (Bridge), 3001 (Socket.io).
   - Use tRPC for internal API communication.
   - Use Next.js 16/React 19 for UI components.
-  - Import shared UI from `@hypernexus/ui`, never local component folders.
+  - Import shared UI from `@tormentnexus/ui`, never local component folders.
 - **Security**:
   - `child_process.exec` is PROHIBITED.
   - Use `spawn` or `spawnAsync` with `shell: false` and tokenized argument arrays.
@@ -37,7 +37,7 @@
 Before submitting any task, you MUST run:
 ```bash
 # Verify Go
-cd go && go build ./cmd/hypernexus/...
+cd go && go build ./cmd/tormentnexus/...
 
 # Verify TypeScript
 pnpm -C packages/core exec tsc --noEmit
@@ -46,28 +46,18 @@ pnpm -C packages/cli exec tsc --noEmit
 
 ## 6. CodeWhale Integration
 
-CodeWhale integrates with HyperNexus through the `hypernexus` MCP server plus a full
-plugin bundle (managed by `node addons/codewhale/install.mjs`, project or `--global`):
+CodeWhale has a native Rust extension (`crates/tn-extension`) with full Pi extension parity:
 
-- **MCP server**: 58 tools via `hypernexus.exe mcp` (memory, scratchpad, knowledge
-  graph, MCP discovery/routing, code search, kernel ops, UI automation, enterprise
-  integrations) — registered in `.codewhale/mcp.json` (project) / `~/.codewhale/mcp.json`
-  (global), tool namespace `mcp__hypernexus__*`
-- **Plugin bundle**: `.codewhale/plugins/hypernexus/` (Agent Plugins v1.0.0 `plugin.json`
-  + legacy `plugin.toml`) with 8 `/hn-*` commands and 3 skills — activate via
-  `/plugin validate hypernexus` → `/plugin show` → `/plugin trust` → `/plugin enable`
-- **Skills**: `hypernexus`, `hypernexus-ops`, `hypernexus-workflows` (bundle + direct
-  mirror in `.codewhale/skills/`)
-- **Prompt overlay**: managed block in `AGENTS.md` (RECALL→DISCOVER→EXECUTE→PERSIST→VERIFY)
-- **REST API**: Sidecar on port 7778 for direct L2 memory operations (works without the extension)
+- **Lifecycle hooks**: SessionStart, BeforeAgentStart, ToolCall, ToolResult, TurnEnd, Input, UserBash, ModelSelect, SessionCompact — all logged to TN L2 memory
+- **Tools**: 49 MCP tools via `tormentnexus.exe mcp` (memory, file I/O, MCP routing, UI automation, enterprise integrations)
+- **Custom tool reg**: 9 tool definitions, 6 slash commands, 3 keyboard shortcuts
+- **SKILL.md**: at `.codewhale/plugins/tormentnexus/skills/SKILL.md`
+- **REST API**: Sidecar on port 7778 for direct L2 memory operations
 
 When working on CodeWhale integration, verify:
-
 ```bash
-node addons/codewhale/install.mjs --check    # installation gaps (exit 1 on gaps)
-node bin/test-codewhale-ext.mjs              # full battery (85 checks)
-codewhale mcp validate && codewhale mcp tools  # hypernexus: 58 tools
-curl -s http://127.0.0.1:7778/health            # kernel liveness (no extension needed)
+codewhale mcp connect tormentnexus
+codewhale mcp tools | grep mcp_tormentnexus | wc -l  # should be 49
 ```
 
 ## 7. Autopilot & Encouragement

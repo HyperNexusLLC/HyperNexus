@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createUser } from '@/lib/authStore';
-import { AUTH_COOKIE_NAME, signAccessToken } from '@/lib/jwt';
 
 export async function POST(req: Request) {
     try {
@@ -24,30 +23,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: 'An account with this email already exists.' }, { status: 409 });
         }
 
-        const { token, expiresAt } = signAccessToken({
-            userId: result.user.id,
-            email: result.user.email,
-            name: result.user.name,
-        });
-
-        const response = NextResponse.json({
-            ok: true,
-            user: result.user,
-            token,
-            expiresAt,
-        });
-
-        response.cookies.set(AUTH_COOKIE_NAME, token, {
-            httpOnly: true,
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
-            path: '/',
-            maxAge: 60 * 60 * 24,
-        });
-
-        return response;
-    } catch (error) {
-        const message = error instanceof Error ? error.message : 'Invalid request payload.';
-        return NextResponse.json({ ok: false, error: message }, { status: 400 });
+        return NextResponse.json({ ok: true, user: result.user });
+    } catch {
+        return NextResponse.json({ ok: false, error: 'Invalid request payload.' }, { status: 400 });
     }
 }

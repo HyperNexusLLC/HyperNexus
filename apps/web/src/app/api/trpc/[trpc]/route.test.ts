@@ -64,13 +64,13 @@ describe("resolveUpstreamBases & resolveGoApiBase", () => {
 	});
 
 	it("prefers HYPERNEXUS_TRPC_UPSTREAM and HYPERNEXUS_GO_API_BASE over legacy aliases", () => {
-		process.env.HYPERNEXUS_TRPC_UPSTREAM = "http://127.0.0.1:17778/trpc/";
+		process.env.HYPERNEXUS_TRPC_UPSTREAM = "http://127.0.0.1:7778/trpc/";
 		process.env.TORMENTNEXUS_TRPC_UPSTREAM = "http://127.0.0.1:3100/trpc";
-		process.env.HYPERNEXUS_GO_API_BASE = "http://127.0.0.1:17778/";
+		process.env.HYPERNEXUS_GO_API_BASE = "http://127.0.0.1:7778/";
 		process.env.TORMENTNEXUS_GO_API_BASE = "http://127.0.0.1:9999";
 
-		expect(resolveUpstreamBases()[0]).toBe("http://127.0.0.1:17778/trpc");
-		expect(resolveGoApiBase()).toBe("http://127.0.0.1:17778");
+		expect(resolveUpstreamBases()[0]).toBe("http://127.0.0.1:7778/trpc");
+		expect(resolveGoApiBase()).toBe("http://127.0.0.1:7778");
 	});
 });
 

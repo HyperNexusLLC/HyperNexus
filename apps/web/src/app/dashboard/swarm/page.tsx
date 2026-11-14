@@ -19,7 +19,7 @@ import {
 	TabsTrigger,
 	Badge,
 	ScrollArea,
-} from "@hypernexus/ui";
+} from "@tormentnexus/ui";
 
 // Import all Swarm & Intelligence sub-pages to consolidate
 import CognitiveBrainDashboard from "../brain/view";
@@ -34,7 +34,7 @@ import ClaudeChromePage from "../claude-chrome/view";
 import SessionImportPage from "../sessions/import/view";
 import { SwarmTranscript } from "@/components/swarm/SwarmTranscript";
 import { DebateVisualizer } from "@/components/council/DebateVisualizer";
-import { SquadsPanel } from "@hypernexus/ui";
+import { SquadsPanel } from "@tormentnexus/ui";
 import { trpc } from "@/utils/trpc";
 import {
 	Users as UsersIcon,
@@ -447,7 +447,7 @@ export function SwarmDashboardOverview() {
 			/>
 			<PageStatusBanner
 				status="experimental"
-				message="Autonomy surfaces, worktree spawners, and consensus debates are running live on the local HyperNexus mesh."
+				message="Autonomy surfaces, worktree spawners, and consensus debates are running live on the local TormentNexus mesh."
 			/>
 
 			<div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">

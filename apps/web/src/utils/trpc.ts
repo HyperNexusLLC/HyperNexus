@@ -1,1 +1,1 @@
-export { trpc } from '@hypernexus/ui';
+export { trpc } from '@tormentnexus/ui';

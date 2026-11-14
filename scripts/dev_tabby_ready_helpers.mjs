@@ -151,7 +151,7 @@ export function chooseStaleCoreRefreshTarget({
     return {
       kind: 'owner',
       pid: ownerPid,
-      sourceLabel: 'port 4300',
+      sourceLabel: 'port 3001',
       trusted: true,
     };
   }
@@ -160,7 +160,7 @@ export function chooseStaleCoreRefreshTarget({
     return {
       kind: 'skip-untrusted-owner',
       pid: ownerPid,
-      sourceLabel: 'port 4300',
+      sourceLabel: 'port 3001',
       trusted: false,
     };
   }
@@ -454,7 +454,7 @@ export function getWaitingReasons(state) {
   }
 
   if (!state.coreBridge.ok) {
-    missing.push('core extension bridge (/api/sse)');
+    missing.push('core extension bridge (/api/mesh/stream)');
   }
 
   if (!state.startupStatus.ok) {

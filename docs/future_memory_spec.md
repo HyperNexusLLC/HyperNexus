@@ -1,6 +1,6 @@
-# HyperNexus: Future Memory Systems Specification
+# TormentNexus: Future Memory Systems Specification
 
-This document details the architectural patterns of advanced memory systems found in the BobbyBookmarks ecosystem that are not currently implemented in HyperNexus, and provides a blueprint for their Go-native integration.
+This document details the architectural patterns of advanced memory systems found in the BobbyBookmarks ecosystem that are not currently implemented in TormentNexus, and provides a blueprint for their Go-native integration.
 
 ---
 

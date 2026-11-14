@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { trpc } from '@/utils/trpc';
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@hypernexus/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@tormentnexus/ui';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Loader2, DollarSign, Activity, Settings, Key, Zap, AlertCircle, Database, Shield, ExternalLink, WalletCards } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,8 +18,8 @@ import {
     type BillingTaskRoutingRuleSummary,
     type BillingProviderQuotaSummary,
 } from './billing-portal-data';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@hypernexus/ui';
-import { Input } from '@hypernexus/ui';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@tormentnexus/ui';
+import { Input } from '@tormentnexus/ui';
 import {
     getBillingUsageSummary,
     getDefaultRoutingStrategy,
@@ -397,7 +397,7 @@ export default function ProviderAuthBillingMatrix() {
                             <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
                                 <div>
                                     <div className="text-xs text-zinc-500 uppercase">Subscription Plan</div>
-                                    <div className="text-base font-bold text-white mt-1">{status?.plan_name || "Commercial Cloud SaaS"}</div>
+                                    <div className="text-base font-bold text-white mt-1">{status?.plan_name || "Enterprise Cloud SaaS"}</div>
                                 </div>
                                 <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-xs">
                                     {(status?.status || "ACTIVE (PAID)").toUpperCase()}
@@ -573,7 +573,7 @@ export default function ProviderAuthBillingMatrix() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            <div className="text-xs text-zinc-400 mb-2">Configure functional permissions across commercial roles:</div>
+                            <div className="text-xs text-zinc-400 mb-2">Configure functional permissions across enterprise roles:</div>
                             <div className="space-y-3 text-xs">
                                 <div className="space-y-1">
                                     <div className="font-semibold text-zinc-300">Admin Role</div>
@@ -804,7 +804,7 @@ export default function ProviderAuthBillingMatrix() {
                                             </div>
                                         </div>
                                         <div className="text-[11px] text-zinc-500">
-                                            Changes apply to the next model-selection decision immediately, so you can tune cost vs quality without restarting HyperNexus.
+                                            Changes apply to the next model-selection decision immediately, so you can tune cost vs quality without restarting TormentNexus.
                                         </div>
                                     </div>
                                     {routingRules.map((rule) => (
@@ -1011,7 +1011,7 @@ export default function ProviderAuthBillingMatrix() {
                                 Provider Portals & Subscriptions
                             </CardTitle>
                             <p className="text-sm text-zinc-500 mt-2">
-                                Jump straight to API keys, usage dashboards, billing consoles, and plan-management pages for the providers HyperNexus knows about.
+                                Jump straight to API keys, usage dashboards, billing consoles, and plan-management pages for the providers TormentNexus knows about.
                             </p>
                         </CardHeader>
                         <CardContent className="p-6">

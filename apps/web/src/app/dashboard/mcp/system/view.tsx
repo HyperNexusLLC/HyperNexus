@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@hypernexus/ui";
-import { Button } from "@hypernexus/ui";
+import { Card, CardContent } from "@tormentnexus/ui";
+import { Button } from "@tormentnexus/ui";
 import {
 	Activity,
 	Server,
@@ -23,7 +23,6 @@ import {
 	buildSystemStartupNotice,
 	buildSystemStatusCards,
 } from "./system-status-helpers";
-import { useStartupStatus, useBrowserStatus, useMcpStatus } from "@/hooks/use-startup-status";
 
 function getStatusCardColor(status: string): string {
 	if (status === "Healthy" || status === "Ready" || status === "Listening") {
@@ -38,10 +37,12 @@ function getStatusCardColor(status: string): string {
 }
 
 export default function SystemStatusDashboard() {
-	const { data: status, refetch } = useMcpStatus();
+	const { data: status, refetch } = trpc.mcp.getStatus.useQuery();
 	const toolsClient = trpc.tools as any;
-	const { data: startupStatus, refetch: refetchStartup } = useStartupStatus(5000);
-	const { data: browserStatus, refetch: refetchBrowser } = useBrowserStatus(5000);
+	const { data: startupStatus, refetch: refetchStartup } =
+		trpc.startupStatus.useQuery(undefined, { refetchInterval: 5000 });
+	const { data: browserStatus, refetch: refetchBrowser } =
+		trpc.browser.status.useQuery(undefined, { refetchInterval: 5000 });
 	const installArtifactsQuery = toolsClient?.detectInstallSurfaces?.useQuery
 		? toolsClient.detectInstallSurfaces.useQuery(undefined, {
 				refetchInterval: 10000,
@@ -243,7 +244,7 @@ export default function SystemStatusDashboard() {
 						<div className="space-y-4">
 							{startupChecks.length === 0 ? (
 								<div className="rounded border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-500">
-									Connecting to live startup telemetry from HyperNexus Core…
+									Connecting to live startup telemetry from TormentNexus Core…
 								</div>
 							) : (
 								startupChecks.map((check) => (

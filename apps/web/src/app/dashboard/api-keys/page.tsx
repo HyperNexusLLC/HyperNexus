@@ -31,7 +31,7 @@ export default function ApiKeysPage() {
 					</h1>
 					<p
 						className="text-zinc-400 text-sm mt-1"
-						title="Manage API keys for programmatic access to HyperNexus APIs, OAuth clients, and authentication providers"
+						title="Manage API keys for programmatic access to TormentNexus APIs, OAuth clients, and authentication providers"
 					>
 						Manage API keys, OAuth clients, and authentication providers used by
 						tools and agents to access external services.

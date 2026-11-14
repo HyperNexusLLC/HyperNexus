@@ -205,7 +205,7 @@ export default function AlwaysOnToolsPage() {
 						Always-On & Native Tools
 					</h1>
 					<p className="text-zinc-400 text-sm mt-1">
-						Configure which built-in HyperNexus tools are always available to
+						Configure which built-in TormentNexus tools are always available to
 						the MCP client and whether they run as native Go services.
 					</p>
 				</div>

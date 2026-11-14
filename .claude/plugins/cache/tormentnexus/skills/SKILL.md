@@ -34,4 +34,4 @@ Add this entry to `~/.claude/claude.json`:
 1. Check scratchpad before complex tasks
 2. Store key decisions after completion
 3. Use repomap for codebase orientation
-4. Route commercial integrations through TN Kernel
+4. Route enterprise integrations through TN sidecar

@@ -42,7 +42,7 @@ class SupervisorServer {
                 tools: [
                     {
                         name: "install_supervisor",
-                        description: "Install HyperNexus Supervisor into Antigravity MCP Config",
+                        description: "Install TormentNexus Supervisor into Antigravity MCP Config",
                         inputSchema: {
                             type: "object",
                             properties: {
@@ -476,10 +476,10 @@ class SupervisorServer {
     }
 
     async start() {
-        logger.info("HyperNexus Supervisor Starting...");
+        logger.info("TormentNexus Supervisor Starting...");
         const transport = new StdioServerTransport();
         await this.server.connect(transport);
-        logger.info("HyperNexus Supervisor Connected to Stdio");
+        logger.info("TormentNexus Supervisor Connected to Stdio");
     }
 }
 

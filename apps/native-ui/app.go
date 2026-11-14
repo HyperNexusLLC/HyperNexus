@@ -6,15 +6,15 @@ import (
 	"time"
 )
 
-// App is the main Wails application struct with HyperNexus bindings.
+// App is the main Wails application struct with TormentNexus bindings.
 type App struct {
 	ctx      context.Context
 	started  time.Time
-	services *HyperNexusServices
+	services *TormentNexusServices
 }
 
-// HyperNexusServices holds references to the HyperNexus Go-sidecar services.
-type HyperNexusServices struct {
+// TormentNexusServices holds references to the TormentNexus Go-sidecar services.
+type TormentNexusServices struct {
 	Status     func() map[string]interface{}
 	MemoryInfo func() map[string]interface{}
 	HealerInfo func() map[string]interface{}
@@ -34,8 +34,8 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// BindServices connects the Wails app to HyperNexus core services.
-func (a *App) BindServices(svc *HyperNexusServices) {
+// BindServices connects the Wails app to TormentNexus core services.
+func (a *App) BindServices(svc *TormentNexusServices) {
 	a.services = svc
 }
 
@@ -50,7 +50,7 @@ func (a *App) GetSystemStatus() map[string]interface{} {
 		"status":   "running",
 		"uptime":   time.Since(a.started).String(),
 		"version":  "1.0.0-alpha.62",
-		"protocol": "hypernexus://",
+		"protocol": "tormentnexus://",
 	}
 
 	if a.services != nil && a.services.Status != nil {

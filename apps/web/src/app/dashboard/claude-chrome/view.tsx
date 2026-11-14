@@ -13,7 +13,7 @@ import {
 	Sparkles,
 	Terminal,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@hypernexus/ui";
+import { Card, CardHeader, CardTitle, CardContent } from "@tormentnexus/ui";
 
 const CLAUDE_CHROME_KEY_STORAGE = "claude-chrome-extension-key";
 
@@ -165,7 +165,7 @@ export default function ClaudeChromePage() {
 					<CardContent>
 						<div className="text-xl font-bold text-emerald-400">CONNECTED</div>
 						<div className="text-[10px] text-zinc-500 mt-1">
-							HyperNexus WS Bridge listening
+							TormentNexus WS Bridge listening
 						</div>
 					</CardContent>
 				</Card>
@@ -229,7 +229,7 @@ export default function ClaudeChromePage() {
 							</h2>
 						</div>
 						<p className="text-xs text-zinc-400">
-							Configure the pairing secret shared between this HyperNexus
+							Configure the pairing secret shared between this TormentNexus
 							session and your Chrome extension.
 						</p>
 						<div className="flex flex-col gap-3">

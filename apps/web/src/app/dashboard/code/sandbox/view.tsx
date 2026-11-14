@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@hypernexus/ui";
-import { Button } from "@hypernexus/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@tormentnexus/ui";
+import { Button } from "@tormentnexus/ui";
 import { Code, Loader2, Play, Shield, Zap, Terminal, Cpu } from "lucide-react";
 
 type ExecResult = {

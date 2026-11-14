@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { TORMENTNEXUS_CAPABILITIES, getHyperNexusOperatorGuidance, getHyperNexusStatusSummary } from './tormentnexus-status';
+import { TORMENTNEXUS_CAPABILITIES, getTormentNexusOperatorGuidance, getTormentNexusStatusSummary } from './tormentnexus-status';
 
 describe('tormentnexus status helpers', () => {
-    it('summarizes the current HyperNexus tormentnexus parity state honestly', () => {
-        expect(getHyperNexusStatusSummary({ ready: true }, [
+    it('summarizes the current TormentNexus tormentnexus parity state honestly', () => {
+        expect(getTormentNexusStatusSummary({ ready: true }, [
             { id: 'browser-extension-chromium', status: 'ready' },
             { id: 'browser-extension-firefox', status: 'ready' },
         ])).toEqual({
@@ -22,13 +22,13 @@ describe('tormentnexus status helpers', () => {
     });
 
     it('reports startup state when core readiness is still pending', () => {
-        expect(getHyperNexusStatusSummary({ ready: false }).coreStatusLabel).toBe('Core warming up');
-        expect(getHyperNexusStatusSummary({ ready: false }).coreStatusTone).toBe('warming');
-        expect(getHyperNexusStatusSummary(null).coreReady).toBe(false);
+        expect(getTormentNexusStatusSummary({ ready: false }).coreStatusLabel).toBe('Core warming up');
+        expect(getTormentNexusStatusSummary({ ready: false }).coreStatusTone).toBe('warming');
+        expect(getTormentNexusStatusSummary(null).coreReady).toBe(false);
     });
 
     it('treats degraded startup compat fallback as a first-class operator state', () => {
-        expect(getHyperNexusStatusSummary({
+        expect(getTormentNexusStatusSummary({
             ready: false,
             status: 'degraded',
             summary: 'Using local MCP config fallback for 64 configured server(s); live startup telemetry is unavailable.',
@@ -41,7 +41,7 @@ describe('tormentnexus status helpers', () => {
     });
 
     it('surfaces pending startup checks even after core reaches ready state', () => {
-        expect(getHyperNexusStatusSummary({
+        expect(getTormentNexusStatusSummary({
             ready: true,
             checks: {
                 configSync: { ready: true },
@@ -60,7 +60,7 @@ describe('tormentnexus status helpers', () => {
     });
 
     it('counts extension install artifacts as a pending startup check until both bundles are ready', () => {
-        expect(getHyperNexusStatusSummary({
+        expect(getTormentNexusStatusSummary({
             ready: true,
             checks: {
                 configSync: { ready: true },
@@ -72,7 +72,7 @@ describe('tormentnexus status helpers', () => {
             coreStatusLabel: 'Core ready · 1 startup check pending',
         });
 
-        expect(getHyperNexusStatusSummary({
+        expect(getTormentNexusStatusSummary({
             ready: true,
             checks: {
                 configSync: { ready: true },
@@ -89,7 +89,7 @@ describe('tormentnexus status helpers', () => {
     });
 
     it('does not double-count install artifacts when startup telemetry already reports that check', () => {
-        expect(getHyperNexusStatusSummary({
+        expect(getTormentNexusStatusSummary({
             ready: true,
             checks: {
                 extensionInstallArtifacts: { ready: false },
@@ -104,7 +104,7 @@ describe('tormentnexus status helpers', () => {
     });
 
     it('guides operators when the adapter store has not been created yet', () => {
-        expect(getHyperNexusOperatorGuidance({
+        expect(getTormentNexusOperatorGuidance({
             exists: false,
             defaultSectionCount: 5,
             presentDefaultSectionCount: 0,
@@ -118,13 +118,13 @@ describe('tormentnexus status helpers', () => {
             },
         })).toEqual({
             title: 'Adapter store not created yet',
-            detail: 'No HyperNexus-managed claude_mem store exists yet. When the adapter initializes, it seeds 5 default buckets for project context, user facts, style preferences, commands, and general notes.',
+            detail: 'No TormentNexus-managed claude_mem store exists yet. When the adapter initializes, it seeds 5 default buckets for project context, user facts, style preferences, commands, and general notes.',
             tone: 'warning',
         });
     });
 
     it('guides operators when data exists but default bucket coverage is incomplete', () => {
-        expect(getHyperNexusOperatorGuidance({
+        expect(getTormentNexusOperatorGuidance({
             exists: true,
             totalEntries: 3,
             defaultSectionCount: 5,
@@ -145,7 +145,7 @@ describe('tormentnexus status helpers', () => {
     });
 
     it('warns when tormentnexus is not part of the active memory pipeline', () => {
-        expect(getHyperNexusOperatorGuidance({
+        expect(getTormentNexusOperatorGuidance({
             exists: true,
             totalEntries: 3,
             defaultSectionCount: 5,
@@ -159,8 +159,8 @@ describe('tormentnexus status helpers', () => {
                 claudeMemEnabled: false,
             },
         })).toEqual({
-            title: 'HyperNexus adapter not active in the runtime pipeline',
-            detail: 'Core reports the active memory pipeline as json with json. The adapter file can still exist on disk, but HyperNexus is not currently writing new memories through tormentnexus.',
+            title: 'TormentNexus adapter not active in the runtime pipeline',
+            detail: 'Core reports the active memory pipeline as json with json. The adapter file can still exist on disk, but TormentNexus is not currently writing new memories through tormentnexus.',
             tone: 'warning',
         });
     });

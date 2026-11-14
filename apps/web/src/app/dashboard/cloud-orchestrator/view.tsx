@@ -36,7 +36,7 @@ import {
 	TabsList,
 	TabsTrigger,
 	ScrollArea,
-} from "@hypernexus/ui";
+} from "@tormentnexus/ui";
 
 const JULES_API_KEY_STORAGE = "jules-api-key";
 const JULES_SYNC_LOG_STORAGE_KEY = "jules-session-sync-log-v1";
@@ -75,12 +75,6 @@ function normalizeArray<T>(value: unknown): T[] {
 
 export default function CloudOrchestratorDashboardPage() {
 	const [activeTab, setActiveTab] = useState("jules");
-	const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set());
-
-	const markVisited = (tab: string) => {
-		setActiveTab(tab);
-		setVisitedTabs(prev => new Set(prev).add(tab));
-	};
 
 	// 1. Jules Autopilot States
 	const julesUrl = useMemo(
@@ -304,7 +298,7 @@ export default function CloudOrchestratorDashboardPage() {
 			</div>
 
 			<div className="p-6 flex-grow flex flex-col gap-6">
-				<Tabs value={activeTab} onValueChange={markVisited} className="w-full flex-grow flex flex-col gap-4">
+				<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-grow flex flex-col gap-4">
 					<TabsList className="bg-zinc-900 border border-zinc-800 p-1 rounded-md self-start flex-wrap h-auto">
 						<TabsTrigger value="jules" className="data-[state=active]:bg-zinc-800 text-xs px-3 py-1.5">Jules Autopilot</TabsTrigger>
 						<TabsTrigger value="claude" className="data-[state=active]:bg-zinc-800 text-xs px-3 py-1.5">Claude Cloud</TabsTrigger>
@@ -369,11 +363,7 @@ export default function CloudOrchestratorDashboardPage() {
 							</Card>
 						</div>
 						<div className="flex-grow border border-zinc-800 rounded-md overflow-hidden relative min-h-[50vh]">
-							{visitedTabs.has("jules") ? (
-								<iframe src={julesUrl} title="Jules Autopilot" className="w-full h-full border-0 bg-black" allow="clipboard-read; clipboard-write" />
-							) : (
-								<div className="flex items-center justify-center h-full text-zinc-500 text-sm">Click the Jules tab to load the autopilot panel</div>
-							)}
+							<iframe src={julesUrl} title="Jules Autopilot" className="w-full h-full border-0 bg-black" allow="clipboard-read; clipboard-write" />
 						</div>
 					</TabsContent>
 
@@ -529,11 +519,7 @@ export default function CloudOrchestratorDashboardPage() {
 							</a>
 						</Card>
 						<div className="flex-grow border border-zinc-800 rounded-md overflow-hidden relative min-h-[50vh]">
-							{visitedTabs.has("opencode") ? (
-								<iframe src={autopilotUrl} title="OpenCode Autopilot" className="w-full h-full border-none bg-black" allow="clipboard-read; clipboard-write" />
-							) : (
-								<div className="flex items-center justify-center h-full text-zinc-500 text-sm">Click the OpenCode tab to load the autopilot panel</div>
-							)}
+							<iframe src={autopilotUrl} title="OpenCode Autopilot" className="w-full h-full border-none bg-black" allow="clipboard-read; clipboard-write" />
 						</div>
 					</TabsContent>
 

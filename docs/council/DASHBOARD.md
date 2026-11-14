@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-hypernexus Orchestrator is a TypeScript monorepo using Bun as the runtime.
+tormentnexus Orchestrator is a TypeScript monorepo using Bun as the runtime.
 
 ```
 packages/

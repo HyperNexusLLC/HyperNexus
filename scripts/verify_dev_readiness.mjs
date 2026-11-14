@@ -74,8 +74,8 @@ function getFailureHint(serviceId) {
       return 'Dashboard is unreachable. Start the web runtime with `tormentnexus dashboard` or `pnpm -C apps/web dev`.';
     case 'tormentnexus-startup-status':
       return 'Dashboard can load, but startupStatus is not reachable through the web proxy.';
-    case 'tormentnexus-go-kernel':
-            return 'TN Kernel is unreachable. Build with go build ./cmd/tormentnexus and run bin/tormentnexus.exe serve.';
+    case 'tormentnexus-go-sidecar':
+            return 'Go sidecar is unreachable. Build with go build ./cmd/tormentnexus and run bin/tormentnexus.exe serve.';
         case 'tormentnexus-mcp-status':
       return 'Dashboard can load, but MCP status is not reachable through the web proxy.';
     default:
@@ -131,7 +131,7 @@ function collectExtensionArtifacts() {
 }
 
 async function main() {
-  const tnKernelPort = normalizePort(process.env.TORMENTNEXUS_GO_PORT) || 7778;
+  const goSidecarPort = normalizePort(process.env.TORMENTNEXUS_GO_PORT) || 7778;
 
   // Pre-warm the web server to handle cold start module loading/database latency
   const webUrls = buildWebUrls();
@@ -153,10 +153,10 @@ async function main() {
       urls: buildWebUrls(),
     },
     {
-        id: 'tormentnexus-go-kernel',
-        description: 'TN Kernel health',
+        id: 'tormentnexus-go-sidecar',
+        description: 'Go sidecar health',
         critical: false,
-        urls: [`http://127.0.0.1:${tnKernelPort}/health`],
+        urls: [`http://127.0.0.1:${goSidecarPort}/health`],
     },
     {
       id: 'tormentnexus-startup-status',

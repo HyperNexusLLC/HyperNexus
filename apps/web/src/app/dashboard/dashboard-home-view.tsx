@@ -64,292 +64,284 @@ const DashboardWorkflowOrchestrationSection = dynamic(
 );
 
 export interface DashboardStatusSummary {
-	initialized: boolean;
-	serverCount: number;
-	toolCount: number;
-	connectedCount: number;
+    initialized: boolean;
+    serverCount: number;
+    toolCount: number;
+    connectedCount: number;
 }
 
 export interface DashboardStartupStatus {
-	status: string;
-	ready: boolean;
-	uptime: number;
-	summary?: string;
-	blockingReasons?: Array<{
-		code: string;
-		detail: string;
-	}>;
-	runtime?: {
-		nodeEnv?: string | null;
-		platform?: string | null;
-		version?: string | null;
-	};
-	checks: {
-		mcpAggregator: {
-			ready: boolean;
-			liveReady?: boolean;
-			residentReady?: boolean;
-			serverCount: number;
-			connectedCount?: number;
-			residentConnectedCount?: number;
-			warmingServerCount?: number;
-			failedWarmupServerCount?: number;
-			initialization: {
-				inProgress: boolean;
-				initialized: boolean;
-				lastStartedAt?: number;
-				lastCompletedAt?: number;
-				lastSuccessAt?: number;
-				lastError?: string;
-				connectedClientCount: number;
-				configuredServerCount: number;
-			} | null;
-			persistedServerCount: number;
-			persistedToolCount: number;
-			configuredServerCount?: number;
-			advertisedServerCount?: number;
-			advertisedToolCount?: number;
-			advertisedAlwaysOnServerCount?: number;
-			advertisedAlwaysOnToolCount?: number;
-			inventoryReady: boolean;
-			inventorySource?: "database" | "config" | "empty";
-			inventorySnapshotUpdatedAt?: string | null;
-			warmupInProgress?: boolean;
-		};
-		configSync: {
-			ready: boolean;
-			status: {
-				inProgress: boolean;
-				lastStartedAt?: number;
-				lastCompletedAt?: number;
-				lastSuccessAt?: number;
-				lastError?: string;
-				lastServerCount: number;
-				lastToolCount: number;
-			} | null;
-		};
-		memory: {
-			ready: boolean;
-			initialized: boolean;
-			agentMemory: boolean;
-			claudeMem?: {
-				ready?: boolean;
-				enabled?: boolean;
-				storeExists?: boolean;
-				storePath?: string | null;
-				totalEntries?: number;
-				sectionCount?: number;
-				defaultSectionCount?: number;
-				presentDefaultSectionCount?: number;
-				missingSections?: string[];
-				lastUpdatedAt?: string | null;
-			};
-			tormentnexus?: {
-				ready?: boolean;
-				enabled?: boolean;
-				storeExists?: boolean;
-				storePath?: string | null;
-				totalEntries?: number;
-				sectionCount?: number;
-				defaultSectionCount?: number;
-				presentDefaultSectionCount?: number;
-				missingSections?: string[];
-				lastUpdatedAt?: string | null;
-			};
-		};
-		browser: {
-			ready: boolean;
-			active: boolean;
-			pageCount: number;
-		};
-		sessionSupervisor: {
-			ready: boolean;
-			sessionCount: number;
-			restore: {
-				lastRestoreAt?: number;
-				restoredSessionCount: number;
-				autoResumeCount: number;
-			} | null;
-		};
-		extensionBridge: {
-			ready: boolean;
-			acceptingConnections?: boolean;
-			clientCount: number;
-			hasConnectedClients?: boolean;
-		};
-		executionEnvironment: {
-			ready: boolean;
-			preferredShellId?: string | null;
-			preferredShellLabel?: string | null;
-			shellCount: number;
-			verifiedShellCount: number;
-			toolCount: number;
-			verifiedToolCount: number;
-			harnessCount: number;
-			verifiedHarnessCount: number;
-			supportsPowerShell: boolean;
-			supportsPosixShell: boolean;
-			notes?: string[];
-		};
-	};
+    status: string;
+    ready: boolean;
+    uptime: number;
+    summary?: string;
+    blockingReasons?: Array<{
+        code: string;
+        detail: string;
+    }>;
+    runtime?: {
+        nodeEnv?: string | null;
+        platform?: string | null;
+        version?: string | null;
+    };
+    checks: {
+        mcpAggregator: {
+            ready: boolean;
+            liveReady?: boolean;
+            residentReady?: boolean;
+            serverCount: number;
+            connectedCount?: number;
+            residentConnectedCount?: number;
+            warmingServerCount?: number;
+            failedWarmupServerCount?: number;
+            initialization: {
+                inProgress: boolean;
+                initialized: boolean;
+                lastStartedAt?: number;
+                lastCompletedAt?: number;
+                lastSuccessAt?: number;
+                lastError?: string;
+                connectedClientCount: number;
+                configuredServerCount: number;
+            } | null;
+            persistedServerCount: number;
+            persistedToolCount: number;
+            configuredServerCount?: number;
+            advertisedServerCount?: number;
+            advertisedToolCount?: number;
+            advertisedAlwaysOnServerCount?: number;
+            advertisedAlwaysOnToolCount?: number;
+            inventoryReady: boolean;
+            inventorySource?: 'database' | 'config' | 'empty';
+            inventorySnapshotUpdatedAt?: string | null;
+            warmupInProgress?: boolean;
+        };
+        configSync: {
+            ready: boolean;
+            status: {
+                inProgress: boolean;
+                lastStartedAt?: number;
+                lastCompletedAt?: number;
+                lastSuccessAt?: number;
+                lastError?: string;
+                lastServerCount: number;
+                lastToolCount: number;
+            } | null;
+        };
+        memory: {
+            ready: boolean;
+            initialized: boolean;
+            agentMemory: boolean;
+            claudeMem?: {
+                ready?: boolean;
+                enabled?: boolean;
+                storeExists?: boolean;
+                storePath?: string | null;
+                totalEntries?: number;
+                sectionCount?: number;
+                defaultSectionCount?: number;
+                presentDefaultSectionCount?: number;
+                missingSections?: string[];
+                lastUpdatedAt?: string | null;
+            };
+            tormentnexus?: {
+                ready?: boolean;
+                enabled?: boolean;
+                storeExists?: boolean;
+                storePath?: string | null;
+                totalEntries?: number;
+                sectionCount?: number;
+                defaultSectionCount?: number;
+                presentDefaultSectionCount?: number;
+                missingSections?: string[];
+                lastUpdatedAt?: string | null;
+            };
+        };
+        browser: {
+            ready: boolean;
+            active: boolean;
+            pageCount: number;
+        };
+        sessionSupervisor: {
+            ready: boolean;
+            sessionCount: number;
+            restore: {
+                lastRestoreAt?: number;
+                restoredSessionCount: number;
+                autoResumeCount: number;
+            } | null;
+        };
+        extensionBridge: {
+            ready: boolean;
+            acceptingConnections?: boolean;
+            clientCount: number;
+            hasConnectedClients?: boolean;
+        };
+        executionEnvironment: {
+            ready: boolean;
+            preferredShellId?: string | null;
+            preferredShellLabel?: string | null;
+            shellCount: number;
+            verifiedShellCount: number;
+            toolCount: number;
+            verifiedToolCount: number;
+            harnessCount: number;
+            verifiedHarnessCount: number;
+            supportsPowerShell: boolean;
+            supportsPosixShell: boolean;
+            notes?: string[];
+        };
+    };
 }
 
 export interface DashboardServerSummary {
-	name: string;
-	status: string;
-	toolCount: number;
-	config: {
-		command: string;
-		args: string[];
-		env: string[];
-	};
+    name: string;
+    status: string;
+    toolCount: number;
+    config: {
+        command: string;
+        args: string[];
+        env: string[];
+    };
 }
 
 export interface DashboardTrafficSummary {
-	server: string;
-	method: string;
-	paramsSummary: string;
-	latencyMs: number;
-	success: boolean;
-	timestamp: number;
-	toolName?: string;
-	error?: string;
+    server: string;
+    method: string;
+    paramsSummary: string;
+    latencyMs: number;
+    success: boolean;
+    timestamp: number;
+    toolName?: string;
+    error?: string;
 }
 
 export interface DashboardProviderSummary {
-	provider: string;
-	name: string;
-	configured: boolean;
-	authenticated?: boolean;
-	authMethod?: string;
-	tier: string;
-	limit: number | null;
-	used: number;
-	remaining: number | null;
-	resetDate?: string | null;
-	rateLimitRpm?: number | null;
-	availability?: string;
-	lastError?: string | null;
+    provider: string;
+    name: string;
+    configured: boolean;
+    authenticated?: boolean;
+    authMethod?: string;
+    tier: string;
+    limit: number | null;
+    used: number;
+    remaining: number | null;
+    resetDate?: string | null;
+    rateLimitRpm?: number | null;
+    availability?: string;
+    lastError?: string | null;
 }
 
 export interface DashboardFallbackSummary {
-	priority: number;
-	provider: string;
-	model?: string;
-	reason: string;
+    priority: number;
+    provider: string;
+    model?: string;
+    reason: string;
 }
 
 export interface DashboardSessionLogSummary {
-	timestamp: number;
-	stream: "stdout" | "stderr" | "system";
-	message: string;
+    timestamp: number;
+    stream: 'stdout' | 'stderr' | 'system';
+    message: string;
 }
 
 export interface DashboardSessionSummary {
-	id: string;
-	name: string;
-	cliType: string;
-	workingDirectory: string;
-	worktreePath?: string;
-	autoRestart?: boolean;
-	status:
-		| "created"
-		| "starting"
-		| "running"
-		| "stopping"
-		| "stopped"
-		| "restarting"
-		| "error";
-	restartCount: number;
-	maxRestartAttempts: number;
-	scheduledRestartAt?: number;
-	lastActivityAt: number;
-	lastError?: string;
-	logs: DashboardSessionLogSummary[];
+    id: string;
+    name: string;
+    cliType: string;
+    workingDirectory: string;
+    worktreePath?: string;
+    autoRestart?: boolean;
+    status: 'created' | 'starting' | 'running' | 'stopping' | 'stopped' | 'restarting' | 'error';
+    restartCount: number;
+    maxRestartAttempts: number;
+    scheduledRestartAt?: number;
+    lastActivityAt: number;
+    lastError?: string;
+    logs: DashboardSessionLogSummary[];
 }
 
 export interface DashboardHealerSummary {
-	activePathogens: number;
-	resolvedCount: number;
-	successRate: number;
-	lastHealTime: string | null;
-	vaultRecordCount: number;
-	isLive: boolean;
+    activePathogens: number;
+    resolvedCount: number;
+    successRate: number;
+    lastHealTime: string | null;
+    vaultRecordCount: number;
+    isLive: boolean;
 }
 
 export interface DashboardInstallSurfaceArtifact {
-	id: string;
-	status: "ready" | "partial" | "missing";
+    id: string;
+    status: 'ready' | 'partial' | 'missing';
 }
 
 export interface DashboardHomeViewProps {
-	activeTab?: string;
-	onTabChange?: (tabId: string) => void;
-	generatedAtLabel: string;
-	currentTimestamp?: number | null;
-	isBootstrapping?: boolean;
-	mcpStatus: DashboardStatusSummary;
-	startupStatus: DashboardStartupStatus;
-	servers: DashboardServerSummary[];
-	traffic: DashboardTrafficSummary[];
-	providers: DashboardProviderSummary[];
-	fallbackChain: DashboardFallbackSummary[];
-	sessions: DashboardSessionSummary[];
-	healerStatus?: DashboardHealerSummary | null;
-	installSurfaceArtifacts?: DashboardInstallSurfaceArtifact[] | null;
-	onStartSession?: (sessionId: string) => void;
-	onStopSession?: (sessionId: string) => void;
-	onRestartSession?: (sessionId: string) => void;
-	pendingSessionActionId?: string | null;
-	children?: React.ReactNode;
+    activeTab?: string;
+    onTabChange?: (tabId: string) => void;
+    generatedAtLabel: string;
+    currentTimestamp?: number | null;
+    isBootstrapping?: boolean;
+    mcpStatus: DashboardStatusSummary;
+    startupStatus: DashboardStartupStatus;
+    servers: DashboardServerSummary[];
+    traffic: DashboardTrafficSummary[];
+    providers: DashboardProviderSummary[];
+    fallbackChain: DashboardFallbackSummary[];
+    sessions: DashboardSessionSummary[];
+    healerStatus?: DashboardHealerSummary | null;
+    installSurfaceArtifacts?: DashboardInstallSurfaceArtifact[] | null;
+    onStartSession?: (sessionId: string) => void;
+    onStopSession?: (sessionId: string) => void;
+    onRestartSession?: (sessionId: string) => void;
+    pendingSessionActionId?: string | null;
+    children?: React.ReactNode;
 }
 
 export interface OverviewMetric {
-	label: string;
-	value: string;
-	detail: string;
+    label: string;
+    value: string;
+    detail: string;
 }
 
 export interface StartupChecklistItem {
-	label: string;
-	ready: boolean;
-	detail: string;
+    label: string;
+    ready: boolean;
+    detail: string;
 }
 
 export interface StartupBlockingReasonView {
-	code: string;
-	detail: string;
+    code: string;
+    detail: string;
 }
 
-export interface StartupBlockingReasonWithPriority
-	extends StartupBlockingReasonView {
-	priority: number;
+export interface StartupBlockingReasonWithPriority extends StartupBlockingReasonView {
+    priority: number;
 }
 
 export interface StartupBlockingReasonAction {
-	href: string;
-	label: string;
+    href: string;
+    label: string;
 }
 
 export interface StartupBlockingReasonPriorityCounts {
-	high: number;
-	medium: number;
-	low: number;
+    high: number;
+    medium: number;
+    low: number;
 }
 
 export interface StartupBlockingReasonGroup {
-	key: string;
-	label: string;
-	reasons: StartupBlockingReasonWithPriority[];
+    key: string;
+    label: string;
+    reasons: StartupBlockingReasonWithPriority[];
 }
 
 export interface StartupBlockingReasonImpactedCheck {
-	key: string;
-	label: string;
+    key: string;
+    label: string;
 }
 
 
-type DashboardStartupChecks = DashboardStartupStatus["checks"];
+type DashboardStartupChecks = DashboardStartupStatus['checks'];
 
 import {
 	DEFAULT_DASHBOARD_STARTUP_CHECKS,
@@ -382,25 +374,25 @@ import {
 
 
 export function DashboardHomeView({
-	activeTab = "console",
-	generatedAtLabel,
-	currentTimestamp,
-	isBootstrapping = false,
-	mcpStatus,
-	startupStatus,
-	servers,
-	traffic,
-	providers,
-	fallbackChain,
-	sessions,
-	healerStatus,
-	installSurfaceArtifacts,
-	onStartSession,
-	onStopSession,
-	onRestartSession,
-	pendingSessionActionId,
-	onTabChange,
-	children,
+    activeTab = 'console',
+    generatedAtLabel,
+    currentTimestamp,
+    isBootstrapping = false,
+    mcpStatus,
+    startupStatus,
+    servers,
+    traffic,
+    providers,
+    fallbackChain,
+    sessions,
+    healerStatus,
+    installSurfaceArtifacts,
+    onStartSession,
+    onStopSession,
+    onRestartSession,
+    pendingSessionActionId,
+    onTabChange,
+    children,
 }: DashboardHomeViewProps) {
 	// --- INTEGRATION HUB & TARGET SURFACES ---
 	const browserStatusQuery = trpc.browser.status.useQuery(undefined, {

@@ -2,10 +2,10 @@
 
 import { trpc } from '@/utils/trpc';
 import { useState } from 'react';
-import { Card } from '@hypernexus/ui';
-import { Input } from '@hypernexus/ui';
-import { Button } from '@hypernexus/ui';
-import { ScrollArea } from '@hypernexus/ui';
+import { Card } from '@tormentnexus/ui';
+import { Input } from '@tormentnexus/ui';
+import { Button } from '@tormentnexus/ui';
+import { ScrollArea } from '@tormentnexus/ui';
 
 export default function CodeDashboard() {
     const [filePath, setFilePath] = useState('packages/core/src/MCPServer.ts');

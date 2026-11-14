@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@hypernexus/ui";
-import { Button } from "@hypernexus/ui";
-import { Input } from "@hypernexus/ui";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@hypernexus/ui";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@tormentnexus/ui";
+import { Button } from "@tormentnexus/ui";
+import { Input } from "@tormentnexus/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@tormentnexus/ui";
 import { FileText, Search, RefreshCcw } from "lucide-react";
 import { trpc } from '@/utils/trpc';
 import { toast } from 'sonner';

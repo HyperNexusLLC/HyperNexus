@@ -1,6 +1,6 @@
 {
-  "name": "HyperNexus",
-  "outputfilename": "HyperNexus",
+  "name": "TormentNexus",
+  "outputfilename": "TormentNexus",
   "frontend:install": "npm install",
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",

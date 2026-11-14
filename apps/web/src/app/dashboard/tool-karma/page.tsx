@@ -35,7 +35,7 @@ export default function ToolKarmaPage() {
 	const fetchTools = useCallback(async () => {
 		setLoading(true);
 		try {
-			// Fetch the tools list and registry info from TN Kernel
+			// Fetch the tools list and registry info from Go sidecar
 			const [toolsRes, registryRes] = await Promise.all([
 				fetch("/api/go/api/mcp/tools?simple=true").catch(() => null),
 				fetch("/api/go/api/mcp/tools/registry").catch(() => null),

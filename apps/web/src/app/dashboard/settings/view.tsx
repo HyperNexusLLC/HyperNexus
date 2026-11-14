@@ -2,7 +2,7 @@
 
 import { trpc } from '@/utils/trpc';
 import { useState, useEffect } from 'react';
-import { Card, Button, Textarea, Tabs, TabsContent, TabsList, TabsTrigger } from '@hypernexus/ui';
+import { Card, Button, Textarea, Tabs, TabsContent, TabsList, TabsTrigger } from '@tormentnexus/ui';
 import DirectorConfig from "@/components/DirectorConfig";
 
 export default function SettingsDashboard() {

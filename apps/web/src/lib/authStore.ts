@@ -1,181 +1,260 @@
-import bcrypt from 'bcrypt';
-import { createHash, randomBytes, randomUUID } from 'crypto';
-import { query } from '@/lib/db';
+import { createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'crypto';
+import { promises as fs } from 'fs';
+import path from 'path';
 
-const BCRYPT_ROUNDS = 12;
-
-type AuthUserRow = {
+type AuthUser = {
     id: string;
     name: string;
     email: string;
-    password_hash: string;
-    created_at: string;
-    reset_requested_at?: string | null;
-    reset_token_hash?: string | null;
-    reset_token_expires_at?: string | null;
+    passwordHash: string;
+    createdAt: string;
+    resetRequestedAt?: string;
+    resetTokenHash?: string;
+    resetTokenExpiresAt?: string;
 };
 
-export type PublicUser = {
+type AuthSession = {
     id: string;
-    name: string;
-    email: string;
+    userId: string;
+    createdAt: string;
+    expiresAt: string;
 };
+
+type AuthDb = {
+    users: AuthUser[];
+    sessions: AuthSession[];
+};
+
+const STORE_DIR = path.join(process.cwd(), '.tormentnexus-auth');
+const STORE_FILE = path.join(STORE_DIR, 'users.json');
+const DEFAULT_DB: AuthDb = { users: [], sessions: [] };
 
 function normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
+}
+
+function hashPassword(password: string): string {
+    // Lightweight local hash for dev auth flow wiring.
+    return scryptSync(password, 'tormentnexus-local-salt', 64).toString('hex');
 }
 
 function hashResetToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
 }
 
-function mapUser(row: AuthUserRow): PublicUser {
-    return {
-        id: row.id,
-        name: row.name,
-        email: row.email,
-    };
+function verifyPassword(password: string, passwordHash: string): boolean {
+    const computed = Buffer.from(hashPassword(password), 'hex');
+    const expected = Buffer.from(passwordHash, 'hex');
+    if (computed.length !== expected.length) {
+        return false;
+    }
+    return timingSafeEqual(computed, expected);
 }
 
-export async function hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, BCRYPT_ROUNDS);
+async function ensureStore(): Promise<void> {
+    await fs.mkdir(STORE_DIR, { recursive: true });
+    try {
+        await fs.access(STORE_FILE);
+    } catch {
+        await fs.writeFile(STORE_FILE, JSON.stringify(DEFAULT_DB, null, 2), 'utf-8');
+    }
 }
 
-export async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-    return bcrypt.compare(password, passwordHash);
+async function readDb(): Promise<AuthDb> {
+    await ensureStore();
+    const raw = await fs.readFile(STORE_FILE, 'utf-8');
+    try {
+        const parsed = JSON.parse(raw) as AuthDb;
+        return { users: parsed.users ?? [], sessions: parsed.sessions ?? [] };
+    } catch {
+        return DEFAULT_DB;
+    }
+}
+
+async function writeDb(db: AuthDb): Promise<void> {
+    await ensureStore();
+    await fs.writeFile(STORE_FILE, JSON.stringify(db, null, 2), 'utf-8');
 }
 
 export async function createUser(input: { name: string; email: string; password: string }) {
+    const db = await readDb();
     const normalized = normalizeEmail(input.email);
-    const existing = await query<AuthUserRow>('SELECT id FROM auth_users WHERE email = $1 LIMIT 1', [normalized]);
-    if (existing.rows.length > 0) {
+    const existing = db.users.find((u) => u.email === normalized);
+    if (existing) {
         return { ok: false as const, reason: 'EXISTS' as const };
     }
 
-    const userId = randomUUID();
-    const passwordHash = await hashPassword(input.password);
+    const user: AuthUser = {
+        id: randomUUID(),
+        name: input.name.trim(),
+        email: normalized,
+        passwordHash: hashPassword(input.password),
+        createdAt: new Date().toISOString(),
+    };
 
-    await query(
-        `INSERT INTO auth_users (id, name, email, password_hash)
-         VALUES ($1, $2, $3, $4)`,
-        [userId, input.name.trim(), normalized, passwordHash],
-    );
+    db.users.push(user);
+    await writeDb(db);
 
     return {
         ok: true as const,
         user: {
-            id: userId,
-            name: input.name.trim(),
-            email: normalized,
+            id: user.id,
+            name: user.name,
+            email: user.email,
         },
     };
 }
 
 export async function authenticateUser(input: { email: string; password: string }) {
+    const db = await readDb();
     const normalized = normalizeEmail(input.email);
-    const result = await query<AuthUserRow>(
-        `SELECT id, name, email, password_hash, created_at
-         FROM auth_users
-         WHERE email = $1
-         LIMIT 1`,
-        [normalized],
-    );
-
-    const user = result.rows[0];
+    const user = db.users.find((u) => u.email === normalized);
     if (!user) {
         return { ok: false as const, reason: 'INVALID_CREDENTIALS' as const };
     }
-
-    const valid = await verifyPassword(input.password, user.password_hash);
-    if (!valid) {
+    if (!verifyPassword(input.password, user.passwordHash)) {
         return { ok: false as const, reason: 'INVALID_CREDENTIALS' as const };
     }
 
     return {
         ok: true as const,
-        user: mapUser(user),
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        },
     };
 }
 
-export async function getUserById(userId: string): Promise<PublicUser | null> {
-    if (!userId) {
+export async function createSession(input: { userId: string; ttlSeconds?: number }) {
+    const db = await readDb();
+    const ttlSeconds = input.ttlSeconds ?? 60 * 60 * 24;
+    const now = Date.now();
+
+    db.sessions = db.sessions.filter((session) => {
+        const expiry = Date.parse(session.expiresAt);
+        return Number.isFinite(expiry) && expiry > now;
+    });
+
+    const session: AuthSession = {
+        id: randomUUID(),
+        userId: input.userId,
+        createdAt: new Date(now).toISOString(),
+        expiresAt: new Date(now + ttlSeconds * 1000).toISOString(),
+    };
+
+    db.sessions.push(session);
+    await writeDb(db);
+    return session;
+}
+
+export async function getUserBySession(sessionId: string) {
+    if (!sessionId) {
         return null;
     }
 
-    const result = await query<AuthUserRow>(
-        `SELECT id, name, email, password_hash, created_at
-         FROM auth_users
-         WHERE id = $1
-         LIMIT 1`,
-        [userId],
-    );
+    const db = await readDb();
+    const now = Date.now();
 
-    const user = result.rows[0];
-    return user ? mapUser(user) : null;
+    db.sessions = db.sessions.filter((session) => {
+        const expiry = Date.parse(session.expiresAt);
+        return Number.isFinite(expiry) && expiry > now;
+    });
+
+    const session = db.sessions.find((entry) => entry.id === sessionId);
+    if (!session) {
+        await writeDb(db);
+        return null;
+    }
+
+    const user = db.users.find((entry) => entry.id === session.userId);
+    if (!user) {
+        db.sessions = db.sessions.filter((entry) => entry.id !== session.id);
+        await writeDb(db);
+        return null;
+    }
+
+    await writeDb(db);
+    return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+    };
+}
+
+export async function revokeSession(sessionId: string) {
+    if (!sessionId) {
+        return { ok: true as const };
+    }
+
+    const db = await readDb();
+    const nextSessions = db.sessions.filter((entry) => entry.id !== sessionId);
+    if (nextSessions.length !== db.sessions.length) {
+        db.sessions = nextSessions;
+        await writeDb(db);
+    }
+
+    return { ok: true as const };
 }
 
 export async function markResetRequested(email: string) {
+    const db = await readDb();
     const normalized = normalizeEmail(email);
-    const result = await query<AuthUserRow>(
-        `SELECT id, name, email, password_hash, created_at
-         FROM auth_users
-         WHERE email = $1
-         LIMIT 1`,
-        [normalized],
-    );
-
-    const user = result.rows[0];
+    const user = db.users.find((u) => u.email === normalized);
     let resetToken: string | undefined;
 
     if (user) {
         const token = randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 1000 * 60 * 30).toISOString();
+        const expiresAt = new Date(Date.now() + 1000 * 60 * 30).toISOString(); // 30 minutes
 
-        await query(
-            `UPDATE auth_users
-             SET reset_requested_at = NOW(),
-                 reset_token_hash = $2,
-                 reset_token_expires_at = $3
-             WHERE id = $1`,
-            [user.id, hashResetToken(token), expiresAt],
-        );
-
+        user.resetRequestedAt = new Date().toISOString();
+        user.resetTokenHash = hashResetToken(token);
+        user.resetTokenExpiresAt = expiresAt;
+        await writeDb(db);
         resetToken = token;
     }
 
+    // Always return success shape to avoid account enumeration.
     return { ok: true as const, resetToken };
 }
 
 export async function resetPasswordWithToken(input: { token: string; newPassword: string }) {
+    const db = await readDb();
     const tokenHash = hashResetToken(input.token);
-    const result = await query<AuthUserRow>(
-        `SELECT id, name, email, password_hash, created_at, reset_token_hash, reset_token_expires_at
-         FROM auth_users
-         WHERE reset_token_hash = $1
-           AND reset_token_expires_at IS NOT NULL
-           AND reset_token_expires_at >= NOW()
-         LIMIT 1`,
-        [tokenHash],
-    );
+    const now = Date.now();
 
-    const user = result.rows[0];
+    const user = db.users.find((u) => {
+        if (!u.resetTokenHash || !u.resetTokenExpiresAt) {
+            return false;
+        }
+        const expiry = Date.parse(u.resetTokenExpiresAt);
+        if (!Number.isFinite(expiry) || expiry < now) {
+            return false;
+        }
+        const expected = Buffer.from(u.resetTokenHash, 'hex');
+        const computed = Buffer.from(tokenHash, 'hex');
+        if (expected.length !== computed.length) {
+            return false;
+        }
+        return timingSafeEqual(expected, computed);
+    });
+
     if (!user) {
         return { ok: false as const, reason: 'INVALID_OR_EXPIRED' as const };
     }
 
-    const passwordHash = await hashPassword(input.newPassword);
-    await query(
-        `UPDATE auth_users
-         SET password_hash = $2,
-             reset_requested_at = NOW(),
-             reset_token_hash = NULL,
-             reset_token_expires_at = NULL
-         WHERE id = $1`,
-        [user.id, passwordHash],
-    );
+    user.passwordHash = hashPassword(input.newPassword);
+    user.resetTokenHash = undefined;
+    user.resetTokenExpiresAt = undefined;
+    user.resetRequestedAt = new Date().toISOString();
+    await writeDb(db);
 
     return {
         ok: true as const,
-        user: mapUser(user),
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        },
     };
 }

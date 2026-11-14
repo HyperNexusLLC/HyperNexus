@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
 	try {
-		const TN_KERNEL = process.env.TORMENTNEXUS_TN_KERNEL_URL || "http://127.0.0.1:7778";
-		const res = await fetch(`${TN_KERNEL}/api/shutdown`, {
+		const GO_SIDECAR = process.env.TORMENTNEXUS_GO_SIDECAR_URL || "http://127.0.0.1:7778";
+		const res = await fetch(`${GO_SIDECAR}/api/shutdown`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({}),
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 		if (!res.ok) {
 			const text = await res.text();
 			return NextResponse.json(
-				{ success: false, error: `Kernel error: ${text}` },
+				{ success: false, error: `Sidecar error: ${text}` },
 				{ status: res.status },
 			);
 		}

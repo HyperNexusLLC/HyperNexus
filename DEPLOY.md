@@ -1,29 +1,93 @@
-# DEPLOY.md — HyperNexus Deployment Guide
+# TormentNexus Deployment Instructions
 
-## Quick Start (Local Development)
+_This document contains the latest deployment instructions for the TormentNexus Universal AI Dashboard and Cognitive Control Plane (TormentNexus)._
 
-### Prerequisites
+## Prerequisites
 
-- Go 1.25+
-- Node.js 20+
-- pnpm 10+
-- Edge browser (for CDP automation)
+1.  **Node.js**: >= 24.x (For maximum runtime compatibility)
+2.  **pnpm**: Recommended package manager (`npm install -g pnpm@10.28`)
+3.  **Go**: >= 1.23 (For the Go control plane sidecar)
+4.  **Git**: For submodule fetching and version control.
 
-### 1. Clone Repository
+## Initial Setup
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/NexusSoftMDMA/TormentNexus.git
+    cd tormentnexus
+    ```
+
+2.  **Initialize Submodules**:
+    ```bash
+    git submodule update --init --recursive
+    ```
+
+3.  **Install Dependencies**:
+    ```bash
+    pnpm install
+    ```
+    *Note: If you are running Node 24, you must rebuild `better-sqlite3` bindings post-install:*
+    ```bash
+    pnpm rebuild better-sqlite3
+    ```
+
+4.  **Environment Variables**:
+    Copy `.env.example` to `.env` and fill in the required API keys (OpenAI, Anthropic, Gemini, etc.).
+    ```bash
+    cp .env.example .env
+    ```
+
+## Running the Platform
+
+TormentNexus is designed as a long-running service that manages PC memory, CPU, disk, and bandwidth usage.
+
+### Standard Build & Run (Production/Development)
+
+To run the TypeScript monorepo and its dashboard in one shot:
+```bash
+pnpm run build
+pnpm run start
+```
+This will compile all TypeScript packages, build the web assets, and launch the primary Node.js CLI orchestrator alongside the web dashboard.
+
+### Windows Startup Script
+
+Use the provided startup batch file:
+```powershell
+.\start.bat
+```
+`start.bat` defaults to `pnpm run build:workspace` (skipping extension-only build stages for a much faster boot). It also triggers a native-runtime preflight to verify SQLite and Electron bindings.
+
+**Startup Overrides**:
+- **Bypass Install**: `set TORMENTNEXUS_SKIP_INSTALL=1`
+- **Bypass Build**: `set TORMENTNEXUS_SKIP_BUILD=1`
+- **Force Full Monorepo Build**: `set TORMENTNEXUS_FULL_BUILD=1`
+- **Bypass Native Preflight**: `set TORMENTNEXUS_SKIP_NATIVE_PREFLIGHT=1`
+
+### Linux/macOS Startup Script
 
 ```bash
-git clone https://gitlab.com/HyperNexusLLC/HyperNexus.git
-cd HyperNexus
+./start.sh
 ```
 
-### 2. Install Dependencies
+### Start Electron Maestro Separately
 
+Maestro is launched independently from the main control plane:
 ```bash
-pnpm install
+pnpm -C apps/maestro start
 ```
 
-### 3. Build Go Backend
+---
 
+## Go Sidecar Kernel
+
+### High-Performance Native Tools
+TormentNexus includes native Go implementations for core development tools. Ensure these are in your PATH for maximum performance:
+- **Ripgrep (rg)**: Required for high-speed regex search.
+- **Anyquery**: SQL interface to various data sources.
+- **Supervisor Monitor**: Background watchdog for session inactivity.
+
+To build and run the Go control plane sidecar alongside the main TS engine:
 ```bash
 cd go
 # Version-stamped kernel build (single version source: repo-root VERSION file)
@@ -50,364 +114,104 @@ Current ops notes (2026-11-11, v1.0.43):
 
 ### 4. Start Services
 
-```bash
-# Terminal 1: Go kernel
-./bin/hypernexus -port 7778
 
-# Terminal 2: Cloud server
-./bin/hypernexus-cloud -port 7780
-
-# Terminal 3: Dashboard
-cd apps/web
-pnpm dev
+go run ./cmd/tormentnexus serve
 ```
-
-### 5. Access Dashboard
-
-Open <http://localhost:7779> in your browser.
-
----
-
-## Production Deployment (Hetzner)
-
-### Server Requirements
-
-- Ubuntu 22.04 LTS
-- 2 vCPUs, 4GB RAM minimum
-- 50GB SSD storage
-- Domain: hypernexus.site
-
-### 1. SSH into Server
-
+Alternatively, build the binary:
 ```bash
-ssh root@hypernexus.site
-```
-
-### 2. Create Service User
-
-```bash
-useradd -m -s /bin/bash hypernexus
-mkdir -p /opt/hypernexus
-chown hypernexus:hypernexus /opt/hypernexus
-```
-
-### 3. Upload Binaries
-
-```bash
-# From local machine
-scp bin/hypernexus-linux-amd64 root@hypernexus.site:/opt/hypernexus/bin/hypernexus
-scp bin/hypernexus-cloud-linux-amd64 root@hypernexus.site:/opt/hypernexus/bin/hypernexus-cloud
-```
-
-### 4. Create systemd Services
-
-```bash
-# /etc/systemd/system/hypernexus.service
-[Unit]
-Description=HyperNexus AI Agent
-After=network.target
-
-[Service]
-Type=simple
-User=hypernexus
-WorkingDirectory=/opt/hypernexus
-ExecStart=/opt/hypernexus/bin/hypernexus -port 7778
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# /etc/systemd/system/hypernexus-cloud.service
-[Unit]
-Description=HyperNexus Cloud Server
-After=network.target
-
-[Service]
-Type=simple
-User=hypernexus
-WorkingDirectory=/opt/hypernexus
-ExecStart=/opt/hypernexus/bin/hypernexus-cloud -port 7780 -db /opt/hypernexus/data/cloud.db
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### 5. Start Services
-
-```bash
-systemctl daemon-reload
-systemctl enable hypernexus hypernexus-cloud
-systemctl start hypernexus hypernexus-cloud
-```
-
-### 6. Configure nginx
-
-```nginx
-# /etc/nginx/sites-available/hypernexus.site
-server {
-    listen 443 ssl http2;
-    server_name hypernexus.site;
-
-    ssl_certificate /etc/letsencrypt/live/hypernexus.site/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/hypernexus.site/privkey.pem;
-
-    location / {
-        proxy_pass http://localhost:7779;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    location /api/ {
-        proxy_pass http://localhost:7778;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-    }
-
-    location /cloud/ {
-        proxy_pass http://localhost:7780;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-    }
-}
-```
-
-### 7. Enable Site
-
-```bash
-ln -s /etc/nginx/sites-available/hypernexus.site /etc/nginx/sites-enabled/
-nginx -t
-systemctl reload nginx
+cd go
+go build -buildvcs=false ./cmd/tormentnexus
 ```
 
 ---
 
-## Environment Variables
+## Extensions
 
-### Required
-
+To compile VS Code and Chrome/Firefox browser agents:
 ```bash
-# .env
-PORT=7778
-ENVIRONMENT=production
-
-# Stripe
-STRIPE_API_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Price IDs
-STRIPE_PRICE_PROFESSIONAL=price_...
-STRIPE_PRICE_ENTERPRISE=price_...
+pnpm run build:extensions
 ```
 
-### Optional
+## Production Docker
 
+Build the production bundle inside a container:
 ```bash
-# LLM Providers
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-OLLAMA_URL=http://localhost:11434
-
-# Memory
-MEMORY_DB_PATH=/opt/hypernexus/data/memory.db
-
-# Logging
-LOG_LEVEL=info
-LOG_FILE=/var/log/hypernexus.log
+docker build -f Dockerfile.prod -t tormentnexus:latest .
+docker run -p 3000:3000 -p 4000:4000 -v tormentnexus-data:/root/.tormentnexus tormentnexus:latest
 ```
 
 ---
 
-## Monitoring
+## Package Manager Requirement
 
-### Health Checks
-
+**pnpm v10 is required.** The root `package.json` locks `packageManager: pnpm@10.28.0`. Using pnpm v9 or below will produce `ERR_PNPM_BAD_PM_VERSION` and fail the build.
 ```bash
-# Check Go kernel
-curl http://localhost:7778/health
-
-# Check Cloud server
-curl http://localhost:7780/api/cloud/health
-
-# Check Dashboard
-curl -s -o /dev/null -w "%{http_code}" http://localhost:7779
+npm install -g pnpm@10
 ```
 
-### Logs
+## Release Gate Validation
 
+Before checking in code, run the CI release verification pipeline:
 ```bash
-# View Go kernel logs
-journalctl -u hypernexus -f
-
-# View Cloud server logs
-journalctl -u hypernexus-cloud -f
-
-# View nginx logs
-tail -f /var/log/nginx/access.log
-tail -f /var/log/nginx/error.log
+pnpm run check:release-gate:ci
 ```
+This will execute standard placeholder checks, perform type-checking across `packages/core`, and lint the entire workspace.
 
-### Metrics
-
-- Request rate: `/api/metrics/requests`
-- Error rate: `/api/metrics/errors`
-- Latency: `/api/metrics/latency`
-- Memory usage: `/api/metrics/memory`
-
----
-
-## Backup & Recovery
-
-### Database Backup
-
+To perform strict visual and screenshot sync checks:
 ```bash
-# Backup SQLite databases
-cp /opt/hypernexus/data/memory.db /opt/hypernexus/backups/memory-$(date +%Y%m%d).db
-cp /opt/hypernexus/data/cloud.db /opt/hypernexus/backups/cloud-$(date +%Y%m%d).db
-```
-
-### Automated Backups
-
-```bash
-# Add to crontab
-0 3 * * * /opt/hypernexus/scripts/backup.sh
-```
-
-### Recovery
-
-```bash
-# Restore from backup
-cp /opt/hypernexus/backups/memory-20260727.db /opt/hypernexus/data/memory.db
-systemctl restart hypernexus
+pnpm run check:release-gate:ci:strict-visuals
 ```
 
 ---
 
-## Troubleshooting
+## Ports & Endpoints
 
-### Service Won't Start
+| Service | Default Port | Override | Health Check Endpoint |
+|---------|-------------|----------|-----------------------|
+| Go Kernel Sidecar | 7778 | `tormentnexus serve --port <n>` | `http://localhost:7778/health` |
+| Web Dashboard (Next.js) | 7779 | `PORT` | `http://localhost:7779/dashboard` |
+| Socket.io Swarm Server | 3001 | — | — |
+| Orchestrator tRPC | 3847 | `TORMENTNEXUS_ORCHESTRATOR_PORT` | `http://localhost:3847` |
 
-```bash
-# Check logs
-journalctl -u hypernexus -n 100
+## Health Checks
+- `http://localhost:7778/health` - Go Kernel Sidecar Health
+- `http://localhost:7779/dashboard` - Web Dashboard
 
-# Check port availability
-netstat -tlnp | grep 7778
-
-# Check permissions
-ls -la /opt/hypernexus/bin/
-```
-
-### High Memory Usage
-
-```bash
-# Check Go memory
-curl http://localhost:7778/debug/pprof/heap > heap.prof
-go tool pprof heap.prof
-```
-
-### SSL Certificate Issues
-
-```bash
-# Renew certificate
-certbot renew --dry-run
-systemctl reload nginx
-```
 
 ---
 
-## Security
+## Corporate Cloud Deployment (HyperNexus)
 
-### Firewall
+HyperNexus supports enterprise cloud requirements including Single Sign-On (SSO), Role-Based Access Control (RBAC), Server-Sent Events (SSE) MCP network connections with authentication, and containerized data isolation.
 
-```bash
-# Allow only necessary ports
-ufw allow 22/tcp   # SSH
-ufw allow 80/tcp   # HTTP
-ufw allow 443/tcp  # HTTPS
-ufw enable
-```
+### 1. SSO & RBAC System Integration
+* **OIDC Identity Federation**: HyperNexus interfaces with industry-standard OIDC providers (Okta, Azure AD, Auth0, etc.). Toggle **SSO Active** in the settings console and configure your Client ID, Secret, and Issuer URL.
+* **Granular RBAC**: Manage functional capabilities per identity role (Admin, Operator, Viewer) through the interactive role permission matrix.
 
-### SSH Hardening
+### 2. Authenticated SSE MCP Connector
+To connect external tools/processes to the cloud control plane:
+1. Enable **SSE Client Authentication** in the Cloud Settings view.
+2. Generate an SSE Client token (`CLOUDMCP_SSE_AUTH_TOKEN`).
+3. Connect using standard Model Context Protocol (MCP) clients to:
+   ```http
+   GET http://YOUR_CLOUD_IP:4300/api/sse?token=hk_prod_YOUR_TOKEN
+   ```
+4. Client requests are POSTed as JSON-RPC payloads to `/api/sse/message?sessionId=client-xyz`.
 
-```bash
-# /etc/ssh/sshd_config
-PermitRootLogin no
-PasswordAuthentication no
-MaxAuthTries 3
-```
+### 3. Multi-Tenant Docker Process Isolation
+For secure data and process separation per account:
+* Spawn account services using the isolated compose blueprint:
+  ```bash
+  export TENANT_ID="tenant-company-a"
+  export TENANT_PORT="3005"
+  export CLOUDMCP_SSE_AUTH_TOKEN="hk_prod_secure_token_for_tenant_a"
+  docker-compose -f docker-compose.isolated.yml up -d
+  ```
+* Resource boundaries, directory mounting (`/var/lib/hypernexus/tenants/tenant-company-a/`), and network interfaces are isolated automatically.
 
-### Application Security
+### 4. Cloud Autoscaling VM Groups
+To configure automated horizontal scaling:
+1. **VM Machine Image**: Create a base image (AMI/Snapshot) with Docker and Compose installed. Configure `systemd` to start the hypernexus orchestrator.
+2. **Stateless Scale**: Ensure VM instances join a load balancer. Keep state stored in an external shared DB (e.g. Postgres RDS/Cloud SQL) and cache layers (Redis Enterprise) as defined in `docker-compose.yml`.
+3. **Autoscaling Policies**: Setup CPU threshold triggers (e.g. scale up at >=70% CPU, scale down at <=30% CPU) using AWS Auto Scaling Groups, Azure VMSS, or Google Compute Engine Managed Instance Groups.
 
-- All API endpoints require authentication
-- RBAC for memory access
-- Audit logging for all operations
-- Encrypted storage for sensitive data
-
----
-
-## Performance Tuning
-
-### Go Kernel
-
-```bash
-# Increase file descriptor limit
-ulimit -n 65536
-
-# Set GOMAXPROCS
-export GOMAXPROCS=4
-```
-
-### nginx
-
-```nginx
-# Enable gzip compression
-gzip on;
-gzip_types text/plain application/json application/javascript;
-
-# Enable caching
-proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=my_cache:10m max_size=10g;
-```
-
-### SQLite
-
-```sql
--- Enable WAL mode for better concurrency
-PRAGMA journal_mode=WAL;
-
--- Increase cache size
-PRAGMA cache_size=-64000;  -- 64MB
-```
-
----
-
-## Scaling
-
-### Horizontal Scaling
-
-- Deploy multiple Go kernel instances behind nginx load balancer
-- Use shared SQLite database (NFS or distributed filesystem)
-- Session affinity for WebSocket connections
-
-### Vertical Scaling
-
-- Increase server RAM for larger memory stores
-- Add SSD storage for faster database operations
-- Use dedicated server for Cloud operations
-
----
-
-## Support
-
-- **Documentation:** <https://hypernexus.site/docs>
-- **Issues:** <https://gitlab.com/HyperNexusLLC/HyperNexus/issues>
-- **Email:** <support@hypernexus.site>
-- **Discord:** <https://discord.gg/hypernexus>

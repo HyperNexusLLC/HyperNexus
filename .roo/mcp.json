@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "hypernexus": {
-      "command": "C:\\Users\\hyper\\workspace\\hypernexus\\hypernexus.exe",
+    "tormentnexus": {
+      "command": "C:\\Users\\hyper\\workspace\\tormentnexus\\tormentnexus.exe",
       "args": ["mcp"],
       "alwaysAllow": ["*"],
       "disabled": false,

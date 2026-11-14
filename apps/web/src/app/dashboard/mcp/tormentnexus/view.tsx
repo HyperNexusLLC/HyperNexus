@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-interface HyperNexusServer {
+interface TormentNexusServer {
     uuid: string;
     name: string;
     description: string | null;
@@ -14,14 +14,14 @@ interface HyperNexusServer {
     enabled: boolean;
 }
 
-interface HyperNexusStatus {
+interface TormentNexusStatus {
     available: boolean;
     url: string;
 }
 
-export default function HyperNexusPage() {
-    const [status, setStatus] = useState<HyperNexusStatus | null>(null);
-    const [servers, setServers] = useState<HyperNexusServer[]>([]);
+export default function TormentNexusPage() {
+    const [status, setStatus] = useState<TormentNexusStatus | null>(null);
+    const [servers, setServers] = useState<TormentNexusServer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +41,7 @@ export default function HyperNexusPage() {
             setLoading(true);
             const [statusRes, serversRes] = await Promise.all([
                 fetch("/api/trpc/mcpServers.tormentnexusStatus").then((r) => r.json()),
-                fetch("/api/trpc/mcpServers.listFromHyperNexus").then((r) => r.json()),
+                fetch("/api/trpc/mcpServers.listFromTormentNexus").then((r) => r.json()),
             ]);
             setStatus(statusRes?.result?.data ?? null);
             setServers(serversRes?.result?.data ?? []);
@@ -69,7 +69,7 @@ export default function HyperNexusPage() {
                 payload.args = newServer.args.split(",").map((s) => s.trim());
             if (newServer.url) payload.url = newServer.url;
 
-            const res = await fetch("/api/trpc/mcpServers.createInHyperNexus", {
+            const res = await fetch("/api/trpc/mcpServers.createInTormentNexus", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -94,7 +94,7 @@ export default function HyperNexusPage() {
 
     const handleDeleteServer = async (uuid: string) => {
         try {
-            await fetch("/api/trpc/mcpServers.deleteFromHyperNexus", {
+            await fetch("/api/trpc/mcpServers.deleteFromTormentNexus", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ uuid }),
@@ -111,10 +111,10 @@ export default function HyperNexusPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-white">
-                        HyperNexus Management
+                        TormentNexus Management
                     </h1>
                     <p className="mt-1 text-sm text-gray-400">
-                        Manage MCP servers via the HyperNexus backend at port 12009
+                        Manage MCP servers via the TormentNexus backend at port 12009
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -269,15 +269,15 @@ export default function HyperNexusPage() {
                 <div className="flex items-center justify-center py-12">
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
                     <span className="ml-3 text-sm text-gray-400">
-                        Loading HyperNexus servers...
+                        Loading TormentNexus servers...
                     </span>
                 </div>
             ) : servers.length === 0 ? (
                 <div className="rounded-xl border border-gray-700 bg-gray-800/30 p-8 text-center">
                     <p className="text-gray-400">
                         {status?.available
-                            ? "No MCP servers registered in HyperNexus yet. Click \"+ Add Server\" to register one."
-                            : "HyperNexus backend is offline. Start it at http://localhost:12009 to manage servers."}
+                            ? "No MCP servers registered in TormentNexus yet. Click \"+ Add Server\" to register one."
+                            : "TormentNexus backend is offline. Start it at http://localhost:12009 to manage servers."}
                     </p>
                 </div>
             ) : (
@@ -322,7 +322,7 @@ export default function HyperNexusPage() {
                                     <button
                                         onClick={() => handleDeleteServer(server.uuid)}
                                         className="rounded-lg bg-red-600/20 px-2 py-1 text-[10px] font-medium text-red-300 hover:bg-red-600/40 transition-colors"
-                                        title="Remove this server from HyperNexus"
+                                        title="Remove this server from TormentNexus"
                                     >
                                         Remove
                                     </button>
@@ -352,13 +352,13 @@ export default function HyperNexusPage() {
                 </div>
             )}
 
-            {/* HyperNexus Info Footer */}
+            {/* TormentNexus Info Footer */}
             <div className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-4 text-xs text-gray-500">
                 <p>
-                    <strong className="text-gray-400">HyperNexus Backend:</strong>{" "}
+                    <strong className="text-gray-400">TormentNexus Backend:</strong>{" "}
                     {status?.url ?? "http://localhost:12009"} •{" "}
                     <strong className="text-gray-400">Integration:</strong> HTTP Bridge
-                    via HyperNexusBridgeService •{" "}
+                    via TormentNexusBridgeService •{" "}
                     <strong className="text-gray-400">Protocol:</strong> tRPC over HTTP
                 </p>
             </div>

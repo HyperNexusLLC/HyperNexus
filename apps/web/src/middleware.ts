@@ -12,7 +12,7 @@ const MAPPINGS: Record<string, 'page-a' | 'page-b' | 'page-c' | 'page-d'> = {
   '/dashboard/mesh': 'page-a',
   '/dashboard/api-keys': 'page-a',
   '/dashboard/settings': 'page-a',
-  '/dashboard/commercial': 'page-a',
+  '/dashboard/enterprise': 'page-a',
 
   // Page B: Native Go MCP Orchestration & Tool Control
   '/dashboard/mcp': 'page-b',

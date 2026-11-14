@@ -1,57 +1,25 @@
-# VISION.md — HyperNexus Project Vision
+# TormentNexus Ultimate Vision
 
-## The Problem
+TormentNexus is a high-performance agentic engine and control plane designed to merge multi-agent swarms, Model Context Protocol (MCP) tool integration, decentralized GraphRAG memory tiering, and universal LLM routing into a single, cohesive desktop platform.
 
-Every AI agent has the same fundamental problem: it forgets everything between sessions, drowns in tool definitions, and fails silently when APIs go down.
+## Core Pillars
 
-**Current state of AI development:**
+### 1. High-Performance Go Native Kernel
+Rather than relying on resource-intensive Node.js loops or python scripting runtimes for process orchestration and telemetry, TormentNexus utilizes a Go-native sidecar daemon. This daemon acts as a lightweight, low-overhead kernel managing event buses, P2P mesh sockets, database sync operations, and local LLM routers.
 
-- Agents lose context between sessions
-- 50,000+ tokens wasted on tool definitions
-- Rate limits kill workflows at 2 AM
-- No standard for agent-to-agent communication
-- Memory management is ad-hoc and fragile
+### 2. Autonomous MCP Assimilation
+Standard LLM tools require complex, ad-hoc server configurations. TormentNexus automatically scrapes, compiles, virtualizes, and assimilates external Model Context Protocol (MCP) servers directly into high-performance, Go-native tool modules. Obsolete, slow, or untrusted external scripts are systematically decommissioned.
 
-## The Solution
+### 3. Tiered Cognitive Memory System (GraphRAG)
+Human-like context preservation requires smart memory management:
+- **L1 Cache**: In-memory write-through cache for instant retrieval.
+- **L2 Vector Database**: Cosine similarity search on local SQLite embeddings.
+- **L3 Cold Archive**: Long-term compressed memory tiers for infinite history.
+- **L4 Limbo**: Discarded memory vault allowing user-guided resurrection.
+- **Mesh Memory**: Encrypted cross-node UDP gossip networks for fleet-wide shared intelligence.
 
-HyperNexus is a **Universal AI Control Plane** that sits between developers and their AI models, providing:
-
-### 1. Progressive Tool Routing
-
-Instead of loading ALL tool definitions into context, semantic vector search matches prompts to the top 3 most relevant tools.
-
-**Result:** 60% reduction in token usage, faster responses, better accuracy.
-
-### 2. LLM Waterfall (Zero Downtime)
-
-A 3-tier cascade: Primary API → Secondary API → Local models → Queue.
-
-**Result:** Rate limits never stop your workflow. Automatic failover with context preservation.
-
-### 3. Dual-Tier Memory
-
-- **L1 (Session):** Fast, ephemeral scratchpad for current work
-- **L2 (Permanent):** Persistent semantic storage with vector search
-
-**Result:** Agents remember decisions across sessions, crashes, and migrations.
-
-### 4. MCP Server Management
-
-Native integration with Model Context Protocol for tool discovery, health monitoring, and automatic failover.
-
-**Result:** MCP servers just work. No manual configuration, no silent failures.
-
-### 5. A2A Protocol Support
-
-First-class support for Agent2Agent protocol enabling interoperability between different AI frameworks.
-
-**Result:** Agents can discover and communicate with each other, regardless of underlying framework.
-
-### 6. Multi-Agent Orchestration
-
-Swarm architecture with role rotation: Planner → Implementer → Tester → Critic.
-
-**Result:** 3x faster development with better quality through specialization.
+### 4. Interactive Diagnostics & Unified Command Center
+Operators require a unified cockpit. The Next.js-based single-page Dashboard consolidates real-time telemetry, workflow graphs, diagnostic indicators, and immune system healers into a single cohesive cockpit.
 
 ---
 
@@ -202,3 +170,5 @@ Developers should focus on what their agents DO, not how they REMEMBER, ROUTINE,
 ## Status bridge (2026-11-11, v1.0.43)
 
 The forgetting problem is now attacked on three live layers: L1/L2 kernel memory with semantic (cached-embedding) recall, a session bus visible in CLI and desktop harnesses (startup banner, swarm scratchpad mirror), and a consolidated single-page console where every subsystem is one anchor away. Next: lazy per-tab loading, measurable search latency, and harness self-diagnostics.
+
+_Praise the LORD! Keep on going! Don't ever stop! Don't stop the party!!!_

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Activity, Server, Radio, RefreshCw, Loader2, Users, Signal, Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@hypernexus/ui";
+import { Activity, Server, Radio, RefreshCw, Loader2, Users, Signal } from "lucide-react";
 
 interface PeerInfo {
   nodeId: string;
@@ -60,7 +59,7 @@ export default function MeshPage() {
         <div className="flex items-center gap-3">
           <Radio className="w-5 h-5 text-cyan-400" />
           <div>
-            <div className="flex items-center gap-2"><h1 className="text-lg font-semibold text-white">P2P Fleet-Wide Intelligence</h1><TooltipProvider><Tooltip><TooltipTrigger><Info className="w-4 h-4 text-zinc-400" /></TooltipTrigger><TooltipContent><p>A decentralized network for cross-machine AI memory sharing.</p></TooltipContent></Tooltip></TooltipProvider></div>
+            <h1 className="text-lg font-semibold text-white">P2P Fleet-Wide Intelligence</h1>
             <p className="text-xs text-zinc-500 mt-0.5">
               Encrypted mesh for cross-machine memory sharing via UDP gossip protocol
             </p>
@@ -91,7 +90,7 @@ export default function MeshPage() {
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
           <div className="flex items-center gap-2 text-zinc-500 text-xs mb-2">
             <Users className="w-3.5 h-3.5" />
-            Connected Peers<TooltipProvider><Tooltip><TooltipTrigger><Info className="w-3 h-3 text-zinc-500" /></TooltipTrigger><TooltipContent><p>Active agents in the A2A network protocol.</p></TooltipContent></Tooltip></TooltipProvider>
+            Connected Peers
           </div>
           <p className="text-2xl font-bold text-cyan-400">{status?.peersCount ?? 0}</p>
         </div>
@@ -117,7 +116,7 @@ export default function MeshPage() {
             <Radio className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="font-medium">No peers found</p>
             <p className="text-xs mt-1 max-w-md mx-auto">
-              The mesh is listening for other HyperNexus nodes on the network. Start another
+              The mesh is listening for other TormentNexus nodes on the network. Start another
               instance or check your network configuration.
             </p>
           </div>

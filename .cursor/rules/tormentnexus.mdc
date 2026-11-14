@@ -30,4 +30,4 @@ The `tormentnexus` MCP server should be configured in `.cursor/mcp.json`. If not
 2. Use `mcp_tormentnexus_memory_scratchpad_set` after key decisions to persist knowledge cross-session
 3. Use `mcp_tormentnexus_mcp_list_tools` when unsure what tools are available
 4. Use `mcp_tormentnexus_repomap` for codebase orientation in unfamiliar projects
-5. Route complex commercial integrations through TN kernel via `mcp_tormentnexus_mcp_call_tool`
+5. Route complex enterprise integrations through TN sidecar via `mcp_tormentnexus_mcp_call_tool`

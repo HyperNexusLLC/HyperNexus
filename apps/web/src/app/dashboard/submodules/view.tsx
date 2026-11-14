@@ -10,14 +10,14 @@ import {
 	TabsContent,
 	TabsList,
 	TabsTrigger,
-} from "@hypernexus/ui";
+} from "@tormentnexus/ui";
 import { useEffect, useState } from "react";
 import {
 	fetchSubmodulesAction,
 	healSubmodulesAction,
 	fetchUserLinksAction,
 } from "./actions";
-import { Button } from "@hypernexus/ui";
+import { Button } from "@tormentnexus/ui";
 import {
 	Loader2,
 	RefreshCw,
@@ -223,7 +223,7 @@ export default function SubmodulesPage() {
 				<TabsContent value="structure">
 					<Card>
 						<CardHeader>
-							<CardTitle>HyperNexus Project Structure</CardTitle>
+							<CardTitle>TormentNexus Project Structure</CardTitle>
 							<CardDescription>
 								Architectural overview of the monorepo.
 							</CardDescription>

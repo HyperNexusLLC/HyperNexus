@@ -14,7 +14,7 @@ import {
 	type DashboardStatusSummary,
 	type DashboardTrafficSummary,
 } from "./dashboard-home-view";
-import { useTNKernelDashboard } from "../../hooks/useTNKernelData";
+import { useGoSidecarDashboard } from "../../hooks/useGoSidecarData";
 import { BrowserToolWidget } from "../../components/BrowserToolWidget";
 import { VibeCheckWidget } from "../../components/VibeCheckWidget";
 
@@ -40,7 +40,7 @@ const TABS = [
 	{ id: "mcp", label: "MCP & Tool Registry" },
 	{ id: "memory", label: "Memory & GraphRAG" },
 	{ id: "workflows", label: "Swarm & Workflows" },
-	{ id: "settings", label: "Settings & Commercial" },
+	{ id: "settings", label: "Settings & Enterprise" },
 ] as const;
 
 export function sortSessions(sessions: DashboardSessionSummary[]) {
@@ -89,8 +89,8 @@ function DashboardHomeClientContent() {
 	>(null);
 	const [currentTimestamp, setCurrentTimestamp] = useState<number | null>(null);
 
-	// TN Kernel fallback data — polled independently of tRPC
-	const goData = useTNKernelDashboard(5000);
+	// Go sidecar fallback data — polled independently of tRPC
+	const goData = useGoSidecarDashboard(5000);
 
 	useEffect(() => {
 		const refreshTimestamp = () => setCurrentTimestamp(Date.now());
@@ -149,7 +149,7 @@ function DashboardHomeClientContent() {
 		mcpStatusQuery.data !== null &&
 		!mcpStatusQuery.error;
 
-	// Use TN Kernel data when tRPC is unreachable
+	// Use Go sidecar data when tRPC is unreachable
 	const useGoFallback = !trpcReachable && goData.connected;
 
 	const isBootstrapping = !trpcReachable && !goData.connected;
@@ -272,7 +272,7 @@ function DashboardHomeClientContent() {
 		return [];
 	}, [trpcReachable, serversQuery.data, goData.servers]);
 
-	// ── Traffic: tRPC only (TN Kernel doesn't track traffic yet) ──
+	// ── Traffic: tRPC only (Go sidecar doesn't track traffic yet) ──
 	const traffic = useMemo<DashboardTrafficSummary[]>(
 		() => {
 			const data = trafficQuery.data;
@@ -382,12 +382,8 @@ function DashboardHomeClientContent() {
 				}}
 				pendingSessionActionId={pendingSessionActionId}
 			>
-				{activeTab === "browser" && (
-					<>
-						<BrowserToolWidget />
-						<VibeCheckWidget />
-					</>
-				)}
+				<BrowserToolWidget />
+				<VibeCheckWidget />
 			</DashboardHomeView>
 		);
 	};

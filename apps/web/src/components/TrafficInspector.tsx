@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
-import { createReconnectPolicy, getReconnectDelayMs, resolveCoreSseUrl, shouldRetryReconnect } from '@hypernexus/ui';
+import { createReconnectPolicy, getReconnectDelayMs, resolveCoreWsUrl, shouldRetryReconnect } from '@tormentnexus/ui';
 import { trpc } from '@/utils/trpc';
 
 interface Packet {
@@ -27,7 +27,7 @@ export function TrafficInspector() {
     useEffect(() => {
         // Prefer custom URL if set, otherwise fallback to env
         const targetUrl = customWsUrl || process.env.NEXT_PUBLIC_CORE_WS_URL || undefined;
-        const wsUrl = resolveCoreSseUrl(targetUrl);
+        const wsUrl = resolveCoreWsUrl(targetUrl);
 
         console.log(`[TrafficInspector] customWsUrl: "${customWsUrl}", env: "${process.env.NEXT_PUBLIC_CORE_WS_URL}", targetUrl: "${targetUrl}"`);
         console.log(`[TrafficInspector] Connecting to: ${wsUrl}`);
@@ -37,7 +37,7 @@ export function TrafficInspector() {
                 wsRef.current.close();
             }
 
-            // Connect to HyperNexus Core Bridge
+            // Connect to TormentNexus Core Bridge
             const ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {

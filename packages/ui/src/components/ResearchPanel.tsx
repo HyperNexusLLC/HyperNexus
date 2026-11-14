@@ -6,7 +6,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
-import { resolveCoreSseUrl } from '../lib/endpoints';
+import { resolveCoreWsUrl } from '../lib/endpoints';
 import { createReconnectPolicy, getReconnectDelayMs, normalizeNumericInput, shouldRetryReconnect } from '../lib/connection-policy';
 
 export default function ResearchPanel() {
@@ -23,14 +23,14 @@ export default function ResearchPanel() {
     const reconnectPolicy = createReconnectPolicy();
 
     useEffect(() => {
-        const wsUrl = resolveCoreSseUrl(process.env.NEXT_PUBLIC_CORE_WS_URL);
+        const wsUrl = resolveCoreWsUrl(process.env.NEXT_PUBLIC_CORE_WS_URL);
 
         const connect = () => {
             const ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
                 reconnectAttemptsRef.current = 0;
-                setLogs(prev => [...prev, { type: 'system', message: 'Connected to HyperNexus Core' }]);
+                setLogs(prev => [...prev, { type: 'system', message: 'Connected to TormentNexus Core' }]);
             };
 
             ws.onmessage = (event: MessageEvent) => {

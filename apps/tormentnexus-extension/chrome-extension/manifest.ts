@@ -27,14 +27,14 @@ function convertToChromeVersion(semver: string): string {
 const manifest = {
   manifest_version: 3,
   default_locale: 'en',
-  name: 'HyperNexus Extension',
+  name: 'TormentNexus Extension',
   browser_specific_settings: {
     gecko: {
-      id: 'extension@hypernexus.local',
+      id: 'extension@tormentnexus.local',
     },
   },
   version: convertToChromeVersion(packageJson.version),
-  description: 'HyperNexus Extension',
+  description: 'TormentNexus Extension',
   host_permissions: [
     '*://*.perplexity.ai/*',
     '*://*.chat.openai.com/*',

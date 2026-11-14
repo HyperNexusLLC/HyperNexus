@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function RedirectPage() {
     const router = useRouter();
     useEffect(() => {
-        router.replace('/dashboard#skills-workflows');
+        router.replace('/dashboard?tab=workflows');
     }, [router]);
     return null;
 }

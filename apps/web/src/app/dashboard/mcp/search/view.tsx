@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@hypernexus/ui";
+import { Button, Card, CardContent, CardHeader, CardTitle } from "@tormentnexus/ui";
 import { Loader2, Search, Zap, Code, Layers, ExternalLink, Activity, Database, ArrowDownToLine, Sparkles, Trash2, SlidersHorizontal, History } from "lucide-react";
 import { trpc } from '@/utils/trpc';
-import { useMcpSearchTools, useMcpWorkingSet, useMcpEvictionHistory, useMcpTelemetry, useMcpPreferences, useMcpJsoncEditor } from '@/hooks/use-mcp-http';
 import { toast } from 'sonner';
 
 type SearchResult = {
@@ -211,13 +210,15 @@ function SearchDashboard() {
     const [telemetryWindowFilter, setTelemetryWindowFilter] = useState<TelemetryWindowPreset>('15m');
     const [telemetrySourceFilter, setTelemetrySourceFilter] = useState<TelemetrySourceFilter>('all');
     const utils = trpc.useUtils();
-    // HTTP-fallback hooks: tRPC primary, kernel HTTP secondary
-    const searchQuery = useMcpSearchTools(query, 20);
-    const workingSetQuery = useMcpWorkingSet(4000);
-    const evictionHistoryQuery = useMcpEvictionHistory(8000);
-    const telemetryQuery = useMcpTelemetry(4000);
-    const preferencesQuery = useMcpPreferences();
-    const jsoncEditorQuery = useMcpJsoncEditor();
+    const searchQuery = trpc.mcp.searchTools.useQuery(
+        { query, profile: profile === 'default' ? undefined : profile },
+        { enabled: query.trim().length > 0 },
+    );
+    const workingSetQuery = trpc.mcp.getWorkingSet.useQuery(undefined, { refetchInterval: 4000 });
+    const evictionHistoryQuery = trpc.mcp.getWorkingSetEvictionHistory.useQuery(undefined, { refetchInterval: 8000 });
+    const telemetryQuery = trpc.mcp.getToolSelectionTelemetry.useQuery(undefined, { refetchInterval: 4000 });
+    const preferencesQuery = trpc.mcp.getToolPreferences.useQuery();
+    const jsoncEditorQuery = trpc.mcp.getJsoncEditor.useQuery();
     const clearTelemetryMutation = trpc.mcp.clearToolSelectionTelemetry.useMutation({
         onSuccess: async () => {
             toast.success('Telemetry history cleared');
@@ -797,7 +798,7 @@ function SearchDashboard() {
                                             value={autoLoadMinConfidenceDraft}
                                             onChange={(event) => setAutoLoadMinConfidenceDraft(Number(event.target.value))}
                                             className="w-full"
-                                            title="Set minimum confidence required before HyperNexus auto-loads the top ranked tool"
+                                            title="Set minimum confidence required before TormentNexus auto-loads the top ranked tool"
                                             aria-label="Auto-load confidence threshold"
                                         />
                                         <input
@@ -1665,7 +1666,7 @@ function SearchDashboard() {
                             <textarea
                                 value={jsoncDraft}
                                 onChange={(event) => setJsoncDraft(event.target.value)}
-                                title="Edit the HyperNexus MCP JSONC configuration. Changes are saved to the HyperNexus config mcp.jsonc file (typically ~/.tormentnexus/mcp.jsonc)."
+                                title="Edit the TormentNexus MCP JSONC configuration. Changes are saved to the TormentNexus config mcp.jsonc file (typically ~/.tormentnexus/mcp.jsonc)."
                                 aria-label="MCP JSONC configuration editor"
                                 className="w-full h-48 bg-zinc-950 border border-zinc-800 rounded-md p-3 font-mono text-xs text-zinc-200 outline-none"
                                 spellCheck={false}

@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function RedirectPage() {
     const router = useRouter();
     useEffect(() => {
-        router.replace('/dashboard#security-audit');
+        router.replace('/dashboard?tab=security');
     }, [router]);
     return null;
 }

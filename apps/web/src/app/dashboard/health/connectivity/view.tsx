@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@hypernexus/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@tormentnexus/ui";
 import {
 	Activity,
 	AlertTriangle,
@@ -31,7 +31,7 @@ type ConnectivityData = {
 		trpcUpstream: ServiceStatus;
 		dashboard: ServiceStatus;
 		bridge: ServiceStatus;
-		tnKernel: {
+		goSidecar: {
 			status: string;
 			port: number;
 			baseURL: string;
@@ -39,7 +39,7 @@ type ConnectivityData = {
 		};
 	};
 	discovery: {
-		tnKernelPort: number;
+		goSidecarPort: number;
 		trpcUpstreams: string[];
 		bridgePort: number;
 		dashboardPort: number;
@@ -174,7 +174,7 @@ export default function ServiceConnectivityPage() {
 
 		async function poll() {
 			try {
-				// Use Next.js API proxy to reach the TN Kernel
+				// Use Next.js API proxy to reach the Go sidecar
 				const endpoints = [
 					"/api/go/service/connectivity",
 					"/api/go/api/service/connectivity",
@@ -199,7 +199,7 @@ export default function ServiceConnectivityPage() {
 				}
 
 				if (!cancelled) {
-					setError("Could not reach TN Kernel or dashboard proxy");
+					setError("Could not reach Go sidecar or dashboard proxy");
 				}
 			} finally {
 				if (!cancelled) setLoading(false);
@@ -233,7 +233,7 @@ export default function ServiceConnectivityPage() {
 						<AlertTriangle className="h-6 w-6 mb-2" />
 						<p>{error}</p>
 						<p className="mt-2 text-sm text-zinc-500">
-							Ensure the TN Kernel is running:{" "}
+							Ensure the Go sidecar is running:{" "}
 							<code className="bg-zinc-800 px-1.5 py-0.5 rounded">
 								tormentnexus serve
 							</code>
@@ -247,7 +247,7 @@ export default function ServiceConnectivityPage() {
 	const trpc = data?.services?.trpcUpstream;
 	const dashboard = data?.services?.dashboard;
 	const bridge = data?.services?.bridge;
-	const tnKernel = data?.services?.tnKernel;
+	const goSidecar = data?.services?.goSidecar;
 	const discovery = data?.discovery;
 
 	return (
@@ -258,7 +258,7 @@ export default function ServiceConnectivityPage() {
 						Service Connectivity
 					</h1>
 					<p className="text-zinc-500 mt-1">
-						Real-time health of the HyperNexus multi-service architecture
+						Real-time health of the TormentNexus multi-service architecture
 					</p>
 				</div>
 				<div className="flex items-center gap-2">
@@ -279,7 +279,7 @@ export default function ServiceConnectivityPage() {
 					<div className="flex items-center justify-center gap-4 text-sm text-zinc-400 flex-wrap">
 						<span className="flex items-center gap-1.5">
 							<Server className="h-4 w-4 text-emerald-400" />
-							Go Kernel (:{discovery?.tnKernelPort ?? 7778})
+							Go Sidecar (:{discovery?.goSidecarPort ?? 7778})
 						</span>
 						<span>→</span>
 						<span className="flex items-center gap-1.5">
@@ -316,31 +316,31 @@ export default function ServiceConnectivityPage() {
 						service={bridge}
 					/>
 				)}
-				{tnKernel && (
+				{goSidecar && (
 					<Card className="bg-zinc-900 border-zinc-800">
 						<CardHeader className="pb-3">
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2">
 									<Server className="h-4 w-4 text-blue-400" />
 									<CardTitle className="text-sm text-white">
-										Go Kernel
+										Go Sidecar
 									</CardTitle>
 								</div>
 								<StatusIndicator
-									reachable={tnKernel.reachable}
-									status={tnKernel.status}
+									reachable={goSidecar.reachable}
+									status={goSidecar.status}
 								/>
 							</div>
 						</CardHeader>
 						<CardContent className="space-y-2 text-xs">
 							<div className="flex justify-between">
 								<span className="text-zinc-500">Port</span>
-								<span className="text-zinc-300">{tnKernel.port}</span>
+								<span className="text-zinc-300">{goSidecar.port}</span>
 							</div>
 							<div className="flex justify-between">
 								<span className="text-zinc-500">Base URL</span>
 								<span className="font-mono text-zinc-300 break-all">
-									{tnKernel.baseURL}
+									{goSidecar.baseURL}
 								</span>
 							</div>
 						</CardContent>

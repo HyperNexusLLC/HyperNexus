@@ -1,19 +1,19 @@
-# HyperNexus Innovation & Refactoring Ideas
+# TormentNexus/TormentNexus Ideas & Future Enhancements
 
-This document gathers innovative concepts, architectural pivots, and optimization ideas for future releases.
+## Phase 2: Autonomy Loop (Self-Healing)
+- [ ] **Verify Loop**: After applying a fix via `HealerService`, automatically run relevant tests. If tests fail, feed the new error back into the healer for a second iteration.
+- [ ] **Idle Healing**: Background agent that scans for known bugs or TODOs during low CPU usage periods and proposes fixes to the L2 Vault.
+- [ ] **Fix Confidence Scoring**: Rank suggested fixes based on historical "success heat" of similar patterns.
 
-## 1. Dynamic Cost-Latency Model Router
-- **Concept**: A local routing layer that reads historical response times from `provider_metrics.db` and selects the cheapest/fastest model provider dynamically for every tool invocation.
-- **Benefits**: Minimizes api token consumption and maximizes user interaction speeds.
+## Phase 3: Skill Intelligence
+- [ ] **Progressive Skill Disclosure**: Apply the same LRU/Ranking system used for tools to the system's "Skills" (instruction sets).
+- [ ] **Skill Evolution**: Automatically refine skill instructions based on model performance metrics.
 
-## 2. Autonomous Go Tool Self-Healer Loop
-- **Concept**: Integrate the python compiler healer into the Go sidecar natively. The sidecar compiles generated stubs and forwards any compile logs to a lightweight local coder model to auto-repair formatting errors, redeclared helpers, or missing returns.
-- **Benefits**: Uninterrupted, fully autonomous tool registry expansion.
+## Enterprise Features
+- [ ] **DLP Layer**: Implement a regex/LLM-based PII scrubber that intercepts prompt streams before they reach public providers.
+- [ ] **Audit Ledger**: Store hash-verified logs of every tool call in a dedicated SQLite table for compliance.
+- [ ] **Fleet Dashboard**: Visualizer for pi-pods/vLLM cluster status.
 
-## 3. SQLite Vector Sync over CRDT/Gossip
-- **Concept**: Synchronize vector database updates across instances using conflict-free replicated data types (CRDTs) over Gossip UDP packets.
-- **Benefits**: Fleet-wide decentralized shared intelligence.
-
-## 4. WebAssembly Tool Sandboxing (Wasmtime)
-- **Concept**: Instead of spawning arbitrary binaries as STDIO subprocesses, compile assimilated MCP tools into WebAssembly and execute them within a sandboxed Wasmtime container.
-- **Benefits**: Advanced sandbox isolation for secure, multi-tenant enterprise deployments.
+## UI/UX
+- [ ] **Reasoning HUD**: A "Live Graph" of the model's current thought process, showing tool selection and memory retrieval in real-time.
+- [ ] **Heat Map**: Visualize memory "Heat" in the dashboard, showing which areas of the codebase or knowledge base are currently "hot."
